@@ -22,12 +22,20 @@ from .views import (
     PublicCancelAppointmentByCodeView,
     PublicAppointmentLookupView,
     ScheduleDiagnosticsView,
+    PublicVisualScheduleView,
+    AppointmentConfirmView,
+    AppointmentCompleteView,
 )
 
 app_name = "appointments"
 
 urlpatterns = [
     path("agenda/", DailyAgendaView.as_view(), name="daily_agenda"),
+    path(
+        "agenda-publica/",
+        PublicVisualScheduleView.as_view(),
+        name="public_visual_schedule",
+    ),
     path("agenda/horarios/", VisualScheduleView.as_view(), name="visual_schedule"),
 
     path(
@@ -71,6 +79,8 @@ urlpatterns = [
     path("marcacoes/nova/", AppointmentCreateView.as_view(), name="appointment_create"),
     path("marcacoes/<int:pk>/editar/", AppointmentUpdateView.as_view(), name="appointment_update"),
     path("marcacoes/<int:pk>/cancelar/", AppointmentCancelView.as_view(), name="appointment_cancel"),
+    path("marcacoes/<int:pk>/confirmar/", AppointmentConfirmView.as_view(), name="appointment_confirm"),
+    path("marcacoes/<int:pk>/concluir/", AppointmentCompleteView.as_view(), name="appointment_complete"),
 
     path("cancelar/", PublicCancelAppointmentView.as_view(), name="public_cancel"),
     path("cancelar/sucesso/", PublicCancelSuccessView.as_view(), name="public_cancel_success"),    

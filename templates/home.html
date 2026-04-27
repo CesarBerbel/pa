@@ -7,7 +7,7 @@
 
 <section class="hero-section text-center mb-5">
     <img
-        src="{% static 'img/logo_menu.png' %}"
+        src="{% static 'img/logo.png' %}"
         alt="Priscila Arantes PA"
         class="home-logo mb-4"
     >
@@ -26,11 +26,11 @@
     </p>
 
     <div class="d-flex flex-column flex-md-row gap-3 justify-content-center">
-        <a href="{% url 'appointments:public_appointment_create' %}" class="btn btn-primary btn-lg px-5">
-            Marcar horário
+        <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary btn-lg px-5">
+            Ver agenda disponível
         </a>
 
-        <a href="{% url 'appointments:public_appointment_lookup' %}" class="btn btn-outline-primary btn-lg px-5">
+        <a href="{% url 'appointments:public_appointment_lookup' %}" class="btn btn-outline-secondary btn-lg px-5">
             Consultar marcação
         </a>
     </div>
@@ -45,15 +45,15 @@
                 </div>
 
                 <h2 class="h5 section-title">
-                    Marque online
+                    Veja a agenda
                 </h2>
 
                 <p class="text-muted mb-4">
-                    Escolha o serviço, a data e um horário disponível.
+                    Consulte os horários disponíveis antes de fazer a marcação.
                 </p>
 
-                <a href="{% url 'appointments:public_appointment_create' %}" class="btn btn-primary w-100">
-                    Marcar agora
+                <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary w-100">
+                    Ver agenda
                 </a>
             </div>
         </div>
@@ -67,16 +67,16 @@
                 </div>
 
                 <h2 class="h5 section-title">
-                    Consulte pelo código
+                    Marque online
                 </h2>
 
                 <p class="text-muted mb-4">
-                    Use o código recebido para ver data, horário, serviço e status.
+                    Escolha o serviço, a data e confirme os seus dados.
                 </p>
 
-                <a href="{% url 'appointments:public_appointment_lookup' %}" class="btn btn-outline-primary w-100">
-                    Consultar
-                </a>
+                {% comment %} <a href="{% url 'appointments:public_appointment_create' %}" class="btn btn-outline-primary w-100">
+                    Marcar agora
+                </a> {% endcomment %}
             </div>
         </div>
     </div>
@@ -89,15 +89,15 @@
                 </div>
 
                 <h2 class="h5 section-title">
-                    Cancele se precisar
+                    Consulte ou cancele
                 </h2>
 
                 <p class="text-muted mb-4">
-                    Informe o código da marcação e cancele sem precisar fazer login.
+                    Use o código da marcação para consultar ou cancelar quando necessário.
                 </p>
 
-                <a href="{% url 'appointments:public_cancel' %}" class="btn btn-outline-danger w-100">
-                    Cancelar marcação
+                <a href="{% url 'appointments:public_appointment_lookup' %}" class="btn btn-outline-secondary w-100">
+                    Consultar marcação
                 </a>
             </div>
         </div>
@@ -136,11 +136,11 @@
     </h2>
 
     <p class="text-muted mb-4">
-        Escolha o melhor horário disponível e confirme em poucos passos.
+        Veja os horários disponíveis e escolha o melhor momento.
     </p>
 
-    <a href="{% url 'appointments:public_appointment_create' %}" class="btn btn-primary btn-lg px-5">
-        Marcar horário
+    <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary btn-lg px-5">
+        Ver agenda disponível
     </a>
 </section>
 

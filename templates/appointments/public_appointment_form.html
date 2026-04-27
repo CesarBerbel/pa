@@ -15,7 +15,7 @@
                 </h1>
 
                 <p class="text-muted text-center mb-4">
-                    Escolha o serviço, a data e o horário disponível.
+                    Confirme os dados da sua marcação.
                 </p>
 
                 <form method="post" novalidate>
@@ -23,18 +23,71 @@
 
                     {{ form.non_field_errors }}
 
-                    {{ form.service|as_crispy_field }}
-                    {{ form.date|as_crispy_field }}
+                    {% if is_locked_from_agenda %}
+                        <input type="hidden" name="locked_from_agenda" value="1">
+                        <input type="hidden" name="service" value="{{ form.initial.service }}">
+                        <input type="hidden" name="date" value="{{ form.initial.date }}">
+                        <input type="hidden" name="start_time" value="{{ form.initial.start_time }}">
 
-                    <div id="loading-slots" class="alert alert-info d-none">
-                        Carregando horários disponíveis...
-                    </div>
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Serviço
+                            </label>
+                            <input type="hidden" name="service" value="{{ form.initial.service }}">
+                            <select class="form-select" disabled>
+                                {% for service in form.fields.service.queryset %}
+                                    {% if service.pk|stringformat:"s" == form.initial.service|stringformat:"s" %}
+                                        <option selected>
+                                            {{ service.name }}
+                                        </option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
 
-                    <div id="no-slots-message" class="alert alert-warning d-none">
-                        Nenhum horário disponível para o serviço e data selecionados.
-                    </div>
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Data
+                            </label>
+                            <input
+                                type="date"
+                                class="form-control"
+                                value="{{ form.initial.date }}"
+                                disabled
+                            >
+                        </div>
 
-                    {{ form.start_time|as_crispy_field }}
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Horário
+                            </label>
+                            <input
+                                type="text"
+                                class="form-control"
+                                value="{{ form.initial.start_time }}"
+                                disabled
+                            >
+                        </div>
+
+                        <div class="alert alert-info">
+                            Serviço, data e horário foram selecionados pela agenda disponível.
+                            Para alterar, volte para a agenda pública.
+                        </div>
+                    {% else %}
+                        {{ form.service|as_crispy_field }}
+                        {{ form.date|as_crispy_field }}
+
+                        <div id="loading-slots" class="alert alert-info d-none">
+                            Carregando horários disponíveis...
+                        </div>
+
+                        <div id="no-slots-message" class="alert alert-warning d-none">
+                            Nenhum horário disponível para o serviço e data selecionados.
+                        </div>
+
+                        {{ form.start_time|as_crispy_field }}
+                    {% endif %}
+
                     {{ form.customer_name|as_crispy_field }}
                     {{ form.customer_phone|as_crispy_field }}
                     {{ form.customer_email|as_crispy_field }}
@@ -43,6 +96,15 @@
                     <button type="submit" class="btn btn-primary w-100 mt-3">
                         Confirmar marcação
                     </button>
+
+                    {% if is_locked_from_agenda %}
+                        <a
+                            href="{% url 'appointments:public_visual_schedule' %}"
+                            class="btn btn-outline-secondary w-100 mt-2"
+                        >
+                            Voltar para agenda
+                        </a>
+                    {% endif %}
                 </form>
             </div>
         </div>
@@ -50,6 +112,7 @@
     </div>
 </div>
 
+{% if not is_locked_from_agenda %}
 <script>
     // Load available appointment slots automatically using AJAX
     document.addEventListener("DOMContentLoaded", function () {
@@ -60,6 +123,8 @@
         const loadingSlots = document.getElementById("loading-slots");
         const noSlotsMessage = document.getElementById("no-slots-message");
 
+        const initialStartTime = "{{ form.initial.start_time|default:'' }}";
+
         function clearSlots() {
             startTimeInput.innerHTML = "";
 
@@ -69,7 +134,16 @@
             startTimeInput.appendChild(emptyOption);
         }
 
-        function selectFirstSlot() {
+        function selectInitialOrFirstSlot() {
+            if (initialStartTime) {
+                for (let i = 0; i < startTimeInput.options.length; i++) {
+                    if (startTimeInput.options[i].value === initialStartTime) {
+                        startTimeInput.selectedIndex = i;
+                        return;
+                    }
+                }
+            }
+
             if (startTimeInput.options.length > 1) {
                 startTimeInput.selectedIndex = 1;
             }
@@ -111,7 +185,7 @@
                         startTimeInput.appendChild(option);
                     });
 
-                    selectFirstSlot();
+                    selectInitialOrFirstSlot();
                 })
                 .catch(function () {
                     loadingSlots.classList.add("d-none");
@@ -124,10 +198,10 @@
         serviceInput.addEventListener("change", loadAvailableSlots);
         dateInput.addEventListener("change", loadAvailableSlots);
 
-        // If service and date already exist, load slots on page load
         if (serviceInput.value && dateInput.value) {
             loadAvailableSlots();
         }
     });
 </script>
+{% endif %}
 {% endblock %}

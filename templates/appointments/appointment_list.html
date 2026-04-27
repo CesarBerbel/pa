@@ -65,29 +65,61 @@
                                 </td>
 
                                 <td class="text-end">
-                                    <a
-                                        href="{% url 'appointments:appointment_update' appointment.pk %}"
-                                        class="btn btn-outline-primary btn-sm"
-                                    >
-                                        Editar
-                                    </a>
+                                    <div class="d-inline-flex flex-wrap justify-content-end gap-1">
 
-                                    {% if appointment.status != "cancelled" %}
-                                        <form
-                                            method="post"
-                                            action="{% url 'appointments:appointment_cancel' appointment.pk %}"
-                                            class="d-inline"
-                                        >
-                                            {% csrf_token %}
-                                            <button
-                                                type="submit"
-                                                class="btn btn-outline-danger btn-sm"
-                                                onclick="return confirm('Tem certeza que deseja cancelar esta marcação?');"
+                                       {% if appointment.status != "completed" %}
+                                            <a
+                                                href="{% url 'appointments:appointment_update' appointment.pk %}"
+                                                class="btn btn-outline-primary btn-sm"
                                             >
-                                                Cancelar
-                                            </button>
-                                        </form>
-                                    {% endif %}
+                                                Editar
+                                            </a>
+                                        {% endif %}
+
+                                        {% if appointment.status == "scheduled" %}
+                                            <form
+                                                method="post"
+                                                action="{% url 'appointments:appointment_confirm' appointment.pk %}"
+                                                class="d-inline"
+                                            >
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-outline-success btn-sm">
+                                                    Confirmar
+                                                </button>
+                                            </form>
+                                        {% endif %}
+
+                                        {% if appointment.status == "confirmed" %}
+                                            <form
+                                                method="post"
+                                                action="{% url 'appointments:appointment_complete' appointment.pk %}"
+                                                class="d-inline"
+                                            >
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-outline-dark btn-sm">
+                                                    Concluir
+                                                </button>
+                                            </form>
+                                        {% endif %}
+
+                                        {% if appointment.status != "cancelled" and appointment.status != "completed" %}
+                                            <form
+                                                method="post"
+                                                action="{% url 'appointments:appointment_cancel' appointment.pk %}"
+                                                class="d-inline"
+                                            >
+                                                {% csrf_token %}
+                                                <button
+                                                    type="submit"
+                                                    class="btn btn-outline-danger btn-sm"
+                                                    onclick="return confirm('Tem certeza que deseja cancelar esta marcação?');"
+                                                >
+                                                    Cancelar
+                                                </button>
+                                            </form>
+                                        {% endif %}
+
+                                    </div>
                                 </td>
                             </tr>
                         {% endfor %}

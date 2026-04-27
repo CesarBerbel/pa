@@ -28,7 +28,6 @@
                 alt="Priscila Arantes PA"
                 style="height: 42px; width: auto;"
             >
-            <span>Priscila Arantes PA</span>
         </a>
 
         {% if user.is_authenticated %}
@@ -54,8 +53,8 @@
             </div>
         {% else %}
             <div class="navbar-nav ms-4">
-                <a class="nav-link" href="{% url 'appointments:public_appointment_create' %}">
-                    Marcar
+                <a class="nav-link" href="{% url 'appointments:public_visual_schedule' %}">
+                    Agenda
                 </a>
                 <a class="nav-link" href="{% url 'appointments:public_appointment_lookup' %}">
                     Consultar

@@ -64,6 +64,7 @@ class PublicAppointmentForm(forms.Form):
 
     start_time = forms.CharField(
         label="Horário",
+        required=True,
         widget=forms.Select(
             choices=[
                 ("", "Selecione um horário"),
@@ -74,16 +75,18 @@ class PublicAppointmentForm(forms.Form):
     customer_name = forms.CharField(
         label="Nome completo",
         max_length=255,
+        required=True,
     )
 
     customer_phone = forms.CharField(
         label="Telefone",
         max_length=30,
+        required=True,
     )
 
     customer_email = forms.EmailField(
         label="Email",
-        required=False,
+        required=True,
     )
 
     notes = forms.CharField(
@@ -91,19 +94,6 @@ class PublicAppointmentForm(forms.Form):
         required=False,
         widget=forms.Textarea(attrs={"rows": 3}),
     )
-
-    def __init__(self, *args, **kwargs):
-        # Receive available slots from the view
-        available_slots = kwargs.pop("available_slots", [])
-        super().__init__(*args, **kwargs)
-
-        self.fields["start_time"].widget.choices = [
-            ("", "Selecione um horário"),
-        ] + [
-            (slot["value"], slot["label"])
-            for slot in available_slots
-        ]
-
 
 class ScheduleBlockForm(forms.ModelForm):
     # Form used to create and edit schedule blocks with weekday checkboxes
