@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% load crispy_forms_tags %}
+
+{% block title %}Consultar marcação | Priscila Arantes PA{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-7">
+
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-4 text-center">
+
+                <h1 class="h4 mb-2">
+                    Consultar marcação
+                </h1>
+
+                <p class="text-muted mb-4">
+                    Digite o código recebido no momento da marcação.
+                </p>
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    {{ form|crispy }}
+
+                    <button type="submit" class="btn btn-primary w-100 mt-3">
+                        Consultar
+                    </button>
+                </form>
+
+            </div>
+        </div>
+
+        {% if appointment %}
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+
+                    <div class="text-center mb-4">
+                        {% if appointment.status == "cancelled" %}
+                            <span class="badge bg-danger px-3 py-2">
+                                {{ appointment.get_status_display }}
+                            </span>
+                        {% elif appointment.status == "completed" %}
+                            <span class="badge bg-success px-3 py-2">
+                                {{ appointment.get_status_display }}
+                            </span>
+                        {% elif appointment.status == "confirmed" %}
+                            <span class="badge bg-primary px-3 py-2">
+                                {{ appointment.get_status_display }}
+                            </span>
+                        {% else %}
+                            <span class="badge bg-secondary px-3 py-2">
+                                {{ appointment.get_status_display }}
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="alert alert-dark text-center">
+                        <div class="small text-uppercase text-muted">
+                            Código da marcação
+                        </div>
+                        <div class="fs-4 fw-bold">
+                            {{ appointment.reference_code }}
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-12 col-md-6">
+                            <div class="border rounded p-3 h-100 bg-light">
+                                <div class="small text-muted">
+                                    Cliente
+                                </div>
+                                <div class="fw-semibold">
+                                    {{ appointment.customer.full_name }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <div class="border rounded p-3 h-100 bg-light">
+                                <div class="small text-muted">
+                                    Serviço
+                                </div>
+                                <div class="fw-semibold">
+                                    {{ appointment.service.name }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <div class="border rounded p-3 h-100 bg-light">
+                                <div class="small text-muted">
+                                    Data
+                                </div>
+                                <div class="fw-semibold">
+                                    {{ appointment.date|date:"d/m/Y" }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <div class="border rounded p-3 h-100 bg-light">
+                                <div class="small text-muted">
+                                    Horário
+                                </div>
+                                <div class="fw-semibold">
+                                    {{ appointment.start_time|time:"H:i" }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if appointment.notes %}
+                        <div class="border rounded p-3 mb-4">
+                            <div class="small text-muted">
+                                Observações
+                            </div>
+                            <div>
+                                {{ appointment.notes }}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div class="d-grid gap-2">
+                        {% if appointment.status != "cancelled" %}
+                            <a
+                                href="{% url 'appointments:public_cancel_by_code' appointment.reference_code %}"
+                                class="btn btn-outline-danger"
+                            >
+                                Cancelar esta marcação
+                            </a>
+                        {% endif %}
+
+                        <a
+                            href="{% url 'appointments:public_appointment_create' %}"
+                            class="btn btn-primary"
+                        >
+                            Fazer nova marcação
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

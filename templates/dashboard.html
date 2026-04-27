@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | Priscila Arantes PA{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+
+    <div class="col-12">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <h1 class="h4">
+                    Bem-vinda ao sistema Priscila Arantes PA
+                </h1>
+
+                <p class="mb-0">
+                    Gerencie serviços, clientes e marcações de horário.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-3">
+        <a href="{% url 'appointments:visual_schedule' %}" class="text-decoration-none">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h2 class="h5 text-dark">Agenda visual</h2>
+                    <p class="text-muted mb-0">
+                        Veja os horários livres e ocupados por slots.
+                    </p>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-12 col-md-3">
+        <a href="{% url 'appointments:service_list' %}" class="text-decoration-none">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h2 class="h5 text-dark">Serviços</h2>
+                    <p class="text-muted mb-0">
+                        Cadastre podologia, manicure, pedicure e unhas em gel.
+                    </p>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-12 col-md-3">
+        <a href="{% url 'appointments:customer_list' %}" class="text-decoration-none">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h2 class="h5 text-dark">Clientes</h2>
+                    <p class="text-muted mb-0">
+                        Cadastre clientes com telefone e email.
+                    </p>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-12 col-md-3">
+        <a href="{% url 'appointments:appointment_list' %}" class="text-decoration-none">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h2 class="h5 text-dark">Marcações</h2>
+                    <p class="text-muted mb-0">
+                        Crie e acompanhe horários marcados.
+                    </p>
+                </div>
+            </div>
+        </a>
+    </div>
+
+</div>
+{% endblock %}

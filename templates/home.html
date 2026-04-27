@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Priscila Arantes PA | Marcações Online{% endblock %}
+
+{% block content %}
+
+<section class="hero-section text-center mb-5">
+    <img
+        src="{% static 'img/logo_menu.png' %}"
+        alt="Priscila Arantes PA"
+        class="home-logo mb-4"
+    >
+    </br>
+    <span class="hero-badge">
+        Marcações online
+    </span>
+
+    <h1 class="hero-title mb-3">
+        Cuide de si com praticidade
+    </h1>
+
+    <p class="hero-subtitle mb-4">
+        Marque o seu horário online, consulte a sua marcação pelo código
+        e cancele quando necessário de forma simples e segura.
+    </p>
+
+    <div class="d-flex flex-column flex-md-row gap-3 justify-content-center">
+        <a href="{% url 'appointments:public_appointment_create' %}" class="btn btn-primary btn-lg px-5">
+            Marcar horário
+        </a>
+
+        <a href="{% url 'appointments:public_appointment_lookup' %}" class="btn btn-outline-primary btn-lg px-5">
+            Consultar marcação
+        </a>
+    </div>
+</section>
+
+<section class="row g-4 mb-5">
+    <div class="col-12 col-md-4">
+        <div class="card public-card h-100">
+            <div class="card-body p-4">
+                <div class="public-icon mb-3">
+                    1
+                </div>
+
+                <h2 class="h5 section-title">
+                    Marque online
+                </h2>
+
+                <p class="text-muted mb-4">
+                    Escolha o serviço, a data e um horário disponível.
+                </p>
+
+                <a href="{% url 'appointments:public_appointment_create' %}" class="btn btn-primary w-100">
+                    Marcar agora
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-4">
+        <div class="card public-card h-100">
+            <div class="card-body p-4">
+                <div class="public-icon mb-3">
+                    2
+                </div>
+
+                <h2 class="h5 section-title">
+                    Consulte pelo código
+                </h2>
+
+                <p class="text-muted mb-4">
+                    Use o código recebido para ver data, horário, serviço e status.
+                </p>
+
+                <a href="{% url 'appointments:public_appointment_lookup' %}" class="btn btn-outline-primary w-100">
+                    Consultar
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-4">
+        <div class="card public-card h-100">
+            <div class="card-body p-4">
+                <div class="public-icon mb-3">
+                    3
+                </div>
+
+                <h2 class="h5 section-title">
+                    Cancele se precisar
+                </h2>
+
+                <p class="text-muted mb-4">
+                    Informe o código da marcação e cancele sem precisar fazer login.
+                </p>
+
+                <a href="{% url 'appointments:public_cancel' %}" class="btn btn-outline-danger w-100">
+                    Cancelar marcação
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="soft-panel p-4 p-md-5 mb-5">
+    <div class="row align-items-center g-4">
+        <div class="col-12 col-lg-7">
+            <h2 class="section-title mb-3">
+                Como funciona
+            </h2>
+
+            <p class="text-muted mb-0">
+                Depois de fazer a marcação, o sistema gera um código único.
+                Guarde esse código para consultar ou cancelar a sua marcação quando necessário.
+            </p>
+        </div>
+
+        <div class="col-12 col-lg-5">
+            <div class="alert alert-primary mb-0">
+                <div class="small text-uppercase">
+                    Exemplo de código
+                </div>
+                <div class="fs-4 fw-bold">
+                    AGD-8F3K2L
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="text-center">
+    <h2 class="h4 section-title mb-3">
+        Pronta para marcar?
+    </h2>
+
+    <p class="text-muted mb-4">
+        Escolha o melhor horário disponível e confirme em poucos passos.
+    </p>
+
+    <a href="{% url 'appointments:public_appointment_create' %}" class="btn btn-primary btn-lg px-5">
+        Marcar horário
+    </a>
+</section>
+
+{% endblock %}

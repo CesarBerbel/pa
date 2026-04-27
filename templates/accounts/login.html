@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% load crispy_forms_tags %}
+
+{% block title %}Login | Priscila Arantes PA{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-6 col-lg-4">
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+
+                <h1 class="h4 text-center mb-4">
+                    Acesso ao Sistema
+                </h1>
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    {{ form|crispy }}
+
+                    <button type="submit" class="btn btn-primary w-100 mt-3">
+                        Entrar
+                    </button>
+                </form>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

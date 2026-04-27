@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+
+{% block title %}Diagnóstico de horários | Priscila Arantes PA{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h4 mb-1">
+            Diagnóstico de horários
+        </h1>
+        <p class="text-muted mb-0">
+            Use esta tela para entender por que um horário aparece ou não na marcação pública.
+        </p>
+    </div>
+
+    <a href="{% url 'appointments:visual_schedule' %}" class="btn btn-outline-secondary">
+        Voltar para agenda
+    </a>
+</div>
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-12 col-md-5">
+                <label for="service" class="form-label">
+                    Serviço
+                </label>
+                <select id="service" name="service" class="form-select">
+                    <option value="">
+                        Selecione um serviço
+                    </option>
+
+                    {% for service in services %}
+                        <option
+                            value="{{ service.pk }}"
+                            {% if selected_service and selected_service.pk == service.pk %}selected{% endif %}
+                        >
+                            {{ service.name }} - {{ service.duration_minutes }} min
+                            {% if not service.is_active %}
+                                (inativo)
+                            {% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-12 col-md-4">
+                <label for="date" class="form-label">
+                    Data
+                </label>
+                <input
+                    type="date"
+                    id="date"
+                    name="date"
+                    value="{{ selected_date|date:'Y-m-d' }}"
+                    class="form-control"
+                >
+            </div>
+
+            <div class="col-12 col-md-3">
+                <button type="submit" class="btn btn-primary w-100">
+                    Diagnosticar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if selected_service %}
+    <div class="row g-4 mb-4">
+
+        <div class="col-12 col-lg-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h2 class="h6 mb-3">
+                        Serviço analisado
+                    </h2>
+
+                    <p class="mb-1">
+                        <strong>Nome:</strong>
+                        {{ selected_service.name }}
+                    </p>
+
+                    <p class="mb-1">
+                        <strong>Duração:</strong>
+                        {{ selected_service.duration_minutes }} minutos
+                    </p>
+
+                    <p class="mb-0">
+                        <strong>Ativo:</strong>
+                        {% if selected_service.is_active %}
+                            <span class="badge bg-success">Sim</span>
+                        {% else %}
+                            <span class="badge bg-danger">Não</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h2 class="h6 mb-3">
+                        Horário de funcionamento
+                    </h2>
+
+                    {% if business_hour %}
+                        <p class="mb-1">
+                            <strong>Início:</strong>
+                            {{ business_hour.start_time|time:"H:i" }}
+                        </p>
+
+                        <p class="mb-1">
+                            <strong>Fim:</strong>
+                            {{ business_hour.end_time|time:"H:i" }}
+                        </p>
+
+                        <p class="mb-0">
+                            <span class="badge bg-success">
+                                Funcionamento ativo
+                            </span>
+                        </p>
+                    {% else %}
+                        <div class="alert alert-danger mb-0">
+                            Não existe horário de funcionamento ativo para esta data.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h2 class="h6 mb-3">
+                        Resumo
+                    </h2>
+
+                    <p class="mb-1">
+                        <strong>Data:</strong>
+                        {{ selected_date|date:"d/m/Y" }}
+                    </p>
+
+                    <p class="mb-1">
+                        <strong>Marcações no dia:</strong>
+                        {{ appointments|length }}
+                    </p>
+
+                    <p class="mb-0">
+                        <strong>Bloqueios ativos:</strong>
+                        {{ blocks|length }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row g-4 mb-4">
+
+        <div class="col-12 col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h2 class="h6 mb-3">
+                        Bloqueios ativos nesta data
+                    </h2>
+
+                    {% if blocks %}
+                        <div class="list-group list-group-flush">
+                            {% for block in blocks %}
+                                <div class="list-group-item px-0">
+                                    <div class="fw-semibold">
+                                        {{ block.title }}
+                                    </div>
+
+                                    <div class="text-muted small">
+                                        {{ block.get_block_type_display }}
+                                        -
+                                        {% if block.is_full_day %}
+                                            Dia inteiro
+                                        {% else %}
+                                            {{ block.start_time|time:"H:i" }}
+                                            até
+                                            {{ block.end_time|time:"H:i" }}
+                                        {% endif %}
+                                    </div>
+
+                                    {% if block.is_recurring %}
+                                        <span class="badge bg-warning text-dark mt-1">
+                                            Recorrente
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="mb-0 text-muted">
+                            Nenhum bloqueio ativo para esta data.
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h2 class="h6 mb-3">
+                        Marcações existentes nesta data
+                    </h2>
+
+                    {% if appointments %}
+                        <div class="list-group list-group-flush">
+                            {% for appointment in appointments %}
+                                <div class="list-group-item px-0">
+                                    <div class="fw-semibold">
+                                        {{ appointment.reference_code }}
+                                        -
+                                        {{ appointment.customer.full_name }}
+                                    </div>
+
+                                    <div class="text-muted small">
+                                        {{ appointment.start_time|time:"H:i" }}
+                                        -
+                                        {{ appointment.service.name }}
+                                        -
+                                        {{ appointment.get_status_display }}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="mb-0 text-muted">
+                            Nenhuma marcação nesta data.
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <h2 class="h6 mb-3">
+                Resultado por horário
+            </h2>
+
+            {% if diagnostics %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Início</th>
+                                <th>Fim estimado</th>
+                                <th>Status</th>
+                                <th>Motivo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in diagnostics %}
+                                <tr>
+                                    <td>
+                                        {{ item.start_time|time:"H:i" }}
+                                    </td>
+
+                                    <td>
+                                        {{ item.end_time|time:"H:i" }}
+                                    </td>
+
+                                    <td>
+                                        {% if item.status == "available" %}
+                                            <span class="badge bg-success">
+                                                Livre
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-danger">
+                                                Bloqueado
+                                            </span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {{ item.reason }}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-warning mb-0">
+                    Nenhum diagnóstico gerado. Verifique se há serviço selecionado e horário de funcionamento para a data.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        Selecione um serviço e uma data para iniciar o diagnóstico.
+    </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Bloqueios de agenda | Priscila Arantes PA{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h4 mb-0">Bloqueios de agenda</h1>
+
+    <a href="{% url 'appointments:schedule_block_create' %}" class="btn btn-primary">
+        Novo bloqueio
+    </a>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        {% if blocks %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Título</th>
+                            <th>Tipo</th>
+                            <th>Data</th>
+                            <th>Horário</th>
+                            <th>Ativo</th>
+                            <th class="text-end">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for block in blocks %}
+                            <tr>
+                                <td>{{ block.title }}</td>
+                                <td>{{ block.get_block_type_display }}</td>
+                                <td>{{ block.date|date:"d/m/Y" }}</td>
+                                <td>
+                                    {% if block.is_full_day %}
+                                        Dia inteiro
+                                    {% else %}
+                                        {{ block.start_time|time:"H:i" }}
+                                        -
+                                        {{ block.end_time|time:"H:i" }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if block.is_active %}
+                                        Sim
+                                    {% else %}
+                                        Não
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <a
+                                        href="{% url 'appointments:schedule_block_update' block.pk %}"
+                                        class="btn btn-outline-primary btn-sm"
+                                    >
+                                        Editar
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="mb-0">
+                Nenhum bloqueio cadastrado.
+            </p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% load crispy_forms_tags %}
+
+{% block title %}
+    {% if object %}
+        Editar bloqueio | Priscila Arantes PA
+    {% else %}
+        Novo bloqueio | Priscila Arantes PA
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-7">
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-4">
+                    {% if object %}
+                        Editar bloqueio
+                    {% else %}
+                        Novo bloqueio
+                    {% endif %}
+                </h1>
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    {{ form|crispy }}
+
+                    <div class="alert alert-info mt-3">
+                        <p class="mb-1">
+                            Se marcar <strong>dia inteiro</strong>, o sistema irá ignorar os campos de horário.
+                        </p>
+                        <p class="mb-0">
+                            Para bloqueios recorrentes, marque os dias da semana desejados.
+                        </p>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-3">
+                        <button type="submit" class="btn btn-primary">
+                            Salvar
+                        </button>
+
+                        <a href="{% url 'appointments:schedule_block_list' %}" class="btn btn-outline-secondary">
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // Toggle schedule block fields visibility based on checkbox values
+    document.addEventListener("DOMContentLoaded", function () {
+        const isFullDayInput = document.getElementById("id_is_full_day");
+        const isRecurringInput = document.getElementById("id_is_recurring");
+
+        const startTimeWrapper = document.getElementById("div_id_start_time");
+        const endTimeWrapper = document.getElementById("div_id_end_time");
+
+        const recurringWeekdaysWrapper = document.getElementById("div_id_recurring_weekdays_checkboxes");
+        const recurrenceEndDateWrapper = document.getElementById("div_id_recurrence_end_date");
+
+        function toggleFullDayFields() {
+            if (!isFullDayInput || !startTimeWrapper || !endTimeWrapper) {
+                return;
+            }
+
+            if (isFullDayInput.checked) {
+                startTimeWrapper.classList.add("d-none");
+                endTimeWrapper.classList.add("d-none");
+            } else {
+                startTimeWrapper.classList.remove("d-none");
+                endTimeWrapper.classList.remove("d-none");
+            }
+        }
+
+        function toggleRecurringFields() {
+            if (!isRecurringInput || !recurringWeekdaysWrapper || !recurrenceEndDateWrapper) {
+                return;
+            }
+
+            if (isRecurringInput.checked) {
+                recurringWeekdaysWrapper.classList.remove("d-none");
+                recurrenceEndDateWrapper.classList.remove("d-none");
+            } else {
+                recurringWeekdaysWrapper.classList.add("d-none");
+                recurrenceEndDateWrapper.classList.add("d-none");
+            }
+        }
+
+        toggleFullDayFields();
+        toggleRecurringFields();
+
+        if (isFullDayInput) {
+            isFullDayInput.addEventListener("change", toggleFullDayFields);
+        }
+
+        if (isRecurringInput) {
+            isRecurringInput.addEventListener("change", toggleRecurringFields);
+        }
+    });
+</script>
+{% endblock %}

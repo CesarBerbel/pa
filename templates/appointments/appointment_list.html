@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Marcações | Priscila Arantes PA{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h4 mb-0">Marcações</h1>
+
+    <a href="{% url 'appointments:appointment_create' %}" class="btn btn-primary">
+        Nova marcação
+    </a>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        {% if appointments %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Data</th>
+                            <th>Hora</th>
+                            <th>Cliente</th>
+                            <th>Serviço</th>
+                            <th>Status</th>
+                            <th class="text-end">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appointment in appointments %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-dark">
+                                        {{ appointment.reference_code }}
+                                    </span>
+                                </td>
+
+                                <td>{{ appointment.date|date:"d/m/Y" }}</td>
+
+                                <td>{{ appointment.start_time|time:"H:i" }}</td>
+
+                                <td>{{ appointment.customer.full_name }}</td>
+
+                                <td>{{ appointment.service.name }}</td>
+
+                                <td>
+                                    {% if appointment.status == "cancelled" %}
+                                        <span class="badge bg-danger">
+                                            {{ appointment.get_status_display }}
+                                        </span>
+                                    {% elif appointment.status == "completed" %}
+                                        <span class="badge bg-success">
+                                            {{ appointment.get_status_display }}
+                                        </span>
+                                    {% elif appointment.status == "confirmed" %}
+                                        <span class="badge bg-primary">
+                                            {{ appointment.get_status_display }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">
+                                            {{ appointment.get_status_display }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <td class="text-end">
+                                    <a
+                                        href="{% url 'appointments:appointment_update' appointment.pk %}"
+                                        class="btn btn-outline-primary btn-sm"
+                                    >
+                                        Editar
+                                    </a>
+
+                                    {% if appointment.status != "cancelled" %}
+                                        <form
+                                            method="post"
+                                            action="{% url 'appointments:appointment_cancel' appointment.pk %}"
+                                            class="d-inline"
+                                        >
+                                            {% csrf_token %}
+                                            <button
+                                                type="submit"
+                                                class="btn btn-outline-danger btn-sm"
+                                                onclick="return confirm('Tem certeza que deseja cancelar esta marcação?');"
+                                            >
+                                                Cancelar
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="mb-0">
+                Nenhuma marcação cadastrada.
+            </p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

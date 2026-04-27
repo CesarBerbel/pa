@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}Agenda por horários | Priscila Arantes PA{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h4 mb-1">Agenda por horários</h1>
+        <p class="text-muted mb-0">
+            {{ selected_date|date:"d/m/Y" }}
+        </p>
+    </div>
+
+    <div class="d-flex gap-2">
+        <a href="{% url 'appointments:schedule_block_create' %}" class="btn btn-outline-warning">
+            Bloquear horário
+        </a>
+
+        <a href="{% url 'appointments:appointment_create' %}" class="btn btn-primary">
+            Nova marcação
+        </a>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-12 col-md-4">
+                <label for="date" class="form-label">
+                    Selecionar data
+                </label>
+                <input
+                    type="date"
+                    id="date"
+                    name="date"
+                    value="{{ selected_date|date:'Y-m-d' }}"
+                    class="form-control"
+                >
+            </div>
+
+            <div class="col-12 col-md-auto">
+                <button type="submit" class="btn btn-outline-primary">
+                    Ver agenda
+                </button>
+            </div>
+
+            <div class="col-12 col-md-auto">
+                <a
+                    href="{% url 'appointments:visual_schedule' %}?date={{ previous_date|date:'Y-m-d' }}"
+                    class="btn btn-outline-secondary"
+                >
+                    Dia anterior
+                </a>
+            </div>
+
+            <div class="col-12 col-md-auto">
+                <a
+                    href="{% url 'appointments:visual_schedule' %}?date={{ next_date|date:'Y-m-d' }}"
+                    class="btn btn-outline-secondary"
+                >
+                    Próximo dia
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if business_hour %}
+    <div class="alert alert-info">
+        Horário de funcionamento:
+        <strong>{{ business_hour.start_time|time:"H:i" }}</strong>
+        até
+        <strong>{{ business_hour.end_time|time:"H:i" }}</strong>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+
+            {% for slot in slots %}
+
+                {% if slot.is_block_start %}
+                    <div class="border-bottom bg-warning-subtle">
+                        <div class="row g-0">
+                            <div class="col-3 col-md-2 p-3 border-end">
+                                <span class="fw-semibold">
+                                    {{ slot.time|time:"H:i" }}
+                                </span>
+                            </div>
+
+                            <div class="col-9 col-md-10 p-3">
+                                <div
+                                    class="rounded border-start border-4 border-warning bg-white p-3"
+                                    style="min-height: {{ slot.block_height }}px;"
+                                >
+                                    <div class="d-flex justify-content-between gap-3">
+                                        <div>
+                                            <h2 class="h6 mb-1">
+                                                {{ slot.block.title }}
+                                            </h2>
+
+                                            <p class="mb-1 text-muted">
+                                                Tipo:
+                                                {{ slot.block.get_block_type_display }}
+                                            </p>
+
+                                            {% if slot.block.is_full_day %}
+                                                <p class="mb-1 text-muted">
+                                                    Dia inteiro
+                                                </p>
+                                            {% else %}
+                                                <p class="mb-1 text-muted">
+                                                    {{ slot.block.start_time|time:"H:i" }}
+                                                    -
+                                                    {{ slot.block.end_time|time:"H:i" }}
+                                                </p>
+                                            {% endif %}
+
+                                            {% if slot.block.notes %}
+                                                <p class="mb-0 small">
+                                                    {{ slot.block.notes }}
+                                                </p>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="text-end">
+                                            <span class="badge bg-warning text-dark">
+                                                Bloqueado
+                                            </span>
+
+                                            <div class="mt-2">
+                                                <a
+                                                    href="{% url 'appointments:schedule_block_update' slot.block.pk %}"
+                                                    class="btn btn-outline-warning btn-sm"
+                                                >
+                                                    Editar
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                {% elif slot.is_inside_block %}
+                    <div class="border-bottom bg-warning-subtle">
+                        <div class="row g-0">
+                            <div class="col-3 col-md-2 p-3 border-end text-muted">
+                                {{ slot.time|time:"H:i" }}
+                            </div>
+
+                            <div class="col-9 col-md-10 p-3 text-muted small">
+                                Horário bloqueado
+                            </div>
+                        </div>
+                    </div>
+
+                {% elif slot.is_appointment_start %}
+                    <div class="border-bottom bg-white">
+                        <div class="row g-0">
+                            <div class="col-3 col-md-2 p-3 border-end">
+                                <span class="fw-semibold">
+                                    {{ slot.time|time:"H:i" }}
+                                </span>
+                            </div>
+
+                            <div class="col-9 col-md-10 p-3">
+                                <div
+                                    class="rounded border-start border-4 border-primary bg-light p-3"
+                                    style="min-height: {{ slot.block_height }}px;"
+                                >
+                                    <div class="d-flex justify-content-between gap-3">
+                                        <div>
+                                            <h2 class="h6 mb-1">
+                                                {{ slot.appointment.service.name }}
+                                            </h2>
+
+                                            <p class="mb-1 text-muted">
+                                                Cliente:
+                                                {{ slot.appointment.customer.full_name }}
+                                            </p>
+
+                                            <p class="mb-1 text-muted">
+                                                Duração:
+                                                {{ slot.appointment.service.duration_minutes }}
+                                                minutos
+                                            </p>
+
+                                            {% if slot.appointment.notes %}
+                                                <p class="mb-0 small">
+                                                    {{ slot.appointment.notes }}
+                                                </p>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="text-end">
+                                            <span class="badge bg-secondary">
+                                                {{ slot.appointment.get_status_display }}
+                                            </span>
+
+                                            <div class="mt-2">
+                                                <a
+                                                    href="{% url 'appointments:appointment_update' slot.appointment.pk %}"
+                                                    class="btn btn-outline-primary btn-sm"
+                                                >
+                                                    Editar
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                {% elif slot.is_inside_appointment %}
+                    <div class="border-bottom bg-light">
+                        <div class="row g-0">
+                            <div class="col-3 col-md-2 p-3 border-end text-muted">
+                                {{ slot.time|time:"H:i" }}
+                            </div>
+
+                            <div class="col-9 col-md-10 p-3 text-muted small">
+                                Ocupado pelo atendimento acima
+                            </div>
+                        </div>
+                    </div>
+
+                {% else %}
+                    <div class="border-bottom bg-white">
+                        <div class="row g-0 align-items-center">
+                            <div class="col-3 col-md-2 p-3 border-end">
+                                <span class="fw-semibold">
+                                    {{ slot.time|time:"H:i" }}
+                                </span>
+                            </div>
+
+                            <div class="col-6 col-md-7 p-3">
+                                <span class="text-success">
+                                    Horário livre
+                                </span>
+                            </div>
+
+                            <div class="col-3 col-md-3 p-3 text-end">
+                                <a
+                                    href="{% url 'appointments:appointment_create' %}?date={{ selected_date|date:'Y-m-d' }}&start_time={{ slot.time_value }}"
+                                    class="btn btn-outline-success btn-sm"
+                                >
+                                    Marcar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+            {% empty %}
+                <div class="p-4">
+                    <p class="mb-0">
+                        Nenhum horário disponível para esta data.
+                    </p>
+                </div>
+            {% endfor %}
+
+        </div>
+    </div>
+{% else %}
+    <div class="alert alert-warning">
+        Não existe horário de funcionamento ativo para esta data.
+        Cadastre o horário no admin antes de usar a agenda visual.
+    </div>
+{% endif %}
+{% endblock %}

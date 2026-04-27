@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Agenda | Priscila Arantes PA{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h4 mb-1">Agenda diária</h1>
+        <p class="text-muted mb-0">
+            {{ selected_date|date:"d/m/Y" }}
+        </p>
+    </div>
+
+    <a href="{% url 'appointments:appointment_create' %}" class="btn btn-primary">
+        Nova marcação
+    </a>
+</div>
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-12 col-md-4">
+                <label for="date" class="form-label">
+                    Selecionar data
+                </label>
+                <input
+                    type="date"
+                    id="date"
+                    name="date"
+                    value="{{ selected_date|date:'Y-m-d' }}"
+                    class="form-control"
+                >
+            </div>
+
+            <div class="col-12 col-md-auto">
+                <button type="submit" class="btn btn-outline-primary">
+                    Ver agenda
+                </button>
+            </div>
+
+            <div class="col-12 col-md-auto">
+                <a
+                    href="{% url 'appointments:daily_agenda' %}?date={{ previous_date|date:'Y-m-d' }}"
+                    class="btn btn-outline-secondary"
+                >
+                    Dia anterior
+                </a>
+            </div>
+
+            <div class="col-12 col-md-auto">
+                <a
+                    href="{% url 'appointments:daily_agenda' %}?date={{ next_date|date:'Y-m-d' }}"
+                    class="btn btn-outline-secondary"
+                >
+                    Próximo dia
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        {% if appointments %}
+            <div class="list-group list-group-flush">
+                {% for appointment in appointments %}
+                    <div class="list-group-item px-0">
+                        <div class="d-flex justify-content-between align-items-start gap-3">
+                            <div>
+                                <div class="fw-semibold">
+                                    {{ appointment.start_time|time:"H:i" }}
+                                    -
+                                    {{ appointment.service.name }}
+                                </div>
+
+                                <div class="text-muted">
+                                    Cliente: {{ appointment.customer.full_name }}
+                                </div>
+
+                                {% if appointment.notes %}
+                                    <div class="small mt-2">
+                                        {{ appointment.notes }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="text-end">
+                                {% if appointment.status == "cancelled" %}
+                                    <span class="badge bg-danger">
+                                        {{ appointment.get_status_display }}
+                                    </span>
+                                {% elif appointment.status == "completed" %}
+                                    <span class="badge bg-success">
+                                        {{ appointment.get_status_display }}
+                                    </span>
+                                {% elif appointment.status == "confirmed" %}
+                                    <span class="badge bg-primary">
+                                        {{ appointment.get_status_display }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">
+                                        {{ appointment.get_status_display }}
+                                    </span>
+                                {% endif %}
+
+                                <div class="mt-2">
+                                    <a
+                                        href="{% url 'appointments:appointment_update' appointment.pk %}"
+                                        class="btn btn-outline-primary btn-sm"
+                                    >
+                                        Editar
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="mb-0">
+                Nenhuma marcação para esta data.
+            </p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

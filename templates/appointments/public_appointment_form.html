@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% load crispy_forms_tags %}
+
+{% block title %}Marcar horário | Priscila Arantes PA{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-7">
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-2 text-center">
+                    Marcar horário
+                </h1>
+
+                <p class="text-muted text-center mb-4">
+                    Escolha o serviço, a data e o horário disponível.
+                </p>
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    {{ form.non_field_errors }}
+
+                    {{ form.service|as_crispy_field }}
+                    {{ form.date|as_crispy_field }}
+
+                    <div id="loading-slots" class="alert alert-info d-none">
+                        Carregando horários disponíveis...
+                    </div>
+
+                    <div id="no-slots-message" class="alert alert-warning d-none">
+                        Nenhum horário disponível para o serviço e data selecionados.
+                    </div>
+
+                    {{ form.start_time|as_crispy_field }}
+                    {{ form.customer_name|as_crispy_field }}
+                    {{ form.customer_phone|as_crispy_field }}
+                    {{ form.customer_email|as_crispy_field }}
+                    {{ form.notes|as_crispy_field }}
+
+                    <button type="submit" class="btn btn-primary w-100 mt-3">
+                        Confirmar marcação
+                    </button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // Load available appointment slots automatically using AJAX
+    document.addEventListener("DOMContentLoaded", function () {
+        const serviceInput = document.getElementById("id_service");
+        const dateInput = document.getElementById("id_date");
+        const startTimeInput = document.getElementById("id_start_time");
+
+        const loadingSlots = document.getElementById("loading-slots");
+        const noSlotsMessage = document.getElementById("no-slots-message");
+
+        function clearSlots() {
+            startTimeInput.innerHTML = "";
+
+            const emptyOption = document.createElement("option");
+            emptyOption.value = "";
+            emptyOption.textContent = "Selecione um horário";
+            startTimeInput.appendChild(emptyOption);
+        }
+
+        function selectFirstSlot() {
+            if (startTimeInput.options.length > 1) {
+                startTimeInput.selectedIndex = 1;
+            }
+        }
+
+        function loadAvailableSlots() {
+            const serviceId = serviceInput.value;
+            const selectedDate = dateInput.value;
+
+            clearSlots();
+            noSlotsMessage.classList.add("d-none");
+
+            if (!serviceId || !selectedDate) {
+                return;
+            }
+
+            loadingSlots.classList.remove("d-none");
+
+            const url = "{% url 'appointments:public_available_slots' %}" +
+                "?service=" + encodeURIComponent(serviceId) +
+                "&date=" + encodeURIComponent(selectedDate);
+
+            fetch(url)
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (data) {
+                    loadingSlots.classList.add("d-none");
+
+                    if (!data.slots || data.slots.length === 0) {
+                        noSlotsMessage.classList.remove("d-none");
+                        return;
+                    }
+
+                    data.slots.forEach(function (slot) {
+                        const option = document.createElement("option");
+                        option.value = slot.value;
+                        option.textContent = slot.label;
+                        startTimeInput.appendChild(option);
+                    });
+
+                    selectFirstSlot();
+                })
+                .catch(function () {
+                    loadingSlots.classList.add("d-none");
+                    noSlotsMessage.classList.remove("d-none");
+                });
+        }
+
+        clearSlots();
+
+        serviceInput.addEventListener("change", loadAvailableSlots);
+        dateInput.addEventListener("change", loadAvailableSlots);
+
+        // If service and date already exist, load slots on page load
+        if (serviceInput.value && dateInput.value) {
+            loadAvailableSlots();
+        }
+    });
+</script>
+{% endblock %}
