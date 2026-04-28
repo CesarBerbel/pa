@@ -1,13 +1,17 @@
 from pathlib import Path
+from decouple import config
 
+# Base directory
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = "django-insecure-change-this-key-in-production"
+# Security settings
+SECRET_KEY = config("SECRET_KEY")
 
-DEBUG = True
+DEBUG = config("DEBUG", default=False, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="").split(",")
 
+# Applications
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -23,6 +27,7 @@ INSTALLED_APPS = [
     "appointments",
 ]
 
+# Middleware
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -35,6 +40,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "config.urls"
 
+# Templates
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -52,6 +58,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
+# Database (SQLite)
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
@@ -59,8 +66,10 @@ DATABASES = {
     }
 }
 
+# Custom user model
 AUTH_USER_MODEL = "accounts.User"
 
+# Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
@@ -76,14 +85,14 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Localization
 LANGUAGE_CODE = "pt-pt"
-
 TIME_ZONE = "Europe/Lisbon"
 
 USE_I18N = True
-
 USE_TZ = True
 
+# Static files
 STATIC_URL = "static/"
 
 STATICFILES_DIRS = [
@@ -92,14 +101,22 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# Crispy forms
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
+# Auth redirects
 LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "dashboard"
 LOGOUT_REDIRECT_URL = "home"
 
-# Email configuration for local development
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+# Email configuration
+EMAIL_BACKEND = config(
+    "EMAIL_BACKEND",
+    default="django.core.mail.backends.console.EmailBackend"
+)
 
-DEFAULT_FROM_EMAIL = "Priscila Arantes PA <no-reply@priscilaarantes.local>"
+DEFAULT_FROM_EMAIL = config(
+    "DEFAULT_FROM_EMAIL",
+    default="no-reply@example.com"
+)
