@@ -72,9 +72,6 @@ urlpatterns = [
         PublicCancelAppointmentByCodeView.as_view(),
         name="public_cancel_by_code",
     ),
-
-    path("cancelar/sucesso/", PublicCancelSuccessView.as_view(), name="public_cancel_success"),
-
     path("marcacoes/", AppointmentListView.as_view(), name="appointment_list"),
     path("marcacoes/nova/", AppointmentCreateView.as_view(), name="appointment_create"),
     path("marcacoes/<int:pk>/editar/", AppointmentUpdateView.as_view(), name="appointment_update"),

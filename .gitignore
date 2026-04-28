@@ -1,4 +1,6 @@
-# Byte-compiled / optimized / DLL files
+# ----------------------
+# Python
+# ----------------------
 __pycache__/
 *.py[cod]
 *$py.class
@@ -6,73 +8,97 @@ __pycache__/
 # C extensions
 *.so
 
-# Distribution / packaging
-build/
-dist/
-*.egg-info/
-.eggs/
-
-# Virtual environments
+# ----------------------
+# Virtualenv
+# ----------------------
 .env
-.venv
-env/
+.env.*
+.venv/
 venv/
+env/
 ENV/
 
-# Django stuff
+# ----------------------
+# Django
+# ----------------------
 *.log
 local_settings.py
-db.sqlite3
-db.sqlite3-journal
 
-# Static and media (gerados em produção)
+# SQLite (mais abrangente)
+*.sqlite3
+*.sqlite3-journal
+db.sqlite3
+db.sqlite3-*
+
+# ----------------------
+# Cache / Temp
+# ----------------------
+.pytest_cache/
+.mypy_cache/
+.cache/
+*.cache
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# Python newer caches
+__pypackages__/
+*.pyo
+
+# Coverage
+.coverage
+.coverage.*
+htmlcov/
+
+# ----------------------
+# Static / Media
+# ----------------------
 staticfiles/
 media/
 
-# Environment variables
-.env
-.env.*
-
+# ----------------------
 # Secrets
+# ----------------------
 *.pem
 *.key
+*.crt
 
-# Migrations (opcional — cuidado em projetos reais)
+# ----------------------
+# Migrations (cuidado!)
+# ----------------------
 **/migrations/*
 !**/migrations/__init__.py
 
-# PyCharm / VSCode / IDEs
+# ----------------------
+# IDEs
+# ----------------------
 .idea/
 .vscode/
 
-# Mac / Linux
+# ----------------------
+# OS files
+# ----------------------
 .DS_Store
 Thumbs.db
 
-# Test / coverage
-.coverage
-htmlcov/
-.pytest_cache/
-
-# mypy / type checking
-.mypy_cache/
-
-# Celery
-celerybeat-schedule
-
+# ----------------------
 # Logs
+# ----------------------
 logs/
 *.log
 
-# Docker (se usar)
+# ----------------------
+# Docker / runtime
+# ----------------------
 *.pid
 *.seed
 *.pid.lock
 
-# Node (caso use frontend junto)
+# ----------------------
+# Node (se existir)
+# ----------------------
 node_modules/
-
-# Static build tools
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
