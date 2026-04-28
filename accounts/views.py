@@ -15,4 +15,4 @@ class UserLoginView(LoginView):
 class UserLogoutView(LogoutView):
     # Logout view redirects the user to the login page
 
-    next_page = reverse_lazy("accounts:login")
+    next_page = reverse_lazy("home")

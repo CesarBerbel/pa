@@ -97,7 +97,7 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "dashboard"
-LOGOUT_REDIRECT_URL = "accounts:login"
+LOGOUT_REDIRECT_URL = "home"
 
 # Email configuration for local development
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"

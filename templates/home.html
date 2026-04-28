@@ -22,7 +22,7 @@
             </p>
 
             <div class="d-flex flex-column flex-md-row gap-3">
-                <a href="#marcacao" class="btn btn-primary btn-lg px-5">
+                <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary btn-lg px-5">
                     Agendar horário
                 </a>
 
@@ -99,7 +99,7 @@
         <div class="col-12 col-lg-5">
             <div class="about-card">
                 <span class="signature-font">Priscila Arantes</span>
-                <h2>PA Podologia</h2>
+                <h2>Priscila Arantes Podologia</h2>
                 <p>
                     Cuidado profissional, atenção individualizada e compromisso
                     com o bem-estar de cada cliente.
@@ -203,33 +203,6 @@
                 <strong>Cliente</strong>
             </div>
         </div>
-    </div>
-</section>
-
-<section id="contato" class="luxury-final-cta text-center">
-    <span class="luxury-eyebrow">Contato</span>
-
-    <h2 class="section-title mt-2 mb-3">
-        Pronta para marcar o seu horário?
-    </h2>
-
-    <p class="text-muted mb-4">
-        Faça a sua marcação online ou entre em contacto pelo WhatsApp.
-    </p>
-
-    <div class="d-flex flex-column flex-md-row gap-3 justify-content-center">
-        <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary btn-lg px-5">
-            Ver agenda disponível
-        </a>
-
-        <a
-            href="https://wa.me/351912345678?text=Ol%C3%A1%2C%20gostaria%20de%20marcar%20um%20hor%C3%A1rio."
-            class="btn btn-outline-secondary btn-lg px-5"
-            target="_blank"
-            rel="noopener noreferrer"
-        >
-            Falar no WhatsApp
-        </a>
     </div>
 </section>
 

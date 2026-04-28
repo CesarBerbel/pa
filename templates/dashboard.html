@@ -3,73 +3,123 @@
 {% block title %}Dashboard | Priscila Arantes PA{% endblock %}
 
 {% block content %}
-<div class="row g-4">
 
-    <div class="col-12">
-        <div class="card shadow-sm border-0">
-            <div class="card-body p-4">
-                <h1 class="h4">
-                    Bem-vinda ao sistema Priscila Arantes PA
-                </h1>
+<section class="internal-dashboard">
 
-                <p class="mb-0">
-                    Gerencie serviços, clientes e marcações de horário.
-                </p>
+    <div class="dashboard-hero mb-4">
+        <div>
+            <span class="luxury-eyebrow">Sistema interno</span>
+            <h1>Bem-vinda ao painel</h1>
+            <p>Gerencie agenda, clientes, serviços e marcações com rapidez.</p>
+        </div>
+
+        <div class="dashboard-hero-actions">
+            <a href="{% url 'appointments:visual_schedule' %}" class="btn btn-primary">
+                Abrir agenda
+            </a>
+
+            <a href="{% url 'appointments:appointment_create' %}" class="btn btn-outline-secondary">
+                Nova marcação
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-md-3">
+            <a href="{% url 'appointments:visual_schedule' %}" class="dashboard-action-card">
+                <span>Agenda</span>
+                <strong>Agenda visual</strong>
+                <small>Ver horários livres, ocupados e bloqueios.</small>
+            </a>
+        </div>
+
+        <div class="col-12 col-md-3">
+            <a href="{% url 'appointments:appointment_list' %}" class="dashboard-action-card">
+                <span>Marcações</span>
+                <strong>Gerir marcações</strong>
+                <small>Confirmar, concluir, editar ou cancelar.</small>
+            </a>
+        </div>
+
+        <div class="col-12 col-md-3">
+            <a href="{% url 'appointments:customer_list' %}" class="dashboard-action-card">
+                <span>Clientes</span>
+                <strong>Base de clientes</strong>
+                <small>Consultar contactos e histórico.</small>
+            </a>
+        </div>
+
+        <div class="col-12 col-md-3">
+            <a href="{% url 'appointments:service_list' %}" class="dashboard-action-card">
+                <span>Serviços</span>
+                <strong>Catálogo</strong>
+                <small>Gerir duração, preço e estado ativo.</small>
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12 col-lg-7">
+            <div class="dashboard-panel h-100">
+                <div class="dashboard-panel-header">
+                    <div>
+                        <span class="luxury-eyebrow">Operação</span>
+                        <h2>Fluxo recomendado</h2>
+                    </div>
+                </div>
+
+                <div class="dashboard-flow">
+                    <div>
+                        <strong>1</strong>
+                        <span>Abra a agenda visual</span>
+                        <p>Veja rapidamente horários livres, marcações e bloqueios.</p>
+                    </div>
+
+                    <div>
+                        <strong>2</strong>
+                        <span>Confirme ou conclua atendimentos</span>
+                        <p>Use os botões rápidos diretamente na agenda interna.</p>
+                    </div>
+
+                    <div>
+                        <strong>3</strong>
+                        <span>Atualize clientes e serviços</span>
+                        <p>Mantenha dados organizados para reduzir erros de marcação.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-5">
+            <div class="dashboard-panel h-100">
+                <div class="dashboard-panel-header">
+                    <div>
+                        <span class="luxury-eyebrow">Atalhos</span>
+                        <h2>Ações rápidas</h2>
+                    </div>
+                </div>
+
+                <div class="dashboard-quick-links">
+                    <a href="{% url 'appointments:schedule_block_create' %}">
+                        Bloquear horário
+                    </a>
+
+                    <a href="{% url 'appointments:schedule_block_list' %}">
+                        Ver bloqueios
+                    </a>
+
+                    <a href="{% url 'appointments:schedule_diagnostics' %}">
+                        Diagnóstico de horários
+                    </a>
+
+                    <a href="{% url 'appointments:appointment_create' %}">
+                        Criar marcação manual
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="col-12 col-md-3">
-        <a href="{% url 'appointments:visual_schedule' %}" class="text-decoration-none">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body">
-                    <h2 class="h5 text-dark">Agenda visual</h2>
-                    <p class="text-muted mb-0">
-                        Veja os horários livres e ocupados por slots.
-                    </p>
-                </div>
-            </div>
-        </a>
-    </div>
+</section>
 
-    <div class="col-12 col-md-3">
-        <a href="{% url 'appointments:service_list' %}" class="text-decoration-none">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body">
-                    <h2 class="h5 text-dark">Serviços</h2>
-                    <p class="text-muted mb-0">
-                        Cadastre podologia, manicure, pedicure e unhas em gel.
-                    </p>
-                </div>
-            </div>
-        </a>
-    </div>
-
-    <div class="col-12 col-md-3">
-        <a href="{% url 'appointments:customer_list' %}" class="text-decoration-none">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body">
-                    <h2 class="h5 text-dark">Clientes</h2>
-                    <p class="text-muted mb-0">
-                        Cadastre clientes com telefone e email.
-                    </p>
-                </div>
-            </div>
-        </a>
-    </div>
-
-    <div class="col-12 col-md-3">
-        <a href="{% url 'appointments:appointment_list' %}" class="text-decoration-none">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body">
-                    <h2 class="h5 text-dark">Marcações</h2>
-                    <p class="text-muted mb-0">
-                        Crie e acompanhe horários marcados.
-                    </p>
-                </div>
-            </div>
-        </a>
-    </div>
-
-</div>
 {% endblock %}

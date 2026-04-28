@@ -21,16 +21,12 @@
     <!-- Custom public styles -->
     <link rel="stylesheet" href="{% static 'css/public.css' %}">
 </head>
-<body class="bg-light">
+<body class="app-layout {% if user.is_authenticated %}internal-layout{% else %}public-layout{% endif %}">
 
 <nav class="navbar navbar-expand-lg navbar-light public-navbar">
     <div class="container">
         <a class="navbar-brand d-flex align-items-center gap-2 fw-semibold" href="{% url 'home' %}">
-            <img
-                src="{% static 'img/logo.png' %}"
-                alt="Priscila Arantes PA"
-                style="height: 42px; width: auto;"
-            >
+            <img src="{% static 'img/logo.png' %}" alt="Priscila Arantes PA" class="site-logo">
         </a>
 
         <button
@@ -57,11 +53,11 @@
                 </div>
             {% else %}
                 <div class="navbar-nav ms-lg-4 mt-3 mt-lg-0">
-                    <a class="nav-link" href="{% url 'home' %}#marcacao">Marcação</a>
-                    <a class="nav-link" href="{% url 'home' %}#sobre">Sobre</a>
-                    <a class="nav-link" href="{% url 'home' %}#servicos">Serviços</a>
-                    <a class="nav-link" href="{% url 'home' %}#testemunhos">Testemunhos</a>
-                    <a class="nav-link" href="{% url 'home' %}#contato">Contato</a>
+                    <a class="nav-link" data-section-link href="{% url 'home' %}#marcacao">Marcação</a>
+                    <a class="nav-link" data-section-link href="{% url 'home' %}#sobre">Sobre</a>
+                    <a class="nav-link" data-section-link href="{% url 'home' %}#servicos">Serviços</a>
+                    <a class="nav-link" data-section-link href="{% url 'home' %}#testemunhos">Testemunhos</a>
+                    <a class="nav-link" data-section-link href="{% url 'home' %}#contato">Contato</a>
                 </div>
             {% endif %}
 
@@ -83,7 +79,7 @@
     </div>
 </nav>
 
-<main class="container py-5">
+<main class="container py-5 app-main">
 
     {% if messages %}
         {% for message in messages %}
@@ -95,7 +91,78 @@
 
     {% block content %}{% endblock %}
 </main>
+{% if not user.is_authenticated %}
+    <footer id="contato" class="site-footer">
+        <div class="container">
 
+            <div class="footer-grid">
+
+                <div class="footer-brand-panel">
+                    <img src="{% static 'img/logo.png' %}" alt="Priscila Arantes PA">
+
+                    <p>
+                        Cuidado, bem-estar e profissionalismo em podologia.
+                    </p>
+
+                    <div class="footer-hours">
+                        <h4>Horário de funcionamento</h4>
+                        <p>Segunda a Sexta: 09:00 — 18:00</p>
+                        <p>Sábado: 09:00 — 13:00</p>
+                        <p>Domingo: Fechado</p>
+                    </div>
+                </div>
+
+                <div class="footer-info-panel">
+                    <div class="footer-columns">
+                        <div>
+                            <h4>Links rápidos</h4>
+
+                            <a href="{% url 'home' %}#inicio">Início</a>
+                            <a href="{% url 'home' %}#marcacao">Marcação</a>
+                            <a href="{% url 'home' %}#sobre">Sobre</a>
+                            <a href="{% url 'home' %}#servicos">Serviços</a>
+                            <a href="{% url 'home' %}#testemunhos">Testemunhos</a>
+                        </div>
+
+                        <div>
+                            <h4>Contato</h4>
+
+                            <p>Telefone / WhatsApp:<br>+351 912 345 678</p>
+                            <p>Email:<br>contato@seudominio.com</p>
+
+                            <div class="footer-actions">
+                                {% if request.resolver_match.url_name != "public_visual_schedule" %}
+                                    <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary">
+                                        Agendar horário
+                                    </a>
+                                {% endif %}
+
+                                <a
+                                    href="https://wa.me/351912345678?text=Ol%C3%A1%2C%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es."
+                                    class="btn btn-outline-secondary"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    WhatsApp
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="footer-map mt-4">
+                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3045.723850692838!2d-8.432831510071974!3d40.23744179297737!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd22f9306abaa9c1%3A0xd8fcca084a76b7fa!2sR.%20Vale%20de%20S%C3%A3o%20Miguel%205%2C%203020-113%20Coimbra!5e0!3m2!1sen!2spt!4v1777382232889!5m2!1sen!2spt" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="footer-bottom">
+                <span>© {% now "Y" %} Priscila Arantes. Todos os direitos reservados.</span>
+            </div>
+
+        </div>
+    </footer>
+{% endif %}
 <!-- Floating WhatsApp button -->
 <a
     href="https://wa.me/351912345678?text=Ol%C3%A1%2C%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es."
@@ -119,6 +186,58 @@
 <script
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
 </script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const links = document.querySelectorAll("[data-section-link]");
+    const sections = [];
 
+    links.forEach(function (link) {
+        const href = link.getAttribute("href");
+        const hash = href.split("#")[1];
+
+        if (!hash) return;
+
+        const section = document.getElementById(hash);
+
+        if (section) {
+            sections.push({
+                id: hash,
+                element: section,
+                link: link
+            });
+        }
+    });
+
+    function clearActiveLinks() {
+        links.forEach(function (link) {
+            link.classList.remove("is-active");
+        });
+    }
+
+    function setActiveSection() {
+        const scrollPosition = window.scrollY + 260;
+        let activeSection = null;
+
+        sections.forEach(function (section) {
+            const sectionTop = section.element.offsetTop;
+
+            if (scrollPosition >= sectionTop) {
+                activeSection = section;
+            }
+        });
+
+        clearActiveLinks();
+
+        if (activeSection) {
+            activeSection.link.classList.add("is-active");
+        }
+    }
+
+    window.addEventListener("scroll", setActiveSection);
+    window.addEventListener("resize", setActiveSection);
+
+    setActiveSection();
+});
+</script>
 </body>
 </html>
