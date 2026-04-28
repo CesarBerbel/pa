@@ -1,28 +1,220 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Priscila Arantes PA | Marcações Online{% endblock %}
+{% block title %}Priscila Arantes PA | Podologia e Bem-estar{% endblock %}
 
 {% block content %}
 
-<section class="hero-section text-center mb-5">
-    <img
-        src="{% static 'img/logo.png' %}"
-        alt="Priscila Arantes PA"
-        class="home-logo mb-4"
-    >
-    </br>
-    <span class="hero-badge">
-        Marcações online
-    </span>
+<section id="inicio" class="luxury-hero mb-5">
+    <div class="row align-items-center g-5">
+        <div class="col-12 col-lg-6">
+            <span class="luxury-eyebrow">Podologia • Cuidado • Bem-estar</span>
 
-    <h1 class="hero-title mb-3">
-        Cuide de si com praticidade
-    </h1>
+            <h1 class="luxury-title mt-3 mb-4">
+                Cuide dos seus pés com
+                <span class="signature-font">delicadeza</span>
+                e profissionalismo
+            </h1>
 
-    <p class="hero-subtitle mb-4">
-        Marque o seu horário online, consulte a sua marcação pelo código
-        e cancele quando necessário de forma simples e segura.
+            <p class="luxury-subtitle mb-4">
+                Atendimento especializado em podologia e cuidados estéticos,
+                com marcação online simples, segura e prática.
+            </p>
+
+            <div class="d-flex flex-column flex-md-row gap-3">
+                <a href="#marcacao" class="btn btn-primary btn-lg px-5">
+                    Agendar horário
+                </a>
+
+                <a href="{% url 'appointments:public_appointment_lookup' %}" class="btn btn-outline-secondary btn-lg px-5">
+                    Consultar marcação
+                </a>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6 text-center">
+            <div class="luxury-logo-card">
+                <img
+                    src="{% static 'img/logo.png' %}"
+                    alt="Priscila Arantes PA"
+                    class="luxury-logo"
+                >
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="trust-strip mb-5">
+    <div class="trust-item">
+        <strong>Atendimento cuidadoso</strong>
+        <span>Foco em conforto e bem-estar</span>
+    </div>
+
+    <div class="trust-item">
+        <strong>Marcação online</strong>
+        <span>Agenda simples e prática</span>
+    </div>
+
+    <div class="trust-item">
+        <strong>Ambiente profissional</strong>
+        <span>Organização, higiene e atenção</span>
+    </div>
+</section>
+
+<section id="marcacao" class="one-page-section mb-5">
+    <div class="row align-items-center g-4">
+        <div class="col-12 col-lg-6">
+            <span class="luxury-eyebrow">Marcação online</span>
+            <h2 class="section-title mt-2 mb-3">
+                Escolha o seu horário de forma simples
+            </h2>
+
+            <p class="text-muted mb-4">
+                Consulte os horários disponíveis, escolha o serviço desejado
+                e confirme a sua marcação em poucos passos.
+            </p>
+
+            <div class="d-flex flex-column flex-md-row gap-3">
+                <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary btn-lg px-5">
+                    Ver agenda disponível
+                </a>
+
+                <a href="{% url 'appointments:public_appointment_lookup' %}" class="btn btn-outline-secondary btn-lg px-5">
+                    Consultar código
+                </a>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="luxury-code-box">
+                <span>Fluxo de marcação</span>
+                <strong>Agenda → Dados → Confirmação</strong>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="sobre" class="one-page-section mb-5">
+    <div class="row align-items-center g-5">
+        <div class="col-12 col-lg-5">
+            <div class="about-card">
+                <span class="signature-font">Priscila Arantes</span>
+                <h2>PA Podologia</h2>
+                <p>
+                    Cuidado profissional, atenção individualizada e compromisso
+                    com o bem-estar de cada cliente.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-7">
+            <span class="luxury-eyebrow">Sobre a profissional</span>
+            <h2 class="section-title mt-2 mb-3">
+                Atendimento cuidadoso, humano e profissional
+            </h2>
+
+            <p class="text-muted mb-3">
+                A proposta é oferecer um atendimento acolhedor e responsável,
+                respeitando as necessidades de cada cliente e valorizando conforto,
+                higiene e confiança.
+            </p>
+
+            <p class="text-muted mb-0">
+                Cada marcação é pensada para proporcionar uma experiência tranquila,
+                organizada e com acompanhamento adequado.
+            </p>
+        </div>
+    </div>
+</section>
+
+<section id="servicos" class="mb-5">
+    <div class="text-center mb-5">
+        <span class="luxury-eyebrow">Serviços</span>
+        <h2 class="section-title mt-2">
+            Cuidados para saúde e beleza dos pés
+        </h2>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12 col-md-4">
+            <div class="luxury-card h-100">
+                <div class="luxury-icon">01</div>
+                <h3>Podologia</h3>
+                <p>
+                    Atendimento focado no cuidado, conforto e saúde dos pés.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <div class="luxury-card h-100">
+                <div class="luxury-icon">02</div>
+                <h3>Pedicure</h3>
+                <p>
+                    Cuidado estético com acabamento delicado e atenção aos detalhes.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <div class="luxury-card h-100">
+                <div class="luxury-icon">03</div>
+                <h3>Manicure e unhas</h3>
+                <p>
+                    Serviços pensados para bem-estar, beleza e praticidade.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="testemunhos" class="one-page-section mb-5">
+    <div class="text-center mb-5">
+        <span class="luxury-eyebrow">Testemunhos</span>
+        <h2 class="section-title mt-2">
+            O que dizem as clientes
+        </h2>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12 col-md-4">
+            <div class="testimonial-card">
+                <p>
+                    “Atendimento muito cuidadoso e profissional. Senti-me muito bem acompanhada.”
+                </p>
+                <strong>Cliente</strong>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <div class="testimonial-card">
+                <p>
+                    “A marcação online é prática e o atendimento é excelente.”
+                </p>
+                <strong>Cliente</strong>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <div class="testimonial-card">
+                <p>
+                    “Ambiente acolhedor, serviço organizado e muita atenção aos detalhes.”
+                </p>
+                <strong>Cliente</strong>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="contato" class="luxury-final-cta text-center">
+    <span class="luxury-eyebrow">Contato</span>
+
+    <h2 class="section-title mt-2 mb-3">
+        Pronta para marcar o seu horário?
+    </h2>
+
+    <p class="text-muted mb-4">
+        Faça a sua marcação online ou entre em contacto pelo WhatsApp.
     </p>
 
     <div class="d-flex flex-column flex-md-row gap-3 justify-content-center">
@@ -30,118 +222,15 @@
             Ver agenda disponível
         </a>
 
-        <a href="{% url 'appointments:public_appointment_lookup' %}" class="btn btn-outline-secondary btn-lg px-5">
-            Consultar marcação
+        <a
+            href="https://wa.me/351912345678?text=Ol%C3%A1%2C%20gostaria%20de%20marcar%20um%20hor%C3%A1rio."
+            class="btn btn-outline-secondary btn-lg px-5"
+            target="_blank"
+            rel="noopener noreferrer"
+        >
+            Falar no WhatsApp
         </a>
     </div>
-</section>
-
-<section class="row g-4 mb-5">
-    <div class="col-12 col-md-4">
-        <div class="card public-card h-100">
-            <div class="card-body p-4">
-                <div class="public-icon mb-3">
-                    1
-                </div>
-
-                <h2 class="h5 section-title">
-                    Veja a agenda
-                </h2>
-
-                <p class="text-muted mb-4">
-                    Consulte os horários disponíveis antes de fazer a marcação.
-                </p>
-
-                <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary w-100">
-                    Ver agenda
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-12 col-md-4">
-        <div class="card public-card h-100">
-            <div class="card-body p-4">
-                <div class="public-icon mb-3">
-                    2
-                </div>
-
-                <h2 class="h5 section-title">
-                    Marque online
-                </h2>
-
-                <p class="text-muted mb-4">
-                    Escolha o serviço, a data e confirme os seus dados.
-                </p>
-
-                {% comment %} <a href="{% url 'appointments:public_appointment_create' %}" class="btn btn-outline-primary w-100">
-                    Marcar agora
-                </a> {% endcomment %}
-            </div>
-        </div>
-    </div>
-
-    <div class="col-12 col-md-4">
-        <div class="card public-card h-100">
-            <div class="card-body p-4">
-                <div class="public-icon mb-3">
-                    3
-                </div>
-
-                <h2 class="h5 section-title">
-                    Consulte ou cancele
-                </h2>
-
-                <p class="text-muted mb-4">
-                    Use o código da marcação para consultar ou cancelar quando necessário.
-                </p>
-
-                <a href="{% url 'appointments:public_appointment_lookup' %}" class="btn btn-outline-secondary w-100">
-                    Consultar marcação
-                </a>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="soft-panel p-4 p-md-5 mb-5">
-    <div class="row align-items-center g-4">
-        <div class="col-12 col-lg-7">
-            <h2 class="section-title mb-3">
-                Como funciona
-            </h2>
-
-            <p class="text-muted mb-0">
-                Depois de fazer a marcação, o sistema gera um código único.
-                Guarde esse código para consultar ou cancelar a sua marcação quando necessário.
-            </p>
-        </div>
-
-        <div class="col-12 col-lg-5">
-            <div class="alert alert-primary mb-0">
-                <div class="small text-uppercase">
-                    Exemplo de código
-                </div>
-                <div class="fs-4 fw-bold">
-                    AGD-8F3K2L
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="text-center">
-    <h2 class="h4 section-title mb-3">
-        Pronta para marcar?
-    </h2>
-
-    <p class="text-muted mb-4">
-        Veja os horários disponíveis e escolha o melhor momento.
-    </p>
-
-    <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary btn-lg px-5">
-        Ver agenda disponível
-    </a>
 </section>
 
 {% endblock %}

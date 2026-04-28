@@ -15,12 +15,15 @@
         rel="stylesheet"
     >
 
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@300;400;500;600&family=Allura&display=swap" rel="stylesheet">
+
     <!-- Custom public styles -->
     <link rel="stylesheet" href="{% static 'css/public.css' %}">
 </head>
 <body class="bg-light">
 
-<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+<nav class="navbar navbar-expand-lg navbar-light public-navbar">
     <div class="container">
         <a class="navbar-brand d-flex align-items-center gap-2 fw-semibold" href="{% url 'home' %}">
             <img
@@ -30,54 +33,52 @@
             >
         </a>
 
-        {% if user.is_authenticated %}
-            <div class="navbar-nav ms-4">
-                <a class="nav-link" href="{% url 'appointments:visual_schedule' %}">
-                    Agenda visual
-                </a>
-                <a class="nav-link" href="{% url 'appointments:schedule_diagnostics' %}">
-                    Diagnóstico
-                </a>
-                <a class="nav-link" href="{% url 'appointments:schedule_block_list' %}">
-                    Bloqueios
-                </a>
-                <a class="nav-link" href="{% url 'appointments:service_list' %}">
-                    Serviços
-                </a>
-                <a class="nav-link" href="{% url 'appointments:customer_list' %}">
-                    Clientes
-                </a>
-                <a class="nav-link" href="{% url 'appointments:appointment_list' %}">
-                    Marcações
-                </a>
-            </div>
-        {% else %}
-            <div class="navbar-nav ms-4">
-                <a class="nav-link" href="{% url 'appointments:public_visual_schedule' %}">
-                    Agenda
-                </a>
-                <a class="nav-link" href="{% url 'appointments:public_appointment_lookup' %}">
-                    Consultar
-                </a>
-                <a class="nav-link" href="{% url 'appointments:public_cancel' %}">
-                    Cancelar
-                </a>
-            </div>
-        {% endif %}
+        <button
+            class="navbar-toggler mobile-menu-button"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#mainNavbar"
+            aria-controls="mainNavbar"
+            aria-expanded="false"
+            aria-label="Abrir menu"
+        >
+        <span class="navbar-toggler-icon"></span>
+        </button>
 
-        <div class="ms-auto">
+        <div class="collapse navbar-collapse" id="mainNavbar">
             {% if user.is_authenticated %}
-                <form method="post" action="{% url 'accounts:logout' %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-outline-danger btn-sm">
-                        Sair
-                    </button>
-                </form>
+                <div class="navbar-nav ms-lg-4 mt-3 mt-lg-0">
+                    <a class="nav-link" href="{% url 'appointments:visual_schedule' %}">Agenda visual</a>
+                    <a class="nav-link" href="{% url 'appointments:schedule_diagnostics' %}">Diagnóstico</a>
+                    <a class="nav-link" href="{% url 'appointments:schedule_block_list' %}">Bloqueios</a>
+                    <a class="nav-link" href="{% url 'appointments:service_list' %}">Serviços</a>
+                    <a class="nav-link" href="{% url 'appointments:customer_list' %}">Clientes</a>
+                    <a class="nav-link" href="{% url 'appointments:appointment_list' %}">Marcações</a>
+                </div>
             {% else %}
-                <a href="{% url 'accounts:login' %}" class="btn btn-outline-primary btn-sm">
-                    Entrar
-                </a>
+                <div class="navbar-nav ms-lg-4 mt-3 mt-lg-0">
+                    <a class="nav-link" href="{% url 'home' %}#marcacao">Marcação</a>
+                    <a class="nav-link" href="{% url 'home' %}#sobre">Sobre</a>
+                    <a class="nav-link" href="{% url 'home' %}#servicos">Serviços</a>
+                    <a class="nav-link" href="{% url 'home' %}#testemunhos">Testemunhos</a>
+                    <a class="nav-link" href="{% url 'home' %}#contato">Contato</a>
+                </div>
             {% endif %}
+
+            <div class="ms-lg-auto mt-3 mt-lg-0">
+                {% if user.is_authenticated %}
+                    <form method="post" action="{% url 'accounts:logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                            Sair
+                        </button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'accounts:login' %}" class="btn btn-outline-primary btn-sm w-100">
+                        Entrar
+                    </a>
+                {% endif %}
+            </div>
         </div>
     </div>
 </nav>

@@ -8,7 +8,7 @@
 <div class="row justify-content-center">
     <div class="col-12 col-lg-7">
 
-        <div class="card shadow-sm border-0">
+        <div class="card shadow-sm border-0 premium-form-card">
             <div class="card-body p-4">
                 <h1 class="h4 mb-2 text-center">
                     Marcar horário
@@ -29,49 +29,35 @@
                         <input type="hidden" name="date" value="{{ form.initial.date }}">
                         <input type="hidden" name="start_time" value="{{ form.initial.start_time }}">
 
-                        <div class="mb-3">
-                            <label class="form-label">
-                                Serviço
-                            </label>
-                            <input type="hidden" name="service" value="{{ form.initial.service }}">
-                            <select class="form-select" disabled>
-                                {% for service in form.fields.service.queryset %}
-                                    {% if service.pk|stringformat:"s" == form.initial.service|stringformat:"s" %}
-                                        <option selected>
-                                            {{ service.name }}
-                                        </option>
-                                    {% endif %}
-                                {% endfor %}
-                            </select>
-                        </div>
+                        <div class="booking-summary mb-4">
+                            <span>Resumo da marcação</span>
 
-                        <div class="mb-3">
-                            <label class="form-label">
-                                Data
-                            </label>
-                            <input
-                                type="date"
-                                class="form-control"
-                                value="{{ form.initial.date }}"
-                                disabled
-                            >
-                        </div>
+                            <div class="booking-summary-grid">
+                                <div>
+                                    <strong>Serviço</strong>
+                                    <p>
+                                        {% for service in form.fields.service.queryset %}
+                                            {% if service.pk|stringformat:"s" == form.initial.service|stringformat:"s" %}
+                                                {{ service.name }}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </p>
+                                </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">
-                                Horário
-                            </label>
-                            <input
-                                type="text"
-                                class="form-control"
-                                value="{{ form.initial.start_time }}"
-                                disabled
-                            >
-                        </div>
+                                <div>
+                                    <strong>Data</strong>
+                                    <p>{{ form.initial.date }}</p>
+                                </div>
 
-                        <div class="alert alert-info">
-                            Serviço, data e horário foram selecionados pela agenda disponível.
-                            Para alterar, volte para a agenda pública.
+                                <div>
+                                    <strong>Horário</strong>
+                                    <p>{{ form.initial.start_time }}</p>
+                                </div>
+                            </div>
+
+                            <small class="booking-summary-note">
+                                Este horário foi selecionado pela agenda disponível.
+                            </small>
                         </div>
                     {% else %}
                         {{ form.service|as_crispy_field }}
@@ -93,7 +79,7 @@
                     {{ form.customer_email|as_crispy_field }}
                     {{ form.notes|as_crispy_field }}
 
-                    <button type="submit" class="btn btn-primary w-100 mt-3">
+                    <button type="submit" class="btn btn-primary w-100 mt-3" id="submit-btn">
                         Confirmar marcação
                     </button>
 
@@ -112,6 +98,20 @@
     </div>
 </div>
 
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector("form");
+    const btn = document.getElementById("submit-btn");
+
+    if (!form || !btn) return;
+
+    form.addEventListener("submit", function () {
+        btn.disabled = true;
+        btn.innerHTML = "A confirmar...";
+    });
+});
+</script>
 {% if not is_locked_from_agenda %}
 <script>
     // Load available appointment slots automatically using AJAX

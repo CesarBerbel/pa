@@ -395,6 +395,27 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
 
     template_name = "appointments/public_visual_schedule.html"
 
+    def get_week_days(self, selected_date):
+        # Build a practical 7-day navigation starting from the selected week
+        start_of_week = selected_date - timedelta(days=selected_date.weekday())
+
+        week_days = []
+
+        for index in range(7):
+            current_date = start_of_week + timedelta(days=index)
+
+            week_days.append(
+                {
+                    "date": current_date,
+                    "weekday": current_date.strftime("%a"),
+                    "day": current_date.strftime("%d"),
+                    "month": current_date.strftime("%b"),
+                    "is_selected": current_date == selected_date,
+                }
+            )
+
+        return week_days
+
     def get_selected_service(self):
         # Get selected service from query string
         service_id = self.request.GET.get("service")
@@ -441,5 +462,6 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
         context["selected_service"] = selected_service
         context["selected_date"] = selected_date
         context["slots"] = slots
+        context["week_days"] = self.get_week_days(selected_date)
 
         return context

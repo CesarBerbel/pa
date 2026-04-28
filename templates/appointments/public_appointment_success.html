@@ -1,37 +1,37 @@
 {% extends "base.html" %}
 
-{% block title %}Marcação enviada | Priscila Arantes PA{% endblock %}
+{% block title %}Marcação confirmada | Priscila Arantes PA{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-12 col-lg-6">
-
-        <div class="card shadow-sm border-0">
+        <div class="card shadow-sm border-0 premium-form-card">
             <div class="card-body p-5 text-center">
+                <span class="luxury-eyebrow">Marcação confirmada</span>
 
-                <h1 class="h4 mb-3">
-                    Marcação realizada com sucesso
+                <h1 class="h4 mt-2 mb-3">
+                    O seu horário foi reservado com sucesso
                 </h1>
 
                 <p class="text-muted mb-3">
-                    Guarde o código da sua marcação:
+                    Guarde este código para consultar ou cancelar a marcação:
                 </p>
 
-                <div class="alert alert-primary fs-5 fw-bold">
+                <div class="success-reference-code mb-4">
                     {{ reference_code }}
                 </div>
 
-                <p class="text-muted mb-4">
-                    Use este código para consultas ou alterações.
-                </p>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'appointments:public_appointment_lookup' %}" class="btn btn-primary">
+                        Consultar marcação
+                    </a>
 
-                <a href="{% url 'appointments:public_appointment_create' %}" class="btn btn-primary">
-                    Nova marcação
-                </a>
-
+                    <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-outline-secondary">
+                        Fazer nova marcação
+                    </a>
+                </div>
             </div>
         </div>
-
     </div>
 </div>
 {% endblock %}

@@ -3,141 +3,159 @@
 {% block title %}Agenda disponível | Priscila Arantes PA{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-12 col-lg-10">
 
-        <section class="public-agenda-hero text-center mb-4">
-            <span class="hero-badge">
-                Agenda online
-            </span>
+<section class="app-agenda-page">
 
-            <h1 class="h3 mb-2">
-                Escolha o melhor horário
-            </h1>
+    <div class="app-agenda-header mb-4">
+     
 
-            <p class="text-muted mb-0">
-                Veja os horários disponíveis e clique para iniciar a marcação.
-            </p>
-        </section>
+        <span class="luxury-eyebrow">Agenda online</span>
 
-        <div class="card shadow-sm border-0 mb-4 rounded-4">
-            <div class="card-body p-4">
-                <form method="get" class="row g-3 align-items-end">
+        <h1>
+            Escolha o melhor horário
+        </h1>
 
-                    <div class="col-12 col-md-6">
-                        <label for="service" class="form-label fw-semibold">
-                            Serviço
-                        </label>
+        <p>
+            Selecione o serviço, escolha a data e reserve o seu horário disponível.
+        </p>
+    </div>
 
-                        <select id="service" name="service" class="form-select form-select-lg">
-                            {% for service in services %}
-                                <option
-                                    value="{{ service.pk }}"
-                                    {% if selected_service and selected_service.pk == service.pk %}selected{% endif %}
-                                >
-                                    {{ service.name }} - {{ service.duration_minutes }} min
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
+    <div class="app-agenda-shell">
 
-                    <div class="col-12 col-md-4">
-                        <label for="date" class="form-label fw-semibold">
-                            Data
-                        </label>
+        <aside class="app-agenda-filter">
+            <form method="get" id="agenda-filter-form">
 
-                        <input
-                            type="date"
-                            id="date"
-                            name="date"
-                            value="{{ selected_date|date:'Y-m-d' }}"
-                            class="form-control form-control-lg"
-                        >
-                    </div>
+                <div class="mb-4">
+                    <label for="service" class="form-label">
+                        Serviço
+                    </label>
 
-                    <div class="col-12 col-md-2">
-                        <button type="submit" class="btn btn-primary btn-lg w-100">
-                            Ver
-                        </button>
-                    </div>
-
-                </form>
-            </div>
-        </div>
-
-        {% if selected_service %}
-            <div class="card shadow-sm border-0 rounded-4">
-                <div class="card-body p-4 p-md-5">
-
-                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-                        <div>
-                            <h2 class="h4 mb-1 section-title">
-                                {{ selected_service.name }}
-                            </h2>
-
-                            <p class="text-muted mb-0">
-                                {{ selected_date|date:"d/m/Y" }}
-                            </p>
-                        </div>
-
-                        <div>
-                            <span class="badge rounded-pill text-bg-primary px-3 py-2">
-                                {{ selected_service.duration_minutes }} minutos
-                            </span>
-                        </div>
-                    </div>
-
-                    {% if slots %}
-                        <div class="row g-3">
-                            {% for slot in slots %}
-                                <div class="col-6 col-md-4 col-lg-3">
-                                    <a
-                                        href="{% url 'appointments:public_appointment_create' %}?service={{ selected_service.pk }}&date={{ selected_date|date:'Y-m-d' }}&start_time={{ slot.value }}"
-                                        class="public-slot-card text-decoration-none"
-                                    >
-                                        <div class="public-slot-time">
-                                            {{ slot.label }}
-                                        </div>
-
-                                        <div class="public-slot-status">
-                                            disponível
-                                        </div>
-
-                                        <div class="public-slot-action">
-                                            Marcar
-                                        </div>
-                                    </a>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <div class="public-empty-state text-center p-5">
-                            <div class="mb-3 fs-1">
-                                🕒
-                            </div>
-
-                            <h3 class="h5 mb-2">
-                                Nenhum horário disponível
-                            </h3>
-
-                            <p class="text-muted mb-4">
-                                Tente escolher outra data ou outro serviço.
-                            </p>
-
-                            <a href="{% url 'appointments:public_appointment_create' %}" class="btn btn-outline-primary">
-                                Ir para marcação
-                            </a>
-                        </div>
-                    {% endif %}
-
+                    <select id="service" name="service" class="form-select form-select-lg">
+                        {% for service in services %}
+                            <option
+                                value="{{ service.pk }}"
+                                {% if selected_service and selected_service.pk == service.pk %}selected{% endif %}
+                            >
+                                {{ service.name }} · {{ service.duration_minutes }} min
+                            </option>
+                        {% endfor %}
+                    </select>
                 </div>
-            </div>
-        {% else %}
-            <div class="alert alert-warning rounded-4">
-                Nenhum serviço ativo cadastrado.
-            </div>
-        {% endif %}
+
+                <div class="mb-4">
+                    <label for="date" class="form-label">
+                        Data
+                    </label>
+
+                    <input
+                        type="date"
+                        id="date"
+                        name="date"
+                        value="{{ selected_date|date:'Y-m-d' }}"
+                        class="form-control form-control-lg"
+                    >
+                </div>
+
+            </form>
+
+            {% if selected_service %}
+                <div class="app-service-summary mt-4">
+                    <span>Serviço selecionado</span>
+                    <strong>{{ selected_service.name }}</strong>
+                    <small>{{ selected_service.duration_minutes }} minutos</small>
+                </div>
+            {% endif %}
+        </aside>
+
+        <main class="app-agenda-results">
+            {% if selected_service %}
+                {% if week_days %}
+                    <div class="app-week-strip mb-4">
+                        {% for day in week_days %}
+                            <a
+                                href="{% url 'appointments:public_visual_schedule' %}?service={{ selected_service.pk }}&date={{ day.date|date:'Y-m-d' }}"
+                                class="app-week-day {% if day.is_selected %}is-active{% endif %}"
+                            >
+                                <span>{{ day.weekday }}</span>
+                                <strong>{{ day.day }}</strong>
+                                <small>{{ day.month }}</small>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                {% if slots %}
+                    <div class="app-slots-grid">
+                        {% for slot in slots %}
+                            <a
+                                href="{% url 'appointments:public_appointment_create' %}?service={{ selected_service.pk }}&date={{ selected_date|date:'Y-m-d' }}&start_time={{ slot.value }}"
+                                class="app-slot-card"
+                            >
+                                <span class="app-slot-time">
+                                    {{ slot.label }}
+                                </span>
+
+                                <span class="app-slot-status">
+                                    Disponível
+                                </span>
+
+                                <span class="app-slot-cta">
+                                    Marcar
+                                </span>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="app-empty-state">
+                        <div class="app-empty-icon">⌛</div>
+
+                        <h3>Nenhum horário disponível</h3>
+
+                        <p>
+                            Tente escolher outra data ou outro serviço.
+                        </p>
+                    </div>
+                {% endif %}
+
+            {% else %}
+                <div class="app-empty-state">
+                    <h3>Nenhum serviço ativo cadastrado</h3>
+                    <p>Cadastre um serviço para exibir horários disponíveis.</p>
+                </div>
+            {% endif %}
+
+        </main>
 
     </div>
-</div>
+
+</section>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("agenda-filter-form");
+        const filterPanel = document.querySelector(".app-agenda-filter");
+        const serviceInput = document.getElementById("service");
+        const dateInput = document.getElementById("date");
+
+        function submitAgendaForm() {
+            if (!form) {
+                return;
+            }
+
+            form.classList.add("is-loading");
+
+            if (filterPanel) {
+                filterPanel.classList.add("is-loading");
+            }
+
+            form.submit();
+        }
+
+        if (serviceInput) {
+            serviceInput.addEventListener("change", submitAgendaForm);
+        }
+
+        if (dateInput) {
+            dateInput.addEventListener("change", submitAgendaForm);
+        }
+    });
+</script>
 {% endblock %}

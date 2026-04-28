@@ -86,7 +86,7 @@ class PublicAppointmentForm(forms.Form):
 
     customer_email = forms.EmailField(
         label="Email",
-        required=True,
+        required=False,
     )
 
     notes = forms.CharField(
