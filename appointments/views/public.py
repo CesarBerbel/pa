@@ -1,3 +1,4 @@
+import re
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from datetime import datetime, timedelta
@@ -111,6 +112,64 @@ class PublicBookingAvailabilityMixin:
         return available_slots
 
 
+def normalize_phone(phone):
+    # Keep only digits to compare phone numbers consistently.
+    if not phone:
+        return ""
+
+    return re.sub(r"\D", "", phone)
+
+
+def find_or_create_public_customer(name, phone, email, user=None):
+    # Reuse customer by email first, then by normalized phone.
+    normalized_phone = normalize_phone(phone)
+    normalized_email = (email or "").strip().lower()
+
+    customer = None
+
+    if normalized_email:
+        customer = Customer.objects.filter(
+            email__iexact=normalized_email,
+        ).order_by("id").first()
+
+    if not customer and normalized_phone:
+        for existing_customer in Customer.objects.exclude(phone="").order_by("id"):
+            if normalize_phone(existing_customer.phone) == normalized_phone:
+                customer = existing_customer
+                break
+
+    if customer:
+        updated = False
+
+        if user and not customer.user:
+            customer.user = user
+            updated = True
+
+        if name and customer.full_name != name:
+            customer.full_name = name
+            updated = True
+
+        if phone and customer.phone != phone:
+            customer.phone = phone
+            updated = True
+
+        if normalized_email and customer.email != normalized_email:
+            customer.email = normalized_email
+            updated = True
+
+        if updated:
+            customer.save(update_fields=["full_name", "phone", "email", "updated_at"])
+
+        return customer
+
+    return Customer.objects.create(
+        user=user if user and user.is_authenticated else None,
+        full_name=name,
+        phone=phone,
+        email=normalized_email,
+    )
+
+
 class PublicAppointmentCreateView(PublicBookingAvailabilityMixin, FormView):
     # Public booking form for customers
 
@@ -119,7 +178,6 @@ class PublicAppointmentCreateView(PublicBookingAvailabilityMixin, FormView):
     success_url = reverse_lazy("appointments:public_appointment_success")
 
     def get_initial(self):
-        # Pre-fill form from query string (agenda click)
         initial = super().get_initial()
 
         service_id = self.request.GET.get("service")
@@ -137,7 +195,36 @@ class PublicAppointmentCreateView(PublicBookingAvailabilityMixin, FormView):
         if start_time_value:
             initial["start_time"] = start_time_value
 
+        if self.request.user.is_authenticated:
+            customer = getattr(self.request.user, "customer_profile", None)
+
+            if customer:
+                initial["customer_name"] = customer.full_name
+                initial["customer_phone"] = customer.phone
+                initial["customer_email"] = customer.email
+            else:
+                initial["customer_email"] = self.request.user.email
+
         return initial
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.method == "GET":
+            service = request.GET.get("service")
+            date = request.GET.get("date")
+            start_time = request.GET.get("start_time")
+
+            if not (service and date and start_time):
+                return redirect("appointments:public_visual_schedule")
+
+        if request.method == "POST":
+            service = request.POST.get("service")
+            date = request.POST.get("date")
+            start_time = request.POST.get("start_time")
+
+            if not (service and date and start_time):
+                return redirect("appointments:public_visual_schedule")
+
+        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         # Detect if the booking came from the public visual schedule
@@ -156,6 +243,17 @@ class PublicAppointmentCreateView(PublicBookingAvailabilityMixin, FormView):
 
         return context
 
+    def is_selected_slot_available(self, service, date, start_time):
+        available_slots = self.get_available_slots_for(
+            service=service,
+            selected_date=date,
+        )
+
+        return any(
+            slot["value"] == start_time
+            for slot in available_slots
+        )
+
     def form_valid(self, form):
         # Create appointment safely
         cleaned_data = form.cleaned_data
@@ -167,24 +265,31 @@ class PublicAppointmentCreateView(PublicBookingAvailabilityMixin, FormView):
             "%H:%M",
         ).time()
 
+        start_time_value = start_time.strftime("%H:%M")
+
+        if not self.is_selected_slot_available(
+            service=service,
+            date=date,
+            start_time=start_time_value,
+        ):
+            form.add_error(
+                None,
+                "Este horário já não está disponível. Escolha outro horário na agenda."
+            )
+            return self.form_invalid(form)
+
         customer_name = cleaned_data["customer_name"]
         customer_phone = cleaned_data["customer_phone"]
         customer_email = cleaned_data["customer_email"]
         notes = cleaned_data.get("notes")
 
         with transaction.atomic():
-            customer = Customer.objects.filter(
+            customer = find_or_create_public_customer(
+                name=customer_name,
+                phone=customer_phone,
                 email=customer_email,
-            ).order_by(
-                "id",
-            ).first()
-
-            if not customer:
-                customer = Customer.objects.create(
-                    full_name=customer_name,
-                    phone=customer_phone,
-                    email=customer_email,
-                )
+                user=self.request.user if self.request.user.is_authenticated else None,
+            )
 
             User = get_user_model()
 

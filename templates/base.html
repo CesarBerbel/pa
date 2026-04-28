@@ -21,7 +21,7 @@
     <!-- Custom public styles -->
     <link rel="stylesheet" href="{% static 'css/public.css' %}">
 </head>
-<body class="app-layout {% if user.is_authenticated %}internal-layout{% else %}public-layout{% endif %}">
+<body class="app-layout {% if user.is_authenticated and user.is_superuser %}internal-layout{% else %}public-layout{% endif %}">
 
 <nav class="navbar navbar-expand-lg navbar-light public-navbar">
     <div class="container">
@@ -42,7 +42,7 @@
         </button>
 
         <div class="collapse navbar-collapse" id="mainNavbar">
-            {% if user.is_authenticated %}
+            {% if user.is_authenticated and user.is_superuser %}
                 <div class="navbar-nav ms-lg-4 mt-3 mt-lg-0">
                     <a class="nav-link" href="{% url 'appointments:visual_schedule' %}">Agenda visual</a>
                     <a class="nav-link" href="{% url 'appointments:schedule_diagnostics' %}">Diagnóstico</a>
@@ -71,7 +71,7 @@
                     </form>
                 {% else %}
                     <a href="{% url 'accounts:login' %}" class="btn btn-outline-primary btn-sm w-100">
-                        Entrar
+                        Área do cliente
                     </a>
                 {% endif %}
             </div>
@@ -91,7 +91,7 @@
 
     {% block content %}{% endblock %}
 </main>
-{% if not user.is_authenticated %}
+{% if not user.is_superuser %}
     <footer id="contato" class="site-footer">
         <div class="container">
 

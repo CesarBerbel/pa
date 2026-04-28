@@ -1,13 +1,13 @@
 from datetime import datetime, timedelta
 
-from django.contrib.auth.mixins import LoginRequiredMixin
+from appointments.mixins import SuperuserRequiredMixin
 from django.utils import timezone
 from django.views.generic import TemplateView
 
 from appointments.models import Appointment, BusinessHour, ScheduleBlock
 
 
-class DailyAgendaView(LoginRequiredMixin, TemplateView):
+class DailyAgendaView(SuperuserRequiredMixin, TemplateView):
     # Shows appointments grouped by a selected day
 
     template_name = "appointments/daily_agenda.html"
@@ -52,7 +52,7 @@ class DailyAgendaView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class VisualScheduleView(LoginRequiredMixin, TemplateView):
+class VisualScheduleView(SuperuserRequiredMixin, TemplateView):
     # Shows a visual daily schedule with appointments and blocked periods
 
     template_name = "appointments/visual_schedule.html"

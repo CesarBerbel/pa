@@ -1,13 +1,13 @@
 from datetime import datetime, timedelta
 
-from django.contrib.auth.mixins import LoginRequiredMixin
+from appointments.mixins import SuperuserRequiredMixin
 from django.utils import timezone
 from django.views.generic import TemplateView
 
 from appointments.models import Appointment, BusinessHour, ScheduleBlock, Service
 
 
-class ScheduleDiagnosticsView(LoginRequiredMixin, TemplateView):
+class ScheduleDiagnosticsView(SuperuserRequiredMixin, TemplateView):
     # Shows detailed diagnostics for available and blocked schedule slots
 
     template_name = "appointments/schedule_diagnostics.html"

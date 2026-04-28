@@ -1,5 +1,5 @@
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
+from appointments.mixins import SuperuserRequiredMixin
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView, UpdateView, View
@@ -8,7 +8,7 @@ from appointments.forms import AppointmentForm
 from appointments.models import Appointment
 
 
-class AppointmentListView(LoginRequiredMixin, ListView):
+class AppointmentListView(SuperuserRequiredMixin, ListView):
     # Lists appointments
 
     model = Appointment
@@ -26,7 +26,7 @@ class AppointmentListView(LoginRequiredMixin, ListView):
         )
 
 
-class AppointmentCreateView(LoginRequiredMixin, CreateView):
+class AppointmentCreateView(SuperuserRequiredMixin, CreateView):
     # Creates a new appointment
 
     model = Appointment
@@ -54,7 +54,7 @@ class AppointmentCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class AppointmentUpdateView(LoginRequiredMixin, UpdateView):
+class AppointmentUpdateView(SuperuserRequiredMixin, UpdateView):
     # Edits an existing appointment only if it is not completed
 
     model = Appointment
@@ -80,7 +80,7 @@ class AppointmentUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-class AppointmentCancelView(LoginRequiredMixin, View):
+class AppointmentCancelView(SuperuserRequiredMixin, View):
     # Cancels an appointment without deleting it from the database
 
     def post(self, request, pk):
@@ -94,7 +94,7 @@ class AppointmentCancelView(LoginRequiredMixin, View):
         return redirect("appointments:appointment_list")
 
 
-class AppointmentConfirmView(LoginRequiredMixin, View):
+class AppointmentConfirmView(SuperuserRequiredMixin, View):
     # Confirms an appointment without deleting it
 
     def post(self, request, pk):
@@ -108,7 +108,7 @@ class AppointmentConfirmView(LoginRequiredMixin, View):
         return redirect("appointments:appointment_list")
 
 
-class AppointmentCompleteView(LoginRequiredMixin, View):
+class AppointmentCompleteView(SuperuserRequiredMixin, View):
     # Marks an appointment as completed only if it is confirmed
 
     def post(self, request, pk):

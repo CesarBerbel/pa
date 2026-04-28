@@ -1,5 +1,5 @@
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
+from appointments.mixins import SuperuserRequiredMixin
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView
 
@@ -7,7 +7,7 @@ from appointments.forms import ServiceForm
 from appointments.models import Service
 
 
-class ServiceListView(LoginRequiredMixin, ListView):
+class ServiceListView(SuperuserRequiredMixin, ListView):
     # Lists available services
 
     model = Service
@@ -15,7 +15,7 @@ class ServiceListView(LoginRequiredMixin, ListView):
     context_object_name = "services"
 
 
-class ServiceCreateView(LoginRequiredMixin, CreateView):
+class ServiceCreateView(SuperuserRequiredMixin, CreateView):
     # Creates a new service
 
     model = Service

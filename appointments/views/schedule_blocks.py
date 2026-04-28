@@ -1,5 +1,5 @@
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
+from appointments.mixins import SuperuserRequiredMixin
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView, UpdateView
 
@@ -7,7 +7,7 @@ from appointments.forms import ScheduleBlockForm
 from appointments.models import ScheduleBlock
 
 
-class ScheduleBlockListView(LoginRequiredMixin, ListView):
+class ScheduleBlockListView(SuperuserRequiredMixin, ListView):
     # Lists schedule blocks
 
     model = ScheduleBlock
@@ -21,7 +21,7 @@ class ScheduleBlockListView(LoginRequiredMixin, ListView):
         )
 
 
-class ScheduleBlockCreateView(LoginRequiredMixin, CreateView):
+class ScheduleBlockCreateView(SuperuserRequiredMixin, CreateView):
     # Creates a new schedule block
 
     model = ScheduleBlock
@@ -34,7 +34,7 @@ class ScheduleBlockCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class ScheduleBlockUpdateView(LoginRequiredMixin, UpdateView):
+class ScheduleBlockUpdateView(SuperuserRequiredMixin, UpdateView):
     # Updates an existing schedule block
 
     model = ScheduleBlock
