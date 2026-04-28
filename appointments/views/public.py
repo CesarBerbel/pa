@@ -1,8 +1,9 @@
 import re
+from django.core import signing
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from datetime import datetime, timedelta
-
+from appointments.emails import send_appointment_confirmation_email, send_appointment_cancelled_email
 from django.contrib import messages
 from django.db import transaction
 from django.http import JsonResponse
@@ -10,7 +11,6 @@ from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic import FormView, TemplateView, View
-
 from appointments.forms import (
     PublicAppointmentForm,
     PublicAppointmentLookupForm,
@@ -310,9 +310,11 @@ class PublicAppointmentCreateView(PublicBookingAvailabilityMixin, FormView):
                 date=date,
                 start_time=start_time,
                 notes=notes,
-                status=Appointment.STATUS_CONFIRMED,
+                status=Appointment.STATUS_SCHEDULED,
                 created_by=system_user,
             )
+
+            send_appointment_confirmation_email(appointment)
 
         self.request.session["last_reference_code"] = appointment.reference_code
 
@@ -452,8 +454,17 @@ class PublicCancelAppointmentByCodeView(TemplateView):
             messages.warning(request, "Esta marcação já está cancelada.")
             return redirect("appointments:public_cancel_success")
 
+        if appointment.status == Appointment.STATUS_CONFIRMED and not request.user.is_superuser:
+            messages.error(
+                request,
+                "Marcações confirmadas só podem ser canceladas pela equipa."
+            )
+            return redirect("appointments:customer_appointment_detail", reference_code=appointment.reference_code)
+        
         appointment.status = Appointment.STATUS_CANCELLED
-        appointment.save(update_fields=["status", "updated_at"])
+        appointment.save(update_fields=["status", "updated_at"])        
+
+        send_appointment_cancelled_email(appointment)
 
         request.session["cancelled_reference_code"] = appointment.reference_code
 
@@ -570,3 +581,52 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
         context["week_days"] = self.get_week_days(selected_date)
 
         return context
+    
+
+    from django.core import signing
+from django.shortcuts import redirect
+
+
+class PublicAppointmentMagicView(TemplateView):
+    template_name = "appointments/public_appointment_lookup.html"
+
+    def get(self, request, *args, **kwargs):
+        token = self.kwargs.get("token")
+
+        try:
+            payload = signing.loads(
+                token,
+                salt="appointment-magic-link",
+                max_age=60 * 60 * 24 * 7,
+            )
+        except signing.SignatureExpired:
+            messages.error(request, "Este link expirou.")
+            return redirect("appointments:public_appointment_lookup")
+        except signing.BadSignature:
+            messages.error(request, "Link inválido.")
+            return redirect("appointments:public_appointment_lookup")
+
+        appointment = Appointment.objects.filter(
+            reference_code=payload.get("reference_code"),
+        ).select_related("customer", "service").first()
+
+        if not appointment:
+            messages.error(request, "Marcação não encontrada.")
+            return redirect("appointments:public_appointment_lookup")
+
+        if appointment.status == Appointment.STATUS_CANCELLED:
+            messages.error(request, "Esta marcação foi cancelada.")
+            return redirect("appointments:public_appointment_lookup")
+
+        if appointment.updated_at.isoformat() != payload.get("updated_at"):
+            messages.error(request, "Este link já não é válido.")
+            return redirect("appointments:public_appointment_lookup")
+
+        return self.render_to_response(
+            self.get_context_data(
+                appointment=appointment,
+                form=PublicAppointmentLookupForm(
+                    initial={"reference_code": appointment.reference_code}
+                ),
+            )
+        )

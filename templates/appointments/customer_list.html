@@ -21,6 +21,7 @@
                             <th>Nome</th>
                             <th>Email</th>
                             <th>Telefone</th>
+                            <th class="text-end">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -29,6 +30,11 @@
                                 <td>{{ customer.full_name }}</td>
                                 <td>{{ customer.email|default:"-" }}</td>
                                 <td>{{ customer.phone }}</td>
+                                <td class="text-end">
+                                    <a href="{% url 'appointments:customer_update' customer.pk %}" class="btn btn-outline-primary btn-sm">                                    
+                                        Editar
+                                    </a>
+                                </td>
                             </tr>
                         {% endfor %}
                     </tbody>

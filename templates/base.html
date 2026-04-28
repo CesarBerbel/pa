@@ -58,6 +58,11 @@
                     <a class="nav-link" data-section-link href="{% url 'home' %}#servicos">Serviços</a>
                     <a class="nav-link" data-section-link href="{% url 'home' %}#testemunhos">Testemunhos</a>
                     <a class="nav-link" data-section-link href="{% url 'home' %}#contato">Contato</a>
+                    {% if user.is_authenticated and not user.is_superuser %}
+                        <a class="nav-link" href="{% url 'appointments:customer_appointments' %}">
+                            Minhas marcações
+                        </a>
+                    {% endif %}
                 </div>
             {% endif %}
 
@@ -122,13 +127,18 @@
                             <a href="{% url 'home' %}#sobre">Sobre</a>
                             <a href="{% url 'home' %}#servicos">Serviços</a>
                             <a href="{% url 'home' %}#testemunhos">Testemunhos</a>
+                            {% if user.is_authenticated and not user.is_superuser %}
+                                <a class="nav-link" href="{% url 'appointments:customer_appointments' %}">
+                                    Minhas marcações
+                                </a>
+                            {% endif %}
                         </div>
 
                         <div>
                             <h4>Contato</h4>
 
-                            <p>Telefone / WhatsApp:<br>+351 912 345 678</p>
-                            <p>Email:<br>contato@seudominio.com</p>
+                            <p>Telefone / WhatsApp:<br>+351 910 191 046</p>
+                            <p>Email:<br>atendimento@priarantes.com</p>
 
                             <div class="footer-actions">
                                 {% if request.resolver_match.url_name != "public_visual_schedule" %}
@@ -138,7 +148,7 @@
                                 {% endif %}
 
                                 <a
-                                    href="https://wa.me/351912345678?text=Ol%C3%A1%2C%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es."
+                                    href="https://wa.me/351910191046?text=Ol%C3%A1%2C%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es."
                                     class="btn btn-outline-secondary"
                                     target="_blank"
                                     rel="noopener noreferrer"
@@ -165,7 +175,7 @@
 {% endif %}
 <!-- Floating WhatsApp button -->
 <a
-    href="https://wa.me/351912345678?text=Ol%C3%A1%2C%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es."
+    href="https://wa.me/351910191046?text=Ol%C3%A1%2C%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es."
     class="whatsapp-floating-button"
     target="_blank"
     rel="noopener noreferrer"

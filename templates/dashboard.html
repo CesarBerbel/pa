@@ -24,6 +24,7 @@
         </div>
     </div>
 
+
     <div class="row g-4 mb-4">
         <div class="col-12 col-md-3">
             <a href="{% url 'appointments:visual_schedule' %}" class="dashboard-action-card">
@@ -55,6 +56,39 @@
                 <strong>Catálogo</strong>
                 <small>Gerir duração, preço e estado ativo.</small>
             </a>
+        </div>        
+    </div> 
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-md-3">
+            <div class="dashboard-metric-card">
+                <span>Hoje</span>
+                <strong>{{ metrics.today_total }}</strong>
+                <small>marcações no dia</small>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-3">
+            <div class="dashboard-metric-card">
+                <span>Confirmadas hoje</span>
+                <strong>{{ metrics.today_confirmed }}</strong>
+                <small>atendimentos confirmados</small>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-3">
+            <div class="dashboard-metric-card">
+                <span>Aguardando</span>
+                <strong>{{ metrics.today_scheduled }}</strong>
+                <small>pedidos para confirmar</small>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-3">
+            <div class="dashboard-metric-card">
+                <span>Receita mensal</span>
+                <strong>€ {{ metrics.month_revenue }}</strong>
+                <small>marcações concluídas</small>
+            </div>
         </div>
     </div>
 
@@ -118,6 +152,37 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <div class="dashboard-panel mt-4">
+        <div class="dashboard-panel-header">
+            <div>
+                <span class="luxury-eyebrow">Hoje</span>
+                <h2>Marcações do dia</h2>
+            </div>
+        </div>
+
+        {% if today_appointments %}
+            <div class="dashboard-today-list">
+                {% for appointment in today_appointments %}
+                    <div class="dashboard-today-item">
+                        <div>
+                            <strong>{{ appointment.start_time|time:"H:i" }}</strong>
+                            <span>{{ appointment.service.name }}</span>
+                            <small>{{ appointment.customer.full_name }}</small>
+                        </div>
+
+                        <span class="status-pill">
+                            {{ appointment.get_status_display }}
+                        </span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted mb-0">
+                Nenhuma marcação para hoje.
+            </p>
+        {% endif %}
     </div>
 
 </section>

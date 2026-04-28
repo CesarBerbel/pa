@@ -25,24 +25,20 @@ from .views import (
     PublicVisualScheduleView,
     AppointmentConfirmView,
     AppointmentCompleteView,
+    CustomerAppointmentsView,
+    CustomerAppointmentDetailView,
+    PublicAppointmentMagicView,
+    CustomerUpdateView,
 )
 
 app_name = "appointments"
 
 urlpatterns = [
     path("agenda/", DailyAgendaView.as_view(), name="daily_agenda"),
-    path(
-        "agenda-publica/",
-        PublicVisualScheduleView.as_view(),
-        name="public_visual_schedule",
-    ),
+    path("agenda-publica/", PublicVisualScheduleView.as_view(), name="public_visual_schedule"),
     path("agenda/horarios/", VisualScheduleView.as_view(), name="visual_schedule"),
 
-    path(
-        "diagnostico/horarios/",
-        ScheduleDiagnosticsView.as_view(),
-        name="schedule_diagnostics",
-    ),
+    path("diagnostico/horarios/", ScheduleDiagnosticsView.as_view(), name="schedule_diagnostics"),
 
     path("bloqueios/", ScheduleBlockListView.as_view(), name="schedule_block_list"),
     path("bloqueios/novo/", ScheduleBlockCreateView.as_view(), name="schedule_block_create"),
@@ -53,6 +49,7 @@ urlpatterns = [
 
     path("clientes/", CustomerListView.as_view(), name="customer_list"),
     path("clientes/novo/", CustomerCreateView.as_view(), name="customer_create"),
+    path("clientes/<int:pk>/editar/", CustomerUpdateView.as_view(), name="customer_update"),
 
     path("marcar/", PublicAppointmentCreateView.as_view(), name="public_appointment_create"),
     path("marcar/horarios/", PublicAvailableSlotsView.as_view(), name="public_available_slots"),
@@ -60,18 +57,13 @@ urlpatterns = [
 
     path("consultar/", PublicAppointmentLookupView.as_view(), name="public_appointment_lookup"),
 
-    path("cancelar/", PublicCancelAppointmentView.as_view(), name="public_cancel"),
-    path(
-        "cancelar/sucesso/<str:reference_code>/",
-        PublicCancelSuccessView.as_view(),
-        name="public_cancel_success_with_code",
-    ),
 
-    path(
-        "cancelar/<str:reference_code>/",
-        PublicCancelAppointmentByCodeView.as_view(),
-        name="public_cancel_by_code",
-    ),
+    path("cancelar/", PublicCancelAppointmentView.as_view(), name="public_cancel"),
+    path("cancelar/<str:reference_code>/", PublicCancelAppointmentByCodeView.as_view(), name="public_cancel_by_code"),
+    path("cancelar/sucesso/", PublicCancelSuccessView.as_view(), name="public_cancel_success"),  
+    path("cancelar/sucesso/<str:reference_code>/", PublicCancelSuccessView.as_view(), name="public_cancel_success_with_code"),
+
+
     path("marcacoes/", AppointmentListView.as_view(), name="appointment_list"),
     path("marcacoes/nova/", AppointmentCreateView.as_view(), name="appointment_create"),
     path("marcacoes/<int:pk>/editar/", AppointmentUpdateView.as_view(), name="appointment_update"),
@@ -79,6 +71,10 @@ urlpatterns = [
     path("marcacoes/<int:pk>/confirmar/", AppointmentConfirmView.as_view(), name="appointment_confirm"),
     path("marcacoes/<int:pk>/concluir/", AppointmentCompleteView.as_view(), name="appointment_complete"),
 
-    path("cancelar/", PublicCancelAppointmentView.as_view(), name="public_cancel"),
-    path("cancelar/sucesso/", PublicCancelSuccessView.as_view(), name="public_cancel_success"),    
+    path("minhas-marcacoes/", CustomerAppointmentsView.as_view(), name="customer_appointments"),
+    path("minhas-marcacoes/<str:reference_code>/", CustomerAppointmentDetailView.as_view(), name="customer_appointment_detail"),
+
+
+    # Cancelamento via código de referência pelo email
+    path("m/<str:token>/", PublicAppointmentMagicView.as_view(), name="public_appointment_magic"),  
 ]

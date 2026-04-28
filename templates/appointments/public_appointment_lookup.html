@@ -123,7 +123,7 @@
                     {% endif %}
 
                     <div class="d-grid gap-2">
-                        {% if appointment.status != "cancelled" %}
+                        {% if appointment.status == "scheduled" %}
                             <a
                                 href="{% url 'appointments:public_cancel_by_code' appointment.reference_code %}"
                                 class="btn btn-outline-danger"

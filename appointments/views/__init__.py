@@ -5,12 +5,16 @@ from .appointments import (
     AppointmentCreateView,
     AppointmentListView,
     AppointmentUpdateView,
+    CustomerAppointmentsView,
+    CustomerAppointmentDetailView,
 )
 from .customers import (
     CustomerCreateView,
     CustomerListView,
+    CustomerUpdateView,
 )
 from .diagnostics import ScheduleDiagnosticsView
+
 from .public import (
     PublicAppointmentCreateView,
     PublicAppointmentLookupView,
@@ -20,6 +24,7 @@ from .public import (
     PublicCancelAppointmentView,
     PublicCancelSuccessView,
     PublicVisualScheduleView,
+    PublicAppointmentMagicView,
 )
 from .schedule_blocks import (
     ScheduleBlockCreateView,

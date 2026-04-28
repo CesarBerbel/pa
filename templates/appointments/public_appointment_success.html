@@ -22,9 +22,14 @@
                 </div>
 
                 <div class="d-grid gap-2">
-                    <a href="{% url 'appointments:public_appointment_lookup' %}" class="btn btn-primary">
-                        Consultar marcação
-                    </a>
+                    <form method="post" action="{% url 'appointments:public_appointment_lookup' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="reference_code" value="{{ reference_code }}">
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            Consultar marcação
+                        </button>
+                    </form>
 
                     <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-outline-secondary">
                         Fazer nova marcação

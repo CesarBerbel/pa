@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Minhas marcações{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+
+                <h1 class="h4 mb-4 text-center">
+                    Minhas marcações
+                </h1>
+
+                {% if appointments %}
+
+                    <div class="d-grid gap-3">
+
+                        {% for appointment in appointments %}
+                            <div class="appointment-card">
+
+                                <div class="appointment-main">
+                                    <strong>{{ appointment.service.name }}</strong>
+
+                                    <p>
+                                        {{ appointment.date|date:"d/m/Y" }} às {{ appointment.start_time|time:"H:i" }}
+                                    </p>
+
+                                    <span class="status-pill">
+                                        {{ appointment.get_status_display }}
+                                    </span>
+                                </div>
+
+                                <div class="appointment-actions">
+                                    
+                                    {% if appointment.status == "scheduled" %}
+                                        <a href="{% url 'appointments:public_cancel_by_code' appointment.reference_code %}"
+                                           class="btn btn-sm btn-outline-danger">
+                                            Cancelar
+                                        </a>                                    
+                                        <a href="{% url 'appointments:customer_appointment_detail' appointment.reference_code %}"
+                                           class="btn btn-sm btn-primary">
+                                            Ver detalhes
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'appointments:customer_appointment_detail' appointment.reference_code %}"
+                                           class="btn btn-sm btn-primary">
+                                            Ver detalhes
+                                        </a>
+                                    {% endif %}
+                                </div>
+
+                            </div>
+                        {% endfor %}
+
+                    </div>
+
+                {% else %}
+
+                    <div class="text-center text-muted">
+                        Nenhuma marcação encontrada.
+                    </div>
+
+                {% endif %}
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

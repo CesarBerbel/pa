@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Detalhes da marcação{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+
+        {% if appointment %}
+            <div class="appointment-detail-card">
+
+                <div class="appointment-detail-header">
+                    <span class="luxury-eyebrow">Detalhes da marcação</span>
+
+                    <h1>{{ appointment.service.name }}</h1>
+
+                    <span class="appointment-detail-status">
+                        {{ appointment.get_status_display }}
+                    </span>
+                </div>
+
+                <div class="appointment-detail-code">
+                    <span>Código da marcação</span>
+                    <strong>{{ appointment.reference_code }}</strong>
+                </div>
+
+                <div class="appointment-detail-grid">
+                    <div>
+                        <span>Cliente</span>
+                        <strong>{{ appointment.customer.full_name }}</strong>
+                    </div>
+
+                    <div>
+                        <span>Serviço</span>
+                        <strong>{{ appointment.service.name }}</strong>
+                    </div>
+
+                    <div>
+                        <span>Data</span>
+                        <strong>{{ appointment.date|date:"d/m/Y" }}</strong>
+                    </div>
+
+                    <div>
+                        <span>Horário</span>
+                        <strong>{{ appointment.start_time|time:"H:i" }}</strong>
+                    </div>
+                </div>
+
+                {% if appointment.notes %}
+                    <div class="appointment-detail-notes">
+                        <span>Observações</span>
+                        <p>{{ appointment.notes }}</p>
+                    </div>
+                {% endif %}
+
+                <div class="appointment-detail-actions">
+                    <a href="{% url 'appointments:customer_appointments' %}" class="btn btn-primary">
+                        Voltar
+                    </a>
+
+                    {% if appointment.status == "scheduled" %}
+                        <a
+                            href="{% url 'appointments:public_cancel_by_code' appointment.reference_code %}"
+                            class="btn btn-outline-danger"
+                        >
+                            Cancelar marcação
+                        </a>
+                    {% endif %}
+
+                    <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary">
+                        Nova marcação
+                    </a>
+                </div>
+
+            </div>
+        {% else %}
+            <div class="app-empty-state">
+                <h3>Marcação não encontrada</h3>
+                <p>Não encontramos esta marcação na sua conta.</p>
+
+                <a href="{% url 'appointments:customer_appointments' %}" class="btn btn-primary">
+                    Voltar para minhas marcações
+                </a>
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}

@@ -18,7 +18,7 @@
                     Confirme os dados da sua marcação.
                 </p>
 
-                <form method="post" novalidate>
+                <form method="post" novalidate id="booking-form">
                     {% csrf_token %}
 
                     {{ form.non_field_errors }}
@@ -79,7 +79,7 @@
                     {{ form.customer_email|as_crispy_field }}
                     {{ form.notes|as_crispy_field }}
 
-                    <button type="submit" class="btn btn-primary w-100 mt-3" id="submit-btn">
+                    <button type="button" class="btn btn-primary w-100 mt-3" id="open-booking-choice-modal">
                         Confirmar marcação
                     </button>
 
@@ -97,18 +97,101 @@
 
     </div>
 </div>
+{% if not request.user.is_authenticated %}
+    <div class="modal fade" id="bookingChoiceModal" tabindex="-1" aria-labelledby="bookingChoiceModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content premium-modal">
+                <div class="modal-body text-center p-4 p-md-5">
+                    <span class="luxury-eyebrow">Antes de confirmar</span>
 
+                    <h2 class="h4 mt-2 mb-3" id="bookingChoiceModalLabel">
+                        Deseja criar uma conta?
+                    </h2>
+
+                    <p class="text-muted mb-4">
+                        Com uma conta, os seus dados ficam guardados para próximas marcações.
+                        Também poderá consultar as suas marcações com mais facilidade.
+                    </p>
+
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-primary" id="continue-without-account">
+                            Continuar sem cadastro
+                        </button>
+
+                        <button type="button" class="btn btn-outline-secondary" id="go-to-signup">
+                            Criar conta com estes dados
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    const form = document.querySelector("form");
-    const btn = document.getElementById("submit-btn");
+    const form = document.getElementById("booking-form");
+    const openModalButton = document.getElementById("open-booking-choice-modal");
 
-    if (!form || !btn) return;
+    if (!form || !openModalButton) {
+        return;
+    }
 
-    form.addEventListener("submit", function () {
-        btn.disabled = true;
-        btn.innerHTML = "A confirmar...";
+    const isAuthenticated = {{ request.user.is_authenticated|yesno:"true,false" }};
+
+    openModalButton.addEventListener("click", function () {
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        if (isAuthenticated) {
+            openModalButton.disabled = true;
+            openModalButton.innerHTML = "A confirmar...";
+            form.submit();
+            return;
+        }
+
+        const continueButton = document.getElementById("continue-without-account");
+        const signupButton = document.getElementById("go-to-signup");
+        const modalElement = document.getElementById("bookingChoiceModal");
+
+        if (!continueButton || !signupButton || !modalElement) {
+            form.submit();
+            return;
+        }
+
+        const bookingModal = new bootstrap.Modal(modalElement);
+        bookingModal.show();
+
+        continueButton.addEventListener("click", function () {
+            continueButton.disabled = true;
+            signupButton.disabled = true;
+            continueButton.innerHTML = "A confirmar...";
+            form.submit();
+        }, { once: true });
+
+        signupButton.addEventListener("click", function () {
+            const params = new URLSearchParams();
+
+            const customerName = document.getElementById("id_customer_name");
+            const customerPhone = document.getElementById("id_customer_phone");
+            const customerEmail = document.getElementById("id_customer_email");
+
+            const serviceInput = form.querySelector("[name='service']");
+            const dateInput = form.querySelector("[name='date']");
+            const startTimeInput = form.querySelector("[name='start_time']");
+
+            if (customerName) params.set("name", customerName.value);
+            if (customerPhone) params.set("phone", customerPhone.value);
+            if (customerEmail) params.set("email", customerEmail.value);
+
+            if (serviceInput) params.set("service", serviceInput.value);
+            if (dateInput) params.set("date", dateInput.value);
+            if (startTimeInput) params.set("start_time", startTimeInput.value);
+
+            window.location.href = "{% url 'accounts:customer_signup' %}?" + params.toString();
+        }, { once: true });
     });
 });
 </script>

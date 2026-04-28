@@ -1,90 +1,68 @@
 from django import forms
 
-from .models import Appointment, Customer, ScheduleBlock, Service
+from django.contrib import admin
+
+from .models import (
+    Appointment,
+    Customer,
+    Service,
+    ScheduleBlock,
+    BusinessHour,
+)
+
+@admin.register(Service)
+class ServiceAdmin(admin.ModelAdmin):
+    list_display = ("name", "duration_minutes", "price", "is_active")
+    list_filter = ("is_active",)
+    search_fields = ("name",)
 
 
-class ServiceForm(forms.ModelForm):
-    # Form used to create and edit services
+@admin.register(Customer)
+class CustomerAdmin(admin.ModelAdmin):
+    list_display = ("full_name", "email", "phone", "user")
+    search_fields = ("full_name", "email", "phone")
 
-    class Meta:
-        model = Service
-        fields = [
-            "name",
-            "description",
-            "duration_minutes",
-            "price",
-            "is_active",
-        ]
+@admin.register(Appointment)
+class AppointmentAdmin(admin.ModelAdmin):
+    list_display = (
+        "reference_code",
+        "customer",
+        "service",
+        "date",
+        "start_time",
+        "status",
+    )
 
+    list_filter = ("status", "date", "service")
 
-class CustomerForm(forms.ModelForm):
-    # Form used to create and edit customers
+    search_fields = (
+        "reference_code",
+        "customer__full_name",
+        "customer__email",
+    )
 
-    class Meta:
-        model = Customer
-        fields = [
-            "full_name",
-            "email",
-            "phone",
-        ]
+    autocomplete_fields = ("customer", "service")
 
+    ordering = ("-date", "-start_time")
+    readonly_fields = ("reference_code", "created_at", "updated_at")
 
-class AppointmentForm(forms.ModelForm):
-    # Form used to create and edit appointments
+@admin.register(ScheduleBlock)
+class ScheduleBlockAdmin(admin.ModelAdmin):
+    list_display = (
+        "title",
+        "date",
+        "start_time",
+        "end_time",
+        "is_full_day",
+        "is_active",
+    )
 
-    class Meta:
-        model = Appointment
-        fields = [
-            "customer",
-            "service",
-            "date",
-            "start_time",
-            "status",
-            "notes",
-        ]
-        widgets = {
-            "date": forms.DateInput(
-                attrs={
-                    "type": "date",
-                }
-            ),
-            "start_time": forms.TimeInput(
-                attrs={
-                    "type": "time",
-                }
-            ),
-        }
+    list_filter = ("is_active", "is_full_day", "block_type")
+
+    search_fields = ("title",)
 
 
-class ScheduleBlockForm(forms.ModelForm):
-    # Form used to create schedule blocks
-
-    class Meta:
-        model = ScheduleBlock
-        fields = [
-            "title",
-            "block_type",
-            "date",
-            "start_time",
-            "end_time",
-            "is_full_day",
-            "is_active",
-            "notes",
-        ]
-        widgets = {
-            "date": forms.DateInput(
-                attrs={
-                    "type": "date",
-                }
-            ),
-            "start_time": forms.TimeInput(
-                attrs={
-                    "type": "time",
-                }
-            ),
-            "end_time": forms.TimeInput(
-                attrs={
-                    "type": "time",
-                }
-            ),
-        }
+@admin.register(BusinessHour)
+class BusinessHourAdmin(admin.ModelAdmin):
+    list_display = ("weekday", "start_time", "end_time", "is_active")
+    list_editable = ("start_time", "end_time", "is_active")            
