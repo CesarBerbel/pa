@@ -1,0 +1,78 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Django stuff
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Static and media (gerados em produção)
+staticfiles/
+media/
+
+# Environment variables
+.env
+.env.*
+
+# Secrets
+*.pem
+*.key
+
+# Migrations (opcional — cuidado em projetos reais)
+**/migrations/*
+!**/migrations/__init__.py
+
+# PyCharm / VSCode / IDEs
+.idea/
+.vscode/
+
+# Mac / Linux
+.DS_Store
+Thumbs.db
+
+# Test / coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# mypy / type checking
+.mypy_cache/
+
+# Celery
+celerybeat-schedule
+
+# Logs
+logs/
+*.log
+
+# Docker (se usar)
+*.pid
+*.seed
+*.pid.lock
+
+# Node (caso use frontend junto)
+node_modules/
+
+# Static build tools
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
