@@ -1,0 +1,445 @@
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
+from datetime import datetime, timedelta
+
+from django.contrib import messages
+from django.db import transaction
+from django.http import JsonResponse
+from django.shortcuts import redirect
+from django.urls import reverse_lazy
+from django.utils import timezone
+from django.views.generic import FormView, TemplateView, View
+
+from appointments.forms import (
+    PublicAppointmentForm,
+    PublicAppointmentLookupForm,
+    PublicCancelForm,
+)
+from appointments.models import Appointment, BusinessHour, Customer, ScheduleBlock, Service
+
+
+class PublicBookingAvailabilityMixin:
+    # Shared availability logic for public booking
+
+    slot_minutes = 30
+
+    def get_available_slots_for(self, service, selected_date):
+        # Calculate available slots without using unsaved appointment objects
+        business_hour = BusinessHour.objects.filter(
+            weekday=selected_date.weekday(),
+            is_active=True,
+        ).first()
+
+        if not business_hour:
+            return []
+
+        now = timezone.localtime()
+
+        current_datetime = datetime.combine(
+            selected_date,
+            business_hour.start_time,
+        )
+
+        business_end_datetime = datetime.combine(
+            selected_date,
+            business_hour.end_time,
+        )
+
+        # If selected date is today, do not show past times
+        if selected_date == now.date():
+            current_datetime = max(
+                current_datetime,
+                now.replace(second=0, microsecond=0).replace(tzinfo=None),
+            )
+
+            # Round up to the next slot interval
+            minute = current_datetime.minute
+
+            if minute % self.slot_minutes != 0:
+                minutes_to_add = self.slot_minutes - (minute % self.slot_minutes)
+                current_datetime += timedelta(minutes=minutes_to_add)
+
+        appointments = Appointment.objects.filter(
+            date=selected_date,
+        ).exclude(
+            status=Appointment.STATUS_CANCELLED,
+        ).select_related(
+            "service",
+        )
+
+        blocks = [
+            block
+            for block in ScheduleBlock.objects.filter(is_active=True)
+            if block.applies_to_date(selected_date)
+        ]
+
+        available_slots = []
+
+        while current_datetime + timedelta(minutes=service.duration_minutes) <= business_end_datetime:
+            slot_start = current_datetime
+            slot_end = slot_start + timedelta(minutes=service.duration_minutes)
+
+            has_conflict = False
+
+            for appointment in appointments:
+                appointment_start = appointment.get_start_datetime()
+                appointment_end = appointment.get_end_datetime()
+
+                if slot_start < appointment_end and slot_end > appointment_start:
+                    has_conflict = True
+                    break
+
+            if not has_conflict:
+                for block in blocks:
+                    block_start = block.get_start_datetime_for_date(selected_date)
+                    block_end = block.get_end_datetime_for_date(selected_date)
+
+                    if slot_start < block_end and slot_end > block_start:
+                        has_conflict = True
+                        break
+
+            if not has_conflict:
+                available_slots.append(
+                    {
+                        "value": slot_start.strftime("%H:%M"),
+                        "label": slot_start.strftime("%H:%M"),
+                    }
+                )
+
+            current_datetime += timedelta(minutes=self.slot_minutes)
+
+        return available_slots
+
+
+class PublicAppointmentCreateView(PublicBookingAvailabilityMixin, FormView):
+    # Public booking form for customers
+
+    template_name = "appointments/public_appointment_form.html"
+    form_class = PublicAppointmentForm
+    success_url = reverse_lazy("appointments:public_appointment_success")
+
+    def get_initial(self):
+        # Pre-fill form from query string (agenda click)
+        initial = super().get_initial()
+
+        service_id = self.request.GET.get("service")
+        date_value = self.request.GET.get("date")
+        start_time_value = self.request.GET.get("start_time")
+
+        if service_id:
+            initial["service"] = service_id
+
+        if date_value:
+            initial["date"] = date_value
+        else:
+            initial["date"] = timezone.localdate()
+
+        if start_time_value:
+            initial["start_time"] = start_time_value
+
+        return initial
+
+    def get_context_data(self, **kwargs):
+        # Detect if the booking came from the public visual schedule
+        context = super().get_context_data(**kwargs)
+
+        is_locked_from_agenda = bool(
+            self.request.GET.get("service")
+            and self.request.GET.get("date")
+            and self.request.GET.get("start_time")
+        )
+
+        if self.request.POST.get("locked_from_agenda") == "1":
+            is_locked_from_agenda = True
+
+        context["is_locked_from_agenda"] = is_locked_from_agenda
+
+        return context
+
+    def form_valid(self, form):
+        # Create appointment safely
+        cleaned_data = form.cleaned_data
+
+        service = cleaned_data["service"]
+        date = cleaned_data["date"]
+        start_time = datetime.strptime(
+            cleaned_data["start_time"],
+            "%H:%M",
+        ).time()
+
+        customer_name = cleaned_data["customer_name"]
+        customer_phone = cleaned_data["customer_phone"]
+        customer_email = cleaned_data["customer_email"]
+        notes = cleaned_data.get("notes")
+
+        with transaction.atomic():
+            customer = Customer.objects.filter(
+                email=customer_email,
+            ).order_by(
+                "id",
+            ).first()
+
+            if not customer:
+                customer = Customer.objects.create(
+                    full_name=customer_name,
+                    phone=customer_phone,
+                    email=customer_email,
+                )
+
+            User = get_user_model()
+
+            system_user = User.objects.filter(
+                is_superuser=True,
+            ).order_by(
+                "id",
+            ).first()
+
+            if not system_user:
+                raise ValidationError(
+                    "Não existe usuário administrador para registrar marcações públicas."
+                )
+
+            appointment = Appointment.objects.create(
+                customer=customer,
+                service=service,
+                date=date,
+                start_time=start_time,
+                notes=notes,
+                status=Appointment.STATUS_CONFIRMED,
+                created_by=system_user,
+            )
+
+        self.request.session["last_reference_code"] = appointment.reference_code
+
+        return super().form_valid(form)
+
+
+class PublicAvailableSlotsView(PublicBookingAvailabilityMixin, View):
+    # Returns available public booking slots as JSON
+
+    def get(self, request):
+        service_id = request.GET.get("service")
+        date_value = request.GET.get("date")
+
+        if not service_id or not date_value:
+            return JsonResponse({"slots": []})
+
+        service = Service.objects.filter(
+            pk=service_id,
+            is_active=True,
+        ).first()
+
+        if not service:
+            return JsonResponse({"slots": []})
+
+        try:
+            selected_date = datetime.strptime(date_value, "%Y-%m-%d").date()
+        except ValueError:
+            return JsonResponse({"slots": []})
+
+        slots = self.get_available_slots_for(service, selected_date)
+
+        return JsonResponse({"slots": slots})
+
+
+class PublicAppointmentSuccessView(TemplateView):
+    # Public appointment success page
+
+    template_name = "appointments/public_appointment_success.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context["reference_code"] = self.request.session.get(
+            "last_reference_code",
+            "N/A",
+        )
+
+        return context
+
+
+class PublicCancelAppointmentView(FormView):
+    # Allows public cancellation by reference code
+
+    template_name = "appointments/public_cancel_form.html"
+    form_class = PublicCancelForm
+    success_url = reverse_lazy("appointments:public_cancel_success")
+
+    def form_valid(self, form):
+        reference_code = form.cleaned_data["reference_code"].strip().upper()
+
+        try:
+            appointment = Appointment.objects.get(reference_code=reference_code)
+        except Appointment.DoesNotExist:
+            form.add_error(
+                "reference_code",
+                "Código não encontrado."
+            )
+            return self.form_invalid(form)
+
+        if appointment.status == Appointment.STATUS_CANCELLED:
+            form.add_error(
+                "reference_code",
+                "Esta marcação já foi cancelada."
+            )
+            return self.form_invalid(form)
+
+        appointment.status = Appointment.STATUS_CANCELLED
+        appointment.save(update_fields=["status", "updated_at"])
+
+        self.request.session["cancelled_reference_code"] = appointment.reference_code
+
+        return redirect(
+            "appointments:public_cancel_success_with_code",
+            reference_code=appointment.reference_code,
+        )
+
+
+class PublicCancelSuccessView(TemplateView):
+    # Shows cancellation success
+
+    template_name = "appointments/public_cancel_success.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context["reference_code"] = self.kwargs.get(
+            "reference_code",
+            self.request.session.get("cancelled_reference_code", "N/A"),
+        )
+
+        return context
+
+
+class PublicCancelAppointmentByCodeView(TemplateView):
+    # Allows public cancellation using a direct reference code URL
+
+    template_name = "appointments/public_cancel_by_code.html"
+
+    def get_appointment(self):
+        # Get appointment by reference code from URL
+        reference_code = self.kwargs.get("reference_code", "").strip().upper()
+
+        return Appointment.objects.filter(
+            reference_code=reference_code,
+        ).select_related(
+            "customer",
+            "service",
+        ).first()
+
+    def get_context_data(self, **kwargs):
+        # Add appointment data to template context
+        context = super().get_context_data(**kwargs)
+
+        context["appointment"] = self.get_appointment()
+
+        return context
+
+    def post(self, request, *args, **kwargs):
+        # Cancel appointment after confirmation
+        appointment = self.get_appointment()
+
+        if not appointment:
+            messages.error(request, "Marcação não encontrada.")
+            return redirect("appointments:public_cancel")
+
+        if appointment.status == Appointment.STATUS_CANCELLED:
+            messages.warning(request, "Esta marcação já está cancelada.")
+            return redirect("appointments:public_cancel_success")
+
+        appointment.status = Appointment.STATUS_CANCELLED
+        appointment.save(update_fields=["status", "updated_at"])
+
+        request.session["cancelled_reference_code"] = appointment.reference_code
+
+        return redirect(
+            "appointments:public_cancel_success_with_code",
+            reference_code=appointment.reference_code,
+        )
+
+
+class PublicAppointmentLookupView(FormView):
+    # Allows customers to search an appointment by reference code
+
+    template_name = "appointments/public_appointment_lookup.html"
+    form_class = PublicAppointmentLookupForm
+
+    def form_valid(self, form):
+        # Search appointment by reference code
+        reference_code = form.cleaned_data["reference_code"]
+
+        appointment = Appointment.objects.filter(
+            reference_code=reference_code,
+        ).select_related(
+            "customer",
+            "service",
+        ).first()
+
+        if not appointment:
+            form.add_error(
+                "reference_code",
+                "Não encontramos nenhuma marcação com este código.",
+            )
+            return self.form_invalid(form)
+
+        return self.render_to_response(
+            self.get_context_data(
+                form=form,
+                appointment=appointment,
+            )
+        )
+
+
+class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
+    # Public visual schedule for customers without login
+
+    template_name = "appointments/public_visual_schedule.html"
+
+    def get_selected_service(self):
+        # Get selected service from query string
+        service_id = self.request.GET.get("service")
+
+        if not service_id:
+            return Service.objects.filter(is_active=True).order_by("name").first()
+
+        return Service.objects.filter(
+            pk=service_id,
+            is_active=True,
+        ).first()
+
+    def get_selected_date(self):
+        # Get selected date from query string or use today
+        date_value = self.request.GET.get("date")
+
+        if not date_value:
+            return timezone.localdate()
+
+        try:
+            return datetime.strptime(date_value, "%Y-%m-%d").date()
+        except ValueError:
+            return timezone.localdate()
+
+    def get_context_data(self, **kwargs):
+        # Add public visual schedule data to context
+        context = super().get_context_data(**kwargs)
+
+        selected_service = self.get_selected_service()
+        selected_date = self.get_selected_date()
+
+        slots = []
+
+        if selected_service:
+            slots = self.get_available_slots_for(
+                selected_service,
+                selected_date,
+            )
+
+        context["services"] = Service.objects.filter(
+            is_active=True,
+        ).order_by("name")
+
+        context["selected_service"] = selected_service
+        context["selected_date"] = selected_date
+        context["slots"] = slots
+
+        return context
