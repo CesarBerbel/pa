@@ -279,6 +279,16 @@ class Appointment(models.Model):
         null=True,
     )
 
+    reminder_24h_sent_at = models.DateTimeField(
+        blank=True,
+        null=True,
+    )
+
+    reminder_2h_sent_at = models.DateTimeField(
+        blank=True,
+        null=True,
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

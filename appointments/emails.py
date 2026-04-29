@@ -155,7 +155,7 @@ def send_appointment_cancelled_email(appointment, cancellation_reason=""):
         recipient_list=[customer_email],
     )
 
-def send_appointment_reminder_email(appointment):
+def send_appointment_reminder_email(appointment, reminder_label=""):
     # Sends appointment reminder email.
     customer_email = appointment.customer.email
 
@@ -182,13 +182,14 @@ def send_appointment_reminder_email(appointment):
         "reference_code": appointment.reference_code,
         "magic_link": full_url,
         "cancellation_link": cancel_url,
+        "reminder_label": reminder_label,
     }
 
-    fallback_subject = "Lembrete da sua marcação"
+    fallback_subject = f"Lembrete da sua marcação {reminder_label}".strip()
 
     fallback_body = (
         f"Olá {context['customer_name']},\n\n"
-        f"Este é um lembrete da sua marcação.\n\n"
+        f"Este é um lembrete da sua marcação {context['reminder_label']}.\n\n"
         f"Serviço: {context['service_name']}\n"
         f"Data: {context['appointment_date']}\n"
         f"Horário: {context['appointment_time']}\n"

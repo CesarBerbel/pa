@@ -56,6 +56,8 @@ class AppointmentAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
         "reminder_sent_at",
+        "reminder_24h_sent_at",
+        "reminder_2h_sent_at",
     )
 
     fieldsets = (
@@ -89,6 +91,8 @@ class AppointmentAdmin(admin.ModelAdmin):
                 "fields": (
                     "created_at",
                     "updated_at",
+                    "reminder_24h_sent_at",
+                    "reminder_2h_sent_at",
                 )
             },
         ),
