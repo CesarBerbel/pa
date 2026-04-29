@@ -78,44 +78,14 @@ def find_customer_by_email_or_phone(email="", phone=""):
     return None
 
 
-def find_or_create_customer(full_name, phone, email="", user=None):
-    # Centralized customer creation and update logic.
-    normalized_email = normalize_email(email)
-    normalized_phone = validate_phone_for_brazil_or_portugal(phone)
-
-    customer = find_customer_by_email_or_phone(
-        email=normalized_email,
-        phone=normalized_phone,
-    )
-
-    if customer:
-        updated_fields = []
-
-        if user and getattr(user, "is_authenticated", False) and not customer.user:
-            customer.user = user
-            updated_fields.append("user")
-
-        if full_name and customer.full_name != full_name:
-            customer.full_name = full_name
-            updated_fields.append("full_name")
-
-        if normalized_phone and customer.phone != normalized_phone:
-            customer.phone = normalized_phone
-            updated_fields.append("phone")
-
-        if normalized_email and customer.email != normalized_email:
-            customer.email = normalized_email
-            updated_fields.append("email")
-
-        if updated_fields:
-            updated_fields.append("updated_at")
-            customer.save(update_fields=updated_fields)
-
-        return customer
+def find_or_create_customer(name, phone, email, user=None):
+    # Always create a new guest customer without searching users or existing customers.
+    normalized_email = (email or "").strip().lower()
 
     return Customer.objects.create(
-        user=user if user and getattr(user, "is_authenticated", False) else None,
-        full_name=full_name,
-        phone=normalized_phone,
+        user=None,
+        is_guest=True,
+        full_name=name,
+        phone=phone,
         email=normalized_email,
     )

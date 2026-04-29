@@ -47,6 +47,11 @@ class Customer(models.Model):
     full_name = models.CharField(max_length=255)
     email = models.EmailField(blank=True)
     phone = models.CharField(max_length=30)
+
+    is_guest = models.BooleanField(
+        default=False,
+    )
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,

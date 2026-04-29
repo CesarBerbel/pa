@@ -232,10 +232,9 @@ class PublicAppointmentCreateView(PublicBookingAvailabilityMixin, FormView):
 
         with transaction.atomic():
             customer = find_or_create_customer(
-                full_name=customer_name,
+                name=customer_name,
                 phone=customer_phone,
                 email=customer_email,
-                user=self.request.user if self.request.user.is_authenticated else None,
             )
 
             User = get_user_model()

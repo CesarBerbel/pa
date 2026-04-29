@@ -123,10 +123,9 @@ class CustomerSignupForm(UserCreationForm):
             user.save()
 
             self.customer = find_or_create_customer(
-                full_name=full_name,
+                name=full_name,
                 phone=phone,
                 email=email,
-                user=user,
             )
 
         return user
