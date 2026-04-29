@@ -47,29 +47,47 @@ class AppointmentService:
         notes="",
         send_email=True,
     ):
-        # Create an appointment using the model validation rules.
+        # Create an appointment safely using transaction and row-level locking.
         if not created_by:
             created_by = AppointmentService.get_system_user()
 
-        with transaction.atomic():
-            appointment = Appointment.objects.create(
-                customer=customer,
-                service=service,
-                date=date,
-                start_time=start_time,
-                status=status,
-                notes=notes or "",
-                created_by=created_by,
+        try:
+            with transaction.atomic():
+                # Lock appointments from the same day to prevent concurrent double booking.
+                existing_appointments = (
+                    Appointment.objects.select_for_update()
+                    .filter(date=date)
+                    .exclude(status=Appointment.STATUS_CANCELLED)
+                    .select_related("service")
+                )
+
+                # Force query evaluation so PostgreSQL applies the lock before creating.
+                list(existing_appointments)
+
+                appointment = Appointment.objects.create(
+                    customer=customer,
+                    service=service,
+                    date=date,
+                    start_time=start_time,
+                    status=status,
+                    notes=notes or "",
+                    created_by=created_by,
+                )
+
+                if send_email:
+                    send_appointment_confirmation_email(appointment)
+
+            return AppointmentCreationResult(
+                success=True,
+                message="Marcação criada com sucesso.",
+                appointment=appointment,
             )
 
-            if send_email:
-                send_appointment_confirmation_email(appointment)
-
-        return AppointmentCreationResult(
-            success=True,
-            message="Marcação criada com sucesso.",
-            appointment=appointment,
-        )
+        except ValidationError as error:
+            return AppointmentCreationResult(
+                success=False,
+                message=error.messages[0] if hasattr(error, "messages") else str(error),
+            )
 
     @staticmethod
     def create_public_appointment(

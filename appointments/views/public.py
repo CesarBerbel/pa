@@ -216,11 +216,14 @@ class PublicAppointmentCreateView(PublicBookingAvailabilityMixin, FormView):
             date=date,
             start_time=start_time_value,
         ):
-            form.add_error(
-                None,
-                "Este horário já não está disponível. Escolha outro horário na agenda."
+            messages.error(
+                self.request,
+                "Este horário já não está disponível. Escolha outro horário na agenda.",
             )
-            return self.form_invalid(form)
+
+            return redirect(
+                f"{reverse_lazy('appointments:public_visual_schedule')}?service={service.id}&date={date.strftime('%Y-%m-%d')}"
+            )
 
         customer_name = cleaned_data["customer_name"]
         customer_phone = cleaned_data["customer_phone"]
@@ -259,8 +262,14 @@ class PublicAppointmentCreateView(PublicBookingAvailabilityMixin, FormView):
             )
 
             if not result.success:
-                form.add_error(None, result.message)
-                return self.form_invalid(form)
+                messages.error(
+                    self.request,
+                    result.message or "Este horário já não está disponível. Escolha outro.",
+                )
+
+                return redirect(
+                    f"{reverse_lazy('appointments:public_visual_schedule')}?service={service.id}&date={date.strftime('%Y-%m-%d')}"
+                )
 
             appointment = result.appointment
 

@@ -1,6 +1,8 @@
 import random
 import string
 from datetime import datetime, timedelta
+from decimal import Decimal
+from django.core.validators import MinValueValidator
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -11,8 +13,22 @@ class Service(models.Model):
 
     name = models.CharField(max_length=120)
     description = models.TextField(blank=True)
-    duration_minutes = models.PositiveIntegerField(default=60)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    duration_minutes = models.PositiveIntegerField(
+        default=60,
+        validators=[
+            MinValueValidator(1),
+        ],
+    )
+
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[
+            MinValueValidator(Decimal("0.00")),
+        ],
+    )
+
     is_active = models.BooleanField(default=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
