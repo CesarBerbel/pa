@@ -12,7 +12,7 @@ from django.contrib.auth import get_user_model, login
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import redirect
-
+from appointments.appointment_services import AppointmentService
 from appointments.models import Appointment, Service
 
 class UserLoginView(LoginView):
@@ -81,16 +81,18 @@ class CustomerSignupView(CreateView):
                             "Não existe usuário administrador para registrar marcações públicas."
                         )
 
-                    appointment = Appointment.objects.create(
+                    result = AppointmentService.create_public_appointment(
                         customer=customer,
-                        service=service,
-                        date=selected_date,
-                        start_time=selected_time,
-                        status=Appointment.STATUS_SCHEDULED,
-                        created_by=system_user,
+                        service_id=service_id,
+                        date_value=date_value,
+                        start_time_value=start_time_value,
+                        send_email=True,
                     )
 
-                    self.request.session["last_reference_code"] = appointment.reference_code
+                    if not result.success:
+                        raise ValidationError(result.message)
+
+                    self.request.session["last_reference_code"] = result.appointment.reference_code
 
                     return redirect("appointments:public_appointment_success")
 

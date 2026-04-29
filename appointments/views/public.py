@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from datetime import datetime, timedelta
 from appointments.cancellation_services import AppointmentCancellationService
-from appointments.emails import send_appointment_confirmation_email, send_appointment_cancelled_email
+from appointments.emails import send_appointment_confirmation_email
 from django.contrib import messages
 from django.db import transaction
 from django.http import JsonResponse
@@ -19,6 +19,7 @@ from appointments.forms import (
 )
 from appointments.models import Appointment, BusinessHour, Customer, ScheduleBlock, Service
 from appointments.customer_services import find_or_create_customer
+from appointments.appointment_services import AppointmentService
 
 class PublicBookingAvailabilityMixin:
     # Shared availability logic for public booking
@@ -247,15 +248,21 @@ class PublicAppointmentCreateView(PublicBookingAvailabilityMixin, FormView):
                     "Não existe usuário administrador para registrar marcações públicas."
                 )
 
-            appointment = Appointment.objects.create(
+            result = AppointmentService.create_appointment(
                 customer=customer,
                 service=service,
                 date=date,
                 start_time=start_time,
                 notes=notes,
                 status=Appointment.STATUS_SCHEDULED,
-                created_by=system_user,
+                send_email=True,
             )
+
+            if not result.success:
+                form.add_error(None, result.message)
+                return self.form_invalid(form)
+
+            appointment = result.appointment
 
             send_appointment_confirmation_email(appointment)
 
