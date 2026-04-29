@@ -17,7 +17,7 @@ from appointments.forms import (
     PublicCancelForm,
 )
 from appointments.models import Appointment, BusinessHour, Customer, ScheduleBlock, Service
-
+from appointments.customer_services import find_or_create_customer
 
 class PublicBookingAvailabilityMixin:
     # Shared availability logic for public booking
@@ -110,64 +110,6 @@ class PublicBookingAvailabilityMixin:
             current_datetime += timedelta(minutes=self.slot_minutes)
 
         return available_slots
-
-
-def normalize_phone(phone):
-    # Keep only digits to compare phone numbers consistently.
-    if not phone:
-        return ""
-
-    return re.sub(r"\D", "", phone)
-
-
-def find_or_create_public_customer(name, phone, email, user=None):
-    # Reuse customer by email first, then by normalized phone.
-    normalized_phone = normalize_phone(phone)
-    normalized_email = (email or "").strip().lower()
-
-    customer = None
-
-    if normalized_email:
-        customer = Customer.objects.filter(
-            email__iexact=normalized_email,
-        ).order_by("id").first()
-
-    if not customer and normalized_phone:
-        for existing_customer in Customer.objects.exclude(phone="").order_by("id"):
-            if normalize_phone(existing_customer.phone) == normalized_phone:
-                customer = existing_customer
-                break
-
-    if customer:
-        updated = False
-
-        if user and not customer.user:
-            customer.user = user
-            updated = True
-
-        if name and customer.full_name != name:
-            customer.full_name = name
-            updated = True
-
-        if phone and customer.phone != phone:
-            customer.phone = phone
-            updated = True
-
-        if normalized_email and customer.email != normalized_email:
-            customer.email = normalized_email
-            updated = True
-
-        if updated:
-            customer.save(update_fields=["full_name", "phone", "email", "updated_at"])
-
-        return customer
-
-    return Customer.objects.create(
-        user=user if user and user.is_authenticated else None,
-        full_name=name,
-        phone=phone,
-        email=normalized_email,
-    )
 
 
 class PublicAppointmentCreateView(PublicBookingAvailabilityMixin, FormView):
@@ -284,8 +226,8 @@ class PublicAppointmentCreateView(PublicBookingAvailabilityMixin, FormView):
         notes = cleaned_data.get("notes")
 
         with transaction.atomic():
-            customer = find_or_create_public_customer(
-                name=customer_name,
+            customer = find_or_create_customer(
+                full_name=customer_name,
                 phone=customer_phone,
                 email=customer_email,
                 user=self.request.user if self.request.user.is_authenticated else None,
@@ -373,26 +315,48 @@ class PublicCancelAppointmentView(FormView):
     success_url = reverse_lazy("appointments:public_cancel_success")
 
     def form_valid(self, form):
+        # Cancel a public appointment by reference code with business rules.
         reference_code = form.cleaned_data["reference_code"].strip().upper()
 
-        try:
-            appointment = Appointment.objects.get(reference_code=reference_code)
-        except Appointment.DoesNotExist:
+        appointment = Appointment.objects.filter(
+            reference_code=reference_code,
+        ).select_related(
+            "customer",
+            "service",
+        ).first()
+
+        if not appointment:
             form.add_error(
                 "reference_code",
-                "Código não encontrado."
+                "Código não encontrado.",
             )
             return self.form_invalid(form)
 
         if appointment.status == Appointment.STATUS_CANCELLED:
             form.add_error(
                 "reference_code",
-                "Esta marcação já foi cancelada."
+                "Esta marcação já foi cancelada.",
+            )
+            return self.form_invalid(form)
+
+        if appointment.status == Appointment.STATUS_COMPLETED:
+            form.add_error(
+                "reference_code",
+                "Marcações concluídas não podem ser canceladas.",
+            )
+            return self.form_invalid(form)
+
+        if appointment.status == Appointment.STATUS_CONFIRMED and not self.request.user.is_superuser:
+            form.add_error(
+                "reference_code",
+                "Marcações confirmadas só podem ser canceladas pela equipa.",
             )
             return self.form_invalid(form)
 
         appointment.status = Appointment.STATUS_CANCELLED
         appointment.save(update_fields=["status", "updated_at"])
+
+        send_appointment_cancelled_email(appointment)
 
         self.request.session["cancelled_reference_code"] = appointment.reference_code
 
@@ -443,7 +407,7 @@ class PublicCancelAppointmentByCodeView(TemplateView):
         return context
 
     def post(self, request, *args, **kwargs):
-        # Cancel appointment after confirmation
+        # Cancel appointment after confirmation using the same business rules.
         appointment = self.get_appointment()
 
         if not appointment:
@@ -452,17 +416,27 @@ class PublicCancelAppointmentByCodeView(TemplateView):
 
         if appointment.status == Appointment.STATUS_CANCELLED:
             messages.warning(request, "Esta marcação já está cancelada.")
-            return redirect("appointments:public_cancel_success")
+            return redirect(
+                "appointments:public_cancel_success_with_code",
+                reference_code=appointment.reference_code,
+            )
+
+        if appointment.status == Appointment.STATUS_COMPLETED:
+            messages.error(
+                request,
+                "Marcações concluídas não podem ser canceladas.",
+            )
+            return redirect("appointments:public_appointment_lookup")
 
         if appointment.status == Appointment.STATUS_CONFIRMED and not request.user.is_superuser:
             messages.error(
                 request,
-                "Marcações confirmadas só podem ser canceladas pela equipa."
+                "Marcações confirmadas só podem ser canceladas pela equipa.",
             )
-            return redirect("appointments:customer_appointment_detail", reference_code=appointment.reference_code)
-        
+            return redirect("appointments:public_appointment_lookup")
+
         appointment.status = Appointment.STATUS_CANCELLED
-        appointment.save(update_fields=["status", "updated_at"])        
+        appointment.save(update_fields=["status", "updated_at"])
 
         send_appointment_cancelled_email(appointment)
 

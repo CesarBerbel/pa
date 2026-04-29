@@ -57,12 +57,10 @@ urlpatterns = [
 
     path("consultar/", PublicAppointmentLookupView.as_view(), name="public_appointment_lookup"),
 
-
     path("cancelar/", PublicCancelAppointmentView.as_view(), name="public_cancel"),
-    path("cancelar/<str:reference_code>/", PublicCancelAppointmentByCodeView.as_view(), name="public_cancel_by_code"),
-    path("cancelar/sucesso/", PublicCancelSuccessView.as_view(), name="public_cancel_success"),  
+    path("cancelar/sucesso/", PublicCancelSuccessView.as_view(), name="public_cancel_success"),
     path("cancelar/sucesso/<str:reference_code>/", PublicCancelSuccessView.as_view(), name="public_cancel_success_with_code"),
-
+    path("cancelar/<str:reference_code>/", PublicCancelAppointmentByCodeView.as_view(), name="public_cancel_by_code"),
 
     path("marcacoes/", AppointmentListView.as_view(), name="appointment_list"),
     path("marcacoes/nova/", AppointmentCreateView.as_view(), name="appointment_create"),
@@ -73,7 +71,6 @@ urlpatterns = [
 
     path("minhas-marcacoes/", CustomerAppointmentsView.as_view(), name="customer_appointments"),
     path("minhas-marcacoes/<str:reference_code>/", CustomerAppointmentDetailView.as_view(), name="customer_appointment_detail"),
-
 
     # Cancelamento via código de referência pelo email
     path("m/<str:token>/", PublicAppointmentMagicView.as_view(), name="public_appointment_magic"),  

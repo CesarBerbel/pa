@@ -1,14 +1,19 @@
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth import get_user_model
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 
-from appointments.models import Customer
+from appointments.customer_services import (
+    find_customer_by_email_or_phone,
+    find_or_create_customer,
+    validate_phone_for_brazil_or_portugal,
+)
 
 
 User = get_user_model()
 
+
 class EmailAuthenticationForm(AuthenticationForm):
-    # Login form using email instead of username
+    # Login form using email instead of username.
 
     username = forms.EmailField(
         label="Email",
@@ -31,6 +36,7 @@ class EmailAuthenticationForm(AuthenticationForm):
             }
         ),
     )
+
 
 class CustomerSignupForm(UserCreationForm):
     full_name = forms.CharField(
@@ -59,6 +65,7 @@ class CustomerSignupForm(UserCreationForm):
         ]
 
     def clean_email(self):
+        # Normalize email before checking if it already exists.
         email = self.cleaned_data["email"].strip().lower()
 
         if User.objects.filter(email__iexact=email).exists():
@@ -66,36 +73,60 @@ class CustomerSignupForm(UserCreationForm):
 
         return email
 
+    def clean_phone(self):
+        # Validate and normalize phone before checking customer identity.
+        phone = self.cleaned_data["phone"]
+
+        return validate_phone_for_brazil_or_portugal(phone)
+
+    def clean(self):
+        # Prevent linking the same phone to a different existing user account.
+        cleaned_data = super().clean()
+
+        email = cleaned_data.get("email")
+        phone = cleaned_data.get("phone")
+
+        if not email or not phone:
+            return cleaned_data
+
+        existing_customer = find_customer_by_email_or_phone(
+            email=email,
+            phone=phone,
+        )
+
+        if (
+            existing_customer
+            and existing_customer.user
+            and existing_customer.user.email.lower() != email.lower()
+        ):
+            raise forms.ValidationError(
+                "Este telefone já está associado a outra conta. Use outro telefone ou faça login na conta existente."
+            )
+
+        return cleaned_data
+
     def save(self, commit=True):
+        # Save user and delegate customer creation/linking to the customer service.
         user = super().save(commit=False)
 
         email = self.cleaned_data["email"].strip().lower()
         full_name = self.cleaned_data["full_name"]
         phone = self.cleaned_data["phone"]
 
-        user.username = email
         user.email = email
-        user.first_name = full_name
+        user.full_name = full_name
+        user.phone = phone
+
+        self.customer = None
 
         if commit:
             user.save()
 
-            customer = Customer.objects.filter(
-                email__iexact=email,
-            ).order_by("id").first()
-
-            if customer:
-                customer.user = user
-                customer.full_name = full_name
-                customer.phone = phone
-                customer.email = email
-                customer.save(update_fields=["user", "full_name", "phone", "email", "updated_at"])
-            else:
-                Customer.objects.create(
-                    user=user,
-                    full_name=full_name,
-                    phone=phone,
-                    email=email,
-                )
+            self.customer = find_or_create_customer(
+                full_name=full_name,
+                phone=phone,
+                email=email,
+                user=user,
+            )
 
         return user

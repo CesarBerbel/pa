@@ -1,10 +1,12 @@
 from django import forms
 
+from appointments.customer_services import validate_phone_for_brazil_or_portugal
+
 from .models import Appointment, Customer, ScheduleBlock, Service
 
 
 class ServiceForm(forms.ModelForm):
-    # Form used to create and edit services
+    # Form used to create and edit services.
 
     class Meta:
         model = Service
@@ -18,7 +20,7 @@ class ServiceForm(forms.ModelForm):
 
 
 class CustomerForm(forms.ModelForm):
-    # Form used to create and edit customers
+    # Form used to create and edit customers.
 
     class Meta:
         model = Customer
@@ -28,9 +30,15 @@ class CustomerForm(forms.ModelForm):
             "phone",
         ]
 
+    def clean_phone(self):
+        # Validate and normalize customer phone before saving.
+        phone = self.cleaned_data["phone"]
+
+        return validate_phone_for_brazil_or_portugal(phone)
+
 
 class AppointmentForm(forms.ModelForm):
-    # Form used to create and edit appointments
+    # Form used to create and edit appointments.
 
     class Meta:
         model = Appointment
@@ -49,7 +57,7 @@ class AppointmentForm(forms.ModelForm):
 
 
 class PublicAppointmentForm(forms.Form):
-    # Public booking form used by customers without login
+    # Public booking form used by customers without login.
 
     service = forms.ModelChoiceField(
         label="Serviço",
@@ -95,8 +103,15 @@ class PublicAppointmentForm(forms.Form):
         widget=forms.Textarea(attrs={"rows": 3}),
     )
 
+    def clean_customer_phone(self):
+        # Validate and normalize public customer phone before booking.
+        phone = self.cleaned_data["customer_phone"]
+
+        return validate_phone_for_brazil_or_portugal(phone)
+
+
 class ScheduleBlockForm(forms.ModelForm):
-    # Form used to create and edit schedule blocks with weekday checkboxes
+    # Form used to create and edit schedule blocks with weekday checkboxes.
 
     recurring_weekdays_checkboxes = forms.MultipleChoiceField(
         label="Dias da semana da recorrência",
@@ -128,7 +143,7 @@ class ScheduleBlockForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        # Load saved comma-separated weekdays into checkbox values
+        # Load saved comma-separated weekdays into checkbox values.
         super().__init__(*args, **kwargs)
 
         if self.instance and self.instance.pk:
@@ -137,7 +152,7 @@ class ScheduleBlockForm(forms.ModelForm):
             )
 
     def clean(self):
-        # Convert selected weekdays before model validation
+        # Convert selected weekdays before model validation.
         cleaned_data = super().clean()
 
         is_recurring = cleaned_data.get("is_recurring")
@@ -156,14 +171,14 @@ class ScheduleBlockForm(forms.ModelForm):
         return cleaned_data
 
     def _post_clean(self):
-        # Ensure the model receives checkbox values before full_clean
+        # Ensure the model receives checkbox values before full_clean.
         selected_weekdays = self.cleaned_data.get("recurring_weekdays_checkboxes") or []
         self.instance.recurring_weekdays = ",".join(selected_weekdays)
 
         super()._post_clean()
 
     def save(self, commit=True):
-        # Save checkbox values into the model text field
+        # Save checkbox values into the model text field.
         instance = super().save(commit=False)
 
         selected_weekdays = self.cleaned_data.get("recurring_weekdays_checkboxes") or []
@@ -173,17 +188,19 @@ class ScheduleBlockForm(forms.ModelForm):
             instance.save()
 
         return instance
-    
+
+
 class PublicCancelForm(forms.Form):
-    # Form to cancel appointment by reference code
+    # Form to cancel appointment by reference code.
 
     reference_code = forms.CharField(
         label="Código da marcação",
         max_length=20,
     )
 
+
 class PublicAppointmentLookupForm(forms.Form):
-    # Form used to search public appointment by reference code
+    # Form used to search public appointment by reference code.
 
     reference_code = forms.CharField(
         label="Código da marcação",
@@ -197,7 +214,7 @@ class PublicAppointmentLookupForm(forms.Form):
     )
 
     def clean_reference_code(self):
-        # Normalize reference code before search
+        # Normalize reference code before search.
         reference_code = self.cleaned_data["reference_code"]
 
-        return reference_code.strip().upper()    
+        return reference_code.strip().upper()

@@ -53,7 +53,7 @@ class CustomerSignupView(CreateView):
                 login(self.request, self.object)
 
                 if service_id and date_value and start_time_value:
-                    customer = self.object.customer_profile
+                    customer = form.customer
 
                     service = Service.objects.get(
                         pk=service_id,
