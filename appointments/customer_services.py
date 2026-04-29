@@ -79,8 +79,20 @@ def find_customer_by_email_or_phone(email="", phone=""):
 
 
 def find_or_create_customer(name, phone, email, user=None):
-    # Always create a new guest customer without searching users or existing customers.
-    normalized_email = (email or "").strip().lower()
+    # Create guest customers for anonymous flows and linked customers for signup flows.
+    normalized_email = normalize_email(email)
+
+    if user is not None:
+        customer, _created = Customer.objects.update_or_create(
+            user=user,
+            defaults={
+                "is_guest": False,
+                "full_name": name,
+                "phone": phone,
+                "email": normalized_email,
+            },
+        )
+        return customer
 
     return Customer.objects.create(
         user=None,
