@@ -13,59 +13,24 @@ User = get_user_model()
 
 
 class EmailAuthenticationForm(AuthenticationForm):
-    # Login form using email instead of username.
-
-    username = forms.EmailField(
-        label="Email",
-        widget=forms.EmailInput(
-            attrs={
-                "class": "form-control",
-                "placeholder": "Digite seu email",
-                "autocomplete": "email",
-            }
-        ),
-    )
+    username = forms.EmailField(label="Email")
 
     password = forms.CharField(
         label="Senha",
-        widget=forms.PasswordInput(
-            attrs={
-                "class": "form-control",
-                "placeholder": "Digite sua senha",
-                "autocomplete": "current-password",
-            }
-        ),
+        widget=forms.PasswordInput(),
     )
 
 
 class CustomerSignupForm(UserCreationForm):
-    full_name = forms.CharField(
-        label="Nome completo",
-        max_length=255,
-    )
-
-    phone = forms.CharField(
-        label="Telefone",
-        max_length=30,
-    )
-
-    email = forms.EmailField(
-        label="Email",
-        required=True,
-    )
+    full_name = forms.CharField(label="Nome completo", max_length=255)
+    phone = forms.CharField(label="Telefone", max_length=30)
+    email = forms.EmailField(label="Email", required=True)
 
     class Meta:
         model = User
-        fields = [
-            "full_name",
-            "phone",
-            "email",
-            "password1",
-            "password2",
-        ]
+        fields = ["full_name", "phone", "email", "password1", "password2"]
 
     def clean_email(self):
-        # Normalize email before checking if it already exists.
         email = self.cleaned_data["email"].strip().lower()
 
         if User.objects.filter(email__iexact=email).exists():
@@ -74,13 +39,10 @@ class CustomerSignupForm(UserCreationForm):
         return email
 
     def clean_phone(self):
-        # Validate and normalize phone before checking customer identity.
         phone = self.cleaned_data["phone"]
-
         return validate_phone_for_brazil_or_portugal(phone)
 
     def clean(self):
-        # Prevent linking the same phone to a different existing user account.
         cleaned_data = super().clean()
 
         email = cleaned_data.get("email")
@@ -106,7 +68,6 @@ class CustomerSignupForm(UserCreationForm):
         return cleaned_data
 
     def save(self, commit=True):
-        # Save user and delegate customer creation/linking to the customer service.
         user = super().save(commit=False)
 
         email = self.cleaned_data["email"].strip().lower()
@@ -117,8 +78,6 @@ class CustomerSignupForm(UserCreationForm):
         user.full_name = full_name
         user.phone = phone
 
-        self.customer = None
-
         if commit:
             user.save()
 
@@ -126,6 +85,7 @@ class CustomerSignupForm(UserCreationForm):
                 name=full_name,
                 phone=phone,
                 email=email,
+                user=user,
             )
 
         return user
