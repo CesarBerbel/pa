@@ -273,8 +273,6 @@ class PublicAppointmentCreateView(PublicBookingAvailabilityMixin, FormView):
 
             appointment = result.appointment
 
-            send_appointment_confirmation_email(appointment)
-
         self.request.session["last_reference_code"] = appointment.reference_code
 
         return super().form_valid(form)

@@ -2180,3 +2180,9 @@ footer[id] {
     font-size: 16px;
     line-height: 1;
 }
+
+.email-preview-html-body {
+        background: #ffffff;
+        padding: 0;
+        overflow: hidden;
+    }

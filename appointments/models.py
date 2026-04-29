@@ -274,6 +274,11 @@ class Appointment(models.Model):
     cancellation_reason = models.TextField(blank=True)
     cancelled_at = models.DateTimeField(blank=True, null=True)
 
+    reminder_sent_at = models.DateTimeField(
+        blank=True,
+        null=True,
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

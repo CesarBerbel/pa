@@ -1,0 +1,168 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}
+    {{ title }}
+{% endblock %}
+
+{% block content %}
+<style>
+    .email-preview-wrapper {
+        max-width: 980px;
+    }
+
+    .email-preview-toolbar {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .email-preview-card {
+        background: #ffffff;
+        border: 1px solid #dddddd;
+        border-radius: 14px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+
+    .email-preview-header {
+        padding: 18px 22px;
+        border-bottom: 1px solid #eeeeee;
+        background: #f8f9fa;
+    }
+
+    .email-preview-subject {
+        font-size: 20px;
+        font-weight: 700;
+        color: #202124;
+        margin: 0 0 8px 0;
+    }
+
+    .email-preview-meta {
+        color: #5f6368;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    .email-preview-body {
+        padding: 26px 28px;
+        font-size: 15px;
+        line-height: 1.7;
+        color: #202124;
+        white-space: pre-wrap;
+    }
+
+    .email-preview-html-frame {
+        width: 100%;
+        min-height: 420px;
+        border: 0;
+        background: #ffffff;
+    }
+
+    .email-preview-section-title {
+        font-size: 16px;
+        font-weight: 700;
+        margin: 28px 0 12px 0;
+    }
+
+    .email-preview-context {
+        background: #111827;
+        color: #e5e7eb;
+        padding: 18px;
+        border-radius: 12px;
+        overflow-x: auto;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    .email-preview-warning {
+        padding: 14px 16px;
+        background: #fff3cd;
+        border: 1px solid #ffecb5;
+        color: #664d03;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+
+    .email-preview-actions a {
+        display: inline-block;
+        padding: 8px 12px;
+        background: #417690;
+        color: #ffffff !important;
+        border-radius: 6px;
+        text-decoration: none;
+    }
+
+    .email-preview-actions a:hover {
+        background: #205067;
+    }
+</style>
+
+<div class="email-preview-wrapper">
+
+    <div class="email-preview-toolbar">
+        <div>
+            <h1>{{ title }}</h1>
+            <p>
+                Template:
+                <strong>{{ email_template.key }}</strong>
+            </p>
+        </div>
+
+        <div class="email-preview-actions">
+            <a href="{% url 'admin:notifications_emailtemplate_change' email_template.pk %}">
+                Editar template
+            </a>
+        </div>
+    </div>
+
+    <div class="email-preview-warning">
+        Este preview usa dados fictícios apenas para simular a aparência final do email.
+    </div>
+
+    <div class="email-preview-section-title">
+        Preview em texto
+    </div>
+
+    <div class="email-preview-card">
+        <div class="email-preview-header">
+            <p class="email-preview-subject">
+                {{ rendered_email.subject }}
+            </p>
+
+            <div class="email-preview-meta">
+                <div><strong>De:</strong> Priscila Arantes PA</div>
+                <div><strong>Para:</strong> maria@example.com</div>
+            </div>
+        </div>
+
+        <div class="email-preview-body">{{ rendered_email.body_text }}</div>
+    </div>
+
+    {% if rendered_email.body_html %}
+        <div class="email-preview-section-title">
+            Preview em HTML
+        </div>
+
+        <div class="email-preview-card">
+            <div class="email-preview-html-body">
+                {{ rendered_email.body_html|safe }}
+            </div>
+        </div>
+    {% else %}
+        <div class="email-preview-warning">
+            Este template ainda não possui conteúdo HTML no campo <strong>body_html</strong>.
+        </div>
+    {% endif %}
+
+    <div class="email-preview-section-title">
+        Variáveis disponíveis neste preview
+    </div>
+
+    <pre class="email-preview-context">{% for key, value in sample_context.items %}{{ key }}: {{ value }}
+{% endfor %}</pre>
+
+</div>
+{% endblock %}

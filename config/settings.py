@@ -27,6 +27,7 @@ INSTALLED_APPS = [
 
     "accounts",
     "appointments",
+    "notifications",
 ]
 
 # Middleware
@@ -128,12 +129,51 @@ LOGIN_REDIRECT_URL = "dashboard"
 LOGOUT_REDIRECT_URL = "home"
 
 # Email configuration
+# Email configuration
 EMAIL_BACKEND = config(
     "EMAIL_BACKEND",
-    default="django.core.mail.backends.console.EmailBackend"
+    default="django.core.mail.backends.console.EmailBackend",
+)
+
+EMAIL_HOST = config(
+    "EMAIL_HOST",
+    default="smtp.hostinger.com",
+)
+
+EMAIL_PORT = config(
+    "EMAIL_PORT",
+    default=465,
+    cast=int,
+)
+
+EMAIL_USE_SSL = config(
+    "EMAIL_USE_SSL",
+    default=True,
+    cast=bool,
+)
+
+EMAIL_USE_TLS = config(
+    "EMAIL_USE_TLS",
+    default=False,
+    cast=bool,
+)
+
+EMAIL_HOST_USER = config(
+    "EMAIL_HOST_USER",
+    default="",
+)
+
+EMAIL_HOST_PASSWORD = config(
+    "EMAIL_HOST_PASSWORD",
+    default="",
 )
 
 DEFAULT_FROM_EMAIL = config(
     "DEFAULT_FROM_EMAIL",
-    default="no-reply@example.com"
+    default=EMAIL_HOST_USER,
+)
+
+SITE_URL = config(
+    "SITE_URL",
+    default="http://localhost:8000",
 )

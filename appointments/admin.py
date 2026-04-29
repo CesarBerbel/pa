@@ -33,6 +33,7 @@ class AppointmentAdmin(admin.ModelAdmin):
         "start_time",
         "status",
         "cancelled_at",
+        "reminder_sent_at",
     )
 
     list_filter = (
@@ -54,6 +55,7 @@ class AppointmentAdmin(admin.ModelAdmin):
         "cancelled_at",
         "created_at",
         "updated_at",
+        "reminder_sent_at",
     )
 
     fieldsets = (
