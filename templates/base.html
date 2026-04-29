@@ -48,7 +48,7 @@
             {% if user.is_authenticated and user.is_superuser %}
                 <div class="navbar-nav ms-lg-4 mt-3 mt-lg-0">
                     <a class="nav-link" href="{% url 'appointments:visual_schedule' %}">Agenda visual</a>
-                    <a class="nav-link" href="{% url 'appointments:schedule_diagnostics' %}">Diagnóstico</a>
+                    <a class="nav-link" href="{% url 'appointments:reminder_diagnostics' %}">Diagnóstico</a>
                     <a class="nav-link" href="{% url 'appointments:schedule_block_list' %}">Bloqueios</a>
                     <a class="nav-link" href="{% url 'appointments:service_list' %}">Serviços</a>
                     <a class="nav-link" href="{% url 'appointments:customer_list' %}">Clientes</a>

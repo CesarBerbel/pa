@@ -5,10 +5,6 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h4 mb-0">Marcações</h1>
-
-    <a href="{% url 'appointments:appointment_create' %}" class="btn btn-primary">
-        Nova marcação
-    </a>
 </div>
 
 <style>
@@ -23,10 +19,172 @@
         font-size: 16px;
         line-height: 1;
     }
+
+    .appointment-filter-card {
+        border-radius: 18px;
+        background: #ffffff;
+        border: 0;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.06);
+    }
+
+    .appointment-filter-card label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #6c5962;
+        margin-bottom: 6px;
+    }
+
+    .appointment-table-summary {
+        color: #777;
+        font-size: 14px;
+    }
 </style>
+
+<div class="card appointment-filter-card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+
+            <div class="col-12 col-lg-3">
+                <label for="q" class="form-label">Pesquisar</label>
+                <input
+                    type="text"
+                    name="q"
+                    id="q"
+                    class="form-control"
+                    value="{{ filters.q }}"
+                    placeholder="Código, cliente, telefone, email ou serviço"
+                >
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-2">
+                <label for="status" class="form-label">Status</label>
+                <select name="status" id="status" class="form-select">
+                    <option value="">Todos</option>
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-2">
+                <label for="service" class="form-label">Serviço</label>
+                <select name="service" id="service" class="form-select">
+                    <option value="">Todos</option>
+                    {% for service in services %}
+                        <option value="{{ service.pk }}" {% if filters.service == service.pk|stringformat:"s" %}selected{% endif %}>
+                            {{ service.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-2">
+                <label for="date_from" class="form-label">Data inicial</label>
+                <input
+                    type="date"
+                    name="date_from"
+                    id="date_from"
+                    class="form-control"
+                    value="{{ filters.date_from }}"
+                >
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-2">
+                <label for="date_to" class="form-label">Data final</label>
+                <input
+                    type="date"
+                    name="date_to"
+                    id="date_to"
+                    class="form-control"
+                    value="{{ filters.date_to }}"
+                >
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-2">
+                <label for="reminder" class="form-label">Lembretes</label>
+                <select name="reminder" id="reminder" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="24h_sent" {% if filters.reminder == "24h_sent" %}selected{% endif %}>
+                        24h enviado
+                    </option>
+                    <option value="24h_pending" {% if filters.reminder == "24h_pending" %}selected{% endif %}>
+                        24h pendente
+                    </option>
+                    <option value="2h_sent" {% if filters.reminder == "2h_sent" %}selected{% endif %}>
+                        2h enviado
+                    </option>
+                    <option value="2h_pending" {% if filters.reminder == "2h_pending" %}selected{% endif %}>
+                        2h pendente
+                    </option>
+                </select>
+            </div>
+
+            <div class="col-12 col-md-6 col-lg-3">
+                <label for="ordering" class="form-label">Ordenar por</label>
+                <select name="ordering" id="ordering" class="form-select">
+                    <option value="date_asc" {% if filters.ordering == "date_asc" %}selected{% endif %}>
+                        Data mais próxima
+                    </option>
+                    <option value="date_desc" {% if filters.ordering == "date_desc" %}selected{% endif %}>
+                        Data mais distante
+                    </option>
+                    <option value="created_desc" {% if filters.ordering == "created_desc" %}selected{% endif %}>
+                        Criação mais recente
+                    </option>
+                    <option value="created_asc" {% if filters.ordering == "created_asc" %}selected{% endif %}>
+                        Criação mais antiga
+                    </option>
+                    <option value="customer_asc" {% if filters.ordering == "customer_asc" %}selected{% endif %}>
+                        Cliente A-Z
+                    </option>
+                    <option value="customer_desc" {% if filters.ordering == "customer_desc" %}selected{% endif %}>
+                        Cliente Z-A
+                    </option>
+                    <option value="service_asc" {% if filters.ordering == "service_asc" %}selected{% endif %}>
+                        Serviço A-Z
+                    </option>
+                    <option value="service_desc" {% if filters.ordering == "service_desc" %}selected{% endif %}>
+                        Serviço Z-A
+                    </option>
+                    <option value="status_asc" {% if filters.ordering == "status_asc" %}selected{% endif %}>
+                        Status A-Z
+                    </option>
+                    <option value="status_desc" {% if filters.ordering == "status_desc" %}selected{% endif %}>
+                        Status Z-A
+                    </option>
+                </select>
+            </div>
+
+            <div class="col-12 col-lg-6">
+                <div class="d-flex flex-wrap gap-4">
+                    <button type="submit" class="btn btn-primary">
+                        Filtrar
+                    </button>
+
+                    <a href="{% url 'appointments:appointment_list' %}" class="btn btn-outline-secondary">
+                        Limpar filtros
+                    </a>
+
+                    <a href="{% url 'appointments:appointment_create' %}" class="btn btn-primary">
+                        Nova marcação
+                    </a>
+                </div>
+            </div>
+
+        </form>
+    </div>
+</div>
 
 <div class="card shadow-sm border-0">
     <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="appointment-table-summary">
+                {{ appointments|length }} marcação(ões) encontrada(s)
+            </span>
+        </div>
+
         {% if appointments %}
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
@@ -38,6 +196,7 @@
                             <th>Cliente</th>
                             <th>Serviço</th>
                             <th>Status</th>
+                            <th>Lembretes</th>
                             <th class="text-end">Ações</th>
                         </tr>
                     </thead>
@@ -76,6 +235,46 @@
                                         <span class="badge bg-secondary">
                                             {{ appointment.get_status_display }}
                                         </span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if appointment.status == "cancelled" or appointment.status == "completed" %}
+                                        <span class="badge bg-light text-muted border">
+                                            Não aplicável
+                                        </span>
+                                    {% else %}
+                                        <div class="d-flex flex-column gap-1">
+                                            {% if appointment.reminder_24h_sent_at %}
+                                                <span
+                                                    class="badge bg-success"
+                                                    data-bs-toggle="tooltip"
+                                                    data-bs-placement="top"
+                                                    data-bs-title="Enviado em {{ appointment.reminder_24h_sent_at|date:'d/m/Y H:i' }}"
+                                                >
+                                                    24h enviado
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">
+                                                    24h pendente
+                                                </span>
+                                            {% endif %}
+
+                                            {% if appointment.reminder_2h_sent_at %}
+                                                <span
+                                                    class="badge bg-success"
+                                                    data-bs-toggle="tooltip"
+                                                    data-bs-placement="top"
+                                                    data-bs-title="Enviado em {{ appointment.reminder_2h_sent_at|date:'d/m/Y H:i' }}"
+                                                >
+                                                    2h enviado
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">
+                                                    2h pendente
+                                                </span>
+                                            {% endif %}
+                                        </div>
                                     {% endif %}
                                 </td>
 
@@ -157,7 +356,7 @@
             </div>
         {% else %}
             <p class="mb-0">
-                Nenhuma marcação cadastrada.
+                Nenhuma marcação encontrada com os filtros selecionados.
             </p>
         {% endif %}
     </div>

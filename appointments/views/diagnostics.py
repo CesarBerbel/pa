@@ -176,3 +176,95 @@ class ScheduleDiagnosticsView(SuperuserRequiredMixin, TemplateView):
         context["diagnostics"] = diagnostics
 
         return context
+
+
+class ReminderDiagnosticsView(SuperuserRequiredMixin, TemplateView):
+    # Shows diagnostics for appointment reminders without changing database data
+
+    template_name = "appointments/reminder_diagnostics.html"
+
+    def get_selected_date(self):
+        # Get selected date from query string or use tomorrow as default
+        date_value = self.request.GET.get("date")
+
+        if not date_value:
+            return timezone.localdate() + timedelta(days=1)
+
+        try:
+            return datetime.strptime(date_value, "%Y-%m-%d").date()
+        except ValueError:
+            return timezone.localdate() + timedelta(days=1)
+
+    def build_reminder_diagnostics(self, selected_date):
+        # Build reminder diagnostics based on appointment status and customer contact data
+        appointments = Appointment.objects.filter(
+            date=selected_date,
+        ).select_related(
+            "customer",
+            "service",
+        ).order_by(
+            "start_time",
+        )
+
+        diagnostics = []
+
+        for appointment in appointments:
+            status = "ready"
+            reason = "Lembrete pode ser enviado."
+            can_send = True
+
+            if appointment.status == Appointment.STATUS_CANCELLED:
+                status = "blocked"
+                reason = "A marcação está cancelada."
+                can_send = False
+
+            elif appointment.status == Appointment.STATUS_COMPLETED:
+                status = "blocked"
+                reason = "A marcação já está concluída."
+                can_send = False
+
+            elif not appointment.customer.email:
+                status = "warning"
+                reason = "Cliente não tem email cadastrado."
+                can_send = False
+
+            elif selected_date < timezone.localdate():
+                status = "blocked"
+                reason = "A data da marcação já passou."
+                can_send = False
+
+            diagnostics.append(
+                {
+                    "appointment": appointment,
+                    "status": status,
+                    "reason": reason,
+                    "can_send": can_send,
+                }
+            )
+
+        return diagnostics
+
+    def get_context_data(self, **kwargs):
+        # Add reminder diagnostics to template context
+        context = super().get_context_data(**kwargs)
+
+        selected_date = self.get_selected_date()
+        diagnostics = self.build_reminder_diagnostics(selected_date)
+
+        context["selected_date"] = selected_date
+        context["previous_date"] = selected_date - timedelta(days=1)
+        context["next_date"] = selected_date + timedelta(days=1)
+        context["diagnostics"] = diagnostics
+
+        context["total_count"] = len(diagnostics)
+        context["ready_count"] = len(
+            [item for item in diagnostics if item["status"] == "ready"]
+        )
+        context["warning_count"] = len(
+            [item for item in diagnostics if item["status"] == "warning"]
+        )
+        context["blocked_count"] = len(
+            [item for item in diagnostics if item["status"] == "blocked"]
+        )
+
+        return context

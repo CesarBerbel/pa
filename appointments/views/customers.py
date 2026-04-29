@@ -1,16 +1,15 @@
 from django.contrib import messages
-from django.db.models import ProtectedError
 from appointments.mixins import SuperuserRequiredMixin
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, DeleteView, ListView, UpdateView
+from django.views.generic import CreateView, ListView, TemplateView, UpdateView
 
 from appointments.forms import CustomerForm
-from appointments.models import Customer
+from appointments.models import Appointment, Customer
 
 
 class CustomerListView(SuperuserRequiredMixin, ListView):
-    # Lists customers.
+    # Lists customers
 
     model = Customer
     template_name = "appointments/customer_list.html"
@@ -18,7 +17,7 @@ class CustomerListView(SuperuserRequiredMixin, ListView):
 
 
 class CustomerCreateView(SuperuserRequiredMixin, CreateView):
-    # Creates a new customer.
+    # Creates a new customer
 
     model = Customer
     form_class = CustomerForm
@@ -31,7 +30,7 @@ class CustomerCreateView(SuperuserRequiredMixin, CreateView):
 
 
 class CustomerUpdateView(SuperuserRequiredMixin, UpdateView):
-    # Updates an existing customer.
+    # Updates an existing customer
 
     model = Customer
     form_class = CustomerForm
@@ -43,23 +42,41 @@ class CustomerUpdateView(SuperuserRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-class CustomerDeleteView(SuperuserRequiredMixin, DeleteView):
-    # Deletes a customer only when there are no protected related appointments.
+class CustomerDeleteView(SuperuserRequiredMixin, TemplateView):
+    # Shows delete confirmation on GET and deletes customer on POST
 
-    model = Customer
     template_name = "appointments/customer_confirm_delete.html"
-    success_url = reverse_lazy("appointments:customer_list")
 
-    def form_valid(self, form):
-        # Protect appointment history by handling protected foreign key errors gracefully.
-        try:
-            response = super().form_valid(form)
-            messages.success(self.request, "Cliente excluído com sucesso.")
-            return response
-        except ProtectedError:
+    def get_customer(self):
+        # Get customer safely by primary key
+        return Customer.objects.get(pk=self.kwargs["pk"])
+
+    def get_context_data(self, **kwargs):
+        # Send customer data to confirmation template
+        context = super().get_context_data(**kwargs)
+        context["customer"] = self.get_customer()
+        return context
+
+    def post(self, request, pk):
+        # Delete customer only if there are no appointments linked to it
+        customer = self.get_customer()
+
+        has_appointments = Appointment.objects.filter(
+            customer=customer,
+        ).exists()
+
+        if has_appointments:
             messages.error(
-                self.request,
-                "Este cliente não pode ser excluído porque possui marcações vinculadas. "
-                "Para preservar o histórico, edite os dados do cliente em vez de excluí-lo.",
+                request,
+                "Este cliente não pode ser apagado porque já possui marcações associadas.",
             )
             return redirect("appointments:customer_list")
+
+        customer.delete()
+
+        messages.success(
+            request,
+            "Cliente apagado com sucesso.",
+        )
+
+        return redirect("appointments:customer_list")

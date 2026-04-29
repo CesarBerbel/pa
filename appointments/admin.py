@@ -9,6 +9,7 @@ from .models import (
     Service,
     ScheduleBlock,
     BusinessHour,
+    AppointmentReminderLog,
 )
 
 @admin.register(Service)
@@ -32,14 +33,17 @@ class AppointmentAdmin(admin.ModelAdmin):
         "date",
         "start_time",
         "status",
+        "reminder_24h_sent_at",
+        "reminder_2h_sent_at",
         "cancelled_at",
-        "reminder_sent_at",
     )
 
     list_filter = (
         "status",
         "date",
         "service",
+        "reminder_24h_sent_at",
+        "reminder_2h_sent_at",
         "cancelled_at",
     )
 
@@ -52,12 +56,11 @@ class AppointmentAdmin(admin.ModelAdmin):
 
     readonly_fields = (
         "reference_code",
+        "reminder_24h_sent_at",
+        "reminder_2h_sent_at",
         "cancelled_at",
         "created_at",
         "updated_at",
-        "reminder_sent_at",
-        "reminder_24h_sent_at",
-        "reminder_2h_sent_at",
     )
 
     fieldsets = (
@@ -77,6 +80,15 @@ class AppointmentAdmin(admin.ModelAdmin):
             },
         ),
         (
+            "Lembretes",
+            {
+                "fields": (
+                    "reminder_24h_sent_at",
+                    "reminder_2h_sent_at",
+                )
+            },
+        ),
+        (
             "Cancelamento",
             {
                 "fields": (
@@ -91,8 +103,6 @@ class AppointmentAdmin(admin.ModelAdmin):
                 "fields": (
                     "created_at",
                     "updated_at",
-                    "reminder_24h_sent_at",
-                    "reminder_2h_sent_at",
                 )
             },
         ),
@@ -145,4 +155,33 @@ class AppointmentLogAdmin(admin.ModelAdmin):
         "performed_by",
         "description",
         "created_at",
+    )    
+
+@admin.register(AppointmentReminderLog)
+class AppointmentReminderLogAdmin(admin.ModelAdmin):
+    list_display = (
+        "appointment",
+        "reminder_type",
+        "status",
+        "sent_at",
+    )
+
+    list_filter = (
+        "reminder_type",
+        "status",
+        "sent_at",
+    )
+
+    search_fields = (
+        "appointment__reference_code",
+        "appointment__customer__full_name",
+        "error_message",
+    )
+
+    readonly_fields = (
+        "appointment",
+        "reminder_type",
+        "status",
+        "error_message",
+        "sent_at",
     )    

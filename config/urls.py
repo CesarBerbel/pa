@@ -5,6 +5,8 @@ from django.urls import include, path
 from django.views.generic import TemplateView
 
 
+from accounts.views import DashboardView
+
 def home_view(request):
     # Show public homepage for anonymous users and dashboard for authenticated users
     if request.user.is_authenticated and request.user.is_superuser:
@@ -23,9 +25,7 @@ urlpatterns = [
 
     path(
         "dashboard/",
-        login_required(
-            TemplateView.as_view(template_name="dashboard.html")
-        ),
+        DashboardView.as_view(),
         name="dashboard",
     ),
 ]

@@ -3,188 +3,439 @@
 {% block title %}Dashboard | Priscila Arantes PA{% endblock %}
 
 {% block content %}
-
 <section class="internal-dashboard">
 
-    <div class="dashboard-hero mb-4">
-        <div>
-            <span class="luxury-eyebrow">Sistema interno</span>
-            <h1>Bem-vinda ao painel</h1>
-            <p>Gerencie agenda, clientes, serviços e marcações com rapidez.</p>
-        </div>
+<style>
+    .dashboard-grid-card {
+        border: 0;
+        border-radius: 18px;
+        background: #ffffff;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.06);
+        padding: 22px;
+        height: 100%;
+    }
 
-        <div class="dashboard-hero-actions">
-            <a href="{% url 'appointments:visual_schedule' %}" class="btn btn-primary">
-                Abrir agenda
-            </a>
+    .dashboard-grid-card span {
+        display: block;
+        color: #8f5f76;
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        margin-bottom: 6px;
+    }
 
-            <a href="{% url 'appointments:appointment_create' %}" class="btn btn-outline-secondary">
-                Nova marcação
-            </a>
+    .dashboard-grid-card strong {
+        display: block;
+        font-size: 30px;
+        line-height: 1.1;
+        color: #252525;
+    }
+
+    .dashboard-grid-card small {
+        display: block;
+        color: #777;
+        margin-top: 6px;
+    }
+
+    .dashboard-panel {
+        border-radius: 20px;
+        background: #ffffff;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.06);
+        padding: 24px;
+    }
+
+    .dashboard-list-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 0;
+        border-bottom: 1px solid #f0e8ec;
+    }
+
+    .dashboard-list-item:last-child {
+        border-bottom: 0;
+    }
+
+    .dashboard-list-item strong {
+        display: block;
+    }
+
+    .dashboard-list-item small {
+        color: #777;
+    }
+
+    .dashboard-status-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .dashboard-status-box {
+        border-radius: 14px;
+        background: #faf7f8;
+        border: 1px solid #eadde3;
+        padding: 16px;
+    }
+
+    .dashboard-status-box strong {
+        font-size: 24px;
+        display: block;
+    }
+
+    .dashboard-action-card {
+        text-decoration: none;
+    }
+</style>
+
+<div class="dashboard-hero mb-4">
+    <div>
+        <span class="luxury-eyebrow">Sistema interno</span>
+        <h1>Dashboard operacional</h1>
+        <p>Visão completa de agenda, receita, clientes, serviços, cancelamentos e lembretes.</p>
+    </div>
+
+    <div class="dashboard-hero-actions">
+        <a href="{% url 'appointments:visual_schedule' %}" class="btn btn-primary">
+            Abrir agenda
+        </a>
+
+        <a href="{% url 'appointments:appointment_create' %}" class="btn btn-outline-secondary">
+            Nova marcação
+        </a>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-12 col-md-3">
+        <a href="{% url 'appointments:visual_schedule' %}" class="dashboard-action-card">
+            <span>Agenda</span>
+            <strong>Agenda visual</strong>
+            <small>Horários livres, ocupados e bloqueios.</small>
+        </a>
+    </div>
+
+    <div class="col-12 col-md-3">
+        <a href="{% url 'appointments:appointment_list' %}" class="dashboard-action-card">
+            <span>Marcações</span>
+            <strong>Gerir marcações</strong>
+            <small>Confirmar, concluir, editar ou cancelar.</small>
+        </a>
+    </div>
+
+    <div class="col-12 col-md-3">
+        <a href="{% url 'appointments:customer_list' %}" class="dashboard-action-card">
+            <span>Clientes</span>
+            <strong>Base de clientes</strong>
+            <small>Consultar contactos e histórico.</small>
+        </a>
+    </div>
+
+    <div class="col-12 col-md-3">
+        <a href="{% url 'appointments:service_list' %}" class="dashboard-action-card">
+            <span>Serviços</span>
+            <strong>Catálogo</strong>
+            <small>Duração, preço e estado ativo.</small>
+        </a>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-12 col-md-3">
+        <div class="dashboard-grid-card">
+            <span>Hoje</span>
+            <strong>{{ metrics.today_total }}</strong>
+            <small>marcações no dia</small>
         </div>
     </div>
 
-
-    <div class="row g-4 mb-4">
-        <div class="col-12 col-md-3">
-            <a href="{% url 'appointments:visual_schedule' %}" class="dashboard-action-card">
-                <span>Agenda</span>
-                <strong>Agenda visual</strong>
-                <small>Ver horários livres, ocupados e bloqueios.</small>
-            </a>
-        </div>
-
-        <div class="col-12 col-md-3">
-            <a href="{% url 'appointments:appointment_list' %}" class="dashboard-action-card">
-                <span>Marcações</span>
-                <strong>Gerir marcações</strong>
-                <small>Confirmar, concluir, editar ou cancelar.</small>
-            </a>
-        </div>
-
-        <div class="col-12 col-md-3">
-            <a href="{% url 'appointments:customer_list' %}" class="dashboard-action-card">
-                <span>Clientes</span>
-                <strong>Base de clientes</strong>
-                <small>Consultar contactos e histórico.</small>
-            </a>
-        </div>
-
-        <div class="col-12 col-md-3">
-            <a href="{% url 'appointments:service_list' %}" class="dashboard-action-card">
-                <span>Serviços</span>
-                <strong>Catálogo</strong>
-                <small>Gerir duração, preço e estado ativo.</small>
-            </a>
-        </div>        
-    </div> 
-    <div class="row g-4 mb-4">
-        <div class="col-12 col-md-3">
-            <div class="dashboard-metric-card">
-                <span>Hoje</span>
-                <strong>{{ metrics.today_total }}</strong>
-                <small>marcações no dia</small>
-            </div>
-        </div>
-
-        <div class="col-12 col-md-3">
-            <div class="dashboard-metric-card">
-                <span>Confirmadas hoje</span>
-                <strong>{{ metrics.today_confirmed }}</strong>
-                <small>atendimentos confirmados</small>
-            </div>
-        </div>
-
-        <div class="col-12 col-md-3">
-            <div class="dashboard-metric-card">
-                <span>Aguardando</span>
-                <strong>{{ metrics.today_scheduled }}</strong>
-                <small>pedidos para confirmar</small>
-            </div>
-        </div>
-
-        <div class="col-12 col-md-3">
-            <div class="dashboard-metric-card">
-                <span>Receita mensal</span>
-                <strong>€ {{ metrics.month_revenue }}</strong>
-                <small>marcações concluídas</small>
-            </div>
+    <div class="col-12 col-md-3">
+        <div class="dashboard-grid-card">
+            <span>Amanhã</span>
+            <strong>{{ metrics.tomorrow_total }}</strong>
+            <small>marcações previstas</small>
         </div>
     </div>
 
-    <div class="row g-4">
-        <div class="col-12 col-lg-7">
-            <div class="dashboard-panel h-100">
-                <div class="dashboard-panel-header">
-                    <div>
-                        <span class="luxury-eyebrow">Operação</span>
-                        <h2>Fluxo recomendado</h2>
-                    </div>
-                </div>
-
-                <div class="dashboard-flow">
-                    <div>
-                        <strong>1</strong>
-                        <span>Abra a agenda visual</span>
-                        <p>Veja rapidamente horários livres, marcações e bloqueios.</p>
-                    </div>
-
-                    <div>
-                        <strong>2</strong>
-                        <span>Confirme ou conclua atendimentos</span>
-                        <p>Use os botões rápidos diretamente na agenda interna.</p>
-                    </div>
-
-                    <div>
-                        <strong>3</strong>
-                        <span>Atualize clientes e serviços</span>
-                        <p>Mantenha dados organizados para reduzir erros de marcação.</p>
-                    </div>
-                </div>
-            </div>
+    <div class="col-12 col-md-3">
+        <div class="dashboard-grid-card">
+            <span>Receita mensal</span>
+            <strong>€ {{ metrics.month_revenue }}</strong>
+            <small>marcações concluídas</small>
         </div>
+    </div>
 
-        <div class="col-12 col-lg-5">
-            <div class="dashboard-panel h-100">
-                <div class="dashboard-panel-header">
-                    <div>
-                        <span class="luxury-eyebrow">Atalhos</span>
-                        <h2>Ações rápidas</h2>
-                    </div>
+    <div class="col-12 col-md-3">
+        <div class="dashboard-grid-card">
+            <span>Clientes</span>
+            <strong>{{ metrics.customers_total }}</strong>
+            <small>{{ metrics.customers_with_email }} com email</small>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-12 col-lg-4">
+        <div class="dashboard-panel h-100">
+            <h2 class="h5 mb-3">Hoje</h2>
+
+            <div class="dashboard-status-grid">
+                <div class="dashboard-status-box">
+                    <span>Confirmadas</span>
+                    <strong>{{ metrics.today_confirmed }}</strong>
                 </div>
 
-                <div class="dashboard-quick-links">
-                    <a href="{% url 'appointments:schedule_block_create' %}">
-                        Bloquear horário
-                    </a>
+                <div class="dashboard-status-box">
+                    <span>Aguardando</span>
+                    <strong>{{ metrics.today_scheduled }}</strong>
+                </div>
 
-                    <a href="{% url 'appointments:schedule_block_list' %}">
-                        Ver bloqueios
-                    </a>
+                <div class="dashboard-status-box">
+                    <span>Concluídas</span>
+                    <strong>{{ metrics.today_completed }}</strong>
+                </div>
 
-                    <a href="{% url 'appointments:schedule_diagnostics' %}">
-                        Diagnóstico de horários
-                    </a>
-
-                    <a href="{% url 'appointments:appointment_create' %}">
-                        Criar marcação manual
-                    </a>
+                <div class="dashboard-status-box">
+                    <span>Canceladas</span>
+                    <strong>{{ metrics.today_cancelled }}</strong>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="dashboard-panel mt-4">
-        <div class="dashboard-panel-header">
-            <div>
-                <span class="luxury-eyebrow">Hoje</span>
-                <h2>Marcações do dia</h2>
+    <div class="col-12 col-lg-4">
+        <div class="dashboard-panel h-100">
+            <h2 class="h5 mb-3">Mês atual</h2>
+
+            <div class="dashboard-status-grid">
+                <div class="dashboard-status-box">
+                    <span>Total</span>
+                    <strong>{{ metrics.month_total }}</strong>
+                </div>
+
+                <div class="dashboard-status-box">
+                    <span>Concluídas</span>
+                    <strong>{{ metrics.month_completed }}</strong>
+                </div>
+
+                <div class="dashboard-status-box">
+                    <span>Canceladas</span>
+                    <strong>{{ metrics.month_cancelled }}</strong>
+                </div>
+
+                <div class="dashboard-status-box">
+                    <span>Cancelamento</span>
+                    <strong>{{ metrics.month_cancellation_rate }}%</strong>
+                </div>
             </div>
         </div>
+    </div>
 
-        {% if today_appointments %}
-            <div class="dashboard-today-list">
+    <div class="col-12 col-lg-4">
+        <div class="dashboard-panel h-100">
+            <h2 class="h5 mb-3">Lembretes hoje</h2>
+
+            <div class="dashboard-status-grid">
+                <div class="dashboard-status-box">
+                    <span>Total</span>
+                    <strong>{{ metrics.reminders_today_total }}</strong>
+                </div>
+
+                <div class="dashboard-status-box">
+                    <span>Sucesso</span>
+                    <strong>{{ metrics.reminders_today_success }}</strong>
+                </div>
+
+                <div class="dashboard-status-box">
+                    <span>24h</span>
+                    <strong>{{ metrics.reminders_24h_today }}</strong>
+                </div>
+
+                <div class="dashboard-status-box">
+                    <span>2h</span>
+                    <strong>{{ metrics.reminders_2h_today }}</strong>
+                </div>
+            </div>
+
+            {% if metrics.reminders_today_error %}
+                <div class="alert alert-danger mt-3 mb-0">
+                    {{ metrics.reminders_today_error }} erro(s) de envio hoje.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-12 col-lg-7">
+        <div class="dashboard-panel h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <span class="luxury-eyebrow">Hoje</span>
+                    <h2 class="h5 mb-0">Marcações do dia</h2>
+                </div>
+
+                <a href="{% url 'appointments:daily_agenda' %}" class="btn btn-sm btn-outline-primary">
+                    Ver agenda
+                </a>
+            </div>
+
+            {% if today_appointments %}
                 {% for appointment in today_appointments %}
-                    <div class="dashboard-today-item">
+                    <div class="dashboard-list-item">
                         <div>
-                            <strong>{{ appointment.start_time|time:"H:i" }}</strong>
-                            <span>{{ appointment.service.name }}</span>
-                            <small>{{ appointment.customer.full_name }}</small>
+                            <strong>{{ appointment.start_time|time:"H:i" }} — {{ appointment.service.name }}</strong>
+                            <small>{{ appointment.customer.full_name }} · {{ appointment.reference_code }}</small>
                         </div>
 
-                        <span class="status-pill">
+                        <span class="badge bg-secondary">
                             {{ appointment.get_status_display }}
                         </span>
                     </div>
                 {% endfor %}
-            </div>
-        {% else %}
-            <p class="text-muted mb-0">
-                Nenhuma marcação para hoje.
-            </p>
-        {% endif %}
+            {% else %}
+                <p class="text-muted mb-0">Nenhuma marcação para hoje.</p>
+            {% endif %}
+        </div>
     </div>
 
-</section>
+    <div class="col-12 col-lg-5">
+        <div class="dashboard-panel h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <span class="luxury-eyebrow">Pendências</span>
+                    <h2 class="h5 mb-0">Aguardando confirmação</h2>
+                </div>
 
+                <a href="{% url 'appointments:appointment_list' %}" class="btn btn-sm btn-outline-primary">
+                    Ver todas
+                </a>
+            </div>
+
+            {% if pending_confirmations %}
+                {% for appointment in pending_confirmations %}
+                    <div class="dashboard-list-item">
+                        <div>
+                            <strong>{{ appointment.date|date:"d/m/Y" }} {{ appointment.start_time|time:"H:i" }}</strong>
+                            <small>{{ appointment.customer.full_name }} · {{ appointment.service.name }}</small>
+                        </div>
+
+                        <span class="badge bg-warning text-dark">
+                            Pendente
+                        </span>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted mb-0">Nenhuma marcação pendente.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-12 col-lg-6">
+        <div class="dashboard-panel h-100">
+            <span class="luxury-eyebrow">Próximos 7 dias</span>
+            <h2 class="h5 mb-3">Próximas marcações</h2>
+
+            {% if upcoming_appointments %}
+                {% for appointment in upcoming_appointments %}
+                    <div class="dashboard-list-item">
+                        <div>
+                            <strong>{{ appointment.date|date:"d/m/Y" }} {{ appointment.start_time|time:"H:i" }}</strong>
+                            <small>{{ appointment.customer.full_name }} · {{ appointment.service.name }}</small>
+                        </div>
+
+                        <span class="badge bg-primary">
+                            {{ appointment.get_status_display }}
+                        </span>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted mb-0">Nenhuma marcação próxima.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-6">
+        <div class="dashboard-panel h-100">
+            <span class="luxury-eyebrow">Serviços</span>
+            <h2 class="h5 mb-3">Top serviços do mês</h2>
+
+            {% if top_services %}
+                {% for service in top_services %}
+                    <div class="dashboard-list-item">
+                        <div>
+                            <strong>{{ service.service__name }}</strong>
+                            <small>{{ service.total }} atendimento(s)</small>
+                        </div>
+
+                        <span class="badge bg-success">
+                            € {{ service.revenue }}
+                        </span>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted mb-0">Ainda não há serviços concluídos neste mês.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-12 col-lg-6">
+        <div class="dashboard-panel h-100">
+            <span class="luxury-eyebrow">Cancelamentos</span>
+            <h2 class="h5 mb-3">Cancelamentos recentes</h2>
+
+            {% if recent_cancellations %}
+                {% for appointment in recent_cancellations %}
+                    <div class="dashboard-list-item">
+                        <div>
+                            <strong>{{ appointment.customer.full_name }}</strong>
+                            <small>
+                                {{ appointment.service.name }} · {{ appointment.date|date:"d/m/Y" }}
+                                {% if appointment.cancellation_reason %}
+                                    · {{ appointment.cancellation_reason|truncatechars:70 }}
+                                {% endif %}
+                            </small>
+                        </div>
+
+                        <span class="badge bg-danger">
+                            Cancelada
+                        </span>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted mb-0">Nenhum cancelamento recente.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-6">
+        <div class="dashboard-panel h-100">
+            <span class="luxury-eyebrow">Alertas</span>
+            <h2 class="h5 mb-3">Erros recentes de lembrete</h2>
+
+            {% if recent_reminder_errors %}
+                {% for log in recent_reminder_errors %}
+                    <div class="dashboard-list-item">
+                        <div>
+                            <strong>{{ log.appointment.reference_code }} · {{ log.get_reminder_type_display }}</strong>
+                            <small>{{ log.error_message|truncatechars:90 }}</small>
+                        </div>
+
+                        <span class="badge bg-danger">
+                            Erro
+                        </span>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted mb-0">Nenhum erro recente de lembrete.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+</section>
 {% endblock %}

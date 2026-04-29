@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from appointments.emails import send_appointment_reminder_email
-from appointments.models import Appointment
+from appointments.models import Appointment, AppointmentReminderLog
 
 
 class Command(BaseCommand):
@@ -18,12 +18,14 @@ class Command(BaseCommand):
         reminder_rules = [
             {
                 "label": "24 horas antes",
+                "type": AppointmentReminderLog.REMINDER_TYPE_24H,
                 "target_start": now + timedelta(hours=23),
                 "target_end": now + timedelta(hours=25),
                 "sent_field": "reminder_24h_sent_at",
             },
             {
                 "label": "2 horas antes",
+                "type": AppointmentReminderLog.REMINDER_TYPE_2H,
                 "target_start": now + timedelta(hours=1, minutes=45),
                 "target_end": now + timedelta(hours=2, minutes=15),
                 "sent_field": "reminder_2h_sent_at",
@@ -33,8 +35,7 @@ class Command(BaseCommand):
         total_sent_count = 0
 
         for rule in reminder_rules:
-            sent_count = self.send_reminders_for_rule(rule)
-            total_sent_count += sent_count
+            total_sent_count += self.send_reminders_for_rule(rule)
 
         self.stdout.write(
             self.style.SUCCESS(
@@ -47,6 +48,7 @@ class Command(BaseCommand):
         target_start = rule["target_start"]
         target_end = rule["target_end"]
         sent_field = rule["sent_field"]
+        reminder_type = rule["type"]
         label = rule["label"]
 
         filter_kwargs = {
@@ -73,7 +75,10 @@ class Command(BaseCommand):
                 timezone.get_current_timezone(),
             )
 
-            if target_start <= appointment_datetime <= target_end:
+            if not target_start <= appointment_datetime <= target_end:
+                continue
+
+            try:
                 send_appointment_reminder_email(
                     appointment=appointment,
                     reminder_label=label,
@@ -82,6 +87,27 @@ class Command(BaseCommand):
                 setattr(appointment, sent_field, timezone.now())
                 appointment.save(update_fields=[sent_field])
 
+                AppointmentReminderLog.objects.create(
+                    appointment=appointment,
+                    reminder_type=reminder_type,
+                    status=AppointmentReminderLog.STATUS_SUCCESS,
+                )
+
                 sent_count += 1
+
+            except Exception as error:
+                AppointmentReminderLog.objects.create(
+                    appointment=appointment,
+                    reminder_type=reminder_type,
+                    status=AppointmentReminderLog.STATUS_ERROR,
+                    error_message=str(error),
+                )
+
+                self.stdout.write(
+                    self.style.ERROR(
+                        f"Failed to send {label} reminder for "
+                        f"{appointment.reference_code}: {error}"
+                    )
+                )
 
         return sent_count

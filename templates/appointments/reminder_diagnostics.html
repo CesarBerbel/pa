@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Diagnóstico de lembretes</h1>
+            <p class="text-muted mb-0">
+                Verifique quais marcações estão prontas para receber lembrete.
+            </p>
+        </div>
+
+        <a href="{% url 'appointments:schedule_diagnostics' %}" class="btn btn-outline-secondary">
+            Diagnóstico de horários
+        </a>
+    </div>
+
+    <form method="get" class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="date" class="form-label">Data</label>
+                    <input
+                        type="date"
+                        id="date"
+                        name="date"
+                        class="form-control"
+                        value="{{ selected_date|date:'Y-m-d' }}"
+                    >
+                </div>
+
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary">
+                        Verificar lembretes
+                    </button>
+                </div>
+
+                <div class="col-md-4 text-md-end">
+                    <a
+                        href="?date={{ previous_date|date:'Y-m-d' }}"
+                        class="btn btn-outline-secondary btn-sm"
+                    >
+                        Dia anterior
+                    </a>
+
+                    <a
+                        href="?date={{ next_date|date:'Y-m-d' }}"
+                        class="btn btn-outline-secondary btn-sm"
+                    >
+                        Próximo dia
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-secondary">
+                <div class="card-body">
+                    <div class="text-muted small">Total</div>
+                    <div class="h4 mb-0">{{ total_count }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-success">
+                <div class="card-body">
+                    <div class="text-muted small">Prontos</div>
+                    <div class="h4 mb-0 text-success">{{ ready_count }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <div class="text-muted small">Atenção</div>
+                    <div class="h4 mb-0 text-warning">{{ warning_count }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-danger">
+                <div class="card-body">
+                    <div class="text-muted small">Bloqueados</div>
+                    <div class="h4 mb-0 text-danger">{{ blocked_count }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            Marcações de {{ selected_date|date:"d/m/Y" }}
+        </div>
+
+        <div class="card-body p-0">
+            {% if diagnostics %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Hora</th>
+                                <th>Código</th>
+                                <th>Cliente</th>
+                                <th>Serviço</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Diagnóstico</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for item in diagnostics %}
+                                <tr>
+                                    <td>
+                                        {{ item.appointment.start_time|time:"H:i" }}
+                                    </td>
+
+                                    <td>
+                                        {{ item.appointment.reference_code }}
+                                    </td>
+
+                                    <td>
+                                        {{ item.appointment.customer.full_name }}
+                                    </td>
+
+                                    <td>
+                                        {{ item.appointment.service.name }}
+                                    </td>
+
+                                    <td>
+                                        {% if item.appointment.customer.email %}
+                                            {{ item.appointment.customer.email }}
+                                        {% else %}
+                                            <span class="text-muted">Sem email</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {{ item.appointment.get_status_display }}
+                                    </td>
+
+                                    <td>
+                                        {% if item.status == "ready" %}
+                                            <span class="badge bg-success">Pronto</span>
+                                        {% elif item.status == "warning" %}
+                                            <span class="badge bg-warning text-dark">Atenção</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Bloqueado</span>
+                                        {% endif %}
+
+                                        <span class="ms-2">{{ item.reason }}</span>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="p-4 text-muted">
+                    Não existem marcações para esta data.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
