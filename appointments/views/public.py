@@ -345,6 +345,7 @@ class PublicCancelAppointmentView(FormView):
         result = AppointmentCancellationService.cancel(
             appointment=appointment,
             user=self.request.user,
+            cancellation_reason=form.cleaned_data["cancellation_reason"],
         )
 
         if not result.success:
@@ -403,10 +404,20 @@ class PublicCancelAppointmentByCodeView(TemplateView):
         # Cancel appointment after confirmation using centralized business rules.
         appointment = self.get_appointment()
 
+        cancellation_reason = request.POST.get("cancellation_reason", "").strip()
+
         result = AppointmentCancellationService.cancel(
             appointment=appointment,
             user=request.user,
+            cancellation_reason=cancellation_reason,
         )
+
+        if not cancellation_reason:
+            messages.error(request, "Informe o motivo do cancelamento.")
+            return redirect(
+                "appointments:public_cancel_by_code",
+                reference_code=appointment.reference_code,
+            )
 
         if not result.success:
             messages.error(request, result.message)

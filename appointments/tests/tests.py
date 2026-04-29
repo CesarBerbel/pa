@@ -9,6 +9,7 @@ from appointments.appointment_services import AppointmentService
 from appointments.cancellation_services import AppointmentCancellationService
 from appointments.models import (
     Appointment,
+    AppointmentLog,
     BusinessHour,
     Customer,
     ScheduleBlock,
@@ -178,6 +179,7 @@ class AppointmentCancellationServiceTests(AppointmentTestSetupMixin, TestCase):
         result = AppointmentCancellationService.cancel(
             appointment=appointment,
             user=self.normal_user,
+            cancellation_reason="Cliente solicitou o cancelamento.",
         )
 
         appointment.refresh_from_db()
@@ -194,6 +196,7 @@ class AppointmentCancellationServiceTests(AppointmentTestSetupMixin, TestCase):
         result = AppointmentCancellationService.cancel(
             appointment=appointment,
             user=self.normal_user,
+            cancellation_reason="Cliente solicitou o cancelamento.",
         )
 
         appointment.refresh_from_db()
@@ -210,6 +213,7 @@ class AppointmentCancellationServiceTests(AppointmentTestSetupMixin, TestCase):
         result = AppointmentCancellationService.cancel(
             appointment=appointment,
             user=self.admin_user,
+            cancellation_reason="Cancelamento autorizado pela equipa.",
         )
 
         appointment.refresh_from_db()
@@ -355,6 +359,7 @@ class PublicAppointmentFlowTests(AppointmentTestSetupMixin, TestCase):
             reverse("appointments:public_cancel"),
             data={
                 "reference_code": appointment.reference_code,
+                "cancellation_reason": "Cliente não poderá comparecer.",
             },
         )
 
@@ -386,6 +391,7 @@ class PublicAppointmentFlowTests(AppointmentTestSetupMixin, TestCase):
             reverse("appointments:public_cancel"),
             data={
                 "reference_code": appointment.reference_code,
+                "cancellation_reason": "Cliente não poderá comparecer.",
             },
         )
 
@@ -952,7 +958,10 @@ class AppointmentAdminActionTests(AppointmentTestSetupMixin, TestCase):
             reverse(
                 "appointments:appointment_cancel",
                 kwargs={"pk": appointment.pk},
-            )
+            ),
+            data={
+                "cancellation_reason": "Cancelamento feito pela equipa.",
+            },
         )
 
         appointment.refresh_from_db()
@@ -1578,3 +1587,302 @@ class ServiceValidationTests(TestCase):
 
         with self.assertRaises(ValidationError):
             service.full_clean()        
+
+class AppointmentAuditLogTests(AppointmentTestSetupMixin, TestCase):
+    # Tests for appointment audit log creation.
+
+    def setUp(self):
+        self.create_base_data()
+
+    def test_create_appointment_generates_create_log(self):
+        # Ensure creating an appointment generates a create audit log.
+        result = AppointmentService.create_appointment(
+            customer=self.customer,
+            service=self.service,
+            date=self.appointment_date,
+            start_time=time(10, 0),
+            created_by=self.admin_user,
+            send_email=False,
+        )
+
+        appointment = result.appointment
+
+        self.assertTrue(result.success)
+        self.assertEqual(appointment.logs.count(), 1)
+
+        log = appointment.logs.first()
+
+        self.assertEqual(log.action, AppointmentLog.ACTION_CREATE)
+        self.assertEqual(log.performed_by, self.admin_user)
+
+    def test_cancel_appointment_generates_cancel_log(self):
+        # Ensure cancelling an appointment generates a cancel audit log.
+        result = AppointmentService.create_appointment(
+            customer=self.customer,
+            service=self.service,
+            date=self.appointment_date,
+            start_time=time(10, 0),
+            created_by=self.admin_user,
+            send_email=False,
+        )
+
+        appointment = result.appointment
+
+        cancel_result = AppointmentCancellationService.cancel(
+            appointment=appointment,
+            user=self.admin_user,
+            cancellation_reason="Cancelamento para teste de auditoria.",
+        )
+
+        self.assertTrue(cancel_result.success)
+
+        self.assertTrue(
+            appointment.logs.filter(
+                action=AppointmentLog.ACTION_CANCEL,
+                performed_by=self.admin_user,
+            ).exists()
+        )
+
+    def test_confirm_appointment_generates_confirm_log(self):
+        # Ensure confirming an appointment generates a confirm audit log.
+        self.client.login(
+            email="admin@test.com",
+            password="testpass123",
+        )
+
+        result = AppointmentService.create_appointment(
+            customer=self.customer,
+            service=self.service,
+            date=self.appointment_date,
+            start_time=time(10, 0),
+            created_by=self.admin_user,
+            send_email=False,
+        )
+
+        appointment = result.appointment
+
+        response = self.client.post(
+            reverse(
+                "appointments:appointment_confirm",
+                kwargs={"pk": appointment.pk},
+            )
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("appointments:appointment_list"),
+        )
+
+        self.assertTrue(
+            appointment.logs.filter(
+                action=AppointmentLog.ACTION_CONFIRM,
+                performed_by=self.admin_user,
+            ).exists()
+        )
+
+    def test_complete_appointment_generates_complete_log(self):
+        # Ensure completing an appointment generates a complete audit log.
+        self.client.login(
+            email="admin@test.com",
+            password="testpass123",
+        )
+
+        result = AppointmentService.create_appointment(
+            customer=self.customer,
+            service=self.service,
+            date=self.appointment_date,
+            start_time=time(10, 0),
+            created_by=self.admin_user,
+            status=Appointment.STATUS_CONFIRMED,
+            send_email=False,
+        )
+
+        appointment = result.appointment
+
+        response = self.client.post(
+            reverse(
+                "appointments:appointment_complete",
+                kwargs={"pk": appointment.pk},
+            )
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("appointments:appointment_list"),
+        )
+
+        self.assertTrue(
+            appointment.logs.filter(
+                action=AppointmentLog.ACTION_COMPLETE,
+                performed_by=self.admin_user,
+            ).exists()
+        )
+
+    def test_update_appointment_generates_update_log(self):
+        # Ensure updating an appointment generates an update audit log.
+        self.client.login(
+            email="admin@test.com",
+            password="testpass123",
+        )
+
+        result = AppointmentService.create_appointment(
+            customer=self.customer,
+            service=self.service,
+            date=self.appointment_date,
+            start_time=time(10, 0),
+            created_by=self.admin_user,
+            send_email=False,
+        )
+
+        appointment = result.appointment
+
+        response = self.client.post(
+            reverse(
+                "appointments:appointment_update",
+                kwargs={"pk": appointment.pk},
+            ),
+            data={
+                "customer": self.customer.pk,
+                "service": self.service.pk,
+                "date": self.appointment_date.strftime("%Y-%m-%d"),
+                "start_time": "11:00",
+                "status": Appointment.STATUS_SCHEDULED,
+                "notes": "Updated appointment notes.",
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("appointments:appointment_list"),
+        )
+
+        self.assertTrue(
+            appointment.logs.filter(
+                action=AppointmentLog.ACTION_UPDATE,
+                performed_by=self.admin_user,
+            ).exists()
+        )            
+
+class PublicVisualScheduleAjaxTests(AppointmentTestSetupMixin, TestCase):
+    # Tests for AJAX data used by the public visual schedule.
+
+    def setUp(self):
+        self.create_base_data()
+
+    def test_ajax_slots_endpoint_returns_json_with_slots_key(self):
+        # Ensure AJAX endpoint returns JSON with the expected structure.
+        response = self.client.get(
+            reverse("appointments:public_available_slots"),
+            data={
+                "service": self.service.pk,
+                "date": self.appointment_date.strftime("%Y-%m-%d"),
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/json")
+
+        data = response.json()
+
+        self.assertIn("slots", data)
+        self.assertIsInstance(data["slots"], list)
+
+    def test_ajax_slots_endpoint_returns_slot_value_and_label(self):
+        # Ensure each returned slot contains value and label for frontend rendering.
+        response = self.client.get(
+            reverse("appointments:public_available_slots"),
+            data={
+                "service": self.service.pk,
+                "date": self.appointment_date.strftime("%Y-%m-%d"),
+            },
+        )
+
+        data = response.json()
+
+        self.assertGreater(len(data["slots"]), 0)
+        self.assertIn("value", data["slots"][0])
+        self.assertIn("label", data["slots"][0])
+
+    def test_ajax_slots_endpoint_does_not_return_occupied_slot(self):
+        # Ensure AJAX endpoint hides slots occupied by existing appointments.
+        AppointmentService.create_appointment(
+            customer=self.customer,
+            service=self.service,
+            date=self.appointment_date,
+            start_time=time(10, 0),
+            created_by=self.admin_user,
+            send_email=False,
+        )
+
+        response = self.client.get(
+            reverse("appointments:public_available_slots"),
+            data={
+                "service": self.service.pk,
+                "date": self.appointment_date.strftime("%Y-%m-%d"),
+            },
+        )
+
+        slot_values = [
+            slot["value"]
+            for slot in response.json()["slots"]
+        ]
+
+        self.assertNotIn("10:00", slot_values)
+        self.assertNotIn("10:30", slot_values)
+
+    def test_ajax_slots_endpoint_does_not_return_blocked_slot(self):
+        # Ensure AJAX endpoint hides slots blocked by schedule blocks.
+        ScheduleBlock.objects.create(
+            title="Blocked period",
+            block_type=ScheduleBlock.BLOCK_TYPE_BREAK,
+            date=self.appointment_date,
+            start_time=time(12, 0),
+            end_time=time(13, 0),
+            is_full_day=False,
+            is_active=True,
+        )
+
+        response = self.client.get(
+            reverse("appointments:public_available_slots"),
+            data={
+                "service": self.service.pk,
+                "date": self.appointment_date.strftime("%Y-%m-%d"),
+            },
+        )
+
+        slot_values = [
+            slot["value"]
+            for slot in response.json()["slots"]
+        ]
+
+        self.assertNotIn("12:00", slot_values)
+        self.assertNotIn("12:30", slot_values)
+
+    def test_public_visual_schedule_page_contains_ajax_container(self):
+        # Ensure visual schedule template exposes the AJAX container expected by JavaScript.
+        response = self.client.get(
+            reverse("appointments:public_visual_schedule"),
+            data={
+                "service": self.service.pk,
+                "date": self.appointment_date.strftime("%Y-%m-%d"),
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="agenda-slots-container"')
+        self.assertContains(response, 'data-slots-url=')
+        self.assertContains(response, 'data-booking-url=')
+
+    def test_public_visual_schedule_page_loads_jquery_ajax_script(self):
+        # Ensure the public visual schedule loads the jQuery AJAX script.
+        response = self.client.get(
+            reverse("appointments:public_visual_schedule"),
+            data={
+                "service": self.service.pk,
+                "date": self.appointment_date.strftime("%Y-%m-%d"),
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "jquery-3.7.1.min.js")
+        self.assertContains(response, "js/public_visual_schedule.js")        

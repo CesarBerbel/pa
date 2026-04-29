@@ -6,7 +6,8 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 
 from appointments.emails import send_appointment_confirmation_email
-from appointments.models import Appointment, Service
+from appointments.audit_services import AppointmentAuditService
+from appointments.models import Appointment, AppointmentLog, Service
 
 
 @dataclass
@@ -72,6 +73,13 @@ class AppointmentService:
                     status=status,
                     notes=notes or "",
                     created_by=created_by,
+                )
+
+                AppointmentAuditService.log(
+                    appointment=appointment,
+                    action=AppointmentLog.ACTION_CREATE,
+                    user=created_by,
+                    description="Appointment created.",
                 )
 
                 if send_email:

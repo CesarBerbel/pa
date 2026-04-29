@@ -4,6 +4,7 @@ from django.contrib import admin
 
 from .models import (
     Appointment,
+    AppointmentLog,
     Customer,
     Service,
     ScheduleBlock,
@@ -31,6 +32,7 @@ class AppointmentAdmin(admin.ModelAdmin):
         "date",
         "start_time",
         "status",
+        "cancellation_reason",
     )
 
     list_filter = ("status", "date", "service")
@@ -44,7 +46,7 @@ class AppointmentAdmin(admin.ModelAdmin):
     autocomplete_fields = ("customer", "service")
 
     ordering = ("-date", "-start_time")
-    readonly_fields = ("reference_code", "created_at", "updated_at")
+    readonly_fields = ("reference_code", "created_at", "updated_at","cancelled_at")
 
 @admin.register(ScheduleBlock)
 class ScheduleBlockAdmin(admin.ModelAdmin):
@@ -66,3 +68,31 @@ class ScheduleBlockAdmin(admin.ModelAdmin):
 class BusinessHourAdmin(admin.ModelAdmin):
     list_display = ("weekday", "start_time", "end_time", "is_active")
     list_editable = ("start_time", "end_time", "is_active")            
+
+@admin.register(AppointmentLog)
+class AppointmentLogAdmin(admin.ModelAdmin):
+    list_display = (
+        "appointment",
+        "action",
+        "performed_by",
+        "created_at",
+    )
+
+    list_filter = (
+        "action",
+        "created_at",
+    )
+
+    search_fields = (
+        "appointment__reference_code",
+        "performed_by__email",
+        "description",
+    )
+
+    readonly_fields = (
+        "appointment",
+        "action",
+        "performed_by",
+        "description",
+        "created_at",
+    )    

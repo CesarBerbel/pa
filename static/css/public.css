@@ -2143,3 +2143,35 @@ footer[id] {
         width: 100%;
     }
 }                                                                             
+
+/* ======================
+   FIX AJAX FOOTER JUMP
+====================== */
+
+/* ======================
+   AJAX SCHEDULE NO FLICKER
+====================== */
+
+.app-agenda-results {
+    min-height: 620px;
+}
+
+#agenda-slots-container {
+    min-height: 420px;
+    position: relative;
+}
+
+#agenda-slots-container.is-loading::after {
+    content: "A carregar horários...";
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 247, 249, 0.72);
+    backdrop-filter: blur(2px);
+    border-radius: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8b5e66;
+    font-weight: 700;
+    z-index: 5;
+}

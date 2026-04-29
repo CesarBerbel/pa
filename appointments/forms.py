@@ -198,6 +198,35 @@ class PublicCancelForm(forms.Form):
         max_length=20,
     )
 
+    cancellation_reason = forms.CharField(
+        label="Motivo do cancelamento",
+        required=True,
+        max_length=1000,
+        widget=forms.Textarea(
+            attrs={
+                "rows": 4,
+                "placeholder": "Informe o motivo do cancelamento.",
+            }
+        ),
+    )
+
+    def clean_reference_code(self):
+        # Normalize reference code before cancellation.
+        reference_code = self.cleaned_data["reference_code"]
+
+        return reference_code.strip().upper()
+
+    def clean_cancellation_reason(self):
+        # Normalize cancellation reason before saving.
+        cancellation_reason = self.cleaned_data["cancellation_reason"].strip()
+
+        if len(cancellation_reason) < 5:
+            raise forms.ValidationError(
+                "Informe um motivo com pelo menos 5 caracteres."
+            )
+
+        return cancellation_reason
+
 
 class PublicAppointmentLookupForm(forms.Form):
     # Form used to search public appointment by reference code.
@@ -218,3 +247,29 @@ class PublicAppointmentLookupForm(forms.Form):
         reference_code = self.cleaned_data["reference_code"]
 
         return reference_code.strip().upper()
+    
+class AppointmentCancelForm(forms.Form):
+    # Internal form used by staff to cancel appointments with a required reason.
+
+    cancellation_reason = forms.CharField(
+        label="Motivo do cancelamento",
+        required=True,
+        max_length=1000,
+        widget=forms.Textarea(
+            attrs={
+                "rows": 4,
+                "placeholder": "Informe o motivo do cancelamento.",
+            }
+        ),
+    )
+
+    def clean_cancellation_reason(self):
+        # Normalize and validate cancellation reason.
+        cancellation_reason = self.cleaned_data["cancellation_reason"].strip()
+
+        if len(cancellation_reason) < 5:
+            raise forms.ValidationError(
+                "Informe um motivo com pelo menos 5 caracteres."
+            )
+
+        return cancellation_reason    

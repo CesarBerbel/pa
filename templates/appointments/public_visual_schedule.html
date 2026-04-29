@@ -1,14 +1,13 @@
 {% extends "base.html" %}
+{% load static %}
 
-{% block title %}Agenda disponível | Priscila Arantes PA{% endblock %}
+{% block title %}Agenda disponível | Priscila Arantes{% endblock %}
 
 {% block content %}
 
 <section class="app-agenda-page">
 
     <div class="app-agenda-header mb-4">
-     
-
         <span class="luxury-eyebrow">Agenda online</span>
 
         <h1>
@@ -34,6 +33,8 @@
                         {% for service in services %}
                             <option
                                 value="{{ service.pk }}"
+                                data-name="{{ service.name }}"
+                                data-duration="{{ service.duration_minutes }}"
                                 {% if selected_service and selected_service.pk == service.pk %}selected{% endif %}
                             >
                                 {{ service.name }} · {{ service.duration_minutes }} min
@@ -61,8 +62,8 @@
             {% if selected_service %}
                 <div class="app-service-summary mt-4">
                     <span>Serviço selecionado</span>
-                    <strong>{{ selected_service.name }}</strong>
-                    <small>{{ selected_service.duration_minutes }} minutos</small>
+                    <strong id="selected-service-name">{{ selected_service.name }}</strong>
+                    <small id="selected-service-duration">{{ selected_service.duration_minutes }} minutos</small>
                 </div>
             {% endif %}
         </aside>
@@ -74,6 +75,7 @@
                         {% for day in week_days %}
                             <a
                                 href="{% url 'appointments:public_visual_schedule' %}?service={{ selected_service.pk }}&date={{ day.date|date:'Y-m-d' }}"
+                                data-date="{{ day.date|date:'Y-m-d' }}"
                                 class="app-week-day {% if day.is_selected %}is-active{% endif %}"
                             >
                                 <span>{{ day.weekday }}</span>
@@ -83,38 +85,45 @@
                         {% endfor %}
                     </div>
                 {% endif %}
-                {% if slots %}
-                    <div class="app-slots-grid">
-                        {% for slot in slots %}
-                            <a
-                                href="{% url 'appointments:public_appointment_create' %}?service={{ selected_service.pk }}&date={{ selected_date|date:'Y-m-d' }}&start_time={{ slot.value }}"
-                                class="app-slot-card"
-                            >
-                                <span class="app-slot-time">
-                                    {{ slot.label }}
-                                </span>
 
-                                <span class="app-slot-status">
-                                    Disponível
-                                </span>
+                <div
+                    id="agenda-slots-container"
+                    data-slots-url="{% url 'appointments:public_available_slots' %}"
+                    data-booking-url="{% url 'appointments:public_appointment_create' %}"
+                >
+                    {% if slots %}
+                        <div class="app-slots-grid">
+                            {% for slot in slots %}
+                                <a
+                                    href="{% url 'appointments:public_appointment_create' %}?service={{ selected_service.pk }}&date={{ selected_date|date:'Y-m-d' }}&start_time={{ slot.value }}"
+                                    class="app-slot-card"
+                                >
+                                    <span class="app-slot-time">
+                                        {{ slot.label }}
+                                    </span>
 
-                                <span class="app-slot-cta">
-                                    Marcar
-                                </span>
-                            </a>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <div class="app-empty-state">
-                        <div class="app-empty-icon">⌛</div>
+                                    <span class="app-slot-status">
+                                        Disponível
+                                    </span>
 
-                        <h3>Nenhum horário disponível</h3>
+                                    <span class="app-slot-cta">
+                                        Marcar
+                                    </span>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="app-empty-state">
+                            <div class="app-empty-icon">⌛</div>
 
-                        <p>
-                            Tente escolher outra data ou outro serviço.
-                        </p>
-                    </div>
-                {% endif %}
+                            <h3>Nenhum horário disponível</h3>
+
+                            <p>
+                                Tente escolher outra data ou outro serviço.
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
 
             {% else %}
                 <div class="app-empty-state">
@@ -128,34 +137,7 @@
     </div>
 
 </section>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const form = document.getElementById("agenda-filter-form");
-        const filterPanel = document.querySelector(".app-agenda-filter");
-        const serviceInput = document.getElementById("service");
-        const dateInput = document.getElementById("date");
 
-        function submitAgendaForm() {
-            if (!form) {
-                return;
-            }
-
-            form.classList.add("is-loading");
-
-            if (filterPanel) {
-                filterPanel.classList.add("is-loading");
-            }
-
-            form.submit();
-        }
-
-        if (serviceInput) {
-            serviceInput.addEventListener("change", submitAgendaForm);
-        }
-
-        if (dateInput) {
-            dateInput.addEventListener("change", submitAgendaForm);
-        }
-    });
-</script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="{% static 'js/public_visual_schedule.js' %}"></script>
 {% endblock %}

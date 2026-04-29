@@ -103,20 +103,12 @@
                                         {% endif %}
 
                                         {% if appointment.status != "cancelled" and appointment.status != "completed" %}
-                                            <form
-                                                method="post"
-                                                action="{% url 'appointments:appointment_cancel' appointment.pk %}"
-                                                class="d-inline"
+                                            <a
+                                                href="{% url 'appointments:appointment_cancel' appointment.pk %}"
+                                                class="btn btn-outline-danger btn-sm"
                                             >
-                                                {% csrf_token %}
-                                                <button
-                                                    type="submit"
-                                                    class="btn btn-outline-danger btn-sm"
-                                                    onclick="return confirm('Tem certeza que deseja cancelar esta marcação?');"
-                                                >
-                                                    Cancelar
-                                                </button>
-                                            </form>
+                                                Cancelar
+                                            </a>
                                         {% endif %}
 
                                     </div>

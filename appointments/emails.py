@@ -56,20 +56,25 @@ def send_appointment_confirmation_email(appointment):
     )
 
 
-def send_appointment_cancelled_email(appointment):
+def send_appointment_cancelled_email(appointment, cancellation_reason=""):
     customer_email = appointment.customer.email
 
     if not customer_email:
         return
 
+    reason = cancellation_reason or appointment.cancellation_reason or "Não informado."
+
     subject = "Marcação cancelada"
 
     message = (
         f"Olá {appointment.customer.full_name},\n\n"
-        f"A sua marcação foi cancelada com sucesso.\n\n"
+        f"A sua marcação foi cancelada.\n\n"
         f"Serviço: {appointment.service.name}\n"
         f"Data: {appointment.date.strftime('%d/%m/%Y')}\n"
-        f"Horário: {appointment.start_time.strftime('%H:%M')}\n\n"
+        f"Horário: {appointment.start_time.strftime('%H:%M')}\n"
+        f"Código: {appointment.reference_code}\n\n"
+        f"Motivo do cancelamento:\n"
+        f"{reason}\n\n"
         f"Se desejar, poderá realizar uma nova marcação a qualquer momento.\n\n"
         f"Obrigada,\n"
         f"Priscila Arantes PA"
@@ -81,4 +86,4 @@ def send_appointment_cancelled_email(appointment):
         settings.DEFAULT_FROM_EMAIL,
         [customer_email],
         fail_silently=False,
-    )    
+    )

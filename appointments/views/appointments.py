@@ -4,8 +4,9 @@ from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView, TemplateView, UpdateView, View
 from appointments.emails import send_appointment_confirmation_email
-from appointments.forms import AppointmentForm
-from appointments.models import Appointment
+from appointments.forms import AppointmentForm, AppointmentCancelForm
+from appointments.audit_services import AppointmentAuditService
+from appointments.models import Appointment, AppointmentLog
 from appointments.cancellation_services import AppointmentCancellationService
 
 class AppointmentListView(SuperuserRequiredMixin, ListView):
@@ -77,27 +78,51 @@ class AppointmentUpdateView(SuperuserRequiredMixin, UpdateView):
 
     def form_valid(self, form):
         messages.success(self.request, "Marcação atualizada com sucesso.")
+        AppointmentAuditService.log(
+            appointment=form.instance,
+            action=AppointmentLog.ACTION_UPDATE,
+            user=self.request.user,
+            description="Appointment updated.",
+        )
         return super().form_valid(form)
 
 
-class AppointmentCancelView(SuperuserRequiredMixin, View):
-    # Cancels an appointment without deleting it from the database
+class AppointmentCancelView(SuperuserRequiredMixin, UpdateView):
+    # Shows an internal cancellation form and cancels an appointment with a required reason.
 
-    def post(self, request, pk):
-        # Cancel an appointment using centralized business rules.
-        appointment = Appointment.objects.filter(pk=pk).first()
+    model = Appointment
+    form_class = AppointmentCancelForm
+    template_name = "appointments/appointment_cancel_form.html"
+    success_url = reverse_lazy("appointments:appointment_list")
+
+    def get_form_kwargs(self):
+        # Remove instance because AppointmentCancelForm is a regular Form, not a ModelForm.
+        kwargs = super().get_form_kwargs()
+        kwargs.pop("instance", None)
+        return kwargs
+
+    def get_initial(self):
+        # Pre-fill the reason if the appointment already has one.
+        initial = super().get_initial()
+        initial["cancellation_reason"] = self.object.cancellation_reason
+        return initial
+
+    def form_valid(self, form):
+        # Cancel the appointment using centralized business rules.
+        appointment = self.get_object()
 
         result = AppointmentCancellationService.cancel(
             appointment=appointment,
-            user=request.user,
+            user=self.request.user,
+            cancellation_reason=form.cleaned_data["cancellation_reason"],
         )
 
         if result.success:
-            messages.success(request, result.message)
-        else:
-            messages.error(request, result.message)
+            messages.success(self.request, result.message)
+            return redirect(self.success_url)
 
-        return redirect("appointments:appointment_list")
+        form.add_error(None, result.message)
+        return self.form_invalid(form)
 
 
 class AppointmentConfirmView(SuperuserRequiredMixin, View):
@@ -110,6 +135,12 @@ class AppointmentConfirmView(SuperuserRequiredMixin, View):
             appointment.status = Appointment.STATUS_CONFIRMED
             appointment.save(update_fields=["status", "updated_at"])
             messages.success(request, "Marcação confirmada com sucesso.")
+            AppointmentAuditService.log(
+                appointment=appointment,
+                action=AppointmentLog.ACTION_CONFIRM,
+                user=request.user,
+                description="Appointment confirmed.",
+            )
             send_appointment_confirmation_email(appointment)
         return redirect("appointments:appointment_list")
 
@@ -129,6 +160,13 @@ class AppointmentCompleteView(SuperuserRequiredMixin, View):
 
         appointment.status = Appointment.STATUS_COMPLETED
         appointment.save(update_fields=["status", "updated_at"])
+
+        AppointmentAuditService.log(
+            appointment=appointment,
+            action=AppointmentLog.ACTION_COMPLETE,
+            user=request.user,
+            description="Appointment completed.",
+        )
 
         messages.success(request, "Marcação concluída com sucesso.")
 

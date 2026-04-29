@@ -63,6 +63,21 @@
                         <form method="post">
                             {% csrf_token %}
 
+                            <div class="text-start mb-3">
+                                <label for="cancellation_reason" class="form-label">
+                                    Motivo do cancelamento
+                                </label>
+
+                                <textarea
+                                    name="cancellation_reason"
+                                    id="cancellation_reason"
+                                    rows="4"
+                                    class="form-control"
+                                    required
+                                    placeholder="Informe o motivo do cancelamento."
+                                ></textarea>
+                            </div>
+
                             <button type="submit" class="btn btn-danger w-100">
                                 Confirmar cancelamento
                             </button>

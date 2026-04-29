@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-
+{% load static %}
 {% load crispy_forms_tags %}
 
 {% block title %}Marcar horário | Priscila Arantes PA{% endblock %}
@@ -287,4 +287,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 </script>
 {% endif %}
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="{% static 'js/public_appointment.js' %}"></script>
 {% endblock %}

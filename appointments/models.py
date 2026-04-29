@@ -271,6 +271,8 @@ class Appointment(models.Model):
     )
 
     notes = models.TextField(blank=True)
+    cancellation_reason = models.TextField(blank=True)
+    cancelled_at = models.DateTimeField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -388,3 +390,49 @@ class Appointment(models.Model):
 
         self.full_clean()
         return super().save(*args, **kwargs)
+    
+class AppointmentLog(models.Model):
+    # Stores audit trail for appointment changes.
+
+    ACTION_CREATE = "create"
+    ACTION_UPDATE = "update"
+    ACTION_CANCEL = "cancel"
+    ACTION_CONFIRM = "confirm"
+    ACTION_COMPLETE = "complete"
+
+    ACTION_CHOICES = [
+        (ACTION_CREATE, "Create"),
+        (ACTION_UPDATE, "Update"),
+        (ACTION_CANCEL, "Cancel"),
+        (ACTION_CONFIRM, "Confirm"),
+        (ACTION_COMPLETE, "Complete"),
+    ]
+
+    appointment = models.ForeignKey(
+        Appointment,
+        on_delete=models.CASCADE,
+        related_name="logs",
+    )
+
+    action = models.CharField(
+        max_length=20,
+        choices=ACTION_CHOICES,
+    )
+
+    performed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="appointment_logs",
+    )
+
+    description = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.appointment.reference_code} - {self.action}"    

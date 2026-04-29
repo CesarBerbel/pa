@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 
 from django.contrib.auth.models import AnonymousUser
+from django.utils import timezone
 
 from appointments.emails import send_appointment_cancelled_email
-from appointments.models import Appointment
+from appointments.audit_services import AppointmentAuditService
+from appointments.models import Appointment, AppointmentLog
 
 
 @dataclass
@@ -18,7 +20,7 @@ class AppointmentCancellationService:
     # Centralizes all appointment cancellation business rules.
 
     @staticmethod
-    def cancel(appointment, user=None):
+    def cancel(appointment, user=None, cancellation_reason=""):
         # Cancel an appointment only when business rules allow it.
         if not appointment:
             return CancellationResult(
@@ -54,10 +56,38 @@ class AppointmentCancellationService:
                 appointment=appointment,
             )
 
-        appointment.status = Appointment.STATUS_CANCELLED
-        appointment.save(update_fields=["status", "updated_at"])
+        cancellation_reason = (cancellation_reason or "").strip()
 
-        send_appointment_cancelled_email(appointment)
+        if not cancellation_reason:
+            return CancellationResult(
+                success=False,
+                message="Informe o motivo do cancelamento.",
+                appointment=appointment,
+            )
+
+        appointment.status = Appointment.STATUS_CANCELLED
+        appointment.cancellation_reason = cancellation_reason
+        appointment.cancelled_at = timezone.now()
+        appointment.save(
+            update_fields=[
+                "status",
+                "cancellation_reason",
+                "cancelled_at",
+                "updated_at",
+            ]
+        )
+
+        AppointmentAuditService.log(
+            appointment=appointment,
+            action=AppointmentLog.ACTION_CANCEL,
+            user=user,
+            description=f"Appointment cancelled. Reason: {cancellation_reason}",
+        )
+
+        send_appointment_cancelled_email(
+            appointment=appointment,
+            cancellation_reason=cancellation_reason,
+        )
 
         return CancellationResult(
             success=True,
