@@ -366,12 +366,23 @@ class PublicCancelSuccessView(TemplateView):
     template_name = "appointments/public_cancel_success.html"
 
     def get_context_data(self, **kwargs):
+        # Add cancelled appointment data to show cancellation reason and timestamp.
         context = super().get_context_data(**kwargs)
 
-        context["reference_code"] = self.kwargs.get(
+        reference_code = self.kwargs.get(
             "reference_code",
             self.request.session.get("cancelled_reference_code", "N/A"),
         )
+
+        appointment = Appointment.objects.filter(
+            reference_code=reference_code,
+        ).select_related(
+            "customer",
+            "service",
+        ).first()
+
+        context["reference_code"] = reference_code
+        context["appointment"] = appointment
 
         return context
 

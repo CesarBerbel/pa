@@ -11,6 +11,20 @@
     </a>
 </div>
 
+<style>
+    .schedule-block-action-button {
+        width: 38px;
+        height: 38px;
+        padding: 0;
+        border-radius: 10px;
+    }
+
+    .schedule-block-action-button i {
+        font-size: 16px;
+        line-height: 1;
+    }
+</style>
+
 <div class="card shadow-sm border-0">
     <div class="card-body">
         {% if blocks %}
@@ -22,39 +36,76 @@
                             <th>Tipo</th>
                             <th>Data</th>
                             <th>Horário</th>
-                            <th>Ativo</th>
+                            <th>Status</th>
                             <th class="text-end">Ações</th>
                         </tr>
                     </thead>
+
                     <tbody>
                         {% for block in blocks %}
                             <tr>
                                 <td>{{ block.title }}</td>
-                                <td>{{ block.get_block_type_display }}</td>
-                                <td>{{ block.date|date:"d/m/Y" }}</td>
+
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        {{ block.get_block_type_display }}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    {{ block.date|date:"d/m/Y" }}
+                                </td>
+
                                 <td>
                                     {% if block.is_full_day %}
-                                        Dia inteiro
+                                        <span class="badge bg-dark">
+                                            Dia inteiro
+                                        </span>
                                     {% else %}
-                                        {{ block.start_time|time:"H:i" }}
-                                        -
-                                        {{ block.end_time|time:"H:i" }}
+                                        {{ block.start_time|time:"H:i" }} às {{ block.end_time|time:"H:i" }}
                                     {% endif %}
                                 </td>
+
                                 <td>
                                     {% if block.is_active %}
-                                        Sim
+                                        <span class="badge bg-success">
+                                            Ativo
+                                        </span>
                                     {% else %}
-                                        Não
+                                        <span class="badge bg-secondary">
+                                            Inativo
+                                        </span>
                                     {% endif %}
                                 </td>
+
                                 <td class="text-end">
-                                    <a
-                                        href="{% url 'appointments:schedule_block_update' block.pk %}"
-                                        class="btn btn-outline-primary btn-sm"
-                                    >
-                                        Editar
-                                    </a>
+                                    <div class="d-inline-flex flex-wrap justify-content-end gap-2">
+
+                                        <!-- Editar -->
+                                        <a
+                                            href="{% url 'appointments:schedule_block_update' block.pk %}"
+                                            class="btn btn-outline-primary btn-sm schedule-block-action-button d-inline-flex align-items-center justify-content-center"
+                                            data-bs-toggle="tooltip"
+                                            data-bs-placement="top"
+                                            data-bs-title="Editar bloqueio"
+                                            aria-label="Editar bloqueio {{ block.title }}"
+                                        >
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+
+                                        <!-- Excluir -->
+                                        <a
+                                            href="{% url 'appointments:schedule_block_delete' block.pk %}"
+                                            class="btn btn-outline-danger btn-sm schedule-block-action-button d-inline-flex align-items-center justify-content-center"
+                                            data-bs-toggle="tooltip"
+                                            data-bs-placement="top"
+                                            data-bs-title="Excluir bloqueio"
+                                            aria-label="Excluir bloqueio {{ block.title }}"
+                                        >
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+
+                                    </div>
                                 </td>
                             </tr>
                         {% endfor %}

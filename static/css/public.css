@@ -2175,3 +2175,8 @@ footer[id] {
     font-weight: 700;
     z-index: 5;
 }
+
+.btn i {
+    font-size: 16px;
+    line-height: 1;
+}

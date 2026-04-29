@@ -11,6 +11,20 @@
     </a>
 </div>
 
+<style>
+    .appointment-action-button {
+        width: 38px;
+        height: 38px;
+        padding: 0;
+        border-radius: 10px;
+    }
+
+    .appointment-action-button i {
+        font-size: 16px;
+        line-height: 1;
+    }
+</style>
+
 <div class="card shadow-sm border-0">
     <div class="card-body">
         {% if appointments %}
@@ -27,6 +41,7 @@
                             <th class="text-end">Ações</th>
                         </tr>
                     </thead>
+
                     <tbody>
                         {% for appointment in appointments %}
                             <tr>
@@ -65,14 +80,18 @@
                                 </td>
 
                                 <td class="text-end">
-                                    <div class="d-inline-flex flex-wrap justify-content-end gap-1">
+                                    <div class="d-inline-flex flex-wrap justify-content-end gap-2">
 
-                                       {% if appointment.status != "completed" %}
+                                        {% if appointment.status != "completed" %}
                                             <a
                                                 href="{% url 'appointments:appointment_update' appointment.pk %}"
-                                                class="btn btn-outline-primary btn-sm"
+                                                class="btn btn-outline-primary btn-sm appointment-action-button d-inline-flex align-items-center justify-content-center"
+                                                data-bs-toggle="tooltip"
+                                                data-bs-placement="top"
+                                                data-bs-title="Editar marcação"
+                                                aria-label="Editar marcação {{ appointment.reference_code }}"
                                             >
-                                                Editar
+                                                <i class="bi bi-pencil"></i>
                                             </a>
                                         {% endif %}
 
@@ -83,8 +102,15 @@
                                                 class="d-inline"
                                             >
                                                 {% csrf_token %}
-                                                <button type="submit" class="btn btn-outline-success btn-sm">
-                                                    Confirmar
+                                                <button
+                                                    type="submit"
+                                                    class="btn btn-success btn-sm appointment-action-button d-inline-flex align-items-center justify-content-center"
+                                                    data-bs-toggle="tooltip"
+                                                    data-bs-placement="top"
+                                                    data-bs-title="Confirmar marcação"
+                                                    aria-label="Confirmar marcação {{ appointment.reference_code }}"
+                                                >
+                                                    <i class="bi bi-check-lg"></i>
                                                 </button>
                                             </form>
                                         {% endif %}
@@ -96,8 +122,15 @@
                                                 class="d-inline"
                                             >
                                                 {% csrf_token %}
-                                                <button type="submit" class="btn btn-outline-dark btn-sm">
-                                                    Concluir
+                                                <button
+                                                    type="submit"
+                                                    class="btn btn-dark btn-sm appointment-action-button d-inline-flex align-items-center justify-content-center"
+                                                    data-bs-toggle="tooltip"
+                                                    data-bs-placement="top"
+                                                    data-bs-title="Concluir marcação"
+                                                    aria-label="Concluir marcação {{ appointment.reference_code }}"
+                                                >
+                                                    <i class="bi bi-check2-circle"></i>
                                                 </button>
                                             </form>
                                         {% endif %}
@@ -105,9 +138,13 @@
                                         {% if appointment.status != "cancelled" and appointment.status != "completed" %}
                                             <a
                                                 href="{% url 'appointments:appointment_cancel' appointment.pk %}"
-                                                class="btn btn-outline-danger btn-sm"
+                                                class="btn btn-outline-danger btn-sm appointment-action-button d-inline-flex align-items-center justify-content-center"
+                                                data-bs-toggle="tooltip"
+                                                data-bs-placement="top"
+                                                data-bs-title="Cancelar marcação"
+                                                aria-label="Cancelar marcação {{ appointment.reference_code }}"
                                             >
-                                                Cancelar
+                                                <i class="bi bi-trash"></i>
                                             </a>
                                         {% endif %}
 

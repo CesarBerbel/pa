@@ -1,0 +1,26 @@
+{% if appointment.status == "cancelled" %}
+    <div class="alert alert-danger mt-3 text-start">
+        <div class="fw-bold mb-2">
+            Marcação cancelada
+        </div>
+
+        {% if appointment.cancelled_at %}
+            <p class="mb-2">
+                <strong>Cancelada em:</strong>
+                {{ appointment.cancelled_at|date:"d/m/Y H:i" }}
+            </p>
+        {% endif %}
+
+        {% if appointment.cancellation_reason %}
+            <p class="mb-0">
+                <strong>Motivo:</strong>
+                {{ appointment.cancellation_reason|linebreaksbr }}
+            </p>
+        {% else %}
+            <p class="mb-0">
+                <strong>Motivo:</strong>
+                Não informado.
+            </p>
+        {% endif %}
+    </div>
+{% endif %}

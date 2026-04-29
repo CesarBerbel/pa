@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Excluir serviço | Priscila Arantes PA{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-6">
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+
+                <h1 class="h4 mb-3 text-danger">
+                    Excluir serviço
+                </h1>
+
+                <div class="alert alert-warning">
+                    Esta ação é permanente. Se o serviço possuir marcações vinculadas,
+                    o sistema impedirá a exclusão para proteger o histórico.
+                </div>
+
+                <div class="border rounded p-3 mb-4 bg-light">
+                    <p class="mb-2">
+                        <strong>Nome:</strong>
+                        {{ object.name }}
+                    </p>
+
+                    <p class="mb-2">
+                        <strong>Duração:</strong>
+                        {{ object.duration_minutes }} minutos
+                    </p>
+
+                    <p class="mb-2">
+                        <strong>Preço:</strong>
+                        € {{ object.price }}
+                    </p>
+
+                    <p class="mb-0">
+                        <strong>Status:</strong>
+                        {% if object.is_active %}
+                            Ativo
+                        {% else %}
+                            Inativo
+                        {% endif %}
+                    </p>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-danger">
+                            Excluir serviço
+                        </button>
+
+                        <a href="{% url 'appointments:service_list' %}" class="btn btn-outline-secondary">
+                            Voltar
+                        </a>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

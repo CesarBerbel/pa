@@ -21,11 +21,15 @@
                     {{ reference_code }}
                 </div>
 
-                <p class="text-muted mb-4">
+                {% if appointment %}
+                    {% include "appointments/_appointment_cancellation_info.html" with appointment=appointment %}
+                {% endif %}
+                
+                <p class="text-muted mb-4 mt-3">
                     Este horário voltou a ficar disponível para novas marcações.
                 </p>
 
-                <a href="{% url 'appointments:public_appointment_create' %}" class="btn btn-primary">
+                <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary">
                     Fazer nova marcação
                 </a>
 

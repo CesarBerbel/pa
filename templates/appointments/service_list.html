@@ -11,6 +11,20 @@
     </a>
 </div>
 
+<style>
+    .service-action-button {
+        width: 38px;
+        height: 38px;
+        padding: 0;
+        border-radius: 10px;
+    }
+
+    .service-action-button i {
+        font-size: 16px;
+        line-height: 1;
+    }
+</style>
+
 <div class="card shadow-sm border-0">
     <div class="card-body">
         {% if services %}
@@ -21,21 +35,58 @@
                             <th>Nome</th>
                             <th>Duração</th>
                             <th>Preço</th>
-                            <th>Ativo</th>
+                            <th>Status</th>
+                            <th class="text-end">Ações</th>
                         </tr>
                     </thead>
+
                     <tbody>
                         {% for service in services %}
                             <tr>
                                 <td>{{ service.name }}</td>
-                                <td>{{ service.duration_minutes }} minutos</td>
+
+                                <td>{{ service.duration_minutes }} min</td>
+
                                 <td>€ {{ service.price }}</td>
+
                                 <td>
                                     {% if service.is_active %}
-                                        Sim
+                                        <span class="badge bg-success">
+                                            Ativo
+                                        </span>
                                     {% else %}
-                                        Não
+                                        <span class="badge bg-secondary">
+                                            Inativo
+                                        </span>
                                     {% endif %}
+                                </td>
+
+                                <td class="text-end">
+                                    <div class="d-inline-flex flex-wrap justify-content-end gap-2">
+
+                                        <a
+                                            href="{% url 'appointments:service_update' service.pk %}"
+                                            class="btn btn-outline-primary btn-sm service-action-button d-inline-flex align-items-center justify-content-center"
+                                            data-bs-toggle="tooltip"
+                                            data-bs-placement="top"
+                                            data-bs-title="Editar serviço"
+                                            aria-label="Editar serviço {{ service.name }}"
+                                        >
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+
+                                        <a
+                                            href="{% url 'appointments:service_delete' service.pk %}"
+                                            class="btn btn-outline-danger btn-sm service-action-button d-inline-flex align-items-center justify-content-center"
+                                            data-bs-toggle="tooltip"
+                                            data-bs-placement="top"
+                                            data-bs-title="Excluir serviço"
+                                            aria-label="Excluir serviço {{ service.name }}"
+                                        >
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+
+                                    </div>
                                 </td>
                             </tr>
                         {% endfor %}
@@ -43,7 +94,9 @@
                 </table>
             </div>
         {% else %}
-            <p class="mb-0">Nenhum serviço cadastrado.</p>
+            <p class="mb-0">
+                Nenhum serviço cadastrado.
+            </p>
         {% endif %}
     </div>
 </div>

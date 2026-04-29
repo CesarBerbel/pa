@@ -101,6 +101,26 @@ class AppointmentCancelView(SuperuserRequiredMixin, UpdateView):
         kwargs.pop("instance", None)
         return kwargs
 
+    def dispatch(self, request, *args, **kwargs):
+        # Prevent opening the cancellation form for appointments that cannot be cancelled.
+        appointment = self.get_object()
+
+        if appointment.status == Appointment.STATUS_CANCELLED:
+            messages.warning(
+                request,
+                "Esta marcação já está cancelada.",
+            )
+            return redirect("appointments:appointment_list")
+
+        if appointment.status == Appointment.STATUS_COMPLETED:
+            messages.error(
+                request,
+                "Marcações concluídas não podem ser canceladas.",
+            )
+            return redirect("appointments:appointment_list")
+
+        return super().dispatch(request, *args, **kwargs)
+
     def get_initial(self):
         # Pre-fill the reason if the appointment already has one.
         initial = super().get_initial()

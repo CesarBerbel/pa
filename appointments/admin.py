@@ -32,21 +32,65 @@ class AppointmentAdmin(admin.ModelAdmin):
         "date",
         "start_time",
         "status",
-        "cancellation_reason",
+        "cancelled_at",
     )
 
-    list_filter = ("status", "date", "service")
+    list_filter = (
+        "status",
+        "date",
+        "service",
+        "cancelled_at",
+    )
 
     search_fields = (
         "reference_code",
         "customer__full_name",
         "customer__email",
+        "cancellation_reason",
     )
 
-    autocomplete_fields = ("customer", "service")
+    readonly_fields = (
+        "reference_code",
+        "cancelled_at",
+        "created_at",
+        "updated_at",
+    )
 
-    ordering = ("-date", "-start_time")
-    readonly_fields = ("reference_code", "created_at", "updated_at","cancelled_at")
+    fieldsets = (
+        (
+            "Dados da marcação",
+            {
+                "fields": (
+                    "reference_code",
+                    "customer",
+                    "service",
+                    "created_by",
+                    "date",
+                    "start_time",
+                    "status",
+                    "notes",
+                )
+            },
+        ),
+        (
+            "Cancelamento",
+            {
+                "fields": (
+                    "cancellation_reason",
+                    "cancelled_at",
+                )
+            },
+        ),
+        (
+            "Controle",
+            {
+                "fields": (
+                    "created_at",
+                    "updated_at",
+                )
+            },
+        ),
+    )
 
 @admin.register(ScheduleBlock)
 class ScheduleBlockAdmin(admin.ModelAdmin):

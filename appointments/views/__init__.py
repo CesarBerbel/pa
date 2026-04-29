@@ -12,6 +12,7 @@ from .customers import (
     CustomerCreateView,
     CustomerListView,
     CustomerUpdateView,
+    CustomerDeleteView,
 )
 from .diagnostics import ScheduleDiagnosticsView
 
@@ -30,6 +31,7 @@ from .schedule_blocks import (
     ScheduleBlockCreateView,
     ScheduleBlockListView,
     ScheduleBlockUpdateView,
+    ScheduleBlockDeleteView,
 )
 from .schedules import (
     DailyAgendaView,
@@ -38,4 +40,6 @@ from .schedules import (
 from .services import (
     ServiceCreateView,
     ServiceListView,
+    ServiceUpdateView,
+    ServiceDeleteView,
 )
