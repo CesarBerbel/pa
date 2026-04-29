@@ -11,6 +11,8 @@ DEBUG = config("DEBUG", default=False, cast=bool)
 
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="").split(",")
 
+SITE_URL = config("SITE_URL", default="http://localhost:8000")
+
 # Applications
 INSTALLED_APPS = [
     "django.contrib.admin",

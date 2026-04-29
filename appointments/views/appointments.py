@@ -3,9 +3,10 @@ from appointments.mixins import SuperuserRequiredMixin, LoginRequiredMixin
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView, TemplateView, UpdateView, View
-from appointments.emails import send_appointment_confirmation_email, send_appointment_cancelled_email
+from appointments.emails import send_appointment_confirmation_email
 from appointments.forms import AppointmentForm
 from appointments.models import Appointment
+from appointments.cancellation_services import AppointmentCancellationService
 
 class AppointmentListView(SuperuserRequiredMixin, ListView):
     # Lists appointments
@@ -83,14 +84,18 @@ class AppointmentCancelView(SuperuserRequiredMixin, View):
     # Cancels an appointment without deleting it from the database
 
     def post(self, request, pk):
-        appointment = Appointment.objects.get(pk=pk)
+        # Cancel an appointment using centralized business rules.
+        appointment = Appointment.objects.filter(pk=pk).first()
 
-        appointment.status = Appointment.STATUS_CANCELLED
-        appointment.save(update_fields=["status", "updated_at"])
+        result = AppointmentCancellationService.cancel(
+            appointment=appointment,
+            user=request.user,
+        )
 
-        send_appointment_cancelled_email(appointment)
-
-        messages.success(request, "Marcação cancelada com sucesso.")
+        if result.success:
+            messages.success(request, result.message)
+        else:
+            messages.error(request, result.message)
 
         return redirect("appointments:appointment_list")
 

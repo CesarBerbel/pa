@@ -24,7 +24,7 @@ def send_appointment_confirmation_email(appointment):
         return
     
     link = generate_secure_link(appointment)
-    full_url = f"https://seudominio.com{link}"
+    full_url = f"{settings.SITE_URL}{link}"
 
     is_confirmed = appointment.status == appointment.STATUS_CONFIRMED
 
