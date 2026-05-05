@@ -1,5 +1,4 @@
 from django.contrib import messages
-from django.db import models
 from appointments.mixins import SuperuserRequiredMixin, LoginRequiredMixin
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
@@ -8,9 +7,10 @@ from django.views.generic import CreateView, ListView, TemplateView, UpdateView,
 
 from appointments.audit_services import AppointmentAuditService
 from appointments.cancellation_services import AppointmentCancellationService
-from appointments.emails import send_appointment_confirmation_email
 from appointments.forms import AppointmentCancelForm, AppointmentForm
 from appointments.models import Appointment, AppointmentLog, Service
+from appointments.selectors import AppointmentFilters, AppointmentSelectors
+from appointments.use_cases import ConfirmAppointmentUseCase, CompleteAppointmentUseCase
 
 
 class AppointmentListView(SuperuserRequiredMixin, ListView):
@@ -20,85 +20,12 @@ class AppointmentListView(SuperuserRequiredMixin, ListView):
     template_name = "appointments/appointment_list.html"
     context_object_name = "appointments"
 
-    allowed_orderings = {
-        "date_asc": ("date", "start_time"),
-        "date_desc": ("-date", "-start_time"),
-        "customer_asc": ("customer__full_name", "date", "start_time"),
-        "customer_desc": ("-customer__full_name", "date", "start_time"),
-        "service_asc": ("service__name", "date", "start_time"),
-        "service_desc": ("-service__name", "date", "start_time"),
-        "status_asc": ("status", "date", "start_time"),
-        "status_desc": ("-status", "date", "start_time"),
-        "created_desc": ("-created_at",),
-        "created_asc": ("created_at",),
-    }
+    def get_filters(self):
+        return AppointmentFilters.from_querydict(self.request.GET)
 
     def get_queryset(self):
-        # Apply search, filters and ordering from query string.
-        queryset = Appointment.objects.select_related(
-            "customer",
-            "service",
-            "created_by",
-        )
-
-        search = self.request.GET.get("q", "").strip()
-        status = self.request.GET.get("status", "").strip()
-        service_id = self.request.GET.get("service", "").strip()
-        date_from = self.request.GET.get("date_from", "").strip()
-        date_to = self.request.GET.get("date_to", "").strip()
-        reminder = self.request.GET.get("reminder", "").strip()
-        ordering = self.request.GET.get("ordering", "date_asc").strip()
-
-        if search:
-            queryset = queryset.filter(
-                models.Q(reference_code__icontains=search)
-                | models.Q(customer__full_name__icontains=search)
-                | models.Q(customer__email__icontains=search)
-                | models.Q(customer__phone__icontains=search)
-                | models.Q(service__name__icontains=search)
-            )
-
-        if status:
-            queryset = queryset.filter(status=status)
-
-        if service_id:
-            queryset = queryset.filter(service_id=service_id)
-
-        if date_from:
-            queryset = queryset.filter(date__gte=date_from)
-
-        if date_to:
-            queryset = queryset.filter(date__lte=date_to)
-
-        if reminder == "24h_sent":
-            queryset = queryset.filter(reminder_24h_sent_at__isnull=False)
-        elif reminder == "24h_pending":
-            queryset = queryset.filter(
-                reminder_24h_sent_at__isnull=True,
-            ).exclude(
-                status__in=[
-                    Appointment.STATUS_CANCELLED,
-                    Appointment.STATUS_COMPLETED,
-                ]
-            )
-        elif reminder == "2h_sent":
-            queryset = queryset.filter(reminder_2h_sent_at__isnull=False)
-        elif reminder == "2h_pending":
-            queryset = queryset.filter(
-                reminder_2h_sent_at__isnull=True,
-            ).exclude(
-                status__in=[
-                    Appointment.STATUS_CANCELLED,
-                    Appointment.STATUS_COMPLETED,
-                ]
-            )
-
-        order_by = self.allowed_orderings.get(
-            ordering,
-            self.allowed_orderings["date_asc"],
-        )
-
-        return queryset.order_by(*order_by)
+        # Delegate filtering/query composition to the application selector layer.
+        return AppointmentSelectors.list_appointments(self.get_filters())
 
     def get_context_data(self, **kwargs):
         # Add filter options and selected values to the template.
@@ -107,15 +34,7 @@ class AppointmentListView(SuperuserRequiredMixin, ListView):
         context["services"] = Service.objects.order_by("name")
         context["status_choices"] = Appointment.STATUS_CHOICES
 
-        context["filters"] = {
-            "q": self.request.GET.get("q", ""),
-            "status": self.request.GET.get("status", ""),
-            "service": self.request.GET.get("service", ""),
-            "date_from": self.request.GET.get("date_from", ""),
-            "date_to": self.request.GET.get("date_to", ""),
-            "reminder": self.request.GET.get("reminder", ""),
-            "ordering": self.request.GET.get("ordering", "date_asc"),
-        }
+        context["filters"] = self.get_filters().as_template_context()
 
         return context
 
@@ -253,20 +172,15 @@ class AppointmentConfirmView(SuperuserRequiredMixin, View):
     def post(self, request, pk):
         appointment = Appointment.objects.get(pk=pk)
 
-        if appointment.status != Appointment.STATUS_CANCELLED:
-            appointment.status = Appointment.STATUS_CONFIRMED
-            appointment.save(update_fields=["status", "updated_at"])
+        result = ConfirmAppointmentUseCase.execute(
+            appointment=appointment,
+            user=request.user,
+        )
 
-            messages.success(request, "Marcação confirmada com sucesso.")
-
-            AppointmentAuditService.log(
-                appointment=appointment,
-                action=AppointmentLog.ACTION_CONFIRM,
-                user=request.user,
-                description="Appointment confirmed.",
-            )
-
-            send_appointment_confirmation_email(appointment)
+        if result.success:
+            messages.success(request, result.message)
+        else:
+            messages.error(request, result.message)
 
         return redirect("appointments:appointment_list")
 
@@ -277,24 +191,15 @@ class AppointmentCompleteView(SuperuserRequiredMixin, View):
     def post(self, request, pk):
         appointment = Appointment.objects.get(pk=pk)
 
-        if appointment.status != Appointment.STATUS_CONFIRMED:
-            messages.error(
-                request,
-                "Só é possível concluir marcações confirmadas.",
-            )
-            return redirect("appointments:appointment_list")
-
-        appointment.status = Appointment.STATUS_COMPLETED
-        appointment.save(update_fields=["status", "updated_at"])
-
-        AppointmentAuditService.log(
+        result = CompleteAppointmentUseCase.execute(
             appointment=appointment,
-            action=AppointmentLog.ACTION_COMPLETE,
             user=request.user,
-            description="Appointment completed.",
         )
 
-        messages.success(request, "Marcação concluída com sucesso.")
+        if result.success:
+            messages.success(request, result.message)
+        else:
+            messages.error(request, result.message)
 
         return redirect("appointments:appointment_list")
 
@@ -309,16 +214,7 @@ class CustomerAppointmentsView(LoginRequiredMixin, TemplateView):
 
         customer = getattr(self.request.user, "customer_profile", None)
 
-        appointments = []
-
-        if customer:
-            appointments = Appointment.objects.filter(
-                customer=customer,
-            ).select_related(
-                "service",
-            ).order_by("-date", "-start_time")
-
-        context["appointments"] = appointments
+        context["appointments"] = AppointmentSelectors.customer_appointments(customer)
 
         return context
 
@@ -336,13 +232,10 @@ class CustomerAppointmentDetailView(LoginRequiredMixin, TemplateView):
 
         reference_code = self.kwargs.get("reference_code", "").strip().upper()
 
-        return Appointment.objects.filter(
+        return AppointmentSelectors.customer_appointment_by_reference(
             customer=customer,
             reference_code=reference_code,
-        ).select_related(
-            "service",
-            "customer",
-        ).first()
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

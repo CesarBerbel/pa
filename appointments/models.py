@@ -325,83 +325,10 @@ class Appointment(models.Model):
         )
 
     def clean(self):
-        # Cancelled appointments do not need schedule validation
-        if self.status == self.STATUS_CANCELLED:
-            return
+        # Keep model validation as a thin delegate to the domain availability policy.
+        from appointments.availability import AvailabilityService
 
-        if self.service and not self.service.is_active:
-            raise ValidationError("Não é possível marcar horário para um serviço inativo.")
-
-        if not self.date or not self.start_time or not self.service:
-            return
-
-        weekday = self.date.weekday()
-
-        try:
-            business_hour = BusinessHour.objects.get(
-                weekday=weekday,
-                is_active=True,
-            )
-        except BusinessHour.DoesNotExist:
-            raise ValidationError(
-                "Não há horário de funcionamento ativo para este dia."
-            )
-
-        appointment_start = self.get_start_datetime()
-        appointment_end = self.get_end_datetime()
-
-        business_start = datetime.combine(self.date, business_hour.start_time)
-        business_end = datetime.combine(self.date, business_hour.end_time)
-
-        if appointment_start < business_start or appointment_end > business_end:
-            raise ValidationError(
-                "A marcação está fora do horário de funcionamento."
-            )
-
-        active_blocks = [
-            block
-            for block in ScheduleBlock.objects.filter(is_active=True)
-            if block.applies_to_date(self.date)
-        ]
-
-        for block in active_blocks:
-            block_start = block.get_start_datetime_for_date(self.date)
-            block_end = block.get_end_datetime_for_date(self.date)
-
-            has_block_conflict = (
-                appointment_start < block_end
-                and appointment_end > block_start
-            )
-
-            if has_block_conflict:
-                raise ValidationError(
-                    f"Este horário está bloqueado: {block.title}."
-                )
-
-        appointments = Appointment.objects.filter(
-            date=self.date,
-        ).exclude(
-            status=self.STATUS_CANCELLED,
-        ).select_related(
-            "service",
-        )
-
-        if self.pk:
-            appointments = appointments.exclude(pk=self.pk)
-
-        for appointment in appointments:
-            existing_start = appointment.get_start_datetime()
-            existing_end = appointment.get_end_datetime()
-
-            has_conflict = (
-                appointment_start < existing_end
-                and appointment_end > existing_start
-            )
-
-            if has_conflict:
-                raise ValidationError(
-                    "Este horário entra em conflito com outra marcação existente."
-                )
+        AvailabilityService.validate_appointment(self)
 
     def save(self, *args, **kwargs):
         # Auto-generate reference code before validation and saving

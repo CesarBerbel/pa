@@ -20,6 +20,7 @@ from appointments.forms import (
 from appointments.models import Appointment, BusinessHour, Customer, ScheduleBlock, Service
 from appointments.customer_services import find_or_create_customer
 from appointments.appointment_services import AppointmentService
+from appointments.availability import AvailabilityService
 
 class PublicBookingAvailabilityMixin:
     # Shared availability logic for public booking
@@ -27,91 +28,11 @@ class PublicBookingAvailabilityMixin:
     slot_minutes = 30
 
     def get_available_slots_for(self, service, selected_date):
-        # Calculate available slots without using unsaved appointment objects
-        business_hour = BusinessHour.objects.filter(
-            weekday=selected_date.weekday(),
-            is_active=True,
-        ).first()
-
-        if not business_hour:
-            return []
-
-        now = timezone.localtime()
-
-        current_datetime = datetime.combine(
-            selected_date,
-            business_hour.start_time,
+        # Delegate public slot generation to the domain availability service.
+        return AvailabilityService.get_available_slots(
+            service=service,
+            selected_date=selected_date,
         )
-
-        business_end_datetime = datetime.combine(
-            selected_date,
-            business_hour.end_time,
-        )
-
-        # If selected date is today, do not show past times
-        if selected_date == now.date():
-            current_datetime = max(
-                current_datetime,
-                now.replace(second=0, microsecond=0).replace(tzinfo=None),
-            )
-
-            # Round up to the next slot interval
-            minute = current_datetime.minute
-
-            if minute % self.slot_minutes != 0:
-                minutes_to_add = self.slot_minutes - (minute % self.slot_minutes)
-                current_datetime += timedelta(minutes=minutes_to_add)
-
-        appointments = Appointment.objects.filter(
-            date=selected_date,
-        ).exclude(
-            status=Appointment.STATUS_CANCELLED,
-        ).select_related(
-            "service",
-        )
-
-        blocks = [
-            block
-            for block in ScheduleBlock.objects.filter(is_active=True)
-            if block.applies_to_date(selected_date)
-        ]
-
-        available_slots = []
-
-        while current_datetime + timedelta(minutes=service.duration_minutes) <= business_end_datetime:
-            slot_start = current_datetime
-            slot_end = slot_start + timedelta(minutes=service.duration_minutes)
-
-            has_conflict = False
-
-            for appointment in appointments:
-                appointment_start = appointment.get_start_datetime()
-                appointment_end = appointment.get_end_datetime()
-
-                if slot_start < appointment_end and slot_end > appointment_start:
-                    has_conflict = True
-                    break
-
-            if not has_conflict:
-                for block in blocks:
-                    block_start = block.get_start_datetime_for_date(selected_date)
-                    block_end = block.get_end_datetime_for_date(selected_date)
-
-                    if slot_start < block_end and slot_end > block_start:
-                        has_conflict = True
-                        break
-
-            if not has_conflict:
-                available_slots.append(
-                    {
-                        "value": slot_start.strftime("%H:%M"),
-                        "label": slot_start.strftime("%H:%M"),
-                    }
-                )
-
-            current_datetime += timedelta(minutes=self.slot_minutes)
-
-        return available_slots
 
 
 class PublicAppointmentCreateView(PublicBookingAvailabilityMixin, FormView):
@@ -236,19 +157,6 @@ class PublicAppointmentCreateView(PublicBookingAvailabilityMixin, FormView):
                 phone=customer_phone,
                 email=customer_email,
             )
-
-            User = get_user_model()
-
-            system_user = User.objects.filter(
-                is_superuser=True,
-            ).order_by(
-                "id",
-            ).first()
-
-            if not system_user:
-                raise ValidationError(
-                    "Não existe usuário administrador para registrar marcações públicas."
-                )
 
             result = AppointmentService.create_appointment(
                 customer=customer,
