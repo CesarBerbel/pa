@@ -79,25 +79,49 @@ def find_customer_by_email_or_phone(email="", phone=""):
 
 
 def find_or_create_customer(name, phone, email, user=None):
-    # Create guest customers for anonymous flows and linked customers for signup flows.
     normalized_email = normalize_email(email)
+    normalized_phone = normalize_phone(phone)
 
+    # Caso exista usuário (signup)
     if user is not None:
-        customer, _created = Customer.objects.update_or_create(
-            user=user,
-            defaults={
-                "is_guest": False,
-                "full_name": name,
-                "phone": phone,
-                "email": normalized_email,
-            },
+        customer = find_customer_by_email_or_phone(
+            email=normalized_email,
+            phone=normalized_phone,
         )
-        return customer
 
+        if customer:
+            # Vincula o usuário ao cliente existente
+            customer.user = user
+            customer.is_guest = False
+            customer.full_name = name
+            customer.phone = normalized_phone or phone
+            customer.email = normalized_email
+            customer.save(
+                update_fields=[
+                    "user",
+                    "is_guest",
+                    "full_name",
+                    "phone",
+                    "email",
+                    "updated_at",
+                ]
+            )
+            return customer
+
+        # Se não encontrou, cria novo
+        return Customer.objects.create(
+            user=user,
+            is_guest=False,
+            full_name=name,
+            phone=normalized_phone or phone,
+            email=normalized_email,
+        )
+
+    # Fluxo de guest (sem usuário)
     return Customer.objects.create(
         user=None,
         is_guest=True,
         full_name=name,
-        phone=phone,
+        phone=normalized_phone or phone,
         email=normalized_email,
     )
