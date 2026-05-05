@@ -17,6 +17,7 @@ from appointments.models import (
 )
 from appointments.forms import ScheduleBlockForm
 
+
 class AppointmentTestSetupMixin:
     # Shared test data for appointment tests.
 
@@ -334,10 +335,7 @@ class PublicAppointmentFlowTests(AppointmentTestSetupMixin, TestCase):
             },
         )
 
-        slot_values = [
-            slot["value"]
-            for slot in response.context["slots"]
-        ]
+        slot_values = [slot["value"] for slot in response.context["slots"]]
 
         self.assertEqual(response.status_code, 200)
         self.assertNotIn("10:00", slot_values)
@@ -484,7 +482,9 @@ class CustomerSignupWithAppointmentTests(AppointmentTestSetupMixin, TestCase):
     def setUp(self):
         self.create_base_data()
 
-    def test_customer_signup_with_appointment_creates_user_customer_and_appointment(self):
+    def test_customer_signup_with_appointment_creates_user_customer_and_appointment(
+        self,
+    ):
         # Ensure signup flow creates user, links customer, and creates appointment.
         response = self.client.post(
             reverse("accounts:customer_signup")
@@ -530,8 +530,6 @@ class CustomerSignupWithAppointmentTests(AppointmentTestSetupMixin, TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFalse(User.objects.filter(email="outro-email@test.com").exists())
         self.assertEqual(Customer.objects.count(), 1)
-
-from django.core.exceptions import ValidationError
 
 
 class BusinessHourModelTests(TestCase):
@@ -779,7 +777,8 @@ class PublicAvailableSlotsViewTests(AppointmentTestSetupMixin, TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["slots"], [])        
+        self.assertEqual(response.json()["slots"], [])
+
 
 class InternalPermissionTests(AppointmentTestSetupMixin, TestCase):
     # Tests for internal page permissions.
@@ -835,19 +834,13 @@ class InternalPermissionTests(AppointmentTestSetupMixin, TestCase):
         )
 
     def test_admin_user_can_access_appointment_list(self):
-        self.assert_admin_user_can_access_internal_url(
-            "appointments:appointment_list"
-        )
+        self.assert_admin_user_can_access_internal_url("appointments:appointment_list")
 
     def test_admin_user_can_access_customer_list(self):
-        self.assert_admin_user_can_access_internal_url(
-            "appointments:customer_list"
-        )
+        self.assert_admin_user_can_access_internal_url("appointments:customer_list")
 
     def test_admin_user_can_access_service_list(self):
-        self.assert_admin_user_can_access_internal_url(
-            "appointments:service_list"
-        )
+        self.assert_admin_user_can_access_internal_url("appointments:service_list")
 
     def test_admin_user_can_access_schedule_block_list(self):
         self.assert_admin_user_can_access_internal_url(
@@ -855,9 +848,7 @@ class InternalPermissionTests(AppointmentTestSetupMixin, TestCase):
         )
 
     def test_admin_user_can_access_daily_agenda(self):
-        self.assert_admin_user_can_access_internal_url(
-            "appointments:daily_agenda"
-        )
+        self.assert_admin_user_can_access_internal_url("appointments:daily_agenda")
 
 
 class AppointmentAdminActionTests(AppointmentTestSetupMixin, TestCase):
@@ -994,7 +985,8 @@ class AppointmentAdminActionTests(AppointmentTestSetupMixin, TestCase):
         appointment.refresh_from_db()
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(appointment.status, Appointment.STATUS_SCHEDULED)        
+        self.assertEqual(appointment.status, Appointment.STATUS_SCHEDULED)
+
 
 @freeze_time("2026-05-04 10:00:00")
 class DashboardMetricsTests(AppointmentTestSetupMixin, TestCase):
@@ -1118,7 +1110,8 @@ class DashboardMetricsTests(AppointmentTestSetupMixin, TestCase):
         response = self.client.get(reverse("accounts:dashboard"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context["metrics"]["month_revenue"], 125)        
+        self.assertEqual(response.context["metrics"]["month_revenue"], 125)
+
 
 class CustomerIdentityAndAccessTests(AppointmentTestSetupMixin, TestCase):
     # Tests for customer identity linking and customer appointment access.
@@ -1276,7 +1269,8 @@ class CustomerIdentityAndAccessTests(AppointmentTestSetupMixin, TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertIsNone(response.context["appointment"])        
+        self.assertIsNone(response.context["appointment"])
+
 
 class AppointmentUpdateProtectionTests(AppointmentTestSetupMixin, TestCase):
     # Tests for appointment update protection rules.
@@ -1425,9 +1419,7 @@ class CustomerInternalFormViewTests(AppointmentTestSetupMixin, TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertFalse(
-            Customer.objects.filter(email="invalido@test.com").exists()
-        )
+        self.assertFalse(Customer.objects.filter(email="invalido@test.com").exists())
 
     def test_admin_can_update_customer_phone_and_normalize_it(self):
         # Ensure customer update normalizes phone numbers.
@@ -1472,7 +1464,8 @@ class CustomerInternalFormViewTests(AppointmentTestSetupMixin, TestCase):
 
         self.customer.refresh_from_db()
 
-        self.assertEqual(self.customer.phone, old_phone)        
+        self.assertEqual(self.customer.phone, old_phone)
+
 
 class ServiceInternalViewTests(AppointmentTestSetupMixin, TestCase):
     # Tests for internal service create view.
@@ -1503,9 +1496,7 @@ class ServiceInternalViewTests(AppointmentTestSetupMixin, TestCase):
             reverse("appointments:service_list"),
         )
 
-        self.assertTrue(
-            Service.objects.filter(name="Tratamento de Unha").exists()
-        )
+        self.assertTrue(Service.objects.filter(name="Tratamento de Unha").exists())
 
     def test_normal_user_cannot_create_service(self):
         # Ensure normal users cannot access service creation.
@@ -1526,9 +1517,7 @@ class ServiceInternalViewTests(AppointmentTestSetupMixin, TestCase):
         )
 
         self.assertEqual(response.status_code, 302)
-        self.assertFalse(
-            Service.objects.filter(name="Serviço Indevido").exists()
-        )
+        self.assertFalse(Service.objects.filter(name="Serviço Indevido").exists())
 
 
 class ServiceValidationTests(TestCase):
@@ -1586,7 +1575,8 @@ class ServiceValidationTests(TestCase):
         )
 
         with self.assertRaises(ValidationError):
-            service.full_clean()        
+            service.full_clean()
+
 
 class AppointmentAuditLogTests(AppointmentTestSetupMixin, TestCase):
     # Tests for appointment audit log creation.
@@ -1761,7 +1751,8 @@ class AppointmentAuditLogTests(AppointmentTestSetupMixin, TestCase):
                 action=AppointmentLog.ACTION_UPDATE,
                 performed_by=self.admin_user,
             ).exists()
-        )            
+        )
+
 
 class PublicVisualScheduleAjaxTests(AppointmentTestSetupMixin, TestCase):
     # Tests for AJAX data used by the public visual schedule.
@@ -1822,10 +1813,7 @@ class PublicVisualScheduleAjaxTests(AppointmentTestSetupMixin, TestCase):
             },
         )
 
-        slot_values = [
-            slot["value"]
-            for slot in response.json()["slots"]
-        ]
+        slot_values = [slot["value"] for slot in response.json()["slots"]]
 
         self.assertNotIn("10:00", slot_values)
         self.assertNotIn("10:30", slot_values)
@@ -1850,10 +1838,7 @@ class PublicVisualScheduleAjaxTests(AppointmentTestSetupMixin, TestCase):
             },
         )
 
-        slot_values = [
-            slot["value"]
-            for slot in response.json()["slots"]
-        ]
+        slot_values = [slot["value"] for slot in response.json()["slots"]]
 
         self.assertNotIn("12:00", slot_values)
         self.assertNotIn("12:30", slot_values)
@@ -1870,8 +1855,8 @@ class PublicVisualScheduleAjaxTests(AppointmentTestSetupMixin, TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'id="agenda-slots-container"')
-        self.assertContains(response, 'data-slots-url=')
-        self.assertContains(response, 'data-booking-url=')
+        self.assertContains(response, "data-slots-url=")
+        self.assertContains(response, "data-booking-url=")
 
     def test_public_visual_schedule_page_loads_jquery_ajax_script(self):
         # Ensure the public visual schedule loads the jQuery AJAX script.
@@ -1885,4 +1870,4 @@ class PublicVisualScheduleAjaxTests(AppointmentTestSetupMixin, TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "jquery-3.7.1.min.js")
-        self.assertContains(response, "js/public_visual_schedule.js")        
+        self.assertContains(response, "js/public_visual_schedule.js")

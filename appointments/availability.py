@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Iterable
 
 from django.core.exceptions import ValidationError
 from django.utils import timezone
@@ -39,21 +38,28 @@ class AvailabilityService:
     def get_active_blocks_for_date(cls, selected_date):
         return [
             block
-            for block in ScheduleBlock.objects.filter(is_active=True).order_by("start_time")
+            for block in ScheduleBlock.objects.filter(is_active=True).order_by(
+                "start_time"
+            )
             if block.applies_to_date(selected_date)
         ]
 
     @classmethod
     def get_active_appointments_for_date(cls, selected_date, exclude_pk=None):
-        appointments = Appointment.objects.filter(
-            date=selected_date,
-        ).exclude(
-            status=Appointment.STATUS_CANCELLED,
-        ).select_related(
-            "customer",
-            "service",
-        ).order_by(
-            "start_time",
+        appointments = (
+            Appointment.objects.filter(
+                date=selected_date,
+            )
+            .exclude(
+                status=Appointment.STATUS_CANCELLED,
+            )
+            .select_related(
+                "customer",
+                "service",
+            )
+            .order_by(
+                "start_time",
+            )
         )
 
         if exclude_pk:
@@ -71,15 +77,23 @@ class AvailabilityService:
             return
 
         if appointment.service and not appointment.service.is_active:
-            raise ValidationError("Não é possível marcar horário para um serviço inativo.")
+            raise ValidationError(
+                "Não é possível marcar horário para um serviço inativo."
+            )
 
-        if not appointment.date or not appointment.start_time or not appointment.service:
+        if (
+            not appointment.date
+            or not appointment.start_time
+            or not appointment.service
+        ):
             return
 
         business_hour = cls.get_business_hour(appointment.date)
 
         if not business_hour:
-            raise ValidationError("Não há horário de funcionamento ativo para este dia.")
+            raise ValidationError(
+                "Não há horário de funcionamento ativo para este dia."
+            )
 
         appointment_start = appointment.get_start_datetime()
         appointment_end = appointment.get_end_datetime()
@@ -104,7 +118,9 @@ class AvailabilityService:
             existing_start = existing.get_start_datetime()
             existing_end = existing.get_end_datetime()
 
-            if cls.overlaps(appointment_start, appointment_end, existing_start, existing_end):
+            if cls.overlaps(
+                appointment_start, appointment_end, existing_start, existing_end
+            ):
                 raise ValidationError(
                     "Este horário entra em conflito com outra marcação existente."
                 )
@@ -128,17 +144,24 @@ class AvailabilityService:
 
             minute = current_datetime.minute
             if minute % cls.slot_minutes != 0:
-                current_datetime += timedelta(minutes=cls.slot_minutes - (minute % cls.slot_minutes))
+                current_datetime += timedelta(
+                    minutes=cls.slot_minutes - (minute % cls.slot_minutes)
+                )
 
         appointments = cls.get_active_appointments_for_date(selected_date)
         blocks = cls.get_active_blocks_for_date(selected_date)
         available_slots = []
 
-        while current_datetime + timedelta(minutes=service.duration_minutes) <= business_end_datetime:
+        while (
+            current_datetime + timedelta(minutes=service.duration_minutes)
+            <= business_end_datetime
+        ):
             slot_start = current_datetime
             slot_end = slot_start + timedelta(minutes=service.duration_minutes)
 
-            has_conflict = cls._has_conflict(slot_start, slot_end, appointments, blocks, selected_date)
+            has_conflict = cls._has_conflict(
+                slot_start, slot_end, appointments, blocks, selected_date
+            )
 
             if not has_conflict:
                 available_slots.append(
@@ -155,7 +178,12 @@ class AvailabilityService:
     @classmethod
     def _has_conflict(cls, slot_start, slot_end, appointments, blocks, selected_date):
         for appointment in appointments:
-            if cls.overlaps(slot_start, slot_end, appointment.get_start_datetime(), appointment.get_end_datetime()):
+            if cls.overlaps(
+                slot_start,
+                slot_end,
+                appointment.get_start_datetime(),
+                appointment.get_end_datetime(),
+            ):
                 return True
 
         for block in blocks:
@@ -195,10 +223,20 @@ class AvailabilityService:
                 "block_height": 70,
             }
 
-            cls._mark_block_slot(slot_data, blocks, selected_date, slot_start, current_datetime, end_datetime, slot_minutes)
+            cls._mark_block_slot(
+                slot_data,
+                blocks,
+                selected_date,
+                slot_start,
+                current_datetime,
+                end_datetime,
+                slot_minutes,
+            )
 
             if not slot_data["block"]:
-                cls._mark_appointment_slot(slot_data, appointments, slot_start, slot_minutes)
+                cls._mark_appointment_slot(
+                    slot_data, appointments, slot_start, slot_minutes
+                )
 
             slots.append(slot_data)
             current_datetime += timedelta(minutes=slot_minutes)
@@ -213,18 +251,33 @@ class AvailabilityService:
         return block_slots
 
     @classmethod
-    def _mark_block_slot(cls, slot_data, blocks, selected_date, slot_start, current_datetime, end_datetime, slot_minutes):
+    def _mark_block_slot(
+        cls,
+        slot_data,
+        blocks,
+        selected_date,
+        slot_start,
+        current_datetime,
+        end_datetime,
+        slot_minutes,
+    ):
         for block in blocks:
             block_start = block.get_start_datetime_for_date(selected_date)
             block_end = block.get_end_datetime_for_date(selected_date)
 
-            if slot_start == block_start or (block.is_full_day and slot_start == current_datetime):
+            if slot_start == block_start or (
+                block.is_full_day and slot_start == current_datetime
+            ):
                 duration_minutes = int((block_end - block_start).total_seconds() / 60)
 
                 if block.is_full_day:
-                    duration_minutes = int((end_datetime - current_datetime).total_seconds() / 60)
+                    duration_minutes = int(
+                        (end_datetime - current_datetime).total_seconds() / 60
+                    )
 
-                block_slots = cls._duration_to_slot_count(duration_minutes, slot_minutes)
+                block_slots = cls._duration_to_slot_count(
+                    duration_minutes, slot_minutes
+                )
                 slot_data.update(
                     {
                         "block": block,

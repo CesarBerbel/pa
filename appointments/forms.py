@@ -247,7 +247,8 @@ class PublicAppointmentLookupForm(forms.Form):
         reference_code = self.cleaned_data["reference_code"]
 
         return reference_code.strip().upper()
-    
+
+
 class AppointmentCancelForm(forms.Form):
     # Internal form used by staff to cancel appointments with a required reason.
 
@@ -272,4 +273,4 @@ class AppointmentCancelForm(forms.Form):
                 "Informe um motivo com pelo menos 5 caracteres."
             )
 
-        return cancellation_reason    
+        return cancellation_reason

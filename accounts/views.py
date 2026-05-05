@@ -16,6 +16,7 @@ from decimal import Decimal
 from django.db.models import DecimalField, Sum
 from django.db.models.functions import Coalesce
 
+
 class UserLoginView(LoginView):
     template_name = "accounts/login.html"
     authentication_form = EmailAuthenticationForm
@@ -55,7 +56,9 @@ class CustomerSignupView(CreateView):
             login(self.request, result.user)
 
             if result.appointment:
-                self.request.session["last_reference_code"] = result.appointment.reference_code
+                self.request.session["last_reference_code"] = (
+                    result.appointment.reference_code
+                )
                 return redirect("appointments:public_appointment_success")
 
         except Exception:
@@ -102,15 +105,27 @@ class DashboardView(SuperuserRequiredMixin, TemplateView):
 
         context["metrics"] = {
             "today_total": today_appointments.count(),
-            "today_scheduled": today_appointments.filter(status=Appointment.STATUS_SCHEDULED).count(),
-            "today_confirmed": today_appointments.filter(status=Appointment.STATUS_CONFIRMED).count(),
-            "today_completed": today_appointments.filter(status=Appointment.STATUS_COMPLETED).count(),
-            "today_cancelled": today_appointments.filter(status=Appointment.STATUS_CANCELLED).count(),
+            "today_scheduled": today_appointments.filter(
+                status=Appointment.STATUS_SCHEDULED
+            ).count(),
+            "today_confirmed": today_appointments.filter(
+                status=Appointment.STATUS_CONFIRMED
+            ).count(),
+            "today_completed": today_appointments.filter(
+                status=Appointment.STATUS_COMPLETED
+            ).count(),
+            "today_cancelled": today_appointments.filter(
+                status=Appointment.STATUS_CANCELLED
+            ).count(),
             "tomorrow_total": Appointment.objects.filter(date=tomorrow).count(),
             "month_total": month_total,
-            "month_completed": month_appointments.filter(status=Appointment.STATUS_COMPLETED).count(),
+            "month_completed": month_appointments.filter(
+                status=Appointment.STATUS_COMPLETED
+            ).count(),
             "month_cancelled": month_cancelled,
-            "month_cancellation_rate": self.get_percentage(month_cancelled, month_total),
+            "month_cancellation_rate": self.get_percentage(
+                month_cancelled, month_total
+            ),
             "month_revenue": month_appointments.filter(
                 status=Appointment.STATUS_COMPLETED
             ).aggregate(
@@ -119,7 +134,9 @@ class DashboardView(SuperuserRequiredMixin, TemplateView):
                     Decimal("0.00"),
                     output_field=DecimalField(max_digits=10, decimal_places=2),
                 )
-            )["total"],
+            )[
+                "total"
+            ],
             "customers_total": Customer.objects.count(),
             "customers_with_email": Customer.objects.exclude(email="").count(),
             "reminders_today_total": 0,

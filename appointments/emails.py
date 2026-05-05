@@ -3,7 +3,8 @@ from django.core import signing
 from django.core.mail import EmailMultiAlternatives
 from django.urls import reverse
 
-from notifications.services import EmailTemplateService
+from notifications.models import EmailEventSetting
+from notifications.services import EmailEventSettingService, EmailTemplateService
 
 
 def generate_secure_link(appointment):
@@ -43,6 +44,43 @@ def send_rendered_email(subject, body_text, body_html, recipient_list):
     email.send(fail_silently=False)
 
 
+def render_email_for_event(
+    event_type,
+    template_key,
+    context,
+    fallback_subject,
+    fallback_body,
+    email_template=None,
+):
+    # Render an email for an event setting, selected template, default template key, or fallback text.
+    selected_template = email_template
+
+    if selected_template:
+        return EmailTemplateService.render_template_or_fallback(
+            email_template=selected_template,
+            context_data=context,
+            fallback_subject=fallback_subject,
+            fallback_body=fallback_body,
+        )
+
+    event_setting = EmailEventSettingService.get_active_setting(event_type)
+
+    if event_setting and event_setting.email_template:
+        return EmailTemplateService.render_template_or_fallback(
+            email_template=event_setting.email_template,
+            context_data=context,
+            fallback_subject=fallback_subject,
+            fallback_body=fallback_body,
+        )
+
+    return EmailTemplateService.render(
+        template_key=template_key,
+        context_data=context,
+        fallback_subject=fallback_subject,
+        fallback_body=fallback_body,
+    )
+
+
 def send_appointment_confirmation_email(appointment):
     # Sends appointment creation or confirmation email.
     customer_email = appointment.customer.email
@@ -65,13 +103,20 @@ def send_appointment_confirmation_email(appointment):
     is_confirmed = appointment.status == appointment.STATUS_CONFIRMED
 
     if is_confirmed:
+        event_type = EmailEventSetting.EVENT_APPOINTMENT_CONFIRMED
         template_key = "appointment_confirmed"
         fallback_subject = "Confirmação da sua marcação"
         intro = "A sua marcação foi confirmada."
     else:
+        event_type = EmailEventSetting.EVENT_APPOINTMENT_CREATED
         template_key = "appointment_created"
         fallback_subject = "Pedido de marcação recebido"
         intro = "Recebemos o seu pedido de marcação. Em breve será confirmado."
+
+    event_setting = EmailEventSettingService.get_active_setting(event_type)
+
+    if not event_setting:
+        return
 
     context = {
         "customer_name": appointment.customer.full_name,
@@ -96,11 +141,13 @@ def send_appointment_confirmation_email(appointment):
         f"Priscila Arantes - Enfermeira e Podóloga"
     )
 
-    rendered_email = EmailTemplateService.render(
+    rendered_email = render_email_for_event(
+        event_type=event_type,
         template_key=template_key,
-        context_data=context,
+        context=context,
         fallback_subject=fallback_subject,
         fallback_body=fallback_body,
+        email_template=event_setting.email_template,
     )
 
     send_rendered_email(
@@ -116,6 +163,13 @@ def send_appointment_cancelled_email(appointment, cancellation_reason=""):
     customer_email = appointment.customer.email
 
     if not customer_email:
+        return
+
+    event_setting = EmailEventSettingService.get_active_setting(
+        EmailEventSetting.EVENT_APPOINTMENT_CANCELLED,
+    )
+
+    if not event_setting:
         return
 
     context = {
@@ -141,11 +195,13 @@ def send_appointment_cancelled_email(appointment, cancellation_reason=""):
         f"Priscila Arantes PA"
     )
 
-    rendered_email = EmailTemplateService.render(
+    rendered_email = render_email_for_event(
+        event_type=EmailEventSetting.EVENT_APPOINTMENT_CANCELLED,
         template_key="appointment_cancelled",
-        context_data=context,
+        context=context,
         fallback_subject=fallback_subject,
         fallback_body=fallback_body,
+        email_template=event_setting.email_template,
     )
 
     send_rendered_email(
@@ -155,7 +211,10 @@ def send_appointment_cancelled_email(appointment, cancellation_reason=""):
         recipient_list=[customer_email],
     )
 
-def send_appointment_reminder_email(appointment, reminder_label=""):
+
+def send_appointment_reminder_email(
+    appointment, reminder_label="", email_template=None
+):
     # Sends appointment reminder email.
     customer_email = appointment.customer.email
 
@@ -200,11 +259,13 @@ def send_appointment_reminder_email(appointment, reminder_label=""):
         f"Priscila Arantes PA"
     )
 
-    rendered_email = EmailTemplateService.render(
+    rendered_email = render_email_for_event(
+        event_type=EmailEventSetting.EVENT_APPOINTMENT_REMINDER,
         template_key="appointment_reminder",
-        context_data=context,
+        context=context,
         fallback_subject=fallback_subject,
         fallback_body=fallback_body,
+        email_template=email_template,
     )
 
     send_rendered_email(

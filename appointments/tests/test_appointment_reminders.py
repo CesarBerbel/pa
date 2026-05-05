@@ -6,10 +6,12 @@ from django.core import mail
 from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.utils import timezone
+from freezegun import freeze_time
 
 from appointments.models import Appointment, BusinessHour, Customer, Service
 
 
+@freeze_time("2026-01-05 09:00:00")
 @override_settings(
     EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
     DEFAULT_FROM_EMAIL="test@example.com",
@@ -44,16 +46,18 @@ class AppointmentReminderCommandTests(TestCase):
 
     def create_business_hour_for_date(self, appointment_date):
         # Ensure appointment validation passes for the selected date.
-        BusinessHour.objects.get_or_create(
+        BusinessHour.objects.update_or_create(
             weekday=appointment_date.weekday(),
             defaults={
-                "start_time": "00:00",
-                "end_time": "23:59",
+                "start_time": "08:00",
+                "end_time": "18:00",
                 "is_active": True,
             },
         )
 
-    def create_appointment(self, appointment_datetime, status=Appointment.STATUS_CONFIRMED):
+    def create_appointment(
+        self, appointment_datetime, status=Appointment.STATUS_CONFIRMED
+    ):
         # Create an appointment at the desired date and time.
         appointment_date = appointment_datetime.date()
         appointment_time = appointment_datetime.time().replace(second=0, microsecond=0)

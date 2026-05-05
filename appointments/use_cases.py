@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from django.core.exceptions import ValidationError
 from django.db import transaction
 
 from appointments.audit_services import AppointmentAuditService
@@ -21,7 +20,9 @@ class ConfirmAppointmentUseCase:
     @staticmethod
     def execute(*, appointment, user, send_email=True):
         if appointment.status == Appointment.STATUS_CANCELLED:
-            return UseCaseResult(False, "Marcações canceladas não podem ser confirmadas.", appointment)
+            return UseCaseResult(
+                False, "Marcações canceladas não podem ser confirmadas.", appointment
+            )
 
         with transaction.atomic():
             appointment.status = Appointment.STATUS_CONFIRMED
@@ -44,7 +45,9 @@ class CompleteAppointmentUseCase:
     @staticmethod
     def execute(*, appointment, user):
         if appointment.status != Appointment.STATUS_CONFIRMED:
-            return UseCaseResult(False, "Só é possível concluir marcações confirmadas.", appointment)
+            return UseCaseResult(
+                False, "Só é possível concluir marcações confirmadas.", appointment
+            )
 
         with transaction.atomic():
             appointment.status = Appointment.STATUS_COMPLETED

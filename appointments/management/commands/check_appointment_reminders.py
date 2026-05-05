@@ -52,15 +52,19 @@ class Command(BaseCommand):
             f"to {target_end.strftime('%d/%m/%Y %H:%M')}"
         )
 
-        appointments = Appointment.objects.filter(
-            status=Appointment.STATUS_CONFIRMED,
-            date=target_start.date(),
-        ).select_related(
-            "customer",
-            "service",
-        ).order_by(
-            "date",
-            "start_time",
+        appointments = (
+            Appointment.objects.filter(
+                status=Appointment.STATUS_CONFIRMED,
+                date=target_start.date(),
+            )
+            .select_related(
+                "customer",
+                "service",
+            )
+            .order_by(
+                "date",
+                "start_time",
+            )
         )
 
         eligible_count = 0
@@ -115,19 +119,24 @@ class Command(BaseCommand):
         now = timezone.localtime()
         tomorrow = now.date() + timedelta(days=1)
 
-        ignored_appointments = Appointment.objects.filter(
-            date__in=[
-                now.date(),
-                tomorrow,
-            ],
-        ).exclude(
-            status=Appointment.STATUS_CONFIRMED,
-        ).select_related(
-            "customer",
-            "service",
-        ).order_by(
-            "date",
-            "start_time",
+        ignored_appointments = (
+            Appointment.objects.filter(
+                date__in=[
+                    now.date(),
+                    tomorrow,
+                ],
+            )
+            .exclude(
+                status=Appointment.STATUS_CONFIRMED,
+            )
+            .select_related(
+                "customer",
+                "service",
+            )
+            .order_by(
+                "date",
+                "start_time",
+            )
         )
 
         self.stdout.write(self.style.WARNING("Ignored appointments"))

@@ -5,33 +5,32 @@ from .appointments import (
     AppointmentCreateView,
     AppointmentListView,
     AppointmentUpdateView,
-    CustomerAppointmentsView,
     CustomerAppointmentDetailView,
+    CustomerAppointmentsView,
 )
 from .customers import (
     CustomerCreateView,
+    CustomerDeleteView,
     CustomerListView,
     CustomerUpdateView,
-    CustomerDeleteView,
 )
 from .diagnostics import ScheduleDiagnosticsView
-
 from .public import (
     PublicAppointmentCreateView,
     PublicAppointmentLookupView,
+    PublicAppointmentMagicView,
     PublicAppointmentSuccessView,
     PublicAvailableSlotsView,
     PublicCancelAppointmentByCodeView,
     PublicCancelAppointmentView,
     PublicCancelSuccessView,
     PublicVisualScheduleView,
-    PublicAppointmentMagicView,
 )
 from .schedule_blocks import (
     ScheduleBlockCreateView,
+    ScheduleBlockDeleteView,
     ScheduleBlockListView,
     ScheduleBlockUpdateView,
-    ScheduleBlockDeleteView,
 )
 from .schedules import (
     DailyAgendaView,
@@ -39,7 +38,42 @@ from .schedules import (
 )
 from .services import (
     ServiceCreateView,
+    ServiceDeleteView,
     ServiceListView,
     ServiceUpdateView,
-    ServiceDeleteView,
 )
+
+__all__ = [
+    "AppointmentCancelView",
+    "AppointmentCompleteView",
+    "AppointmentConfirmView",
+    "AppointmentCreateView",
+    "AppointmentListView",
+    "AppointmentUpdateView",
+    "CustomerAppointmentDetailView",
+    "CustomerAppointmentsView",
+    "CustomerCreateView",
+    "CustomerDeleteView",
+    "CustomerListView",
+    "CustomerUpdateView",
+    "ScheduleDiagnosticsView",
+    "PublicAppointmentCreateView",
+    "PublicAppointmentLookupView",
+    "PublicAppointmentMagicView",
+    "PublicAppointmentSuccessView",
+    "PublicAvailableSlotsView",
+    "PublicCancelAppointmentByCodeView",
+    "PublicCancelAppointmentView",
+    "PublicCancelSuccessView",
+    "PublicVisualScheduleView",
+    "ScheduleBlockCreateView",
+    "ScheduleBlockDeleteView",
+    "ScheduleBlockListView",
+    "ScheduleBlockUpdateView",
+    "DailyAgendaView",
+    "VisualScheduleView",
+    "ServiceCreateView",
+    "ServiceDeleteView",
+    "ServiceListView",
+    "ServiceUpdateView",
+]

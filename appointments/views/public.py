@@ -1,10 +1,6 @@
-import re
 from django.core import signing
-from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
 from datetime import datetime, timedelta
 from appointments.cancellation_services import AppointmentCancellationService
-from appointments.emails import send_appointment_confirmation_email
 from django.contrib import messages
 from django.db import transaction
 from django.http import JsonResponse
@@ -17,10 +13,11 @@ from appointments.forms import (
     PublicAppointmentLookupForm,
     PublicCancelForm,
 )
-from appointments.models import Appointment, BusinessHour, Customer, ScheduleBlock, Service
+from appointments.models import Appointment, Service
 from appointments.customer_services import find_or_create_customer
 from appointments.appointment_services import AppointmentService
 from appointments.availability import AvailabilityService
+
 
 class PublicBookingAvailabilityMixin:
     # Shared availability logic for public booking
@@ -114,10 +111,7 @@ class PublicAppointmentCreateView(PublicBookingAvailabilityMixin, FormView):
             selected_date=date,
         )
 
-        return any(
-            slot["value"] == start_time
-            for slot in available_slots
-        )
+        return any(slot["value"] == start_time for slot in available_slots)
 
     def form_valid(self, form):
         # Create appointment safely
@@ -171,7 +165,8 @@ class PublicAppointmentCreateView(PublicBookingAvailabilityMixin, FormView):
             if not result.success:
                 messages.error(
                     self.request,
-                    result.message or "Este horário já não está disponível. Escolha outro.",
+                    result.message
+                    or "Este horário já não está disponível. Escolha outro.",
                 )
 
                 return redirect(
@@ -240,12 +235,16 @@ class PublicCancelAppointmentView(FormView):
         # Cancel a public appointment by reference code using centralized business rules.
         reference_code = form.cleaned_data["reference_code"].strip().upper()
 
-        appointment = Appointment.objects.filter(
-            reference_code=reference_code,
-        ).select_related(
-            "customer",
-            "service",
-        ).first()
+        appointment = (
+            Appointment.objects.filter(
+                reference_code=reference_code,
+            )
+            .select_related(
+                "customer",
+                "service",
+            )
+            .first()
+        )
 
         result = AppointmentCancellationService.cancel(
             appointment=appointment,
@@ -279,12 +278,16 @@ class PublicCancelSuccessView(TemplateView):
             self.request.session.get("cancelled_reference_code", "N/A"),
         )
 
-        appointment = Appointment.objects.filter(
-            reference_code=reference_code,
-        ).select_related(
-            "customer",
-            "service",
-        ).first()
+        appointment = (
+            Appointment.objects.filter(
+                reference_code=reference_code,
+            )
+            .select_related(
+                "customer",
+                "service",
+            )
+            .first()
+        )
 
         context["reference_code"] = reference_code
         context["appointment"] = appointment
@@ -301,12 +304,16 @@ class PublicCancelAppointmentByCodeView(TemplateView):
         # Get appointment by reference code from URL
         reference_code = self.kwargs.get("reference_code", "").strip().upper()
 
-        return Appointment.objects.filter(
-            reference_code=reference_code,
-        ).select_related(
-            "customer",
-            "service",
-        ).first()
+        return (
+            Appointment.objects.filter(
+                reference_code=reference_code,
+            )
+            .select_related(
+                "customer",
+                "service",
+            )
+            .first()
+        )
 
     def get_context_data(self, **kwargs):
         # Add appointment data to template context
@@ -357,12 +364,16 @@ class PublicAppointmentLookupView(FormView):
         # Search appointment by reference code
         reference_code = form.cleaned_data["reference_code"]
 
-        appointment = Appointment.objects.filter(
-            reference_code=reference_code,
-        ).select_related(
-            "customer",
-            "service",
-        ).first()
+        appointment = (
+            Appointment.objects.filter(
+                reference_code=reference_code,
+            )
+            .select_related(
+                "customer",
+                "service",
+            )
+            .first()
+        )
 
         if not appointment:
             form.add_error(
@@ -454,10 +465,8 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
         context["week_days"] = self.get_week_days(selected_date)
 
         return context
-    
 
     from django.core import signing
-from django.shortcuts import redirect
 
 
 class PublicAppointmentMagicView(TemplateView):
@@ -479,9 +488,13 @@ class PublicAppointmentMagicView(TemplateView):
             messages.error(request, "Link inválido.")
             return redirect("appointments:public_appointment_lookup")
 
-        appointment = Appointment.objects.filter(
-            reference_code=payload.get("reference_code"),
-        ).select_related("customer", "service").first()
+        appointment = (
+            Appointment.objects.filter(
+                reference_code=payload.get("reference_code"),
+            )
+            .select_related("customer", "service")
+            .first()
+        )
 
         if not appointment:
             messages.error(request, "Marcação não encontrada.")

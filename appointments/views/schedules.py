@@ -31,7 +31,9 @@ class DailyAgendaView(SuperuserRequiredMixin, TemplateView):
         context["selected_date"] = selected_date
         context["previous_date"] = selected_date - timedelta(days=1)
         context["next_date"] = selected_date + timedelta(days=1)
-        context["appointments"] = AppointmentSelectors.appointments_for_date(selected_date)
+        context["appointments"] = AppointmentSelectors.appointments_for_date(
+            selected_date
+        )
         context["blocks"] = AppointmentSelectors.blocks_for_date(selected_date)
 
         return context

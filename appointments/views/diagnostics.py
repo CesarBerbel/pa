@@ -60,20 +60,27 @@ class ScheduleDiagnosticsView(SuperuserRequiredMixin, TemplateView):
 
         now = timezone.localtime()
 
-        appointments = Appointment.objects.filter(
-            date=selected_date,
-        ).exclude(
-            status=Appointment.STATUS_CANCELLED,
-        ).select_related(
-            "customer",
-            "service",
-        ).order_by(
-            "start_time",
+        appointments = (
+            Appointment.objects.filter(
+                date=selected_date,
+            )
+            .exclude(
+                status=Appointment.STATUS_CANCELLED,
+            )
+            .select_related(
+                "customer",
+                "service",
+            )
+            .order_by(
+                "start_time",
+            )
         )
 
         blocks = [
             block
-            for block in ScheduleBlock.objects.filter(is_active=True).order_by("start_time")
+            for block in ScheduleBlock.objects.filter(is_active=True).order_by(
+                "start_time"
+            )
             if block.applies_to_date(selected_date)
         ]
 
@@ -111,7 +118,10 @@ class ScheduleDiagnosticsView(SuperuserRequiredMixin, TemplateView):
                         appointment_start = appointment.get_start_datetime()
                         appointment_end = appointment.get_end_datetime()
 
-                        if slot_start < appointment_end and slot_end > appointment_start:
+                        if (
+                            slot_start < appointment_end
+                            and slot_end > appointment_start
+                        ):
                             status = "blocked"
                             reason = (
                                 f"Conflito com marcação: "
@@ -147,18 +157,24 @@ class ScheduleDiagnosticsView(SuperuserRequiredMixin, TemplateView):
             is_active=True,
         ).first()
 
-        appointments = Appointment.objects.filter(
-            date=selected_date,
-        ).select_related(
-            "customer",
-            "service",
-        ).order_by(
-            "start_time",
+        appointments = (
+            Appointment.objects.filter(
+                date=selected_date,
+            )
+            .select_related(
+                "customer",
+                "service",
+            )
+            .order_by(
+                "start_time",
+            )
         )
 
         blocks = [
             block
-            for block in ScheduleBlock.objects.filter(is_active=True).order_by("start_time")
+            for block in ScheduleBlock.objects.filter(is_active=True).order_by(
+                "start_time"
+            )
             if block.applies_to_date(selected_date)
         ]
 
@@ -197,13 +213,17 @@ class ReminderDiagnosticsView(SuperuserRequiredMixin, TemplateView):
 
     def build_reminder_diagnostics(self, selected_date):
         # Build reminder diagnostics based on appointment status and customer contact data
-        appointments = Appointment.objects.filter(
-            date=selected_date,
-        ).select_related(
-            "customer",
-            "service",
-        ).order_by(
-            "start_time",
+        appointments = (
+            Appointment.objects.filter(
+                date=selected_date,
+            )
+            .select_related(
+                "customer",
+                "service",
+            )
+            .order_by(
+                "start_time",
+            )
         )
 
         diagnostics = []

@@ -26,9 +26,13 @@ class AppointmentService:
         # Get the first superuser to register public appointments.
         User = get_user_model()
 
-        system_user = User.objects.filter(
-            is_superuser=True,
-        ).order_by("id").first()
+        system_user = (
+            User.objects.filter(
+                is_superuser=True,
+            )
+            .order_by("id")
+            .first()
+        )
 
         if not system_user:
             raise ValidationError(

@@ -40,9 +40,7 @@ def validate_phone_for_brazil_or_portugal(phone):
     normalized_phone = normalize_phone(phone)
 
     if not normalized_phone:
-        raise ValidationError(
-            "Informe um telefone válido do Brasil ou de Portugal."
-        )
+        raise ValidationError("Informe um telefone válido do Brasil ou de Portugal.")
 
     digits = re.sub(r"\D", "", normalized_phone)
 
@@ -50,9 +48,7 @@ def validate_phone_for_brazil_or_portugal(phone):
     is_portugal_phone = digits.startswith("351") and len(digits) == 12
 
     if not is_brazil_phone and not is_portugal_phone:
-        raise ValidationError(
-            "O telefone deve ser válido para Brasil ou Portugal."
-        )
+        raise ValidationError("O telefone deve ser válido para Brasil ou Portugal.")
 
     return normalized_phone
 
@@ -63,9 +59,13 @@ def find_customer_by_email_or_phone(email="", phone=""):
     normalized_phone = normalize_phone(phone)
 
     if normalized_email:
-        customer = Customer.objects.filter(
-            email__iexact=normalized_email,
-        ).order_by("id").first()
+        customer = (
+            Customer.objects.filter(
+                email__iexact=normalized_email,
+            )
+            .order_by("id")
+            .first()
+        )
 
         if customer:
             return customer

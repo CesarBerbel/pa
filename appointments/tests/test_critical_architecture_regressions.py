@@ -1,4 +1,4 @@
-from datetime import date, timedelta, time
+from datetime import timedelta, time
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
@@ -93,13 +93,19 @@ class AvailabilityCriticalTests(CriticalArchitectureTestMixin, TestCase):
             is_active=True,
         )
 
-        slots = AvailabilityService.get_available_slots(self.service, self.appointment_date)
+        slots = AvailabilityService.get_available_slots(
+            self.service, self.appointment_date
+        )
         slot_values = {slot["value"] for slot in slots}
 
         self.assertIn("09:00", slot_values)
-        self.assertNotIn("09:30", slot_values, "09:30-10:30 overlaps the 10:00 appointment")
+        self.assertNotIn(
+            "09:30", slot_values, "09:30-10:30 overlaps the 10:00 appointment"
+        )
         self.assertNotIn("10:00", slot_values)
-        self.assertNotIn("10:30", slot_values, "10:30-11:30 overlaps the 10:00 appointment")
+        self.assertNotIn(
+            "10:30", slot_values, "10:30-11:30 overlaps the 10:00 appointment"
+        )
         self.assertNotIn("11:30", slot_values, "11:30-12:30 overlaps the 12:00 block")
         self.assertNotIn("12:00", slot_values)
         self.assertNotIn("12:30", slot_values)
@@ -115,7 +121,9 @@ class AvailabilityCriticalTests(CriticalArchitectureTestMixin, TestCase):
             status=Appointment.STATUS_SCHEDULED,
         )
 
-        with self.assertRaisesMessage(ValidationError, "A marcação está fora do horário"):
+        with self.assertRaisesMessage(
+            ValidationError, "A marcação está fora do horário"
+        ):
             appointment.full_clean()
 
     def test_appointment_validation_rejects_overlapping_appointment(self):
@@ -142,7 +150,9 @@ class AvailabilityCriticalTests(CriticalArchitectureTestMixin, TestCase):
             cancelled_at=timezone.now(),
         )
 
-        slots = AvailabilityService.get_available_slots(self.service, self.appointment_date)
+        slots = AvailabilityService.get_available_slots(
+            self.service, self.appointment_date
+        )
         slot_values = {slot["value"] for slot in slots}
 
         self.assertIn("10:00", slot_values)
@@ -160,7 +170,9 @@ class AvailabilityCriticalTests(CriticalArchitectureTestMixin, TestCase):
         )
 
         self.assertTrue(block.applies_to_date(self.appointment_date))
-        self.assertFalse(block.applies_to_date(self.appointment_date + timedelta(days=1)))
+        self.assertFalse(
+            block.applies_to_date(self.appointment_date + timedelta(days=1))
+        )
 
 
 @override_settings(
@@ -205,7 +217,9 @@ class AppointmentCreationCriticalTests(CriticalArchitectureTestMixin, TestCase):
 
         self.assertFalse(result.success)
         self.assertIn("conflito", result.message)
-        self.assertEqual(Appointment.objects.exclude(status=Appointment.STATUS_CANCELLED).count(), 1)
+        self.assertEqual(
+            Appointment.objects.exclude(status=Appointment.STATUS_CANCELLED).count(), 1
+        )
         self.assertEqual(len(mail.outbox), 0)
 
 

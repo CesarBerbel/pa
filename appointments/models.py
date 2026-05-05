@@ -8,6 +8,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 
+
 class Service(models.Model):
     # Represents a service offered by the business
 
@@ -97,7 +98,9 @@ class BusinessHour(models.Model):
     def clean(self):
         # Validate that end time is after start time
         if self.end_time <= self.start_time:
-            raise ValidationError("O horário final deve ser maior que o horário inicial.")
+            raise ValidationError(
+                "O horário final deve ser maior que o horário inicial."
+            )
 
 
 class ScheduleBlock(models.Model):
@@ -164,9 +167,7 @@ class ScheduleBlock(models.Model):
             return []
 
         return [
-            item.strip()
-            for item in self.recurring_weekdays.split(",")
-            if item.strip()
+            item.strip() for item in self.recurring_weekdays.split(",") if item.strip()
         ]
 
     def applies_to_date(self, selected_date):
@@ -337,7 +338,8 @@ class Appointment(models.Model):
 
         self.full_clean()
         return super().save(*args, **kwargs)
-    
+
+
 class AppointmentLog(models.Model):
     # Stores audit trail for appointment changes.
 
@@ -382,18 +384,14 @@ class AppointmentLog(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
-        return f"{self.appointment.reference_code} - {self.action}"    
-    
+        return f"{self.appointment.reference_code} - {self.action}"
+
+
 class AppointmentReminderLog(models.Model):
     # Stores reminder sending logs for audit and monitoring.
 
     REMINDER_TYPE_24H = "24h"
     REMINDER_TYPE_2H = "2h"
-
-    REMINDER_TYPE_CHOICES = (
-        (REMINDER_TYPE_24H, "24 horas"),
-        (REMINDER_TYPE_2H, "2 horas"),
-    )
 
     STATUS_SUCCESS = "success"
     STATUS_ERROR = "error"
@@ -410,8 +408,8 @@ class AppointmentReminderLog(models.Model):
     )
 
     reminder_type = models.CharField(
-        max_length=10,
-        choices=REMINDER_TYPE_CHOICES,
+        max_length=50,
+        help_text="Reminder identifier, e.g. reminder_1_days or reminder_2_hours.",
     )
 
     status = models.CharField(
@@ -431,4 +429,6 @@ class AppointmentReminderLog(models.Model):
         ordering = ["-sent_at"]
 
     def __str__(self):
-        return f"{self.appointment.reference_code} - {self.reminder_type} - {self.status}"    
+        return (
+            f"{self.appointment.reference_code} - {self.reminder_type} - {self.status}"
+        )

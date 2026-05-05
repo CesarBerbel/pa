@@ -8,7 +8,6 @@ from appointments.customer_services import (
     validate_phone_for_brazil_or_portugal,
 )
 
-
 User = get_user_model()
 
 

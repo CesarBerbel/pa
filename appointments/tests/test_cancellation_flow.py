@@ -8,7 +8,13 @@ from django.urls import reverse
 from django.utils import timezone
 
 from appointments.cancellation_services import AppointmentCancellationService
-from appointments.models import Appointment, AppointmentLog, BusinessHour, Customer, Service
+from appointments.models import (
+    Appointment,
+    AppointmentLog,
+    BusinessHour,
+    Customer,
+    Service,
+)
 
 
 @override_settings(
@@ -88,7 +94,9 @@ class AppointmentCancellationFlowTests(TestCase):
         self.assertIsNone(self.appointment.cancelled_at)
         self.assertEqual(len(mail.outbox), 0)
 
-    def test_cancellation_service_saves_reason_sets_cancelled_at_logs_and_sends_email(self):
+    def test_cancellation_service_saves_reason_sets_cancelled_at_logs_and_sends_email(
+        self,
+    ):
         # Ensure centralized cancellation saves reason, timestamp, audit log, and email.
         reason = "Cliente não poderá comparecer no horário marcado."
 

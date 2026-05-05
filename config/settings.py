@@ -2,7 +2,6 @@ from pathlib import Path
 
 from decouple import config
 
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -209,9 +208,13 @@ STATIC_URL = config("STATIC_URL", default="/static/")
 
 STATIC_ROOT = BASE_DIR / config("STATIC_ROOT", default="staticfiles")
 
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-] if (BASE_DIR / "static").exists() else []
+STATICFILES_DIRS = (
+    [
+        BASE_DIR / "static",
+    ]
+    if (BASE_DIR / "static").exists()
+    else []
+)
 
 MEDIA_URL = config("MEDIA_URL", default="/media/")
 

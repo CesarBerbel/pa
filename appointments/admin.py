@@ -1,5 +1,3 @@
-from django import forms
-
 from django.contrib import admin
 
 from .models import (
@@ -12,6 +10,7 @@ from .models import (
     AppointmentReminderLog,
 )
 
+
 @admin.register(Service)
 class ServiceAdmin(admin.ModelAdmin):
     list_display = ("name", "duration_minutes", "price", "is_active")
@@ -23,6 +22,7 @@ class ServiceAdmin(admin.ModelAdmin):
 class CustomerAdmin(admin.ModelAdmin):
     list_display = ("full_name", "email", "phone", "user")
     search_fields = ("full_name", "email", "phone")
+
 
 @admin.register(Appointment)
 class AppointmentAdmin(admin.ModelAdmin):
@@ -108,6 +108,7 @@ class AppointmentAdmin(admin.ModelAdmin):
         ),
     )
 
+
 @admin.register(ScheduleBlock)
 class ScheduleBlockAdmin(admin.ModelAdmin):
     list_display = (
@@ -127,7 +128,8 @@ class ScheduleBlockAdmin(admin.ModelAdmin):
 @admin.register(BusinessHour)
 class BusinessHourAdmin(admin.ModelAdmin):
     list_display = ("weekday", "start_time", "end_time", "is_active")
-    list_editable = ("start_time", "end_time", "is_active")            
+    list_editable = ("start_time", "end_time", "is_active")
+
 
 @admin.register(AppointmentLog)
 class AppointmentLogAdmin(admin.ModelAdmin):
@@ -155,7 +157,8 @@ class AppointmentLogAdmin(admin.ModelAdmin):
         "performed_by",
         "description",
         "created_at",
-    )    
+    )
+
 
 @admin.register(AppointmentReminderLog)
 class AppointmentReminderLogAdmin(admin.ModelAdmin):
@@ -184,4 +187,4 @@ class AppointmentReminderLogAdmin(admin.ModelAdmin):
         "status",
         "error_message",
         "sent_at",
-    )    
+    )
