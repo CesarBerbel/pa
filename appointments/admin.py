@@ -3,19 +3,58 @@ from django.contrib import admin
 from .models import (
     Appointment,
     AppointmentLog,
-    Customer,
-    Service,
-    ScheduleBlock,
-    BusinessHour,
     AppointmentReminderLog,
+    BusinessHour,
+    Customer,
+    ScheduleBlock,
+    Service,
+    ServiceCategory,
 )
+
+
+@admin.register(ServiceCategory)
+class ServiceCategoryAdmin(admin.ModelAdmin):
+    list_display = (
+        "display_order",
+        "name",
+        "slug",
+        "is_active",
+    )
+    list_display_links = ("name",)
+    list_editable = (
+        "display_order",
+        "is_active",
+    )
+    list_filter = ("is_active",)
+    search_fields = (
+        "name",
+        "slug",
+        "description",
+    )
+    prepopulated_fields = {
+        "slug": ("name",),
+    }
 
 
 @admin.register(Service)
 class ServiceAdmin(admin.ModelAdmin):
-    list_display = ("name", "duration_minutes", "price", "is_active")
-    list_filter = ("is_active",)
-    search_fields = ("name",)
+    list_display = (
+        "name",
+        "category",
+        "duration_minutes",
+        "price",
+        "is_active",
+    )
+    list_filter = (
+        "category",
+        "is_active",
+    )
+    search_fields = (
+        "name",
+        "description",
+        "category__name",
+    )
+    autocomplete_fields = ("category",)
 
 
 @admin.register(Customer)
@@ -41,6 +80,7 @@ class AppointmentAdmin(admin.ModelAdmin):
     list_filter = (
         "status",
         "date",
+        "service__category",
         "service",
         "reminder_24h_sent_at",
         "reminder_2h_sent_at",
@@ -51,6 +91,8 @@ class AppointmentAdmin(admin.ModelAdmin):
         "reference_code",
         "customer__full_name",
         "customer__email",
+        "service__name",
+        "service__category__name",
         "cancellation_reason",
     )
 
@@ -117,18 +159,34 @@ class ScheduleBlockAdmin(admin.ModelAdmin):
         "start_time",
         "end_time",
         "is_full_day",
+        "is_recurring",
         "is_active",
     )
 
-    list_filter = ("is_active", "is_full_day", "block_type")
+    list_filter = (
+        "is_active",
+        "is_full_day",
+        "is_recurring",
+        "block_type",
+    )
 
     search_fields = ("title",)
 
 
 @admin.register(BusinessHour)
 class BusinessHourAdmin(admin.ModelAdmin):
-    list_display = ("weekday", "start_time", "end_time", "is_active")
-    list_editable = ("start_time", "end_time", "is_active")
+    list_display = (
+        "weekday",
+        "start_time",
+        "end_time",
+        "is_active",
+    )
+    list_editable = (
+        "start_time",
+        "end_time",
+        "is_active",
+    )
+    list_filter = ("is_active",)
 
 
 @admin.register(AppointmentLog)

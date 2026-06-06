@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from appointments.cancellation_services import AppointmentCancellationService
 from django.contrib import messages
 from django.db import transaction
+from django.db.models import Prefetch
 from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
@@ -13,7 +14,7 @@ from appointments.forms import (
     PublicAppointmentLookupForm,
     PublicCancelForm,
 )
-from appointments.models import Appointment, Service
+from appointments.models import Appointment, Service, ServiceCategory
 from appointments.customer_services import find_or_create_customer
 from appointments.appointment_services import AppointmentService
 from appointments.availability import AvailabilityService
@@ -190,10 +191,15 @@ class PublicAvailableSlotsView(PublicBookingAvailabilityMixin, View):
         if not service_id or not date_value:
             return JsonResponse({"slots": []})
 
-        service = Service.objects.filter(
-            pk=service_id,
-            is_active=True,
-        ).first()
+        service = (
+            Service.objects.filter(
+                pk=service_id,
+                is_active=True,
+                category__is_active=True,
+            )
+            .select_related("category")
+            .first()
+        )
 
         if not service:
             return JsonResponse({"slots": []})
@@ -421,12 +427,29 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
         service_id = self.request.GET.get("service")
 
         if not service_id:
-            return Service.objects.filter(is_active=True).order_by("name").first()
+            return (
+                Service.objects.filter(
+                    is_active=True,
+                    category__is_active=True,
+                )
+                .select_related("category")
+                .order_by(
+                    "category__display_order",
+                    "category__name",
+                    "name",
+                )
+                .first()
+            )
 
-        return Service.objects.filter(
-            pk=service_id,
-            is_active=True,
-        ).first()
+        return (
+            Service.objects.filter(
+                pk=service_id,
+                is_active=True,
+                category__is_active=True,
+            )
+            .select_related("category")
+            .first()
+        )
 
     def get_selected_date(self):
         # Get selected date from query string or use today
@@ -455,9 +478,33 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
                 selected_date,
             )
 
-        context["services"] = Service.objects.filter(
-            is_active=True,
-        ).order_by("name")
+        context["service_categories"] = (
+            ServiceCategory.objects.filter(
+                is_active=True,
+                services__is_active=True,
+            )
+            .prefetch_related(
+                Prefetch(
+                    "services",
+                    queryset=Service.objects.filter(is_active=True).order_by("name"),
+                )
+            )
+            .distinct()
+            .order_by("display_order", "name")
+        )
+
+        context["services"] = (
+            Service.objects.filter(
+                is_active=True,
+                category__is_active=True,
+            )
+            .select_related("category")
+            .order_by(
+                "category__display_order",
+                "category__name",
+                "name",
+            )
+        )
 
         context["selected_service"] = selected_service
         context["selected_date"] = selected_date
@@ -465,8 +512,6 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
         context["week_days"] = self.get_week_days(selected_date)
 
         return context
-
-    from django.core import signing
 
 
 class PublicAppointmentMagicView(TemplateView):

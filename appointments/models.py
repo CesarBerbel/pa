@@ -9,8 +9,35 @@ from django.core.exceptions import ValidationError
 from django.db import models
 
 
+class ServiceCategory(models.Model):
+    # Represents a public service category, such as Podologia or Enfermagem.
+
+    name = models.CharField(max_length=120, unique=True)
+    slug = models.SlugField(max_length=140, unique=True)
+    description = models.TextField(blank=True)
+    display_order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["display_order", "name"]
+        verbose_name = "Categoria de serviço"
+        verbose_name_plural = "Categorias de serviço"
+
+    def __str__(self):
+        return self.name
+
+
 class Service(models.Model):
-    # Represents a service offered by the business
+    # Represents a bookable service offered inside a public category.
+
+    category = models.ForeignKey(
+        ServiceCategory,
+        on_delete=models.PROTECT,
+        related_name="services",
+    )
 
     name = models.CharField(max_length=120)
     description = models.TextField(blank=True)
@@ -36,10 +63,12 @@ class Service(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ["name"]
+        ordering = ["category__display_order", "category__name", "name"]
+        verbose_name = "Serviço"
+        verbose_name_plural = "Serviços"
 
     def __str__(self):
-        return self.name
+        return f"{self.category.name} - {self.name}"
 
 
 class Customer(models.Model):
@@ -94,6 +123,29 @@ class BusinessHour(models.Model):
 
     def __str__(self):
         return f"{self.get_weekday_display()} - {self.start_time} às {self.end_time}"
+
+    @property
+    def duration_minutes(self):
+        # Return gross working duration in minutes for display purposes.
+        if not self.start_time or not self.end_time:
+            return 0
+
+        start_datetime = datetime.combine(datetime.today(), self.start_time)
+        end_datetime = datetime.combine(datetime.today(), self.end_time)
+
+        return int((end_datetime - start_datetime).total_seconds() / 60)
+
+    @property
+    def duration_display(self):
+        # Return gross working duration formatted as hours and minutes.
+        total_minutes = self.duration_minutes
+        hours = total_minutes // 60
+        minutes = total_minutes % 60
+
+        if minutes:
+            return f"{hours}h{minutes:02d}"
+
+        return f"{hours}h"
 
     def clean(self):
         # Validate that end time is after start time

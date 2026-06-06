@@ -1,3 +1,9 @@
+from .business_hours import (
+    BusinessHourCreateView,
+    BusinessHourDeleteView,
+    BusinessHourListView,
+    BusinessHourUpdateView,
+)
 from .appointments import (
     AppointmentCancelView,
     AppointmentCompleteView,
@@ -37,6 +43,7 @@ from .schedules import (
     VisualScheduleView,
 )
 from .services import (
+    PublicServiceFeedView,
     ServiceCreateView,
     ServiceDeleteView,
     ServiceListView,
@@ -44,6 +51,10 @@ from .services import (
 )
 
 __all__ = [
+    "BusinessHourUpdateView",
+    "BusinessHourListView",
+    "BusinessHourDeleteView",
+    "BusinessHourCreateView",
     "AppointmentCancelView",
     "AppointmentCompleteView",
     "AppointmentConfirmView",
@@ -66,6 +77,7 @@ __all__ = [
     "PublicCancelAppointmentView",
     "PublicCancelSuccessView",
     "PublicVisualScheduleView",
+    "PublicServiceFeedView",
     "ScheduleBlockCreateView",
     "ScheduleBlockDeleteView",
     "ScheduleBlockListView",

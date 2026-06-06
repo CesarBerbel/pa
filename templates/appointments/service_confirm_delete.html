@@ -1,51 +1,46 @@
 {% extends "base.html" %}
 
+{% block title %}Apagar serviço | Priscila Arantes PA{% endblock %}
+
 {% block content %}
 <div class="container py-4">
     <div class="card border-danger shadow-sm">
         <div class="card-header bg-danger text-white">
-            Confirmar exclusão de bloqueio
+            Confirmar exclusão de serviço
         </div>
 
         <div class="card-body">
             <p>
-                Tem certeza que deseja apagar o bloqueio
-                <strong>{{ schedule_block.title }}</strong>?
+                Tem certeza que deseja apagar o serviço
+                <strong>{{ service.name }}</strong>
+                da categoria
+                <strong>{{ service.category.name }}</strong>?
             </p>
 
             <ul class="text-muted">
-                <li>Data: {{ schedule_block.date|date:"d/m/Y" }}</li>
+                <li>Categoria: {{ service.category.name }}</li>
+                <li>Duração: {{ service.duration_minutes }} minutos</li>
+                <li>Preço: € {{ service.price }}</li>
 
-                {% if schedule_block.is_full_day %}
-                    <li>Tipo: Dia inteiro</li>
+                {% if service.is_active %}
+                    <li>Status: Ativo</li>
                 {% else %}
-                    <li>
-                        Horário:
-                        {{ schedule_block.start_time|time:"H:i" }}
-                        até
-                        {{ schedule_block.end_time|time:"H:i" }}
-                    </li>
-                {% endif %}
-
-                {% if schedule_block.is_recurring %}
-                    <li>Recorrente: Sim</li>
-                {% else %}
-                    <li>Recorrente: Não</li>
+                    <li>Status: Inativo</li>
                 {% endif %}
             </ul>
 
             <p class="text-danger mb-4">
-                Esta ação não pode ser desfeita.
+                Esta ação não pode ser desfeita. Se o serviço já tiver marcações associadas, o sistema bloqueará a exclusão.
             </p>
 
             <form method="post">
                 {% csrf_token %}
 
                 <button type="submit" class="btn btn-danger">
-                    Sim, apagar bloqueio
+                    Sim, apagar serviço
                 </button>
 
-                <a href="{% url 'appointments:schedule_block_list' %}" class="btn btn-secondary">
+                <a href="{% url 'appointments:service_list' %}" class="btn btn-secondary">
                     Cancelar
                 </a>
             </form>

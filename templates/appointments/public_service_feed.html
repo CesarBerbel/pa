@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Serviços | Priscila Arantes PA{% endblock %}
+
+{% block content %}
+<section class="one-page-section mb-5">
+    <div class="text-center mb-5">
+        <span class="luxury-eyebrow">Feed de categorias e serviços</span>
+
+        <h1 class="section-title mt-2">
+            Escolha o cuidado ideal para si
+        </h1>
+
+        <p class="text-muted mb-0">
+            Podologia, manicure, pedicure e enfermagem agora funcionam como categorias.
+            Cada categoria apresenta serviços específicos que podem ser marcados online.
+        </p>
+    </div>
+
+    {% if service_categories %}
+        <div class="row g-4">
+            {% for category in service_categories %}
+                <div class="col-12 col-lg-6">
+                    <div class="luxury-card h-100">
+                        <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                            <div>
+                                <span class="luxury-eyebrow">Categoria</span>
+                                <h2 class="h4 mb-2">{{ category.name }}</h2>
+                            </div>
+                        </div>
+
+                        <p class="text-muted">
+                            {{ category.description }}
+                        </p>
+
+                        <div class="list-group list-group-flush mt-4">
+                            {% for service in category.services.all %}
+                                <a
+                                    href="{% url 'appointments:public_visual_schedule' %}?service={{ service.pk }}"
+                                    class="list-group-item list-group-item-action px-0"
+                                >
+                                    <div class="d-flex justify-content-between align-items-start gap-3">
+                                        <div>
+                                            <strong>{{ service.name }}</strong>
+
+                                            {% if service.description %}
+                                                <p class="small text-muted mb-0 mt-1">
+                                                    {{ service.description }}
+                                                </p>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="text-end flex-shrink-0">
+                                            <span class="badge bg-light text-dark border">
+                                                {{ service.duration_minutes }} min
+                                            </span>
+
+                                            <div class="small text-muted mt-1">
+                                                € {{ service.price }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="app-empty-state">
+            <h3>Nenhum serviço ativo cadastrado</h3>
+            <p>Cadastre categorias e serviços ativos para exibir o feed público.</p>
+        </div>
+    {% endif %}
+
+    <div class="text-center mt-5">
+        <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary btn-lg px-5">
+            Ver agenda disponível
+        </a>
+    </div>
+</section>
+{% endblock %}

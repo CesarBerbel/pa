@@ -37,6 +37,20 @@ CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS", default="")
 
 INTERNAL_IPS = env_list("INTERNAL_IPS", default="127.0.0.1") if DEBUG else []
 
+# =============================================================================
+# Public homepage
+# =============================================================================
+
+HOME_HERO_LAYOUT_CHOICES = (
+    "classic",
+    "logo_top",
+)
+
+HOME_HERO_LAYOUT = config("HOME_HERO_LAYOUT", default="classic").strip().lower()
+
+if HOME_HERO_LAYOUT not in HOME_HERO_LAYOUT_CHOICES:
+    HOME_HERO_LAYOUT = "classic"
+
 
 # =============================================================================
 # Applications

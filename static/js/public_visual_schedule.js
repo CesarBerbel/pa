@@ -86,6 +86,7 @@ $(document).ready(function () {
         const selectedOption = serviceInput.find("option:selected");
 
         $("#selected-service-name").text(selectedOption.data("name") || selectedOption.text());
+        $("#selected-service-category").text(selectedOption.data("category") || "");
         $("#selected-service-duration").text((selectedOption.data("duration") || "") + " minutos");
     }
 

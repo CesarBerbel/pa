@@ -2,7 +2,30 @@ from django import forms
 
 from appointments.customer_services import validate_phone_for_brazil_or_portugal
 
-from .models import Appointment, Customer, ScheduleBlock, Service
+from .models import Appointment, BusinessHour, Customer, ScheduleBlock, Service
+
+
+class BusinessHourForm(forms.ModelForm):
+    # Form used to create and edit working hours.
+
+    class Meta:
+        model = BusinessHour
+        fields = [
+            "weekday",
+            "start_time",
+            "end_time",
+            "is_active",
+        ]
+        labels = {
+            "weekday": "Dia da semana",
+            "start_time": "Hora inicial",
+            "end_time": "Hora final",
+            "is_active": "Ativo",
+        }
+        widgets = {
+            "start_time": forms.TimeInput(attrs={"type": "time"}),
+            "end_time": forms.TimeInput(attrs={"type": "time"}),
+        }
 
 
 class ServiceForm(forms.ModelForm):
@@ -11,6 +34,7 @@ class ServiceForm(forms.ModelForm):
     class Meta:
         model = Service
         fields = [
+            "category",
             "name",
             "description",
             "duration_minutes",
@@ -56,12 +80,22 @@ class AppointmentForm(forms.ModelForm):
         }
 
 
+class CategoryServiceChoiceField(forms.ModelChoiceField):
+    # Displays services grouped by category in human-friendly labels.
+
+    def label_from_instance(self, obj):
+        return f"{obj.category.name} — {obj.name}"
+
+
 class PublicAppointmentForm(forms.Form):
     # Public booking form used by customers without login.
 
-    service = forms.ModelChoiceField(
+    service = CategoryServiceChoiceField(
         label="Serviço",
-        queryset=Service.objects.filter(is_active=True),
+        queryset=Service.objects.filter(
+            is_active=True,
+            category__is_active=True,
+        ).select_related("category"),
         empty_label="Selecione um serviço",
     )
 

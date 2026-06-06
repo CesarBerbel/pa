@@ -5,6 +5,10 @@ from .views import (
     AppointmentCreateView,
     AppointmentListView,
     AppointmentUpdateView,
+    BusinessHourUpdateView,
+    BusinessHourListView,
+    BusinessHourDeleteView,
+    BusinessHourCreateView,
     CustomerCreateView,
     CustomerListView,
     DailyAgendaView,
@@ -28,6 +32,7 @@ from .views import (
     CustomerAppointmentsView,
     CustomerAppointmentDetailView,
     PublicAppointmentMagicView,
+    PublicServiceFeedView,
     CustomerUpdateView,
     ServiceUpdateView,
     ServiceDeleteView,
@@ -57,6 +62,26 @@ urlpatterns = [
         ReminderDiagnosticsView.as_view(),
         name="reminder_diagnostics",
     ),
+    path(
+        "horas-trabalhadas/",
+        BusinessHourListView.as_view(),
+        name="business_hour_list",
+    ),
+    path(
+        "horas-trabalhadas/novo/",
+        BusinessHourCreateView.as_view(),
+        name="business_hour_create",
+    ),
+    path(
+        "horas-trabalhadas/<int:pk>/editar/",
+        BusinessHourUpdateView.as_view(),
+        name="business_hour_update",
+    ),
+    path(
+        "horas-trabalhadas/<int:pk>/apagar/",
+        BusinessHourDeleteView.as_view(),
+        name="business_hour_delete",
+    ),
     path("bloqueios/", ScheduleBlockListView.as_view(), name="schedule_block_list"),
     path(
         "bloqueios/novo/",
@@ -74,6 +99,7 @@ urlpatterns = [
         name="schedule_block_delete",
     ),
     path("servicos/", ServiceListView.as_view(), name="service_list"),
+    path("servicos/feed/", PublicServiceFeedView.as_view(), name="public_service_feed"),
     path("servicos/novo/", ServiceCreateView.as_view(), name="service_create"),
     path(
         "servicos/<int:pk>/editar/", ServiceUpdateView.as_view(), name="service_update"

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% load crispy_forms_tags %}
+
+{% block title %}
+    {% if object %}
+        Editar horas trabalhadas | Priscila Arantes PA
+    {% else %}
+        Novas horas trabalhadas | Priscila Arantes PA
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-7">
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-4">
+                    {% if object %}
+                        Editar horas trabalhadas
+                    {% else %}
+                        Novas horas trabalhadas
+                    {% endif %}
+                </h1>
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    {{ form|crispy }}
+
+                    <div class="alert alert-info mt-3">
+                        <p class="mb-1">
+                            Cadastre aqui apenas o intervalo geral de trabalho do dia.
+                        </p>
+                        <p class="mb-0">
+                            Para almoço, folgas, férias ou pausas, use a tela de bloqueios de agenda.
+                        </p>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-3">
+                        <button type="submit" class="btn btn-primary">
+                            Salvar
+                        </button>
+
+                        <a href="{% url 'appointments:business_hour_list' %}" class="btn btn-outline-secondary">
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

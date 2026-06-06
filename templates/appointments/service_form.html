@@ -2,7 +2,7 @@
 
 {% load crispy_forms_tags %}
 
-{% block title %}Novo serviço | Priscila Arantes PA{% endblock %}
+{% block title %}Serviço | Priscila Arantes PA{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -10,7 +10,13 @@
 
         <div class="card shadow-sm border-0">
             <div class="card-body p-4">
-                <h1 class="h4 mb-4">Novo serviço</h1>
+                <h1 class="h4 mb-2">
+                    Serviço
+                </h1>
+
+                <p class="text-muted mb-4">
+                    Escolha a categoria principal e cadastre o serviço específico que será exibido na agenda pública.
+                </p>
 
                 <form method="post" novalidate>
                     {% csrf_token %}

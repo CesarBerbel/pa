@@ -1,27 +1,33 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Priscila Arantes PA | Podologia e Bem-estar{% endblock %}
+{% block title %}Priscila Arantes PA | Podologia, estética e enfermagem{% endblock %}
 
 {% block content %}
 
-<section id="inicio" class="luxury-hero mb-5">
-    <div class="row align-items-center g-5">
-        <div class="col-12 col-lg-6">
-            <span class="luxury-eyebrow">Podologia • Cuidado • Bem-estar</span>
+{% if home_hero_layout == "logo_top" %}
+    <section id="inicio" class="luxury-hero luxury-hero-logo-top mb-5">
+        <div class="luxury-hero-logo-top-content">
+            <img
+                src="{% static 'img/logo_transparent.png' %}"
+                alt="Priscila Arantes PA"
+                class="luxury-logo luxury-logo-transparent mb-4"
+            >
+
+            <span class="luxury-eyebrow">Podologia • Estética • Enfermagem</span>
 
             <h1 class="luxury-title mt-3 mb-4">
-                Cuide dos seus pés com
+                Cuidados profissionais com
                 <span class="signature-font">delicadeza</span>
-                e profissionalismo
+                e organização
             </h1>
 
             <p class="luxury-subtitle mb-4">
-                Atendimento especializado em podologia e cuidados estéticos,
+                Atendimento especializado em podologia, manicure, pedicure e apoio de enfermagem,
                 com marcação online simples, segura e prática.
             </p>
 
-            <div class="d-flex flex-column flex-md-row gap-3">
+            <div class="luxury-hero-actions d-flex flex-column flex-md-row gap-3">
                 <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary btn-lg px-5">
                     Agendar horário
                 </a>
@@ -31,18 +37,47 @@
                 </a>
             </div>
         </div>
+    </section>
+{% else %}
+    <section id="inicio" class="luxury-hero mb-5">
+        <div class="row align-items-center g-5">
+            <div class="col-12 col-lg-6">
+                <span class="luxury-eyebrow">Podologia • Estética • Enfermagem</span>
 
-        <div class="col-12 col-lg-6 text-center">
-            <div class="luxury-logo-card">
-                <img
-                    src="{% static 'img/logo.png' %}"
-                    alt="Priscila Arantes PA"
-                    class="luxury-logo"
-                >
+                <h1 class="luxury-title mt-3 mb-4">
+                    Cuidados profissionais com
+                    <span class="signature-font">delicadeza</span>
+                    e organização
+                </h1>
+
+                <p class="luxury-subtitle mb-4">
+                    Atendimento especializado em podologia, manicure, pedicure e apoio de enfermagem,
+                    com marcação online simples, segura e prática.
+                </p>
+
+                <div class="d-flex flex-column flex-md-row gap-3">
+                    <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary btn-lg px-5">
+                        Agendar horário
+                    </a>
+
+                    <a href="{% url 'appointments:public_appointment_lookup' %}" class="btn btn-outline-secondary btn-lg px-5">
+                        Consultar marcação
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-6 text-center">
+                <div class="luxury-logo-card">
+                    <img
+                        src="{% static 'img/logo.png' %}"
+                        alt="Priscila Arantes PA"
+                        class="luxury-logo"
+                    >
+                </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
+{% endif %}
 
 <section class="trust-strip mb-5">
     <div class="trust-item">
@@ -70,7 +105,7 @@
             </h2>
 
             <p class="text-muted mb-4">
-                Consulte os horários disponíveis, escolha o serviço desejado
+                Consulte os horários disponíveis, escolha a categoria e o serviço desejado
                 e confirme a sua marcação em poucos passos.
             </p>
 
@@ -88,7 +123,7 @@
         <div class="col-12 col-lg-6">
             <div class="luxury-code-box">
                 <span>Fluxo de marcação</span>
-                <strong>Agenda → Dados → Confirmação</strong>
+                <strong>Categoria → Serviço → Agenda → Confirmação</strong>
             </div>
         </div>
     </div>
@@ -99,7 +134,7 @@
         <div class="col-12 col-lg-5">
             <div class="about-card">
                 <span class="signature-font">Priscila Arantes</span>
-                <h2>Priscila Arantes Podologia</h2>
+                <h2>Priscila Arantes PA</h2>
                 <p>
                     Cuidado profissional, atenção individualizada e compromisso
                     com o bem-estar de cada cliente.
@@ -131,41 +166,77 @@
     <div class="text-center mb-5">
         <span class="luxury-eyebrow">Serviços</span>
         <h2 class="section-title mt-2">
-            Cuidados para saúde e beleza dos pés
+            Categorias e cuidados disponíveis
         </h2>
+
+        <p class="text-muted mb-0">
+            As áreas principais são categorias. Dentro de cada uma, escolha o serviço específico para marcar.
+        </p>
     </div>
 
-    <div class="row g-4">
-        <div class="col-12 col-md-4">
-            <div class="luxury-card h-100">
-                <div class="luxury-icon">01</div>
-                <h3>Podologia</h3>
-                <p>
-                    Atendimento focado no cuidado, conforto e saúde dos pés.
-                </p>
-            </div>
-        </div>
+    {% if service_categories %}
+        <div class="row g-4">
+            {% for category in service_categories %}
+                <div class="col-12 col-md-6 col-xl-3">
+                    <div class="luxury-card h-100">
+                        <div class="luxury-icon">{{ forloop.counter|stringformat:"02d" }}</div>
 
-        <div class="col-12 col-md-4">
-            <div class="luxury-card h-100">
-                <div class="luxury-icon">02</div>
-                <h3>Pedicure</h3>
-                <p>
-                    Cuidado estético com acabamento delicado e atenção aos detalhes.
-                </p>
-            </div>
-        </div>
+                        <h3>{{ category.name }}</h3>
 
-        <div class="col-12 col-md-4">
-            <div class="luxury-card h-100">
-                <div class="luxury-icon">03</div>
-                <h3>Manicure e unhas</h3>
-                <p>
-                    Serviços pensados para bem-estar, beleza e praticidade.
-                </p>
+                        <p>
+                            {{ category.description }}
+                        </p>
+
+                        <ul class="list-unstyled text-muted small mb-4">
+                            {% for service in category.services.all|slice:":4" %}
+                                <li class="mb-2">
+                                    • {{ service.name }}
+                                </li>
+                            {% endfor %}
+                        </ul>
+
+                        <a href="{% url 'appointments:public_service_feed' %}" class="btn btn-outline-secondary btn-sm">
+                            Ver serviços
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="row g-4">
+            <div class="col-12 col-md-3">
+                <div class="luxury-card h-100">
+                    <div class="luxury-icon">01</div>
+                    <h3>Podologia</h3>
+                    <p>Tratamento de pés diabéticos, calosidades, unha encravada e avaliação podológica.</p>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-3">
+                <div class="luxury-card h-100">
+                    <div class="luxury-icon">02</div>
+                    <h3>Manicure</h3>
+                    <p>Unha em gel, manicure simples, cutícula russa e verniz gel mãos.</p>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-3">
+                <div class="luxury-card h-100">
+                    <div class="luxury-icon">03</div>
+                    <h3>Pedicure</h3>
+                    <p>Pedicure simples, corte de unhas dos pés, verniz gel e hidratação profunda.</p>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-3">
+                <div class="luxury-card h-100">
+                    <div class="luxury-icon">04</div>
+                    <h3>Enfermagem</h3>
+                    <p>Troca de penso, administração de medicação a idosos e avaliação de sinais vitais.</p>
+                </div>
             </div>
         </div>
-    </div>
+    {% endif %}
 </section>
 
 <section id="testemunhos" class="one-page-section mb-5">

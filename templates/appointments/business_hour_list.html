@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Horas trabalhadas | Priscila Arantes PA{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h1 class="h4 mb-1">Horas trabalhadas</h1>
+        <p class="text-muted mb-0">
+            Cadastre os dias e horários em que a agenda pode receber marcações.
+        </p>
+    </div>
+
+    <a href="{% url 'appointments:business_hour_create' %}" class="btn btn-primary">
+        Novo horário
+    </a>
+</div>
+
+<style>
+    .business-hour-action-button {
+        width: 38px;
+        height: 38px;
+        padding: 0;
+        border-radius: 10px;
+    }
+
+    .business-hour-action-button i {
+        font-size: 16px;
+        line-height: 1;
+    }
+</style>
+
+<div class="alert alert-info">
+    <strong>Importante:</strong>
+    o almoço e outros períodos sem atendimento devem continuar a ser configurados em
+    <a href="{% url 'appointments:schedule_block_list' %}" class="alert-link">Bloqueios</a>.
+    Esta tela controla apenas o intervalo geral de trabalho de cada dia.
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        {% if business_hours %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Dia da semana</th>
+                            <th>Início</th>
+                            <th>Fim</th>
+                            <th>Total bruto</th>
+                            <th>Status</th>
+                            <th class="text-end">Ações</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for business_hour in business_hours %}
+                            <tr>
+                                <td>
+                                    <strong>{{ business_hour.get_weekday_display }}</strong>
+                                </td>
+
+                                <td>
+                                    {{ business_hour.start_time|time:"H:i" }}
+                                </td>
+
+                                <td>
+                                    {{ business_hour.end_time|time:"H:i" }}
+                                </td>
+
+                                <td>
+                                    {{ business_hour.duration_display }}
+                                </td>
+
+                                <td>
+                                    {% if business_hour.is_active %}
+                                        <span class="badge bg-success">
+                                            Ativo
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">
+                                            Inativo
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <td class="text-end">
+                                    <div class="d-inline-flex flex-wrap justify-content-end gap-2">
+                                        <a
+                                            href="{% url 'appointments:business_hour_update' business_hour.pk %}"
+                                            class="btn btn-outline-primary btn-sm business-hour-action-button d-inline-flex align-items-center justify-content-center"
+                                            data-bs-toggle="tooltip"
+                                            data-bs-placement="top"
+                                            data-bs-title="Editar horário"
+                                            aria-label="Editar horário de {{ business_hour.get_weekday_display }}"
+                                        >
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+
+                                        <a
+                                            href="{% url 'appointments:business_hour_delete' business_hour.pk %}"
+                                            class="btn btn-outline-danger btn-sm business-hour-action-button d-inline-flex align-items-center justify-content-center"
+                                            data-bs-toggle="tooltip"
+                                            data-bs-placement="top"
+                                            data-bs-title="Excluir horário"
+                                            aria-label="Excluir horário de {{ business_hour.get_weekday_display }}"
+                                        >
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-4">
+                <p class="text-muted mb-3">
+                    Nenhum horário trabalhado cadastrado.
+                </p>
+
+                <a href="{% url 'appointments:business_hour_create' %}" class="btn btn-primary">
+                    Cadastrar primeiro horário
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

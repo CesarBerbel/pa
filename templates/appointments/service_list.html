@@ -4,7 +4,12 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h4 mb-0">Serviços</h1>
+    <div>
+        <h1 class="h4 mb-1">Serviços</h1>
+        <p class="text-muted mb-0">
+            Podologia, manicure, pedicure e enfermagem são categorias. Os itens abaixo são os serviços marcáveis.
+        </p>
+    </div>
 
     <a href="{% url 'appointments:service_create' %}" class="btn btn-primary">
         Novo serviço
@@ -32,7 +37,8 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead>
                         <tr>
-                            <th>Nome</th>
+                            <th>Categoria</th>
+                            <th>Serviço</th>
                             <th>Duração</th>
                             <th>Preço</th>
                             <th>Status</th>
@@ -43,7 +49,17 @@
                     <tbody>
                         {% for service in services %}
                             <tr>
-                                <td>{{ service.name }}</td>
+                                <td>{{ service.category.name }}</td>
+
+                                <td>
+                                    <strong>{{ service.name }}</strong>
+
+                                    {% if service.description %}
+                                        <div class="small text-muted">
+                                            {{ service.description|truncatechars:90 }}
+                                        </div>
+                                    {% endif %}
+                                </td>
 
                                 <td>{{ service.duration_minutes }} min</td>
 

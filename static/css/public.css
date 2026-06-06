@@ -2186,3 +2186,53 @@ footer[id] {
         padding: 0;
         overflow: hidden;
     }
+
+/* ======================
+   HOME HERO LAYOUT OPTIONS
+====================== */
+
+.luxury-hero-logo-top {
+    text-align: center;
+    max-width: 1000px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.luxury-hero-logo-top-content {
+    max-width: 820px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.luxury-logo-transparent {
+    width: min(100%, 560px);
+    max-width: 560px;
+    height: auto;
+    filter: drop-shadow(0 18px 28px rgba(139, 94, 102, 0.14));
+}
+
+.luxury-hero-logo-top .luxury-title {
+    max-width: 780px;
+}
+
+.luxury-hero-logo-top .luxury-subtitle {
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.luxury-hero-actions {
+    justify-content: center;
+}
+
+@media (max-width: 768px) {
+    .luxury-logo-transparent {
+        max-width: 340px;
+    }
+
+    .luxury-hero-logo-top {
+        padding: 44px 22px;
+    }
+}

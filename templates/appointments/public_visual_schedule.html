@@ -15,7 +15,7 @@
         </h1>
 
         <p>
-            Selecione o serviço, escolha a data e reserve o seu horário disponível.
+            Selecione a categoria, escolha o serviço, defina a data e reserve o seu horário disponível.
         </p>
     </div>
 
@@ -26,19 +26,26 @@
 
                 <div class="mb-4">
                     <label for="service" class="form-label">
-                        Serviço
+                        Categoria e serviço
                     </label>
 
                     <select id="service" name="service" class="form-select form-select-lg">
-                        {% for service in services %}
-                            <option
-                                value="{{ service.pk }}"
-                                data-name="{{ service.name }}"
-                                data-duration="{{ service.duration_minutes }}"
-                                {% if selected_service and selected_service.pk == service.pk %}selected{% endif %}
-                            >
-                                {{ service.name }} · {{ service.duration_minutes }} min
-                            </option>
+                        {% for category in service_categories %}
+                            <optgroup label="{{ category.name }}">
+                                {% for service in services %}
+                                    {% if service.category_id == category.id %}
+                                        <option
+                                            value="{{ service.pk }}"
+                                            data-name="{{ service.name }}"
+                                            data-category="{{ category.name }}"
+                                            data-duration="{{ service.duration_minutes }}"
+                                            {% if selected_service and selected_service.pk == service.pk %}selected{% endif %}
+                                        >
+                                            {{ service.name }} · {{ service.duration_minutes }} min
+                                        </option>
+                                    {% endif %}
+                                {% endfor %}
+                            </optgroup>
                         {% endfor %}
                     </select>
                 </div>
@@ -63,7 +70,64 @@
                 <div class="app-service-summary mt-4">
                     <span>Serviço selecionado</span>
                     <strong id="selected-service-name">{{ selected_service.name }}</strong>
+                    <small id="selected-service-category">{{ selected_service.category.name }}</small>
                     <small id="selected-service-duration">{{ selected_service.duration_minutes }} minutos</small>
+                </div>
+            {% endif %}
+
+            {% if service_categories %}
+                <div class="card border-0 shadow-sm mt-4">
+                    <div class="card-body">
+                        <span class="luxury-eyebrow">Feed de serviços</span>
+
+                        <div class="accordion mt-3" id="serviceFeedAccordion">
+                            {% for category in service_categories %}
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="service-category-heading-{{ category.id }}">
+                                        <button
+                                            class="accordion-button {% if selected_service and selected_service.category_id == category.id %}{% else %}collapsed{% endif %}"
+                                            type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#service-category-{{ category.id }}"
+                                            aria-expanded="{% if selected_service and selected_service.category_id == category.id %}true{% else %}false{% endif %}"
+                                            aria-controls="service-category-{{ category.id }}"
+                                        >
+                                            {{ category.name }}
+                                        </button>
+                                    </h2>
+
+                                    <div
+                                        id="service-category-{{ category.id }}"
+                                        class="accordion-collapse collapse {% if selected_service and selected_service.category_id == category.id %}show{% endif %}"
+                                        aria-labelledby="service-category-heading-{{ category.id }}"
+                                        data-bs-parent="#serviceFeedAccordion"
+                                    >
+                                        <div class="accordion-body">
+                                            <p class="small text-muted mb-3">
+                                                {{ category.description }}
+                                            </p>
+
+                                            <div class="list-group list-group-flush">
+                                                {% for service in services %}
+                                                    {% if service.category_id == category.id %}
+                                                        <a
+                                                            href="{% url 'appointments:public_visual_schedule' %}?service={{ service.pk }}&date={{ selected_date|date:'Y-m-d' }}"
+                                                            class="list-group-item list-group-item-action px-0 {% if selected_service and selected_service.pk == service.pk %}fw-semibold{% endif %}"
+                                                        >
+                                                            <div class="d-flex justify-content-between gap-3">
+                                                                <span>{{ service.name }}</span>
+                                                                <small>{{ service.duration_minutes }} min</small>
+                                                            </div>
+                                                        </a>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
             {% endif %}
         </aside>
@@ -128,7 +192,7 @@
             {% else %}
                 <div class="app-empty-state">
                     <h3>Nenhum serviço ativo cadastrado</h3>
-                    <p>Cadastre um serviço para exibir horários disponíveis.</p>
+                    <p>Cadastre uma categoria e pelo menos um serviço ativo para exibir horários disponíveis.</p>
                 </div>
             {% endif %}
 

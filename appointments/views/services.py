@@ -1,11 +1,36 @@
 from django.contrib import messages
+from django.db.models import Prefetch
 from appointments.mixins import SuperuserRequiredMixin
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView, TemplateView, UpdateView
 
 from appointments.forms import ServiceForm
-from appointments.models import Appointment, Service
+from appointments.models import Appointment, Service, ServiceCategory
+
+
+class PublicServiceFeedView(TemplateView):
+    # Public feed with categories and bookable services.
+
+    template_name = "appointments/public_service_feed.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["service_categories"] = (
+            ServiceCategory.objects.filter(
+                is_active=True,
+                services__is_active=True,
+            )
+            .prefetch_related(
+                Prefetch(
+                    "services",
+                    queryset=Service.objects.filter(is_active=True).order_by("name"),
+                )
+            )
+            .distinct()
+            .order_by("display_order", "name")
+        )
+        return context
 
 
 class ServiceListView(SuperuserRequiredMixin, ListView):
@@ -14,6 +39,13 @@ class ServiceListView(SuperuserRequiredMixin, ListView):
     model = Service
     template_name = "appointments/service_list.html"
     context_object_name = "services"
+
+    def get_queryset(self):
+        return Service.objects.select_related("category").order_by(
+            "category__display_order",
+            "category__name",
+            "name",
+        )
 
 
 class ServiceCreateView(SuperuserRequiredMixin, CreateView):
@@ -49,7 +81,7 @@ class ServiceDeleteView(SuperuserRequiredMixin, TemplateView):
 
     def get_service(self):
         # Get service safely by primary key
-        return Service.objects.get(pk=self.kwargs["pk"])
+        return Service.objects.select_related("category").get(pk=self.kwargs["pk"])
 
     def get_context_data(self, **kwargs):
         # Send service data to confirmation template
