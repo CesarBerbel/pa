@@ -76,7 +76,7 @@
             {% endif %}
 
             {% if service_categories %}
-                <div class="card border-0 shadow-sm mt-4">
+                <div class="card border-0 shadow-sm mt-4 agenda-service-feed-card">
                     <div class="card-body">
                         <span class="luxury-eyebrow">Feed de serviços</span>
 
@@ -134,17 +134,36 @@
 
         <main class="app-agenda-results">
             {% if selected_service %}
+                <div class="app-agenda-results-header mb-4">
+                    <div>
+                        <span class="luxury-eyebrow">Disponibilidade</span>
+                        <h2>{{ selected_date|date:"d/m/Y" }}</h2>
+                    </div>
+
+                    <div
+                        id="availability-status-pill"
+                        class="availability-status-pill status-{{ availability_status.type }}"
+                    >
+                        <i class="bi {{ availability_status.icon }}"></i>
+                        <span>{{ availability_status.title }}</span>
+                    </div>
+                </div>
+
                 {% if week_days %}
                     <div class="app-week-strip mb-4">
                         {% for day in week_days %}
                             <a
                                 href="{% url 'appointments:public_visual_schedule' %}?service={{ selected_service.pk }}&date={{ day.date|date:'Y-m-d' }}"
                                 data-date="{{ day.date|date:'Y-m-d' }}"
-                                class="app-week-day {% if day.is_selected %}is-active{% endif %}"
+                                class="app-week-day {% if day.is_selected %}is-active{% endif %} {% if day.availability_status.is_fully_blocked %}is-fully-blocked{% endif %}"
+                                title="{{ day.availability_status.title }}"
                             >
                                 <span>{{ day.weekday }}</span>
                                 <strong>{{ day.day }}</strong>
                                 <small>{{ day.month }}</small>
+                                {% if day.availability_status.is_fully_blocked %}
+                                    <em>Esgotado</em>
+                                {% endif %}
                             </a>
                         {% endfor %}
                     </div>
@@ -177,20 +196,40 @@
                             {% endfor %}
                         </div>
                     {% else %}
-                        <div class="app-empty-state">
-                            <div class="app-empty-icon">⌛</div>
+                        {% if availability_status.is_fully_blocked %}
+                            <div class="app-empty-state app-full-blocked-state">
+                                <div class="app-empty-icon">
+                                    <i class="bi {{ availability_status.icon }}"></i>
+                                </div>
 
-                            <h3>Nenhum horário disponível</h3>
+                                <h3>{{ availability_status.title }}</h3>
 
-                            <p>
-                                Tente escolher outra data ou outro serviço.
-                            </p>
-                        </div>
+                                <p>
+                                    {{ availability_status.message }}
+                                </p>
+
+                            </div>
+                        {% else %}
+                            <div class="app-empty-state">
+                                <div class="app-empty-icon">
+                                    <i class="bi {{ availability_status.icon }}"></i>
+                                </div>
+
+                                <h3>{{ availability_status.title }}</h3>
+
+                                <p>
+                                    {{ availability_status.message }}
+                                </p>
+                            </div>
+                        {% endif %}
                     {% endif %}
                 </div>
 
             {% else %}
                 <div class="app-empty-state">
+                    <div class="app-empty-icon">
+                        <i class="bi bi-inbox"></i>
+                    </div>
                     <h3>Nenhum serviço ativo cadastrado</h3>
                     <p>Cadastre uma categoria e pelo menos um serviço ativo para exibir horários disponíveis.</p>
                 </div>
@@ -203,5 +242,5 @@
 </section>
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="{% static 'js/public_visual_schedule.js' %}"></script>
+<script src="{% static 'js/public_visual_schedule.js' %}?v=20260606-no-past-slots"></script>
 {% endblock %}

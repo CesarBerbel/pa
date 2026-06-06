@@ -1,5 +1,5 @@
 from django.contrib import messages
-from django.db.models import Prefetch
+from django.db.models import Count, Prefetch, Q
 from appointments.mixins import SuperuserRequiredMixin
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
@@ -46,6 +46,29 @@ class ServiceListView(SuperuserRequiredMixin, ListView):
             "category__name",
             "name",
         )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        base_queryset = Service.objects.all()
+        context["service_total"] = base_queryset.count()
+        context["active_service_total"] = base_queryset.filter(is_active=True).count()
+        context["inactive_service_total"] = base_queryset.filter(
+            is_active=False
+        ).count()
+        context["category_total"] = (
+            ServiceCategory.objects.filter(services__isnull=False).distinct().count()
+        )
+        context["categories_with_counts"] = (
+            ServiceCategory.objects.annotate(
+                total_services=Count("services"),
+                active_services=Count("services", filter=Q(services__is_active=True)),
+            )
+            .filter(total_services__gt=0)
+            .order_by("display_order", "name")
+        )
+
+        return context
 
 
 class ServiceCreateView(SuperuserRequiredMixin, CreateView):

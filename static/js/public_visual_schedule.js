@@ -7,10 +7,19 @@ $(document).ready(function () {
     const filterPanel = $(".app-agenda-filter");
     const resultsPanel = $(".app-agenda-results");
     const slotsContainer = $("#agenda-slots-container");
-    const weekDays = $(".app-week-day");
+    const statusPill = $("#availability-status-pill");
 
     const slotsUrl = slotsContainer.data("slots-url");
     const bookingUrl = slotsContainer.data("booking-url");
+
+    function escapeHtml(value) {
+        return String(value || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
 
     function updateBrowserUrl(serviceId, selectedDate) {
         // Keep URL synchronized without reloading the page.
@@ -23,21 +32,73 @@ $(document).ready(function () {
         slotsContainer.addClass("is-loading");
     }
 
-    function renderEmpty() {
+    function getDefaultStatus() {
+        return {
+            type: "no_slots",
+            is_fully_blocked: false,
+            title: "Horários esgotados",
+            message: "Horários esgotados, favor verificar outro dia.",
+            icon: "bi-clock-history",
+            block_title: "",
+            block_notes: ""
+        };
+    }
+
+    function updateAvailabilityStatus(status) {
+        const safeStatus = status || getDefaultStatus();
+        const typeClass = `status-${safeStatus.type || "no_slots"}`;
+        const iconClass = safeStatus.icon || "bi-clock-history";
+
+        statusPill
+            .removeClass(function (_index, className) {
+                return (className.match(/(^|\s)status-\S+/g) || []).join(" ");
+            })
+            .addClass(typeClass)
+            .html(`
+                <i class="bi ${escapeHtml(iconClass)}"></i>
+                <span>${escapeHtml(safeStatus.title)}</span>
+            `);
+    }
+
+    function renderEmpty(status) {
         // Show empty state when there are no available slots.
+        const safeStatus = status || getDefaultStatus();
+        const icon = escapeHtml(safeStatus.icon || "bi-clock-history");
+        const title = escapeHtml(safeStatus.title || "Nenhum horário disponível");
+        const message = escapeHtml(
+            safeStatus.message || "Tente escolher outra data ou outro serviço."
+        );
+
+        if (safeStatus.is_fully_blocked) {
+            slotsContainer.html(`
+                <div class="app-empty-state app-full-blocked-state">
+                    <div class="app-empty-icon">
+                        <i class="bi ${icon}"></i>
+                    </div>
+                    <h3>${title}</h3>
+                    <p>${message}</p>
+                </div>
+            `);
+            return;
+        }
+
         slotsContainer.html(`
             <div class="app-empty-state">
-                <div class="app-empty-icon">⌛</div>
-                <h3>Nenhum horário disponível</h3>
-                <p>Tente escolher outra data ou outro serviço.</p>
+                <div class="app-empty-icon">
+                    <i class="bi ${icon}"></i>
+                </div>
+                <h3>${title}</h3>
+                <p>${message}</p>
             </div>
         `);
     }
 
-    function renderSlots(slots, serviceId, selectedDate) {
+    function renderSlots(slots, serviceId, selectedDate, status) {
         // Render available slots returned by the backend.
+        updateAvailabilityStatus(status);
+
         if (!slots || slots.length === 0) {
-            renderEmpty();
+            renderEmpty(status);
             return;
         }
 
@@ -49,7 +110,7 @@ $(document).ready(function () {
             html += `
                 <a href="${appointmentUrl}" class="app-slot-card">
                     <span class="app-slot-time">
-                        ${slot.label}
+                        ${escapeHtml(slot.label)}
                     </span>
 
                     <span class="app-slot-status">
@@ -70,6 +131,8 @@ $(document).ready(function () {
 
     function updateSelectedWeekDay(selectedDate) {
         // Update active day in the week strip.
+        const weekDays = $(".app-week-day");
+
         weekDays.removeClass("is-active");
 
         weekDays.each(function () {
@@ -96,13 +159,15 @@ $(document).ready(function () {
         const selectedDate = dateInput.val();
 
         if (!serviceId || !selectedDate) {
-            renderEmpty();
+            const status = getDefaultStatus();
+            updateAvailabilityStatus(status);
+            renderEmpty(status);
             return;
         }
 
         filterForm.addClass("is-loading");
         filterPanel.addClass("is-loading");
-        resultsPanel.addClass("is-loading");        
+        resultsPanel.addClass("is-loading");
 
         renderLoading();
 
@@ -114,7 +179,7 @@ $(document).ready(function () {
                 date: selectedDate
             },
             success: function (response) {
-                renderSlots(response.slots, serviceId, selectedDate);
+                renderSlots(response.slots, serviceId, selectedDate, response.availability_status);
                 updateBrowserUrl(serviceId, selectedDate);
                 updateSelectedWeekDay(selectedDate);
                 updateServiceSummary();
@@ -122,7 +187,9 @@ $(document).ready(function () {
             error: function () {
                 slotsContainer.html(`
                     <div class="app-empty-state">
-                        <div class="app-empty-icon">⚠️</div>
+                        <div class="app-empty-icon">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
                         <h3>Erro ao carregar horários</h3>
                         <p>Tente novamente dentro de instantes.</p>
                     </div>

@@ -3,78 +3,117 @@
 {% block title %}Serviços | Priscila Arantes PA{% endblock %}
 
 {% block content %}
-<section class="one-page-section mb-5">
-    <div class="text-center mb-5">
-        <span class="luxury-eyebrow">Feed de categorias e serviços</span>
+<section class="one-page-section service-feed-page mb-5">
+    <div class="service-feed-hero mb-5">
+        <div>
+            <span class="luxury-eyebrow">Categorias e serviços</span>
 
-        <h1 class="section-title mt-2">
-            Escolha o cuidado ideal para si
-        </h1>
+            <h1 class="section-title mt-2 mb-3">
+                Escolha o cuidado ideal para si
+            </h1>
 
-        <p class="text-muted mb-0">
-            Podologia, manicure, pedicure e enfermagem agora funcionam como categorias.
-            Cada categoria apresenta serviços específicos que podem ser marcados online.
-        </p>
+            <p class="service-feed-lead mb-0">
+                Podologia, manicure, pedicure e enfermagem estão organizadas por categoria para facilitar a escolha do serviço e o agendamento online.
+            </p>
+        </div>
+
+        <div class="service-feed-hero-card">
+            <i class="bi bi-stars"></i>
+            <strong>Atendimento personalizado</strong>
+            <span>Escolha o serviço e avance diretamente para a agenda disponível.</span>
+        </div>
     </div>
 
     {% if service_categories %}
-        <div class="row g-4">
+        <div class="service-category-grid">
             {% for category in service_categories %}
-                <div class="col-12 col-lg-6">
-                    <div class="luxury-card h-100">
-                        <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
-                            <div>
-                                <span class="luxury-eyebrow">Categoria</span>
-                                <h2 class="h4 mb-2">{{ category.name }}</h2>
-                            </div>
+                <article class="service-category-card">
+                    <div class="service-category-card-header">
+                        <div class="service-category-icon" aria-hidden="true">
+                            {% if "podologia" in category.name|lower %}
+                                <i class="bi bi-heart-pulse"></i>
+                            {% elif "manicure" in category.name|lower %}
+                                <i class="bi bi-gem"></i>
+                            {% elif "pedicure" in category.name|lower %}
+                                <i class="bi bi-flower1"></i>
+                            {% elif "enfermagem" in category.name|lower %}
+                                <i class="bi bi-bandaid"></i>
+                            {% else %}
+                                <i class="bi bi-stars"></i>
+                            {% endif %}
                         </div>
 
-                        <p class="text-muted">
-                            {{ category.description }}
-                        </p>
-
-                        <div class="list-group list-group-flush mt-4">
-                            {% for service in category.services.all %}
-                                <a
-                                    href="{% url 'appointments:public_visual_schedule' %}?service={{ service.pk }}"
-                                    class="list-group-item list-group-item-action px-0"
-                                >
-                                    <div class="d-flex justify-content-between align-items-start gap-3">
-                                        <div>
-                                            <strong>{{ service.name }}</strong>
-
-                                            {% if service.description %}
-                                                <p class="small text-muted mb-0 mt-1">
-                                                    {{ service.description }}
-                                                </p>
-                                            {% endif %}
-                                        </div>
-
-                                        <div class="text-end flex-shrink-0">
-                                            <span class="badge bg-light text-dark border">
-                                                {{ service.duration_minutes }} min
-                                            </span>
-
-                                            <div class="small text-muted mt-1">
-                                                € {{ service.price }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </a>
-                            {% endfor %}
+                        <div>
+                            <span class="luxury-eyebrow">Categoria</span>
+                            <h2>{{ category.name }}</h2>
                         </div>
                     </div>
-                </div>
+
+                    {% if category.description %}
+                        <p class="service-category-description">
+                            {{ category.description }}
+                        </p>
+                    {% endif %}
+
+                    <div class="service-card-list">
+                        {% for service in category.services.all %}
+                            <a
+                                href="{% url 'appointments:public_visual_schedule' %}?service={{ service.pk }}"
+                                class="service-public-card"
+                            >
+                                <div class="service-public-main">
+                                    <strong>{{ service.name }}</strong>
+
+                                    {% if service.description %}
+                                        <p>
+                                            {{ service.description|truncatechars:130 }}
+                                        </p>
+                                    {% endif %}
+                                </div>
+
+                                <div class="service-public-meta">
+                                    <span>
+                                        <i class="bi bi-clock"></i>
+                                        {{ service.duration_minutes }} min
+                                    </span>
+
+                                    <span>
+                                        <i class="bi bi-tag"></i>
+                                        € {{ service.price }}
+                                    </span>
+                                </div>
+
+                                <span class="service-public-cta">
+                                    Ver horários
+                                    <i class="bi bi-arrow-right"></i>
+                                </span>
+                            </a>
+                        {% empty %}
+                            <div class="service-public-empty">
+                                Nenhum serviço ativo nesta categoria.
+                            </div>
+                        {% endfor %}
+                    </div>
+                </article>
             {% endfor %}
         </div>
     {% else %}
         <div class="app-empty-state">
+            <div class="app-empty-icon">
+                <i class="bi bi-inbox"></i>
+            </div>
             <h3>Nenhum serviço ativo cadastrado</h3>
             <p>Cadastre categorias e serviços ativos para exibir o feed público.</p>
         </div>
     {% endif %}
 
-    <div class="text-center mt-5">
+    <div class="service-feed-bottom-cta mt-5">
+        <div>
+            <span class="luxury-eyebrow">Pronto para marcar?</span>
+            <h2>Consulte a agenda disponível</h2>
+            <p>Escolha o serviço, selecione a data e reserve o melhor horário.</p>
+        </div>
+
         <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary btn-lg px-5">
             Ver agenda disponível
         </a>

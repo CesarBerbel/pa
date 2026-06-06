@@ -3,117 +3,155 @@
 {% block title %}Serviços | Priscila Arantes PA{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h1 class="h4 mb-1">Serviços</h1>
-        <p class="text-muted mb-0">
-            Podologia, manicure, pedicure e enfermagem são categorias. Os itens abaixo são os serviços marcáveis.
-        </p>
+<section class="internal-services-page">
+    <div class="internal-services-header mb-4">
+        <div>
+            <span class="luxury-eyebrow">Gestão de serviços</span>
+            <h1>Serviços</h1>
+            <p>
+                Podologia, manicure, pedicure e enfermagem são categorias. Os cartões abaixo representam os serviços marcáveis na agenda pública.
+            </p>
+        </div>
+
+        <a href="{% url 'appointments:service_create' %}" class="btn btn-primary btn-lg">
+            <i class="bi bi-plus-lg me-1"></i>
+            Novo serviço
+        </a>
     </div>
 
-    <a href="{% url 'appointments:service_create' %}" class="btn btn-primary">
-        Novo serviço
-    </a>
-</div>
+    <div class="service-admin-metrics mb-4">
+        <div class="service-admin-metric-card">
+            <span>Total</span>
+            <strong>{{ service_total }}</strong>
+            <small>serviços cadastrados</small>
+        </div>
 
-<style>
-    .service-action-button {
-        width: 38px;
-        height: 38px;
-        padding: 0;
-        border-radius: 10px;
-    }
+        <div class="service-admin-metric-card is-active">
+            <span>Ativos</span>
+            <strong>{{ active_service_total }}</strong>
+            <small>visíveis para marcação</small>
+        </div>
 
-    .service-action-button i {
-        font-size: 16px;
-        line-height: 1;
-    }
-</style>
+        <div class="service-admin-metric-card is-muted">
+            <span>Inativos</span>
+            <strong>{{ inactive_service_total }}</strong>
+            <small>ocultos da agenda</small>
+        </div>
 
-<div class="card shadow-sm border-0">
-    <div class="card-body">
-        {% if services %}
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead>
-                        <tr>
-                            <th>Categoria</th>
-                            <th>Serviço</th>
-                            <th>Duração</th>
-                            <th>Preço</th>
-                            <th>Status</th>
-                            <th class="text-end">Ações</th>
-                        </tr>
-                    </thead>
+        <div class="service-admin-metric-card">
+            <span>Categorias</span>
+            <strong>{{ category_total }}</strong>
+            <small>com serviços associados</small>
+        </div>
+    </div>
 
-                    <tbody>
-                        {% for service in services %}
-                            <tr>
-                                <td>{{ service.category.name }}</td>
+    {% if categories_with_counts %}
+        <div class="service-admin-category-strip mb-4">
+            {% for category in categories_with_counts %}
+                <div class="service-admin-category-chip">
+                    <span>{{ category.name }}</span>
+                    <strong>{{ category.active_services }}/{{ category.total_services }}</strong>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
 
-                                <td>
-                                    <strong>{{ service.name }}</strong>
+    {% if services %}
+        {% regroup services by category as category_groups %}
 
-                                    {% if service.description %}
-                                        <div class="small text-muted">
-                                            {{ service.description|truncatechars:90 }}
-                                        </div>
-                                    {% endif %}
-                                </td>
+        <div class="service-admin-groups">
+            {% for group in category_groups %}
+                <section class="service-admin-group">
+                    <div class="service-admin-group-title">
+                        <div>
+                            <span class="luxury-eyebrow">Categoria</span>
+                            <h2>{{ group.grouper.name }}</h2>
+                        </div>
 
-                                <td>{{ service.duration_minutes }} min</td>
+                        <span class="service-admin-group-count">
+                            {{ group.list|length }} serviço{% if group.list|length != 1 %}s{% endif %}
+                        </span>
+                    </div>
 
-                                <td>€ {{ service.price }}</td>
+                    <div class="service-admin-card-grid">
+                        {% for service in group.list %}
+                            <article class="service-admin-card {% if not service.is_active %}is-inactive{% endif %}">
+                                <div class="service-admin-card-top">
+                                    <span class="service-admin-category-badge">
+                                        {{ service.category.name }}
+                                    </span>
 
-                                <td>
                                     {% if service.is_active %}
-                                        <span class="badge bg-success">
+                                        <span class="service-admin-status is-active">
+                                            <i class="bi bi-check-circle"></i>
                                             Ativo
                                         </span>
                                     {% else %}
-                                        <span class="badge bg-secondary">
+                                        <span class="service-admin-status is-inactive">
+                                            <i class="bi bi-pause-circle"></i>
                                             Inativo
                                         </span>
                                     {% endif %}
-                                </td>
+                                </div>
 
-                                <td class="text-end">
-                                    <div class="d-inline-flex flex-wrap justify-content-end gap-2">
+                                <div class="service-admin-card-body">
+                                    <h3>{{ service.name }}</h3>
 
-                                        <a
-                                            href="{% url 'appointments:service_update' service.pk %}"
-                                            class="btn btn-outline-primary btn-sm service-action-button d-inline-flex align-items-center justify-content-center"
-                                            data-bs-toggle="tooltip"
-                                            data-bs-placement="top"
-                                            data-bs-title="Editar serviço"
-                                            aria-label="Editar serviço {{ service.name }}"
-                                        >
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
+                                    {% if service.description %}
+                                        <p>{{ service.description|truncatechars:150 }}</p>
+                                    {% else %}
+                                        <p class="text-muted">Sem descrição cadastrada.</p>
+                                    {% endif %}
+                                </div>
 
-                                        <a
-                                            href="{% url 'appointments:service_delete' service.pk %}"
-                                            class="btn btn-outline-danger btn-sm service-action-button d-inline-flex align-items-center justify-content-center"
-                                            data-bs-toggle="tooltip"
-                                            data-bs-placement="top"
-                                            data-bs-title="Excluir serviço"
-                                            aria-label="Excluir serviço {{ service.name }}"
-                                        >
-                                            <i class="bi bi-trash"></i>
-                                        </a>
+                                <div class="service-admin-card-meta">
+                                    <span>
+                                        <i class="bi bi-clock"></i>
+                                        {{ service.duration_minutes }} min
+                                    </span>
 
-                                    </div>
-                                </td>
-                            </tr>
+                                    <span>
+                                        <i class="bi bi-currency-euro"></i>
+                                        {{ service.price }}
+                                    </span>
+                                </div>
+
+                                <div class="service-admin-card-actions">
+                                    <a
+                                        href="{% url 'appointments:service_update' service.pk %}"
+                                        class="btn btn-outline-primary btn-sm"
+                                        aria-label="Editar serviço {{ service.name }}"
+                                    >
+                                        <i class="bi bi-pencil"></i>
+                                        Editar
+                                    </a>
+
+                                    <a
+                                        href="{% url 'appointments:service_delete' service.pk %}"
+                                        class="btn btn-outline-danger btn-sm"
+                                        aria-label="Excluir serviço {{ service.name }}"
+                                    >
+                                        <i class="bi bi-trash"></i>
+                                        Excluir
+                                    </a>
+                                </div>
+                            </article>
                         {% endfor %}
-                    </tbody>
-                </table>
+                    </div>
+                </section>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="app-empty-state">
+            <div class="app-empty-icon">
+                <i class="bi bi-inbox"></i>
             </div>
-        {% else %}
-            <p class="mb-0">
-                Nenhum serviço cadastrado.
-            </p>
-        {% endif %}
-    </div>
-</div>
+            <h3>Nenhum serviço cadastrado</h3>
+            <p>Crie o primeiro serviço para que ele possa aparecer na agenda pública.</p>
+            <a href="{% url 'appointments:service_create' %}" class="btn btn-primary mt-3">
+                Criar primeiro serviço
+            </a>
+        </div>
+    {% endif %}
+</section>
 {% endblock %}

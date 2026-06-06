@@ -27,7 +27,7 @@ class PublicBookingAvailabilityMixin:
 
     def get_available_slots_for(self, service, selected_date):
         # Delegate public slot generation to the domain availability service.
-        return AvailabilityService.get_available_slots(
+        return AvailabilityService.get_public_available_slots(
             service=service,
             selected_date=selected_date,
         )
@@ -107,6 +107,12 @@ class PublicAppointmentCreateView(PublicBookingAvailabilityMixin, FormView):
         return context
 
     def is_selected_slot_available(self, service, date, start_time):
+        if not AvailabilityService.public_slot_is_bookable(
+            selected_date=date,
+            start_time_value=start_time,
+        ):
+            return False
+
         available_slots = self.get_available_slots_for(
             service=service,
             selected_date=date,
@@ -209,9 +215,19 @@ class PublicAvailableSlotsView(PublicBookingAvailabilityMixin, View):
         except ValueError:
             return JsonResponse({"slots": []})
 
-        slots = self.get_available_slots_for(service, selected_date)
+        slots = AvailabilityService.filter_public_slots_by_cutoff(
+            slots=self.get_available_slots_for(service, selected_date),
+            selected_date=selected_date,
+        )
+        availability_status = AvailabilityService.get_availability_status(
+            service,
+            selected_date,
+            public_safe=True,
+        )
 
-        return JsonResponse({"slots": slots})
+        return JsonResponse(
+            {"slots": slots, "availability_status": availability_status}
+        )
 
 
 class PublicAppointmentSuccessView(TemplateView):
@@ -401,14 +417,21 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
 
     template_name = "appointments/public_visual_schedule.html"
 
-    def get_week_days(self, selected_date):
-        # Build a practical 7-day navigation starting from the selected week
+    def get_week_days(self, selected_date, selected_service=None):
+        # Build a practical 7-day navigation starting from the selected week.
+        # Each day receives a compact availability status so the public agenda
+        # can visually distinguish closed or fully blocked days.
         start_of_week = selected_date - timedelta(days=selected_date.weekday())
 
         week_days = []
 
         for index in range(7):
             current_date = start_of_week + timedelta(days=index)
+            availability_status = AvailabilityService.get_availability_status(
+                selected_service,
+                current_date,
+                public_safe=True,
+            )
 
             week_days.append(
                 {
@@ -417,6 +440,7 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
                     "day": current_date.strftime("%d"),
                     "month": current_date.strftime("%b"),
                     "is_selected": current_date == selected_date,
+                    "availability_status": availability_status,
                 }
             )
 
@@ -471,11 +495,25 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
         selected_date = self.get_selected_date()
 
         slots = []
+        availability_status = {
+            "type": "no_service",
+            "is_fully_blocked": False,
+            "title": "Nenhum serviço selecionado",
+            "message": "Escolha um serviço ativo para consultar a disponibilidade.",
+            "icon": "bi-calendar2-week",
+            "block_title": "",
+            "block_notes": "",
+        }
 
         if selected_service:
             slots = self.get_available_slots_for(
                 selected_service,
                 selected_date,
+            )
+            availability_status = AvailabilityService.get_availability_status(
+                selected_service,
+                selected_date,
+                public_safe=True,
             )
 
         context["service_categories"] = (
@@ -509,7 +547,8 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
         context["selected_service"] = selected_service
         context["selected_date"] = selected_date
         context["slots"] = slots
-        context["week_days"] = self.get_week_days(selected_date)
+        context["availability_status"] = availability_status
+        context["week_days"] = self.get_week_days(selected_date, selected_service)
 
         return context
 

@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
@@ -126,27 +128,131 @@ class AvailabilityService:
                 )
 
     @classmethod
-    def get_available_slots(cls, service, selected_date):
+    def get_availability_status(cls, service, selected_date, public_safe=False):
+        business_hour = cls.get_business_hour(selected_date)
+
+        if not business_hour:
+            return {
+                "type": "closed",
+                "is_fully_blocked": True,
+                "title": "Dia sem atendimento",
+                "message": "Não existe horário de funcionamento ativo para esta data.",
+                "icon": "bi-calendar-x",
+                "block_title": "",
+                "block_notes": "",
+            }
+
+        business_start = datetime.combine(selected_date, business_hour.start_time)
+        business_end = datetime.combine(selected_date, business_hour.end_time)
+
+        for block in cls.get_active_blocks_for_date(selected_date):
+            block_start = block.get_start_datetime_for_date(selected_date)
+            block_end = block.get_end_datetime_for_date(selected_date)
+
+            if block.is_full_day or (
+                block_start <= business_start and block_end >= business_end
+            ):
+                status = {
+                    "type": "full_day_blocked",
+                    "is_fully_blocked": True,
+                    "title": "Horários esgotados",
+                    "message": "Horários esgotados, favor verificar outro dia.",
+                    "icon": "bi-clock-history",
+                    "block_title": "",
+                    "block_notes": "",
+                }
+
+                if not public_safe:
+                    status.update(
+                        {
+                            "title": "Dia totalmente bloqueado",
+                            "message": "Esta data está indisponível para marcações.",
+                            "icon": "bi-slash-circle",
+                            "block_title": block.title,
+                            "block_notes": block.notes,
+                        }
+                    )
+
+                return status
+
+        if service and public_safe:
+            slots = cls.get_public_available_slots(service, selected_date)
+        else:
+            slots = cls.get_available_slots(service, selected_date) if service else []
+
+        if service and not slots:
+            return {
+                "type": "no_slots",
+                "is_fully_blocked": False,
+                "title": "Horários esgotados",
+                "message": "Horários esgotados, favor verificar outro dia.",
+                "icon": "bi-clock-history",
+                "block_title": "",
+                "block_notes": "",
+            }
+
+        return {
+            "type": "available",
+            "is_fully_blocked": False,
+            "title": "Horários disponíveis",
+            "message": "Escolha um horário disponível para concluir a marcação.",
+            "icon": "bi-calendar-check",
+            "block_title": "",
+            "block_notes": "",
+        }
+
+    @classmethod
+    def get_full_day_block_for_date(cls, selected_date, business_hour=None):
+        business_hour = business_hour or cls.get_business_hour(selected_date)
+
+        if not business_hour:
+            return None
+
+        business_start = datetime.combine(selected_date, business_hour.start_time)
+        business_end = datetime.combine(selected_date, business_hour.end_time)
+
+        for block in cls.get_active_blocks_for_date(selected_date):
+            block_start = block.get_start_datetime_for_date(selected_date)
+            block_end = block.get_end_datetime_for_date(selected_date)
+
+            if block.is_full_day or (
+                block_start <= business_start and block_end >= business_end
+            ):
+                return block
+
+        return None
+
+    @classmethod
+    def get_available_slots(
+        cls,
+        service,
+        selected_date,
+        enforce_minimum_advance=False,
+    ):
         business_hour = cls.get_business_hour(selected_date)
 
         if not business_hour:
             return []
 
-        now = timezone.localtime()
         current_datetime = datetime.combine(selected_date, business_hour.start_time)
         business_end_datetime = datetime.combine(selected_date, business_hour.end_time)
+        public_cutoff_datetime = None
 
-        if selected_date == now.date():
-            current_datetime = max(
-                current_datetime,
-                now.replace(second=0, microsecond=0).replace(tzinfo=None),
+        if enforce_minimum_advance:
+            public_cutoff_datetime = cls.get_public_booking_cutoff_datetime(
+                selected_date
             )
 
-            minute = current_datetime.minute
-            if minute % cls.slot_minutes != 0:
-                current_datetime += timedelta(
-                    minutes=cls.slot_minutes - (minute % cls.slot_minutes)
+            if public_cutoff_datetime:
+                if public_cutoff_datetime > business_end_datetime:
+                    return []
+
+                current_datetime = max(
+                    current_datetime,
+                    public_cutoff_datetime,
                 )
+
+        current_datetime = cls.round_datetime_up_to_slot(current_datetime)
 
         appointments = cls.get_active_appointments_for_date(selected_date)
         blocks = cls.get_active_blocks_for_date(selected_date)
@@ -163,7 +269,13 @@ class AvailabilityService:
                 slot_start, slot_end, appointments, blocks, selected_date
             )
 
-            if not has_conflict:
+            violates_public_cutoff = (
+                enforce_minimum_advance
+                and public_cutoff_datetime
+                and slot_start < public_cutoff_datetime
+            )
+
+            if not has_conflict and not violates_public_cutoff:
                 available_slots.append(
                     AvailableSlot(
                         value=slot_start.strftime("%H:%M"),
@@ -174,6 +286,128 @@ class AvailabilityService:
             current_datetime += timedelta(minutes=cls.slot_minutes)
 
         return available_slots
+
+    @classmethod
+    def get_public_available_slots(cls, service, selected_date):
+        # Public booking must never expose a slot in the past. It must also
+        # respect the configured minimum lead time for same-day bookings.
+        slots = cls.get_available_slots(
+            service=service,
+            selected_date=selected_date,
+            enforce_minimum_advance=True,
+        )
+
+        return cls.filter_public_slots_by_cutoff(
+            slots=slots,
+            selected_date=selected_date,
+        )
+
+    @classmethod
+    def filter_public_slots_by_cutoff(cls, slots, selected_date):
+        # Last line of defence before returning public slots. Even if another
+        # caller builds slots incorrectly, the public response cannot include
+        # any slot before the current public booking cutoff.
+        public_cutoff_datetime = cls.get_public_booking_cutoff_datetime(selected_date)
+
+        if not public_cutoff_datetime:
+            return slots
+
+        filtered_slots = []
+
+        for slot in slots:
+            try:
+                slot_time = datetime.strptime(slot["value"], "%H:%M").time()
+            except (KeyError, TypeError, ValueError):
+                continue
+
+            slot_datetime = datetime.combine(selected_date, slot_time)
+
+            if slot_datetime >= public_cutoff_datetime:
+                filtered_slots.append(slot)
+
+        return filtered_slots
+
+    @classmethod
+    def get_public_booking_cutoff_datetime(cls, selected_date):
+        # Public bookings cannot show past slots. For today, the effective cutoff
+        # is the latest value between now and now + PUBLIC_BOOKING_MIN_ADVANCE_HOURS.
+        # Example: if now is 09:00 and the minimum advance is 3 hours, the cutoff
+        # is 12:00. If 12:00 is blocked by lunch, normal conflict validation will
+        # skip it and expose the next valid slot.
+        now = cls.get_public_booking_now().replace(second=0, microsecond=0)
+
+        if selected_date < now.date():
+            return datetime.combine(selected_date, datetime.max.time())
+
+        if selected_date > now.date():
+            return None
+
+        minimum_advance_hours = getattr(
+            settings,
+            "PUBLIC_BOOKING_MIN_ADVANCE_HOURS",
+            3,
+        )
+
+        minimum_start = now + timedelta(hours=minimum_advance_hours)
+
+        return max(now, minimum_start).replace(
+            second=0,
+            microsecond=0,
+        )
+
+    @classmethod
+    def get_minimum_public_booking_start_datetime(cls, selected_date):
+        # Backward-compatible alias for older callers.
+        return cls.get_public_booking_cutoff_datetime(selected_date)
+
+    @classmethod
+    def public_slot_is_bookable(cls, selected_date, start_time_value):
+        # Used by public form submission to block manual URL tampering such as
+        # /marcar/?date=today&start_time=09:00 after 09:00 has already passed.
+        public_cutoff_datetime = cls.get_public_booking_cutoff_datetime(selected_date)
+
+        if not public_cutoff_datetime:
+            return True
+
+        if hasattr(start_time_value, "strftime"):
+            slot_time = start_time_value
+        else:
+            try:
+                slot_time = datetime.strptime(str(start_time_value), "%H:%M").time()
+            except ValueError:
+                return False
+
+        slot_datetime = datetime.combine(selected_date, slot_time)
+
+        return slot_datetime >= public_cutoff_datetime
+
+    @classmethod
+    def get_public_booking_now(cls):
+        # Use the public booking timezone explicitly. This avoids exposing stale
+        # same-day slots when the server timezone differs from the business
+        # timezone used by the agenda.
+        timezone_name = getattr(
+            settings,
+            "PUBLIC_BOOKING_TIME_ZONE",
+            getattr(settings, "TIME_ZONE", "Europe/Lisbon"),
+        )
+
+        try:
+            booking_timezone = ZoneInfo(timezone_name)
+        except ZoneInfoNotFoundError:
+            booking_timezone = timezone.get_current_timezone()
+
+        return timezone.now().astimezone(booking_timezone).replace(tzinfo=None)
+
+    @classmethod
+    def round_datetime_up_to_slot(cls, value):
+        minute = value.minute
+        remainder = minute % cls.slot_minutes
+
+        if remainder:
+            value += timedelta(minutes=cls.slot_minutes - remainder)
+
+        return value.replace(second=0, microsecond=0)
 
     @classmethod
     def _has_conflict(cls, slot_start, slot_end, appointments, blocks, selected_date):

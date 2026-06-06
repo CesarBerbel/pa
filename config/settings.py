@@ -53,6 +53,20 @@ if HOME_HERO_LAYOUT not in HOME_HERO_LAYOUT_CHOICES:
 
 
 # =============================================================================
+# Public bookings
+# =============================================================================
+
+PUBLIC_BOOKING_MIN_ADVANCE_HOURS = config(
+    "PUBLIC_BOOKING_MIN_ADVANCE_HOURS",
+    default=3,
+    cast=int,
+)
+
+if PUBLIC_BOOKING_MIN_ADVANCE_HOURS < 0:
+    PUBLIC_BOOKING_MIN_ADVANCE_HOURS = 0
+
+
+# =============================================================================
 # Applications
 # =============================================================================
 
@@ -208,6 +222,11 @@ AUTH_PASSWORD_VALIDATORS = [
 LANGUAGE_CODE = config("LANGUAGE_CODE", default="pt-pt")
 
 TIME_ZONE = config("TIME_ZONE", default="Europe/Lisbon")
+
+PUBLIC_BOOKING_TIME_ZONE = config(
+    "PUBLIC_BOOKING_TIME_ZONE",
+    default=TIME_ZONE,
+).strip()
 
 USE_I18N = True
 

@@ -59,15 +59,25 @@ class VisualScheduleView(SuperuserRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         selected_date = self.get_selected_date()
-        business_hour, slots = AvailabilityService.build_visual_slots(
+        business_hour = AvailabilityService.get_business_hour(selected_date)
+        full_day_block = AvailabilityService.get_full_day_block_for_date(
             selected_date=selected_date,
-            slot_minutes=self.slot_minutes,
+            business_hour=business_hour,
         )
+
+        slots = []
+
+        if business_hour and not full_day_block:
+            business_hour, slots = AvailabilityService.build_visual_slots(
+                selected_date=selected_date,
+                slot_minutes=self.slot_minutes,
+            )
 
         context["selected_date"] = selected_date
         context["previous_date"] = selected_date - timedelta(days=1)
         context["next_date"] = selected_date + timedelta(days=1)
         context["business_hour"] = business_hour
+        context["full_day_block"] = full_day_block
         context["slots"] = slots
 
         return context
