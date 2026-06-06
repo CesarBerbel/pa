@@ -37,6 +37,66 @@ CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS", default="")
 
 INTERNAL_IPS = env_list("INTERNAL_IPS", default="127.0.0.1") if DEBUG else []
 
+
+# =============================================================================
+# SEO / public search configuration
+# =============================================================================
+
+SEO_SITE_NAME = config("SEO_SITE_NAME", default="Priscila Arantes PA")
+
+SEO_DEFAULT_TITLE = config(
+    "SEO_DEFAULT_TITLE",
+    default="Priscila Arantes PA | Podologia, estética e enfermagem em Coimbra",
+)
+
+SEO_DEFAULT_DESCRIPTION = config(
+    "SEO_DEFAULT_DESCRIPTION",
+    default=(
+        "Atendimento profissional em podologia, manicure, pedicure e enfermagem "
+        "em Coimbra. Consulte serviços e marque o seu horário online."
+    ),
+)
+
+SEO_DEFAULT_KEYWORDS = config(
+    "SEO_DEFAULT_KEYWORDS",
+    default=(
+        "podologia Coimbra, manicure Coimbra, pedicure Coimbra, enfermagem Coimbra, "
+        "tratamento pés diabéticos, unha em gel, troca de penso"
+    ),
+)
+
+SEO_DEFAULT_IMAGE_PATH = config(
+    "SEO_DEFAULT_IMAGE_PATH",
+    default="/static/img/logo.png",
+)
+
+SEO_LOCALE = config("SEO_LOCALE", default="pt_PT")
+
+SEO_THEME_COLOR = config("SEO_THEME_COLOR", default="#a8755f")
+
+SEO_ROBOTS_DEFAULT = config("SEO_ROBOTS_DEFAULT", default="index,follow")
+
+SEO_BUSINESS_PHONE = config("SEO_BUSINESS_PHONE", default="+351910191046")
+
+SEO_BUSINESS_EMAIL = config("SEO_BUSINESS_EMAIL", default="atendimento@priarantes.com")
+
+SEO_BUSINESS_STREET_ADDRESS = config(
+    "SEO_BUSINESS_STREET_ADDRESS",
+    default="R. Vale de São Miguel 5",
+)
+
+SEO_BUSINESS_LOCALITY = config("SEO_BUSINESS_LOCALITY", default="Coimbra")
+
+SEO_BUSINESS_POSTAL_CODE = config("SEO_BUSINESS_POSTAL_CODE", default="3020-113")
+
+SEO_BUSINESS_COUNTRY = config("SEO_BUSINESS_COUNTRY", default="PT")
+
+SEO_BUSINESS_AREA_SERVED = config("SEO_BUSINESS_AREA_SERVED", default="Coimbra")
+
+SEO_BUSINESS_OPENS_AT = config("SEO_BUSINESS_OPENS_AT", default="08:00")
+
+SEO_BUSINESS_CLOSES_AT = config("SEO_BUSINESS_CLOSES_AT", default="20:00")
+
 # =============================================================================
 # Public homepage
 # =============================================================================
@@ -127,6 +187,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "config.context_processors.seo_settings",
             ],
         },
     },

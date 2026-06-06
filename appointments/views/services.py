@@ -6,6 +6,7 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView, TemplateView, UpdateView
 
 from appointments.forms import ServiceForm
+from config.seo import build_service_feed_structured_data
 from appointments.models import Appointment, Service, ServiceCategory
 
 
@@ -16,7 +17,7 @@ class PublicServiceFeedView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["service_categories"] = (
+        service_categories = (
             ServiceCategory.objects.filter(
                 is_active=True,
                 services__is_active=True,
@@ -30,6 +31,12 @@ class PublicServiceFeedView(TemplateView):
             .distinct()
             .order_by("display_order", "name")
         )
+
+        context["service_categories"] = service_categories
+        context["service_feed_structured_data"] = build_service_feed_structured_data(
+            service_categories
+        )
+
         return context
 
 

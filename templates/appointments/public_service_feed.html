@@ -1,6 +1,20 @@
 {% extends "base.html" %}
 
-{% block title %}Serviços | Priscila Arantes PA{% endblock %}
+{% block title %}Serviços | Podologia, manicure, pedicure e enfermagem em Coimbra{% endblock %}
+{% block meta_description %}Conheça os serviços de podologia, manicure, pedicure e enfermagem da Priscila Arantes PA em Coimbra e marque online o seu horário.{% endblock %}
+{% block meta_keywords %}serviços podologia Coimbra, manicure Coimbra, pedicure Coimbra, enfermagem Coimbra, unha em gel, pés diabéticos, troca de penso{% endblock %}
+{% block og_title %}Serviços | Priscila Arantes PA{% endblock %}
+{% block og_description %}Serviços organizados por categoria para marcação online em Coimbra: podologia, manicure, pedicure e enfermagem.{% endblock %}
+{% block twitter_title %}Serviços | Priscila Arantes PA{% endblock %}
+{% block twitter_description %}Veja categorias e serviços disponíveis e marque online o seu horário.{% endblock %}
+
+{% block structured_data %}
+    {% if service_feed_structured_data %}
+        <script type="application/ld+json">
+            {{ service_feed_structured_data|safe }}
+        </script>
+    {% endif %}
+{% endblock %}
 
 {% block content %}
 <section class="one-page-section service-feed-page mb-5">
