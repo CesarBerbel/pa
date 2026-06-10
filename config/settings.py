@@ -462,6 +462,56 @@ EMAIL_TIMEOUT = config("EMAIL_TIMEOUT", default=30, cast=int)
 
 
 # =============================================================================
+# WhatsApp Cloud API
+# =============================================================================
+
+WHATSAPP_CLOUD_API_ENABLED = config(
+    "WHATSAPP_CLOUD_API_ENABLED",
+    default=False,
+    cast=bool,
+)
+
+WHATSAPP_CLOUD_API_VERSION = config(
+    "WHATSAPP_CLOUD_API_VERSION",
+    default="v23.0",
+).strip()
+
+WHATSAPP_PHONE_NUMBER_ID = config(
+    "WHATSAPP_PHONE_NUMBER_ID",
+    default="",
+).strip()
+
+WHATSAPP_ACCESS_TOKEN = config(
+    "WHATSAPP_ACCESS_TOKEN",
+    default="",
+).strip()
+
+WHATSAPP_TEMPLATE_NAME = config(
+    "WHATSAPP_TEMPLATE_NAME",
+    default="marcacao",
+).strip()
+
+WHATSAPP_TEMPLATE_LANGUAGE_CODE = config(
+    "WHATSAPP_TEMPLATE_LANGUAGE_CODE",
+    default="pt_PT",
+).strip()
+
+WHATSAPP_TEMPLATE_BODY_PARAMETERS = env_list(
+    "WHATSAPP_TEMPLATE_BODY_PARAMETERS",
+    default=(
+        "customer_name,service_name,appointment_date,"
+        "appointment_time,reference_code"
+    ),
+)
+
+WHATSAPP_REQUEST_TIMEOUT = config(
+    "WHATSAPP_REQUEST_TIMEOUT",
+    default=15,
+    cast=int,
+)
+
+
+# =============================================================================
 # Logging
 # =============================================================================
 

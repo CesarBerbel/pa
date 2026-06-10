@@ -92,6 +92,7 @@
                     <a class="nav-link" data-section-link href="{% url 'home' %}#servicos">Serviços</a>
                     <a class="nav-link" data-section-link href="{% url 'home' %}#testemunhos">Testemunhos</a>
                     <a class="nav-link" data-section-link href="{% url 'home' %}#contato">Contato</a>
+                    <a class="nav-link" href="{% url 'privacy_policy' %}">Privacidade</a>
                     {% if user.is_authenticated and not user.is_superuser %}
                         <a class="nav-link" href="{% url 'appointments:customer_appointments' %}">
                             Minhas marcações

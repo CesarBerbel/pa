@@ -165,3 +165,83 @@ class EmailEventSetting(models.Model):
             return self.event_type
 
         return f"reminder_{self.lead_time_value}_{self.lead_time_unit}"
+
+
+
+class WhatsAppMessageLog(models.Model):
+    # Stores WhatsApp Cloud API sending attempts for audit and duplicate prevention.
+
+    EVENT_APPOINTMENT_CONFIRMED = "appointment_confirmed"
+
+    EVENT_CHOICES = (
+        (EVENT_APPOINTMENT_CONFIRMED, "Marcação confirmada"),
+    )
+
+    STATUS_SUCCESS = "success"
+    STATUS_ERROR = "error"
+    STATUS_SKIPPED = "skipped"
+
+    STATUS_CHOICES = (
+        (STATUS_SUCCESS, "Sucesso"),
+        (STATUS_ERROR, "Erro"),
+        (STATUS_SKIPPED, "Ignorado"),
+    )
+
+    appointment = models.ForeignKey(
+        "appointments.Appointment",
+        on_delete=models.CASCADE,
+        related_name="whatsapp_logs",
+    )
+
+    event_type = models.CharField(
+        max_length=50,
+        choices=EVENT_CHOICES,
+    )
+
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+    )
+
+    template_name = models.CharField(
+        max_length=100,
+    )
+
+    recipient_phone = models.CharField(
+        max_length=30,
+    )
+
+    whatsapp_message_id = models.CharField(
+        max_length=255,
+        blank=True,
+    )
+
+    request_payload = models.TextField(
+        blank=True,
+    )
+
+    response_payload = models.TextField(
+        blank=True,
+    )
+
+    error_message = models.TextField(
+        blank=True,
+    )
+
+    sent_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-sent_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["appointment", "event_type", "template_name"],
+                condition=Q(status="success"),
+                name="unique_success_whatsapp_per_appointment_event_template",
+            ),
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.appointment.reference_code} - "
+            f"{self.template_name} - {self.status}"
+        )
