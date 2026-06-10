@@ -59,11 +59,13 @@ class AppointmentCancellationFlowTests(TestCase):
 
         self.appointment_date = timezone.localdate() + timedelta(days=7)
 
-        BusinessHour.objects.create(
+        BusinessHour.objects.update_or_create(
             weekday=self.appointment_date.weekday(),
-            start_time="09:00",
-            end_time="18:00",
-            is_active=True,
+            defaults={
+                "start_time": "09:00",
+                "end_time": "18:00",
+                "is_active": True,
+            },
         )
 
         self.appointment = Appointment.objects.create(

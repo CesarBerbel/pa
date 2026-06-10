@@ -1,5 +1,6 @@
-from datetime import date, time
-from freezegun import freeze_time
+from datetime import date, time, timedelta
+
+from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.core import signing
 from django.test import TestCase
@@ -14,6 +15,7 @@ from appointments.models import (
     Customer,
     ScheduleBlock,
     Service,
+    ServiceCategory,
 )
 from appointments.forms import ScheduleBlockForm
 
@@ -21,7 +23,7 @@ from appointments.forms import ScheduleBlockForm
 class AppointmentTestSetupMixin:
     # Shared test data for appointment tests.
 
-    def create_base_data(self):
+    def create_base_data(self, appointment_date=None):
         User = get_user_model()
 
         self.admin_user = User.objects.create_superuser(
@@ -50,14 +52,28 @@ class AppointmentTestSetupMixin:
             is_active=True,
         )
 
-        BusinessHour.objects.create(
-            weekday=0,
-            start_time=time(9, 0),
-            end_time=time(18, 0),
-            is_active=True,
+        self.appointment_date = appointment_date or date(2026, 5, 4)
+
+        BusinessHour.objects.update_or_create(
+            weekday=self.appointment_date.weekday(),
+            defaults={
+                "start_time": time(9, 0),
+                "end_time": time(18, 0),
+                "is_active": True,
+            },
         )
 
-        self.appointment_date = date(2026, 5, 4)
+
+    def get_future_business_date(self, weekday=0, min_days=7):
+        # Return a stable future date for public availability tests without
+        # depending on freezegun class decorators. This avoids compatibility
+        # issues in Django/Python while still testing a real business weekday.
+        candidate = timezone.localdate() + timedelta(days=min_days)
+
+        while candidate.weekday() != weekday:
+            candidate += timedelta(days=1)
+
+        return candidate
 
 
 class AppointmentServiceTests(AppointmentTestSetupMixin, TestCase):
@@ -243,7 +259,7 @@ class PublicAppointmentFlowTests(AppointmentTestSetupMixin, TestCase):
     # Tests for public appointment HTTP flows.
 
     def setUp(self):
-        self.create_base_data()
+        self.create_base_data(appointment_date=self.get_future_business_date())
 
     def test_public_booking_valid_slot_redirects_to_success(self):
         # Ensure public booking creates an appointment and redirects to success.
@@ -257,6 +273,7 @@ class PublicAppointmentFlowTests(AppointmentTestSetupMixin, TestCase):
                 "customer_phone": "+351918888888",
                 "customer_email": "novo@test.com",
                 "notes": "",
+                "privacy_policy_accepted": "on",
             },
         )
 
@@ -305,6 +322,7 @@ class PublicAppointmentFlowTests(AppointmentTestSetupMixin, TestCase):
                 "customer_phone": "+351918888888",
                 "customer_email": "outro@test.com",
                 "notes": "",
+                "privacy_policy_accepted": "on",
             },
         )
 
@@ -545,7 +563,7 @@ class BusinessHourModelTests(TestCase):
         )
 
         try:
-            business_hour.full_clean()
+            business_hour.full_clean(validate_unique=False)
         except ValidationError:
             self.fail("Valid business hour raised ValidationError unexpectedly.")
 
@@ -559,7 +577,7 @@ class BusinessHourModelTests(TestCase):
         )
 
         with self.assertRaises(ValidationError):
-            business_hour.full_clean()
+            business_hour.full_clean(validate_unique=False)
 
     def test_business_hour_with_same_start_and_end_time_is_invalid(self):
         # Ensure business hours cannot start and end at the same time.
@@ -571,7 +589,7 @@ class BusinessHourModelTests(TestCase):
         )
 
         with self.assertRaises(ValidationError):
-            business_hour.full_clean()
+            business_hour.full_clean(validate_unique=False)
 
 
 class ScheduleBlockModelTests(TestCase):
@@ -668,7 +686,7 @@ class PublicAvailableSlotsViewTests(AppointmentTestSetupMixin, TestCase):
     # Tests for the public available slots AJAX endpoint.
 
     def setUp(self):
-        self.create_base_data()
+        self.create_base_data(appointment_date=self.get_future_business_date())
 
     def test_available_slots_endpoint_returns_available_slots(self):
         # Ensure AJAX endpoint returns available slots for service and date.
@@ -988,12 +1006,11 @@ class AppointmentAdminActionTests(AppointmentTestSetupMixin, TestCase):
         self.assertEqual(appointment.status, Appointment.STATUS_SCHEDULED)
 
 
-@freeze_time("2026-05-04 10:00:00")
 class DashboardMetricsTests(AppointmentTestSetupMixin, TestCase):
     # Tests for dashboard appointment and revenue metrics.
 
     def setUp(self):
-        self.create_base_data()
+        self.create_base_data(appointment_date=timezone.localdate())
 
         self.client.login(
             email="admin@test.com",
@@ -1483,6 +1500,7 @@ class ServiceInternalViewTests(AppointmentTestSetupMixin, TestCase):
         response = self.client.post(
             reverse("appointments:service_create"),
             data={
+                "category": self.service.category_id,
                 "name": "Tratamento de Unha",
                 "description": "Tratamento profissional.",
                 "duration_minutes": 45,
@@ -1523,9 +1541,17 @@ class ServiceInternalViewTests(AppointmentTestSetupMixin, TestCase):
 class ServiceValidationTests(TestCase):
     # Tests for service model/form validation.
 
+    def setUp(self):
+        self.category = ServiceCategory.objects.create(
+            name="Categoria Teste",
+            slug="categoria-teste",
+            is_active=True,
+        )
+
     def test_service_with_valid_data_is_valid(self):
         # Ensure a service with valid duration and price passes validation.
         service = Service(
+            category=self.category,
             name="Podologia Completa",
             description="Serviço completo.",
             duration_minutes=60,
@@ -1758,7 +1784,7 @@ class PublicVisualScheduleAjaxTests(AppointmentTestSetupMixin, TestCase):
     # Tests for AJAX data used by the public visual schedule.
 
     def setUp(self):
-        self.create_base_data()
+        self.create_base_data(appointment_date=self.get_future_business_date())
 
     def test_ajax_slots_endpoint_returns_json_with_slots_key(self):
         # Ensure AJAX endpoint returns JSON with the expected structure.

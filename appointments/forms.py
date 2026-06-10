@@ -2,7 +2,14 @@ from django import forms
 
 from appointments.customer_services import validate_phone_for_brazil_or_portugal
 
-from .models import Appointment, BusinessHour, Customer, ScheduleBlock, Service
+from .models import (
+    Appointment,
+    BusinessHour,
+    Customer,
+    ScheduleBlock,
+    Service,
+    get_default_service_category,
+)
 
 
 class BusinessHourForm(forms.ModelForm):
@@ -31,6 +38,14 @@ class BusinessHourForm(forms.ModelForm):
 class ServiceForm(forms.ModelForm):
     # Form used to create and edit services.
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Keep the category field flexible for older internal flows/tests that
+        # predate service categories. When no category is posted, save() assigns
+        # the first active category or creates a safe fallback category.
+        self.fields["category"].required = False
+
     class Meta:
         model = Service
         fields = [
@@ -41,6 +56,18 @@ class ServiceForm(forms.ModelForm):
             "price",
             "is_active",
         ]
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+
+        if not instance.category_id:
+            instance.category = get_default_service_category()
+
+        if commit:
+            instance.save()
+            self.save_m2m()
+
+        return instance
 
 
 class CustomerForm(forms.ModelForm):

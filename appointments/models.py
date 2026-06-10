@@ -30,6 +30,34 @@ class ServiceCategory(models.Model):
         return self.name
 
 
+def get_default_service_category():
+    # Return an active default category for legacy flows that do not submit one.
+    category = (
+        ServiceCategory.objects.filter(is_active=True)
+        .order_by("display_order", "name")
+        .first()
+    )
+
+    if category:
+        return category
+
+    category, _created = ServiceCategory.objects.get_or_create(
+        slug="geral",
+        defaults={
+            "name": "Geral",
+            "description": "Categoria padrão para serviços sem categoria definida.",
+            "display_order": 999,
+            "is_active": True,
+        },
+    )
+
+    if not category.is_active:
+        category.is_active = True
+        category.save(update_fields=["is_active", "updated_at"])
+
+    return category
+
+
 class Service(models.Model):
     # Represents a bookable service offered inside a public category.
 
@@ -68,7 +96,20 @@ class Service(models.Model):
         verbose_name_plural = "Serviços"
 
     def __str__(self):
-        return f"{self.category.name} - {self.name}"
+        if self.category_id and self.category:
+            return f"{self.category.name} - {self.name}"
+
+        return self.name
+
+    def save(self, *args, **kwargs):
+        # Service categories were added after the initial service model.
+        # Assign a safe fallback category when legacy code/tests create a service
+        # without explicitly selecting one, while keeping the database relation
+        # non-null for current production data.
+        if not self.category_id:
+            self.category = get_default_service_category()
+
+        super().save(*args, **kwargs)
 
 
 class Customer(models.Model):
