@@ -55,12 +55,19 @@ class CriticalArchitectureTestMixin:
             is_active=True,
         )
         self.appointment_date = timezone.localdate() + timedelta(days=14)
-        BusinessHour.objects.create(
+        BusinessHour.objects.update_or_create(
             weekday=self.appointment_date.weekday(),
-            start_time=time(9, 0),
-            end_time=time(18, 0),
-            is_active=True,
+            defaults={
+                "start_time": time(9, 0),
+                "end_time": time(18, 0),
+                "is_active": True,
+            },
         )
+        ScheduleBlock.objects.filter(
+            title="Almoço",
+            block_type=ScheduleBlock.BLOCK_TYPE_BREAK,
+            is_recurring=True,
+        ).delete()
 
     def create_appointment(self, **overrides):
         data = {
