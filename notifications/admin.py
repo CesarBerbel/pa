@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import path, reverse
 from django.utils.html import format_html
 
-from .models import EmailEventSetting, EmailTemplate
+from .models import EmailEventSetting, EmailTemplate, WhatsAppMessageLog
 from .services import EmailTemplateService
 
 
@@ -201,3 +201,80 @@ class EmailEventSettingAdmin(admin.ModelAdmin):
         return f"-{obj.window_before_minutes} min / +{obj.window_after_minutes} min"
 
     window_display.short_description = "Janela de envio"
+
+
+
+@admin.register(WhatsAppMessageLog)
+class WhatsAppMessageLogAdmin(admin.ModelAdmin):
+    # Read-only audit screen for WhatsApp Cloud API sending attempts.
+
+    list_display = (
+        "sent_at",
+        "appointment",
+        "event_type",
+        "status",
+        "template_name",
+        "recipient_phone",
+        "whatsapp_message_id",
+    )
+
+    list_filter = (
+        "status",
+        "event_type",
+        "template_name",
+        "sent_at",
+    )
+
+    search_fields = (
+        "appointment__reference_code",
+        "appointment__customer__full_name",
+        "recipient_phone",
+        "whatsapp_message_id",
+        "error_message",
+    )
+
+    readonly_fields = (
+        "appointment",
+        "event_type",
+        "status",
+        "template_name",
+        "recipient_phone",
+        "whatsapp_message_id",
+        "request_payload",
+        "response_payload",
+        "error_message",
+        "sent_at",
+    )
+
+    fieldsets = (
+        (
+            "Identificação",
+            {
+                "fields": (
+                    "appointment",
+                    "event_type",
+                    "status",
+                    "template_name",
+                    "recipient_phone",
+                    "whatsapp_message_id",
+                    "sent_at",
+                ),
+            },
+        ),
+        (
+            "Payloads e erro",
+            {
+                "fields": (
+                    "request_payload",
+                    "response_payload",
+                    "error_message",
+                ),
+            },
+        ),
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False

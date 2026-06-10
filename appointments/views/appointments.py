@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import messages
 from appointments.mixins import SuperuserRequiredMixin, LoginRequiredMixin
 from django.shortcuts import redirect
@@ -11,6 +12,7 @@ from appointments.forms import AppointmentCancelForm, AppointmentForm
 from appointments.models import Appointment, AppointmentLog, Service
 from appointments.selectors import AppointmentFilters, AppointmentSelectors
 from appointments.use_cases import ConfirmAppointmentUseCase, CompleteAppointmentUseCase
+from notifications.whatsapp import WhatsAppAppointmentNotificationService
 
 
 class AppointmentListView(SuperuserRequiredMixin, ListView):
@@ -96,16 +98,62 @@ class AppointmentUpdateView(SuperuserRequiredMixin, UpdateView):
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
-        messages.success(self.request, "Marcação atualizada com sucesso.")
+        previous_status = Appointment.objects.values_list(
+            "status",
+            flat=True,
+        ).get(pk=self.object.pk)
+
+        response = super().form_valid(form)
 
         AppointmentAuditService.log(
-            appointment=form.instance,
+            appointment=self.object,
             action=AppointmentLog.ACTION_UPDATE,
             user=self.request.user,
             description="Appointment updated.",
         )
 
-        return super().form_valid(form)
+        was_confirmed_now = (
+            previous_status != Appointment.STATUS_CONFIRMED
+            and self.object.status == Appointment.STATUS_CONFIRMED
+        )
+
+        if was_confirmed_now:
+            AppointmentAuditService.log(
+                appointment=self.object,
+                action=AppointmentLog.ACTION_CONFIRM,
+                user=self.request.user,
+                description="Appointment confirmed by status update.",
+            )
+
+            whatsapp_result = WhatsAppAppointmentNotificationService.send_confirmation(
+                self.object
+            )
+
+            if whatsapp_result.success:
+                should_show_whatsapp_message = (
+                    not whatsapp_result.skipped or settings.WHATSAPP_CLOUD_API_ENABLED
+                )
+
+                if should_show_whatsapp_message:
+                    messages.success(
+                        self.request,
+                        f"Marcação atualizada com sucesso. {whatsapp_result.message}",
+                    )
+                else:
+                    messages.success(
+                        self.request,
+                        "Marcação atualizada com sucesso.",
+                    )
+            else:
+                messages.warning(
+                    self.request,
+                    "Marcação atualizada e confirmada, mas não foi possível "
+                    f"enviar o WhatsApp: {whatsapp_result.message}",
+                )
+        else:
+            messages.success(self.request, "Marcação atualizada com sucesso.")
+
+        return response
 
 
 class AppointmentCancelView(SuperuserRequiredMixin, UpdateView):
