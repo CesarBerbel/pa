@@ -2,6 +2,7 @@ from html import escape
 
 from django.conf import settings
 from django.http import HttpResponse
+from django.shortcuts import render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_GET
@@ -55,6 +56,18 @@ def sitemap_xml(request):
             "changefreq": "daily",
             "priority": "0.8",
         },
+        {
+            "loc": f"{site_url}{reverse('privacy_policy')}",
+            "lastmod": today,
+            "changefreq": "monthly",
+            "priority": "0.4",
+        },
+        {
+            "loc": f"{site_url}{reverse('cookie_policy')}",
+            "lastmod": today,
+            "changefreq": "monthly",
+            "priority": "0.4",
+        },
     ]
 
     url_entries = []
@@ -84,3 +97,17 @@ def sitemap_xml(request):
     )
 
     return HttpResponse(xml, content_type="application/xml; charset=utf-8")
+
+
+@require_GET
+def privacy_policy(request):
+    """Render the public privacy policy page."""
+
+    return render(request, "legal/privacy_policy.html")
+
+
+@require_GET
+def cookie_policy(request):
+    """Render the public cookie policy page."""
+
+    return render(request, "legal/cookie_policy.html")

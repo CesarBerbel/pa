@@ -137,6 +137,16 @@ class PublicAppointmentForm(forms.Form):
         widget=forms.Textarea(attrs={"rows": 3}),
     )
 
+    privacy_policy_accepted = forms.BooleanField(
+        label="Li e aceito a Política de Privacidade.",
+        required=True,
+        error_messages={
+            "required": (
+                "Tem de aceitar a Política de Privacidade para confirmar a marcação."
+            ),
+        },
+    )
+
     def clean_customer_phone(self):
         # Validate and normalize public customer phone before booking.
         phone = self.cleaned_data["customer_phone"]

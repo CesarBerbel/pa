@@ -160,6 +160,11 @@
                             <a href="{% url 'home' %}#sobre">Sobre</a>
                             <a href="{% url 'home' %}#servicos">Serviços</a>
                             <a href="{% url 'home' %}#testemunhos">Testemunhos</a>
+                            <a href="{% url 'privacy_policy' %}">Política de Privacidade</a>
+                            <a href="{% url 'cookie_policy' %}">Política de Cookies</a>
+                            <button type="button" class="footer-cookie-link" data-cookie-action="open-preferences">
+                                Gerir cookies
+                            </button>
                             {% if user.is_authenticated and not user.is_superuser %}
                                 <a class="nav-link" href="{% url 'appointments:customer_appointments' %}">
                                     Minhas marcações
@@ -193,7 +198,33 @@
                     </div>
 
                     <div class="footer-map mt-4">
-                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3045.723850692838!2d-8.432831510071974!3d40.23744179297737!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd22f9306abaa9c1%3A0xd8fcca084a76b7fa!2sR.%20Vale%20de%20S%C3%A3o%20Miguel%205%2C%203020-113%20Coimbra!5e0!3m2!1sen!2spt!4v1777382232889!5m2!1sen!2spt" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                        <div id="google-map-cookie-placeholder" class="cookie-map-placeholder">
+                            <i class="bi bi-geo-alt"></i>
+                            <div>
+                                <strong>Mapa bloqueado por preferências de cookies</strong>
+                                <p>
+                                    Para ver o mapa incorporado do Google, aceite cookies funcionais.
+                                    A marcação online continua disponível mesmo sem ativar esta opção.
+                                </p>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" data-cookie-action="open-preferences">
+                                    Gerir cookies
+                                </button>
+                            </div>
+                        </div>
+
+                        <iframe
+                            data-cookie-category="functional"
+                            data-cookie-placeholder="#google-map-cookie-placeholder"
+                            data-cookie-src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3045.723850692838!2d-8.432831510071974!3d40.23744179297737!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd22f9306abaa9c1%3A0xd8fcca084a76b7fa!2sR.%20Vale%20de%20S%C3%A3o%20Miguel%205%2C%203020-113%20Coimbra!5e0!3m2!1sen!2spt!4v1777382232889!5m2!1sen!2spt"
+                            title="Mapa com a localização da Priscila Arantes PA"
+                            width="600"
+                            height="450"
+                            style="border:0;"
+                            allowfullscreen=""
+                            loading="lazy"
+                            referrerpolicy="no-referrer-when-downgrade"
+                            hidden
+                        ></iframe>
                     </div>
                 </div>
 
@@ -201,10 +232,127 @@
 
             <div class="footer-bottom">
                 <span>© {% now "Y" %} Priscila Arantes. Todos os direitos reservados.</span>
+
+                <div class="footer-legal-links">
+                    <a href="{% url 'privacy_policy' %}">Política de Privacidade</a>
+                    <a href="{% url 'cookie_policy' %}">Política de Cookies</a>
+                    <button type="button" data-cookie-action="open-preferences">Gerir cookies</button>
+                </div>
             </div>
 
         </div>
     </footer>
+{% endif %}
+{% if not user.is_superuser %}
+    <section
+        id="cookie-consent-banner"
+        class="cookie-consent-banner"
+        aria-label="Aviso de cookies"
+        hidden
+    >
+        <div class="cookie-consent-content">
+            <div>
+                <span class="cookie-consent-kicker">Privacidade e cookies</span>
+                <h2>Este site utiliza cookies</h2>
+                <p>
+                    Usamos cookies necessários para funcionamento e segurança.
+                    Com a sua autorização, também podemos ativar recursos funcionais,
+                    analíticos e de marketing. Pode aceitar, rejeitar ou personalizar
+                    as suas preferências.
+                </p>
+                <a href="{% url 'cookie_policy' %}">Ler Política de Cookies</a>
+            </div>
+
+            <div class="cookie-consent-actions">
+                <button type="button" class="btn btn-primary" data-cookie-action="accept-all">
+                    Aceitar todos
+                </button>
+                <button type="button" class="btn btn-outline-secondary" data-cookie-action="reject-optional">
+                    Rejeitar opcionais
+                </button>
+                <button type="button" class="btn btn-link" data-cookie-action="open-preferences">
+                    Personalizar
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <div id="cookie-preferences-backdrop" class="cookie-preferences-backdrop" hidden></div>
+
+    <section
+        id="cookie-preferences-panel"
+        class="cookie-preferences-panel"
+        role="dialog"
+        aria-labelledby="cookie-preferences-title"
+        hidden
+    >
+        <div class="cookie-preferences-header">
+            <div>
+                <span class="cookie-consent-kicker">Centro de preferências</span>
+                <h2 id="cookie-preferences-title">Gerir cookies</h2>
+            </div>
+            <button
+                type="button"
+                class="cookie-preferences-close"
+                data-cookie-action="close-preferences"
+                aria-label="Fechar preferências de cookies"
+            >
+                ×
+            </button>
+        </div>
+
+        <p class="cookie-preferences-intro">
+            Pode ativar ou desativar categorias opcionais. Os cookies necessários
+            mantêm-se sempre ativos porque são indispensáveis para segurança,
+            formulários e funcionamento do site.
+        </p>
+
+        <div class="cookie-preference-list">
+            <label class="cookie-preference-item">
+                <input type="checkbox" data-cookie-preference="necessary" checked disabled>
+                <span>
+                    <strong>Necessários</strong>
+                    <small>Essenciais para sessão, segurança, formulários e gravação da escolha.</small>
+                </span>
+            </label>
+
+            <label class="cookie-preference-item">
+                <input type="checkbox" data-cookie-preference="functional">
+                <span>
+                    <strong>Funcionais</strong>
+                    <small>Permitem recursos como o mapa incorporado de localização.</small>
+                </span>
+            </label>
+
+            <label class="cookie-preference-item">
+                <input type="checkbox" data-cookie-preference="analytics">
+                <span>
+                    <strong>Analíticos</strong>
+                    <small>Ajudam a compreender a utilização do site, se forem configurados no futuro.</small>
+                </span>
+            </label>
+
+            <label class="cookie-preference-item">
+                <input type="checkbox" data-cookie-preference="marketing">
+                <span>
+                    <strong>Marketing</strong>
+                    <small>Permitem medição de campanhas e integrações publicitárias, se forem configuradas.</small>
+                </span>
+            </label>
+        </div>
+
+        <div class="cookie-preferences-actions">
+            <button type="button" class="btn btn-primary" data-cookie-action="save-preferences">
+                Guardar preferências
+            </button>
+            <button type="button" class="btn btn-outline-secondary" data-cookie-action="accept-all">
+                Aceitar todos
+            </button>
+            <button type="button" class="btn btn-link" data-cookie-action="reject-optional">
+                Rejeitar opcionais
+            </button>
+        </div>
+    </section>
 {% endif %}
 <!-- Floating WhatsApp button -->
 <a
@@ -229,6 +377,7 @@
 <script
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
 </script>
+<script src="{% static 'js/cookie_consent.js' %}"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const links = document.querySelectorAll("[data-section-link]");

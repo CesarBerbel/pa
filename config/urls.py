@@ -7,7 +7,7 @@ from django.urls import include, path
 from accounts.views import DashboardView
 from appointments.models import Service, ServiceCategory
 from config.seo import build_home_structured_data
-from config.views import robots_txt, sitemap_xml
+from config.views import cookie_policy, privacy_policy, robots_txt, sitemap_xml
 
 
 def home_view(request):
@@ -44,6 +44,8 @@ def home_view(request):
 urlpatterns = [
     path("robots.txt", robots_txt, name="robots_txt"),
     path("sitemap.xml", sitemap_xml, name="sitemap_xml"),
+    path("politica-de-privacidade/", privacy_policy, name="privacy_policy"),
+    path("politica-de-cookies/", cookie_policy, name="cookie_policy"),
     path("admin/", admin.site.urls),
     path("", home_view, name="home"),
     path("", include("accounts.urls")),
