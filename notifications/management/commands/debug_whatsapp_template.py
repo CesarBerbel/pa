@@ -128,7 +128,9 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         appointment = self.get_appointment(options["appointment_id"])
         context = self.build_context(appointment, options)
-        recipient_phone = self.get_recipient_phone(appointment, options["recipient_phone"])
+        recipient_phone = self.get_recipient_phone(
+            appointment, options["recipient_phone"]
+        )
         template_name = (options["template"] or settings.WHATSAPP_TEMPLATE_NAME).strip()
         language_code = (
             options["language"] or settings.WHATSAPP_TEMPLATE_LANGUAGE_CODE
@@ -165,9 +167,13 @@ class Command(BaseCommand):
             raise CommandError(settings_error)
 
         try:
-            response_payload = WhatsAppAppointmentNotificationService.post_message(payload)
+            response_payload = WhatsAppAppointmentNotificationService.post_message(
+                payload
+            )
         except (HTTPError, URLError, TimeoutError, ValueError) as error:
-            formatted_error = WhatsAppAppointmentNotificationService.format_api_error(error)
+            formatted_error = WhatsAppAppointmentNotificationService.format_api_error(
+                error
+            )
             raise CommandError(f"Falha no envio pela Meta API: {formatted_error}")
 
         self.stdout.write("")
@@ -180,14 +186,11 @@ class Command(BaseCommand):
             return None
 
         try:
-            return (
-                Appointment.objects.select_related(
-                    "customer",
-                    "service",
-                    "service__category",
-                )
-                .get(pk=appointment_id)
-            )
+            return Appointment.objects.select_related(
+                "customer",
+                "service",
+                "service__category",
+            ).get(pk=appointment_id)
         except Appointment.DoesNotExist as error:
             raise CommandError(
                 f"Não existe marcação com ID {appointment_id}."
@@ -304,16 +307,22 @@ class Command(BaseCommand):
         dry_run: bool,
     ) -> None:
         endpoint_url = WhatsAppAppointmentNotificationService.build_endpoint_url()
-        token = settings.WHATSAPP_ACCESS_TOKEN if show_token else self.mask_secret(
+        token = (
             settings.WHATSAPP_ACCESS_TOKEN
+            if show_token
+            else self.mask_secret(settings.WHATSAPP_ACCESS_TOKEN)
         )
 
         self.stdout.write(self.style.NOTICE("Diagnóstico WhatsApp Cloud API"))
         self.stdout.write(f"Data do teste: {date.today().isoformat()}")
         self.stdout.write(f"Modo: {'DRY-RUN' if dry_run else 'ENVIO REAL'}")
-        self.stdout.write(f"WhatsApp ativo no settings: {settings.WHATSAPP_CLOUD_API_ENABLED}")
+        self.stdout.write(
+            f"WhatsApp ativo no settings: {settings.WHATSAPP_CLOUD_API_ENABLED}"
+        )
         self.stdout.write(f"Endpoint: {endpoint_url}")
-        self.stdout.write(f"Phone Number ID: {settings.WHATSAPP_PHONE_NUMBER_ID or '[vazio]'}")
+        self.stdout.write(
+            f"Phone Number ID: {settings.WHATSAPP_PHONE_NUMBER_ID or '[vazio]'}"
+        )
         self.stdout.write(f"Access Token: {token or '[vazio]'}")
         self.stdout.write(f"Template: {payload['template']['name']}")
         self.stdout.write(f"Idioma: {payload['template']['language']['code']}")

@@ -499,8 +499,7 @@ WHATSAPP_TEMPLATE_LANGUAGE_CODE = config(
 WHATSAPP_TEMPLATE_BODY_PARAMETERS = env_list(
     "WHATSAPP_TEMPLATE_BODY_PARAMETERS",
     default=(
-        "customer_name,service_name,appointment_date,"
-        "appointment_time,reference_code"
+        "customer_name,service_name,appointment_date," "appointment_time,reference_code"
     ),
 )
 

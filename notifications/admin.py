@@ -203,7 +203,6 @@ class EmailEventSettingAdmin(admin.ModelAdmin):
     window_display.short_description = "Janela de envio"
 
 
-
 @admin.register(WhatsAppMessageLog)
 class WhatsAppMessageLogAdmin(admin.ModelAdmin):
     # Read-only audit screen for WhatsApp Cloud API sending attempts.
