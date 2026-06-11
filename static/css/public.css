@@ -264,7 +264,7 @@ h1, h2, h3, .hero-title, .section-title {
 ====================== */
 
 .site-logo {
-    height: 100px;
+    height: 120px;
     width: auto;
     transition: transform 0.25s ease;
 }
@@ -276,7 +276,7 @@ h1, h2, h3, .hero-title, .section-title {
 /* mobile */
 @media (max-width: 768px) {
     .site-logo {
-        height: 52px;
+        height: 72px;
     }
 }
 
@@ -1463,14 +1463,14 @@ html {
 }
 
 .public-navbar .navbar-brand img {
-    height: 100px !important;
+    height: 120px !important;
 }
 
 .public-navbar .nav-link {
     color: #2b2b2b;
     font-weight: 600;
-    font-size: 0.95rem;
-    padding-inline: 14px;
+    font-size: 1.2rem;
+    padding-inline: 16px;
 }
 
 .public-navbar .nav-link:hover {
@@ -3499,5 +3499,670 @@ footer[id] {
 
     .cookie-map-placeholder {
         flex-direction: column;
+    }
+}
+
+/* ======================
+   VISUAL SOFTENING PASS
+   Objetivo: reduzir peso visual, escala tipográfica e excesso de contraste.
+====================== */
+
+:root {
+    --text-dark: #343032;
+    --text-muted: #70686b;
+    --bg-soft: #fff9fb;
+    --shadow-soft: rgba(139, 94, 102, 0.08);
+}
+
+html {
+    font-size: 15px;
+}
+
+body {
+    background: #fffafb;
+    color: var(--text-dark);
+    font-size: 0.96rem;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+.container {
+    max-width: 1080px;
+}
+
+main.container {
+    padding-top: 42px;
+    padding-bottom: 48px;
+}
+
+h1,
+h2,
+h3,
+.hero-title,
+.section-title,
+.luxury-title,
+.app-agenda-header h1,
+.internal-calendar-header h1,
+.internal-services-header h1,
+.legal-hero h1,
+.appointment-detail-header h1 {
+    letter-spacing: 0.01em;
+    line-height: 1.14;
+}
+
+h1,
+.luxury-title,
+.hero-title {
+    font-size: clamp(2rem, 4.2vw, 3.15rem);
+}
+
+h2,
+.section-title,
+.app-results-top h2,
+.app-agenda-results-header h2 {
+    font-size: clamp(1.45rem, 2.6vw, 1.85rem);
+}
+
+h3,
+.luxury-card h3,
+.service-admin-card-body h3 {
+    font-size: clamp(1.1rem, 2vw, 1.28rem);
+}
+
+p,
+li,
+.text-muted,
+.luxury-subtitle,
+.hero-subtitle,
+.service-feed-lead,
+.app-agenda-header p,
+.internal-calendar-header p,
+.legal-hero p {
+    font-size: 0.95rem;
+    line-height: 1.62;
+}
+
+.small,
+small,
+.form-text,
+.footer-bottom,
+.public-slot-status,
+.app-slot-status,
+.service-public-main p,
+.service-public-meta span {
+    font-size: 0.82rem;
+}
+
+/* Navbar mais leve */
+.public-navbar {
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 6px 20px rgba(139, 94, 102, 0.045);
+}
+
+.public-navbar .navbar-brand img,
+.site-logo {
+    height: 120px !important;
+}
+
+.public-navbar .nav-link {
+    font-size: 1.2rem;
+    font-weight: 600;
+    padding-inline: 16px;
+    padding-block: 10px;
+    line-height: 1.25;
+}
+
+.navbar-brand img {
+    border-radius: 8px;
+}
+
+/* Botões menos pesados */
+.btn,
+form .btn {
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    padding: 9px 20px;
+}
+
+.btn-lg,
+.btn-group-lg > .btn {
+    font-size: 0.95rem;
+    padding: 10px 24px;
+}
+
+.btn-sm,
+.btn-group-sm > .btn {
+    font-size: 0.8rem;
+    padding: 6px 14px;
+}
+
+.btn-primary:hover,
+.btn-outline-secondary:hover,
+.luxury-card:hover,
+.premium-card:hover,
+.public-slot-card:hover,
+.app-slot-card:hover,
+.service-public-card:hover,
+.dashboard-action-card:hover,
+.footer-brand-panel:hover,
+.footer-info-panel:hover {
+    transform: translateY(-2px);
+}
+
+/* Cards e painéis com menos volume */
+.soft-container,
+.premium-card,
+.soft-panel,
+.luxury-card,
+.luxury-info-panel,
+.luxury-logo-card,
+.one-page-section,
+.about-card,
+.testimonial-card,
+.app-agenda-filter,
+.app-agenda-results,
+.internal-calendar-filter,
+.internal-business-hour,
+.internal-calendar-board,
+.dashboard-hero,
+.dashboard-panel,
+.dashboard-action-card,
+.dashboard-metric-card,
+.service-feed-hero,
+.service-category-card,
+.service-admin-group,
+.service-admin-card,
+.footer-brand-panel,
+.footer-info-panel,
+.legal-hero,
+.legal-content-card,
+.appointment-detail-card {
+    border-color: rgba(216, 167, 177, 0.55);
+    box-shadow: 0 10px 28px rgba(139, 94, 102, 0.055);
+}
+
+.soft-container,
+.premium-card,
+.soft-panel,
+.luxury-card,
+.one-page-section,
+.about-card,
+.testimonial-card,
+.app-agenda-filter,
+.app-agenda-results,
+.service-category-card,
+.service-admin-group,
+.footer-brand-panel,
+.footer-info-panel,
+.legal-content-card,
+.appointment-detail-card {
+    border-radius: 22px;
+}
+
+.luxury-hero,
+.hero-section,
+.service-feed-hero {
+    border-radius: 26px;
+    padding: clamp(34px, 5vw, 54px) clamp(22px, 4vw, 40px);
+    box-shadow: 0 14px 38px rgba(139, 94, 102, 0.07);
+}
+
+.luxury-title {
+    font-size: clamp(2rem, 4.6vw, 3.25rem);
+    line-height: 1.12;
+}
+
+.luxury-subtitle {
+    font-size: 0.98rem;
+    line-height: 1.68;
+}
+
+.signature-font {
+    font-size: 1.18em;
+}
+
+.luxury-eyebrow,
+.dashboard-action-card span,
+.dashboard-metric-card span,
+.booking-summary span,
+.app-service-summary span,
+.calendar-event-kicker,
+.appointment-detail-grid span,
+.appointment-detail-notes span,
+.cookie-consent-kicker {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.11em;
+}
+
+.one-page-section {
+    padding: clamp(30px, 4vw, 44px) clamp(22px, 4vw, 34px);
+}
+
+.section-spacing {
+    margin-bottom: 42px;
+}
+
+.section-title {
+    font-weight: 600;
+}
+
+.trust-strip {
+    gap: 14px;
+}
+
+.trust-item,
+.luxury-code-box,
+.booking-summary,
+.app-service-summary,
+.calendar-empty-slot,
+.service-public-card,
+.service-admin-metric-card,
+.service-feed-hero-card,
+.cookie-consent-content {
+    border-radius: 18px;
+    box-shadow: 0 8px 22px rgba(139, 94, 102, 0.05);
+}
+
+.trust-item {
+    padding: 18px;
+}
+
+.trust-item strong {
+    font-size: 1.08rem;
+    font-weight: 600;
+}
+
+.trust-item span {
+    font-size: 0.86rem;
+}
+
+.luxury-card,
+.premium-card,
+.dashboard-panel,
+.service-category-card,
+.service-admin-group {
+    padding: 24px;
+}
+
+.luxury-icon,
+.service-category-icon,
+.public-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    font-size: 1.15rem;
+}
+
+.luxury-card p,
+.about-card p,
+.testimonial-card p,
+.service-category-description {
+    line-height: 1.6;
+}
+
+.about-card {
+    min-height: 220px;
+    padding: 30px;
+}
+
+.about-card h2 {
+    font-size: 1.55rem;
+}
+
+.testimonial-card {
+    padding: 24px;
+}
+
+/* Agenda pública e interna mais compactas */
+.app-agenda-shell {
+    grid-template-columns: 320px 1fr;
+    gap: 22px;
+}
+
+.app-agenda-header h1,
+.internal-calendar-header h1,
+.internal-services-header h1 {
+    font-size: clamp(1.75rem, 3.4vw, 2.45rem);
+}
+
+.app-agenda-filter,
+.app-agenda-results,
+.internal-calendar-filter,
+.dashboard-hero,
+.dashboard-panel {
+    padding: 22px;
+}
+
+.app-results-top,
+.app-agenda-results-header {
+    margin-bottom: 20px;
+}
+
+.app-week-strip {
+    gap: 10px;
+}
+
+.app-week-day {
+    min-width: 82px;
+    border-radius: 16px;
+    padding: 11px 10px;
+    box-shadow: 0 6px 18px rgba(139, 94, 102, 0.045);
+}
+
+.app-week-day strong {
+    font-size: 1.36rem;
+}
+
+.app-slots-grid {
+    grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+    gap: 12px;
+}
+
+.app-slot-card,
+.public-slot-card {
+    border-radius: 18px;
+    padding: 15px;
+}
+
+.app-slot-time,
+.public-slot-time {
+    font-size: 1.36rem;
+}
+
+.app-slot-cta,
+.public-slot-action {
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 7px 11px;
+}
+
+.app-empty-state {
+    border-radius: 20px;
+    padding: 40px 20px;
+}
+
+.app-empty-state h3 {
+    font-size: 1.25rem;
+}
+
+.internal-slot-row {
+    grid-template-columns: 92px 1fr;
+    min-height: 62px;
+}
+
+.internal-slot-time {
+    font-size: 0.96rem;
+    padding: 14px 12px;
+}
+
+.internal-slot-content {
+    padding: 10px 12px;
+}
+
+.calendar-event {
+    border-left-width: 4px;
+    border-radius: 18px;
+    gap: 14px;
+    padding: 14px;
+}
+
+.calendar-event h2 {
+    font-size: 1.12rem;
+}
+
+.status-pill,
+.service-admin-category-badge,
+.service-admin-status,
+.service-admin-card-meta span,
+.app-duration-pill,
+.availability-status-pill {
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 7px 11px;
+}
+
+.internal-full-day-block-card {
+    border-radius: 22px;
+    gap: 18px;
+    padding: 22px;
+}
+
+.internal-full-day-block-icon {
+    width: 58px;
+    height: 58px;
+    border-radius: 18px;
+    font-size: 1.5rem;
+}
+
+.internal-full-day-block-main h2 {
+    font-size: clamp(1.35rem, 2.6vw, 1.9rem);
+}
+
+.internal-full-day-block-main > p,
+.internal-full-day-block-notes p {
+    font-size: 0.92rem;
+}
+
+/* Formulários */
+.form-label {
+    font-size: 0.86rem;
+    font-weight: 500;
+}
+
+.form-control,
+.form-select,
+textarea.form-control,
+.app-agenda-filter .form-select,
+.app-agenda-filter .form-control {
+    border-radius: 13px;
+    font-size: 0.92rem;
+    padding: 10px 13px;
+}
+
+.card.shadow-sm.border-0 {
+    border-radius: 22px;
+    box-shadow: 0 12px 34px rgba(139, 94, 102, 0.06) !important;
+}
+
+.card-body {
+    border-radius: 22px;
+}
+
+.premium-form-card .card-body {
+    padding: 30px !important;
+}
+
+.success-code,
+.success-reference-code,
+.appointment-detail-code strong {
+    font-size: 1.2rem;
+    letter-spacing: 0.08em;
+}
+
+/* Serviços */
+.service-feed-lead {
+    font-size: 0.98rem;
+}
+
+.service-category-grid {
+    gap: 18px;
+}
+
+.service-category-card h2,
+.service-admin-group-title h2 {
+    font-size: 1.4rem;
+}
+
+.service-admin-metric-card strong {
+    font-size: 1.7rem;
+}
+
+.service-public-card {
+    padding: 16px;
+}
+
+.service-public-main strong {
+    font-size: 0.96rem;
+}
+
+.service-feed-bottom-cta {
+    border-radius: 22px;
+    padding: 26px;
+}
+
+/* Rodapé e cookies */
+.site-footer {
+    padding: 42px 0 24px;
+}
+
+.footer-brand-panel,
+.footer-info-panel {
+    padding: 24px;
+}
+
+.footer-brand-panel img {
+    height: 82px;
+}
+
+.footer-hours h4,
+.footer-info-panel h4 {
+    font-size: 1.12rem;
+}
+
+.cookie-consent-content {
+    padding: 18px;
+}
+
+.cookie-consent-content h2,
+.cookie-preferences-header h2 {
+    font-size: 1.25rem;
+}
+
+.cookie-consent-content p,
+.cookie-preferences-intro {
+    font-size: 0.88rem;
+}
+
+/* Melhor leitura em telemóveis */
+@media (max-width: 991px) {
+    .public-navbar .navbar-brand img,
+    .site-logo {
+        height: 86px !important;
+    }
+
+    .public-navbar .navbar-collapse {
+        border-radius: 18px;
+        margin-top: 12px;
+        padding: 14px;
+        box-shadow: 0 12px 30px rgba(139, 94, 102, 0.08);
+    }
+
+    .public-navbar .navbar-nav {
+        gap: 6px;
+    }
+
+    .public-navbar .nav-link {
+        font-size: 1.05rem;
+        padding: 9px 14px;
+    }
+
+    .app-agenda-shell {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    html {
+        font-size: 14.5px;
+    }
+
+    main.container {
+        padding-top: 28px;
+        padding-bottom: 34px;
+    }
+
+    .luxury-hero,
+    .hero-section,
+    .one-page-section,
+    .service-feed-hero,
+    .service-category-card,
+    .service-admin-group,
+    .footer-brand-panel,
+    .footer-info-panel,
+    .legal-content-card,
+    .legal-hero,
+    .appointment-detail-card {
+        border-radius: 18px;
+        padding: 22px;
+    }
+
+    .luxury-title,
+    .hero-title {
+        font-size: clamp(1.75rem, 9vw, 2.35rem);
+    }
+
+    .section-title {
+        font-size: 1.35rem;
+    }
+
+    .luxury-logo-transparent {
+        max-width: 280px;
+    }
+
+    .btn,
+    .btn-lg,
+    form .btn {
+        font-size: 0.9rem;
+        padding: 9px 18px;
+    }
+
+    .app-slots-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .footer-brand-panel img {
+        height: 58px;
+    }
+}
+
+@media (max-width: 576px) {
+    .public-navbar .container {
+        padding-inline: 14px;
+    }
+
+    .public-navbar .navbar-brand img,
+    .site-logo {
+        height: 72px !important;
+    }
+
+    .luxury-hero-actions,
+    .d-flex.flex-column.flex-md-row.gap-3 {
+        gap: 0.65rem !important;
+    }
+
+    .app-week-day {
+        min-width: 76px;
+    }
+
+    .app-week-day strong {
+        font-size: 1.22rem;
+    }
+
+    .app-slot-card,
+    .public-slot-card {
+        padding: 13px 10px;
+    }
+
+    .app-slot-time,
+    .public-slot-time {
+        font-size: 1.18rem;
+    }
+
+    .premium-form-card .card-body {
+        padding: 22px !important;
     }
 }

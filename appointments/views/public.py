@@ -16,6 +16,7 @@ from appointments.forms import (
 )
 from appointments.models import Appointment, Service, ServiceCategory
 from appointments.customer_services import find_or_create_customer
+from appointments.lookup_services import PublicAppointmentLookupService
 from appointments.appointment_services import AppointmentService
 from appointments.availability import AvailabilityService
 
@@ -377,14 +378,25 @@ class PublicCancelAppointmentByCodeView(TemplateView):
 
 
 class PublicAppointmentLookupView(FormView):
-    # Allows customers to search an appointment by reference code
+    # Allows customers to search by reference code or request details by email.
 
     template_name = "appointments/public_appointment_lookup.html"
     form_class = PublicAppointmentLookupForm
 
     def form_valid(self, form):
-        # Search appointment by reference code
-        reference_code = form.cleaned_data["reference_code"]
+        # Search appointment by reference code or send open appointment details by email.
+        reference_code = form.cleaned_data.get("reference_code")
+        email = form.cleaned_data.get("email")
+
+        if email:
+            result = PublicAppointmentLookupService.send_lookup_email(email)
+
+            if not result.success:
+                form.add_error("email", result.message)
+                return self.form_invalid(form)
+
+            messages.success(self.request, result.message)
+            return redirect("appointments:public_appointment_lookup")
 
         appointment = (
             Appointment.objects.filter(

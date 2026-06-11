@@ -88,13 +88,9 @@ class WhatsAppAppointmentNotificationService:
         )
 
         try:
-            response_payload = WhatsAppAppointmentNotificationService.post_message(
-                payload
-            )
-            whatsapp_message_id = (
-                WhatsAppAppointmentNotificationService.extract_message_id(
-                    response_payload
-                )
+            response_payload = WhatsAppAppointmentNotificationService.post_message(payload)
+            whatsapp_message_id = WhatsAppAppointmentNotificationService.extract_message_id(
+                response_payload
             )
 
             try:
@@ -134,9 +130,7 @@ class WhatsAppAppointmentNotificationService:
             )
 
         except (HTTPError, URLError, TimeoutError, ValueError) as error:
-            error_message = WhatsAppAppointmentNotificationService.format_api_error(
-                error
-            )
+            error_message = WhatsAppAppointmentNotificationService.format_api_error(error)
             logger.exception(
                 "Error sending WhatsApp confirmation for appointment %s",
                 appointment.reference_code,

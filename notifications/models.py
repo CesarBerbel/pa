@@ -167,12 +167,15 @@ class EmailEventSetting(models.Model):
         return f"reminder_{self.lead_time_value}_{self.lead_time_unit}"
 
 
+
 class WhatsAppMessageLog(models.Model):
     # Stores WhatsApp Cloud API sending attempts for audit and duplicate prevention.
 
     EVENT_APPOINTMENT_CONFIRMED = "appointment_confirmed"
 
-    EVENT_CHOICES = ((EVENT_APPOINTMENT_CONFIRMED, "Marcação confirmada"),)
+    EVENT_CHOICES = (
+        (EVENT_APPOINTMENT_CONFIRMED, "Marcação confirmada"),
+    )
 
     STATUS_SUCCESS = "success"
     STATUS_ERROR = "error"

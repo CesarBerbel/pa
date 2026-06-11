@@ -2,6 +2,7 @@ from django.conf import settings
 from django.core import signing
 from django.core.mail import EmailMultiAlternatives
 from django.urls import reverse
+from django.utils.html import escape
 
 from notifications.models import EmailEventSetting
 from notifications.services import EmailEventSettingService, EmailTemplateService
@@ -274,3 +275,102 @@ def send_appointment_reminder_email(
         body_html=rendered_email["body_html"],
         recipient_list=[customer_email],
     )
+
+
+def send_open_appointments_lookup_email(recipient_email, appointments):
+    # Sends open appointment details and reference codes to the email owner.
+    appointments = list(appointments)
+
+    if not recipient_email or not appointments:
+        return
+
+    subject = "Detalhes das suas marcações em aberto"
+    appointment_count = len(appointments)
+
+    if appointment_count == 1:
+        intro = "Encontramos 1 marcação em aberto associada a este email."
+    else:
+        intro = (
+            f"Encontramos {appointment_count} marcações em aberto associadas "
+            "a este email."
+        )
+
+    text_lines = [
+        "Olá,",
+        "",
+        "Recebemos uma solicitação para consultar marcações associadas a este email.",
+        intro,
+        "",
+    ]
+
+    html_items = []
+
+    for appointment in appointments:
+        detail_url = build_full_url(generate_secure_link(appointment))
+        cancel_url = build_full_url(
+            reverse(
+                "appointments:public_cancel_by_code",
+                kwargs={
+                    "reference_code": appointment.reference_code,
+                },
+            )
+        )
+
+        status_label = appointment.get_status_display()
+        appointment_date = appointment.date.strftime("%d/%m/%Y")
+        appointment_time = appointment.start_time.strftime("%H:%M")
+
+        text_lines.extend(
+            [
+                f"Código: {appointment.reference_code}",
+                f"Estado: {status_label}",
+                f"Cliente: {appointment.customer.full_name}",
+                f"Serviço: {appointment.service.name}",
+                f"Data: {appointment_date}",
+                f"Horário: {appointment_time}",
+                f"Ver detalhes: {detail_url}",
+                f"Cancelar marcação: {cancel_url}",
+                "",
+            ]
+        )
+
+        html_items.append(
+            "<li style='margin-bottom:16px;'>"
+            f"<strong>Código:</strong> {escape(appointment.reference_code)}<br>"
+            f"<strong>Estado:</strong> {escape(status_label)}<br>"
+            f"<strong>Cliente:</strong> {escape(appointment.customer.full_name)}<br>"
+            f"<strong>Serviço:</strong> {escape(appointment.service.name)}<br>"
+            f"<strong>Data:</strong> {escape(appointment_date)}<br>"
+            f"<strong>Horário:</strong> {escape(appointment_time)}<br>"
+            f"<a href='{escape(detail_url)}'>Ver detalhes</a> | "
+            f"<a href='{escape(cancel_url)}'>Cancelar marcação</a>"
+            "</li>"
+        )
+
+    text_lines.extend(
+        [
+            "Se não foi você que solicitou esta consulta, ignore este email.",
+            "",
+            "Obrigada,",
+            "Priscila Arantes PA",
+        ]
+    )
+
+    body_text = "\n".join(text_lines)
+    body_html = (
+        "<p>Olá,</p>"
+        "<p>Recebemos uma solicitação para consultar marcações associadas "
+        "a este email.</p>"
+        f"<p>{escape(intro)}</p>"
+        f"<ul>{''.join(html_items)}</ul>"
+        "<p>Se não foi você que solicitou esta consulta, ignore este email.</p>"
+        "<p>Obrigada,<br>Priscila Arantes PA</p>"
+    )
+
+    send_rendered_email(
+        subject=subject,
+        body_text=body_text,
+        body_html=body_html,
+        recipient_list=[recipient_email],
+    )
+

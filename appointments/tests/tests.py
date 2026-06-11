@@ -63,6 +63,7 @@ class AppointmentTestSetupMixin:
             },
         )
 
+
     def get_future_business_date(self, weekday=0, min_days=7):
         # Return a stable future date for public availability tests without
         # depending on freezegun class decorators. This avoids compatibility

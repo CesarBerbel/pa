@@ -300,24 +300,62 @@ class PublicCancelForm(forms.Form):
 
 
 class PublicAppointmentLookupForm(forms.Form):
-    # Form used to search public appointment by reference code.
+    # Form used to search public appointments by reference code or request details by email.
 
     reference_code = forms.CharField(
         label="Código da marcação",
         max_length=20,
+        required=False,
         widget=forms.TextInput(
             attrs={
                 "placeholder": "Exemplo: AGD-8F3K2L",
                 "class": "form-control text-uppercase",
+                "autocomplete": "off",
             }
+        ),
+        help_text="Use esta opção se já tiver o código de referência da marcação.",
+    )
+
+    email = forms.EmailField(
+        label="Email utilizado na marcação",
+        required=False,
+        widget=forms.EmailInput(
+            attrs={
+                "placeholder": "exemplo@email.com",
+                "class": "form-control",
+                "autocomplete": "email",
+            }
+        ),
+        help_text=(
+            "Use esta opção para receber no email os detalhes e o código "
+            "das marcações em aberto."
         ),
     )
 
-    def clean_reference_code(self):
-        # Normalize reference code before search.
-        reference_code = self.cleaned_data["reference_code"]
+    def clean(self):
+        # Require exactly one lookup method to avoid ambiguous public searches.
+        cleaned_data = super().clean()
 
-        return reference_code.strip().upper()
+        if self.errors:
+            return cleaned_data
+
+        reference_code = (cleaned_data.get("reference_code") or "").strip().upper()
+        email = (cleaned_data.get("email") or "").strip().lower()
+
+        cleaned_data["reference_code"] = reference_code
+        cleaned_data["email"] = email
+
+        if not reference_code and not email:
+            raise forms.ValidationError(
+                "Informe o código da marcação ou o email utilizado na marcação."
+            )
+
+        if reference_code and email:
+            raise forms.ValidationError(
+                "Informe apenas uma das alternativas: código da marcação ou email."
+            )
+
+        return cleaned_data
 
 
 class AppointmentCancelForm(forms.Form):

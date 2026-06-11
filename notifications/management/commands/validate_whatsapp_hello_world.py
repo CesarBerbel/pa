@@ -46,7 +46,10 @@ class Command(BaseCommand):
         parser.add_argument(
             "--language",
             default=Command.DEFAULT_LANGUAGE_CODE,
-            help=("Código de idioma do template hello_world. " "Por padrão usa en_US."),
+            help=(
+                "Código de idioma do template hello_world. "
+                "Por padrão usa en_US."
+            ),
         )
         parser.add_argument(
             "--dry-run",
@@ -103,9 +106,7 @@ class Command(BaseCommand):
 
         if not skip_phone_check:
             phone_number_payload = self.validate_phone_number_id()
-            self.stdout.write(
-                self.style.SUCCESS("Phone Number ID validado com sucesso.")
-            )
+            self.stdout.write(self.style.SUCCESS("Phone Number ID validado com sucesso."))
             self.stdout.write("Resposta do Phone Number ID:")
             self.stdout.write(self.format_json(phone_number_payload))
             self.stdout.write("")
@@ -119,20 +120,12 @@ class Command(BaseCommand):
             return
 
         try:
-            response_payload = WhatsAppAppointmentNotificationService.post_message(
-                payload
-            )
+            response_payload = WhatsAppAppointmentNotificationService.post_message(payload)
         except (HTTPError, URLError, TimeoutError, ValueError) as error:
-            formatted_error = WhatsAppAppointmentNotificationService.format_api_error(
-                error
-            )
-            raise CommandError(
-                f"Falha no envio hello_world pela Meta API: {formatted_error}"
-            )
+            formatted_error = WhatsAppAppointmentNotificationService.format_api_error(error)
+            raise CommandError(f"Falha no envio hello_world pela Meta API: {formatted_error}")
 
-        self.stdout.write(
-            self.style.SUCCESS("Template hello_world enviado para a Meta API.")
-        )
+        self.stdout.write(self.style.SUCCESS("Template hello_world enviado para a Meta API."))
         self.stdout.write("Resposta da Meta:")
         self.stdout.write(self.format_json(response_payload))
 
@@ -170,14 +163,10 @@ class Command(BaseCommand):
         )
 
         try:
-            with urlopen(
-                request, timeout=settings.WHATSAPP_REQUEST_TIMEOUT
-            ) as response:
+            with urlopen(request, timeout=settings.WHATSAPP_REQUEST_TIMEOUT) as response:
                 response_body = response.read().decode("utf-8")
         except (HTTPError, URLError, TimeoutError) as error:
-            formatted_error = WhatsAppAppointmentNotificationService.format_api_error(
-                error
-            )
+            formatted_error = WhatsAppAppointmentNotificationService.format_api_error(error)
             raise CommandError(
                 "Falha ao validar WHATSAPP_PHONE_NUMBER_ID com a Meta API: "
                 f"{formatted_error}"
@@ -233,31 +222,21 @@ class Command(BaseCommand):
         show_token: bool,
         skip_phone_check: bool,
     ) -> None:
-        token = (
+        token = settings.WHATSAPP_ACCESS_TOKEN if show_token else self.mask_secret(
             settings.WHATSAPP_ACCESS_TOKEN
-            if show_token
-            else self.mask_secret(settings.WHATSAPP_ACCESS_TOKEN)
         )
 
         self.stdout.write(self.style.NOTICE("Validação WhatsApp hello_world"))
         self.stdout.write(f"Data/hora do teste: {self.format_now()}")
         self.stdout.write(f"Modo: {'DRY-RUN' if dry_run else 'ENVIO REAL'}")
-        self.stdout.write(
-            f"Endpoint de envio: {WhatsAppAppointmentNotificationService.build_endpoint_url()}"
-        )
-        self.stdout.write(
-            f"Endpoint Phone Number ID: {self.build_phone_number_info_url()}"
-        )
-        self.stdout.write(
-            f"Phone Number ID: {settings.WHATSAPP_PHONE_NUMBER_ID or '[vazio]'}"
-        )
+        self.stdout.write(f"Endpoint de envio: {WhatsAppAppointmentNotificationService.build_endpoint_url()}")
+        self.stdout.write(f"Endpoint Phone Number ID: {self.build_phone_number_info_url()}")
+        self.stdout.write(f"Phone Number ID: {settings.WHATSAPP_PHONE_NUMBER_ID or '[vazio]'}")
         self.stdout.write(f"Access Token: {token or '[vazio]'}")
         self.stdout.write(f"Template: {template_name}")
         self.stdout.write(f"Idioma: {language_code}")
         self.stdout.write(f"Destino normalizado: {recipient_phone}")
-        self.stdout.write(
-            f"Validação prévia do Phone Number ID: {'não' if skip_phone_check else 'sim'}"
-        )
+        self.stdout.write(f"Validação prévia do Phone Number ID: {'não' if skip_phone_check else 'sim'}")
         self.stdout.write("")
         self.stdout.write("Payload JSON:")
         self.stdout.write(self.format_json(payload))
