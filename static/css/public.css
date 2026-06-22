@@ -31,6 +31,7 @@ body {
     font-family: 'Inter', sans-serif;
     color: var(--text-dark);
     background: #FFF7F9;
+    overflow-x: hidden;
 }
 
 a, button {
@@ -2234,6 +2235,112 @@ footer[id] {
 
     .luxury-hero-logo-top {
         padding: 44px 22px;
+    }
+}
+
+/* ======================
+   HERO COM FOTO + PARALLAX
+====================== */
+
+.luxury-hero-photo {
+    position: relative;
+    /* full-bleed: quebra o container e ocupa toda a largura da viewport */
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    /* sobe o banner para encostar na navbar (cancela o padding-top do <main>) */
+    margin-top: -3rem;
+    display: flex;
+    align-items: center;
+    min-height: clamp(460px, 78vh, 760px);
+    overflow: hidden;
+    /* parallax: o fundo fica fixo enquanto a página rola */
+    background-image: var(--hero-bg);
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center right;
+    background-attachment: fixed;
+}
+
+/* véu claro à esquerda para o texto ficar legível,
+   mantendo a foto visível à direita */
+.luxury-hero-photo::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        100deg,
+        rgba(255, 247, 249, 0.96) 0%,
+        rgba(255, 247, 249, 0.86) 30%,
+        rgba(255, 247, 249, 0.45) 52%,
+        rgba(255, 247, 249, 0.05) 70%,
+        rgba(255, 247, 249, 0) 100%
+    );
+    pointer-events: none;
+}
+
+.luxury-hero-photo-inner {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 64px 24px;
+}
+
+.luxury-hero-photo-content {
+    max-width: 560px;
+    text-align: left;
+}
+
+.luxury-hero-photo .luxury-logo-transparent {
+    width: min(100%, 360px);
+    max-width: 360px;
+    filter: drop-shadow(0 18px 28px rgba(139, 94, 102, 0.14));
+}
+
+.luxury-hero-photo .luxury-subtitle {
+    max-width: 520px;
+}
+
+.luxury-hero-photo .luxury-hero-actions {
+    justify-content: flex-start;
+}
+
+/* mobile: background-attachment: fixed é instável no iOS/Android.
+   Trocamos por scroll e empurramos o texto para cima, deixando a
+   foto aparecer abaixo do conteúdo. */
+@media (max-width: 768px) {
+    .luxury-hero-photo {
+        margin-top: -1.5rem;
+        min-height: auto;
+        background-attachment: scroll;
+        background-position: 72% top;
+    }
+
+    .luxury-hero-photo-inner {
+        padding: 36px 20px 230px;
+    }
+
+    .luxury-hero-photo::before {
+        background: linear-gradient(
+            180deg,
+            rgba(255, 247, 249, 0.97) 0%,
+            rgba(255, 247, 249, 0.88) 42%,
+            rgba(255, 247, 249, 0.3) 72%,
+            rgba(255, 247, 249, 0) 100%
+        );
+    }
+
+    .luxury-hero-photo .luxury-logo-transparent {
+        max-width: 260px;
+    }
+}
+
+/* respeita quem prefere menos movimento */
+@media (prefers-reduced-motion: reduce) {
+    .luxury-hero-photo {
+        background-attachment: scroll;
     }
 }
 

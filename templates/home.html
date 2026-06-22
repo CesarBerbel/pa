@@ -20,35 +20,41 @@
 {% block content %}
 
 {% if home_hero_layout == "logo_top" %}
-    <section id="inicio" class="luxury-hero luxury-hero-logo-top mb-5">
-        <div class="luxury-hero-logo-top-content">
-            <img
-                src="{% static 'img/logo_transparent.png' %}"
-                alt="Priscila Arantes PA"
-                class="luxury-logo luxury-logo-transparent mb-4"
-            >
+    <section
+        id="inicio"
+        class="luxury-hero-photo mb-5"
+        style="--hero-bg: url('{% static 'img/hero.png' %}');"
+    >
+        <div class="luxury-hero-photo-inner">
+            <div class="luxury-hero-photo-content">
+                <img
+                    src="{% static 'img/logo_transparent.png' %}"
+                    alt="Priscila Arantes PA"
+                    class="luxury-logo luxury-logo-transparent mb-4"
+                >
 
-            <span class="luxury-eyebrow">Podologia • Estética • Enfermagem</span>
+                <span class="luxury-eyebrow">Podologia • Estética • Enfermagem</span>
 
-            <h1 class="luxury-title mt-3 mb-4">
-                Cuidados profissionais com
-                <span class="signature-font">delicadeza</span>
-                e organização
-            </h1>
+                <h1 class="luxury-title mt-3 mb-4">
+                    Cuidados profissionais com
+                    <span class="signature-font">delicadeza</span>
+                    e organização
+                </h1>
 
-            <p class="luxury-subtitle mb-4">
-                Atendimento especializado em podologia, manicure, pedicure e apoio de enfermagem,
-                com marcação online simples, segura e prática.
-            </p>
+                <p class="luxury-subtitle mb-4">
+                    Atendimento especializado em podologia, manicure, pedicure e apoio de enfermagem,
+                    com marcação online simples, segura e prática.
+                </p>
 
-            <div class="luxury-hero-actions d-flex flex-column flex-md-row gap-3">
-                <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary btn-lg px-5">
-                    Agendar horário
-                </a>
+                <div class="luxury-hero-actions d-flex flex-column flex-md-row gap-3">
+                    <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary btn-lg px-5">
+                        Agendar horário
+                    </a>
 
-                <a href="{% url 'appointments:public_appointment_lookup' %}" class="btn btn-outline-secondary btn-lg px-5">
-                    Consultar marcação
-                </a>
+                    <a href="{% url 'appointments:public_appointment_lookup' %}" class="btn btn-outline-secondary btn-lg px-5">
+                        Consultar marcação
+                    </a>
+                </div>
             </div>
         </div>
     </section>
