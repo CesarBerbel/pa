@@ -1,5 +1,7 @@
 asgiref==3.11.1
 black==26.3.1
+gunicorn>=21.2
+whitenoise>=6.6
 click==8.3.3
 colorama==0.4.6
 coverage==7.13.5
