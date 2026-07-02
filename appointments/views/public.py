@@ -19,6 +19,7 @@ from appointments.customer_services import find_or_create_customer
 from appointments.lookup_services import PublicAppointmentLookupService
 from appointments.appointment_services import AppointmentService
 from appointments.availability import AvailabilityService
+from config.promotions import get_active_promo_code
 
 
 class PublicBookingAvailabilityMixin:
@@ -68,6 +69,11 @@ class PublicAppointmentCreateView(PublicBookingAvailabilityMixin, FormView):
                 initial["customer_email"] = customer.email
             else:
                 initial["customer_email"] = self.request.user.email
+
+        promo_code = get_active_promo_code()
+
+        if promo_code:
+            initial["notes"] = f"Código promocional: {promo_code}"
 
         return initial
 

@@ -1523,7 +1523,7 @@ section[id] {
 
 .trust-strip {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 18px;
 }
 
@@ -1549,9 +1549,85 @@ section[id] {
     font-size: 0.95rem;
 }
 
+@media (max-width: 992px) {
+    .trust-strip {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 @media (max-width: 768px) {
     .trust-strip {
         grid-template-columns: 1fr;
+    }
+}
+
+/* ======================
+   PROMOTION
+====================== */
+
+.promo-topbar {
+    background: var(--gold);
+    text-align: center;
+    padding: 10px 16px;
+}
+
+.promo-topbar a {
+    color: #2b2b2b;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.promo-topbar a:hover {
+    text-decoration: underline;
+}
+
+.promo-banner {
+    background: linear-gradient(135deg, var(--primary-dark), #6f454c);
+    border-radius: 32px;
+    color: #ffffff;
+    padding: 48px;
+    text-align: center;
+}
+
+.promo-banner .luxury-eyebrow {
+    color: var(--gold);
+}
+
+.promo-banner h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+}
+
+.promo-banner p {
+    color: rgba(255, 255, 255, 0.85);
+    max-width: 640px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.promo-banner strong {
+    color: var(--gold);
+}
+
+.promo-banner .btn-outline-secondary {
+    border-color: rgba(255, 255, 255, 0.6);
+    color: #ffffff;
+}
+
+.promo-banner .btn-outline-secondary:hover {
+    background-color: #ffffff;
+    color: var(--primary-dark);
+}
+
+@media (max-width: 768px) {
+    .promo-banner {
+        border-radius: 24px;
+        padding: 28px;
+    }
+
+    .promo-banner h2 {
+        font-size: 1.5rem;
     }
 }
 

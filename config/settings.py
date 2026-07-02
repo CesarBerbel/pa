@@ -78,6 +78,8 @@ SEO_ROBOTS_DEFAULT = config("SEO_ROBOTS_DEFAULT", default="index,follow")
 
 SEO_BUSINESS_PHONE = config("SEO_BUSINESS_PHONE", default="+351910191046")
 
+SEO_WHATSAPP_NUMBER = config("SEO_WHATSAPP_NUMBER", default="+351938594367")
+
 SEO_BUSINESS_EMAIL = config("SEO_BUSINESS_EMAIL", default="atendimento@priarantes.com")
 
 SEO_BUSINESS_STREET_ADDRESS = config(
@@ -110,6 +112,20 @@ HOME_HERO_LAYOUT = config("HOME_HERO_LAYOUT", default="classic").strip().lower()
 
 if HOME_HERO_LAYOUT not in HOME_HERO_LAYOUT_CHOICES:
     HOME_HERO_LAYOUT = "classic"
+
+
+# =============================================================================
+# Promotion
+# =============================================================================
+
+PROMO_ENABLED = config("PROMO_ENABLED", default=True, cast=bool)
+
+PROMO_DISCOUNT_PERCENT = config("PROMO_DISCOUNT_PERCENT", default=25, cast=int)
+
+PROMO_CODE = config("PROMO_CODE", default="BEMVINDA25")
+
+# Formato AAAA-MM-DD. A promoção deixa de aparecer automaticamente após esta data.
+PROMO_VALID_UNTIL = config("PROMO_VALID_UNTIL", default="2026-07-31")
 
 
 # =============================================================================
@@ -189,6 +205,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "config.context_processors.seo_settings",
+                "config.context_processors.promo_settings",
             ],
         },
     },

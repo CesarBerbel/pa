@@ -73,6 +73,17 @@
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 
+{% if not user.is_superuser and PROMO_ACTIVE %}
+    <div class="promo-topbar">
+        <a href="{% url 'home' %}#promocao">
+            <i class="bi bi-stars"></i>
+            {{ PROMO_DISCOUNT_PERCENT }}% de desconto em todos os serviços com o código
+            <strong>{{ PROMO_CODE }}</strong>
+            — válido até {{ PROMO_VALID_UNTIL|date:"d/m" }}
+        </a>
+    </div>
+{% endif %}
+
 <nav class="navbar navbar-expand-lg navbar-light public-navbar">
     <div class="container">
         <a class="navbar-brand d-flex align-items-center gap-2 fw-semibold" href="{% url 'home' %}">
@@ -192,8 +203,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <div>
                             <h4>Contato</h4>
 
-                            <p>Telefone / WhatsApp:<br>+351 910 191 046</p>
+                            <p>Telefone:<br>{{ SEO_BUSINESS_PHONE_DISPLAY }}</p>
+                            <p>
+                                WhatsApp:<br>
+                                <a href="{{ SEO_WHATSAPP_LINK }}" target="_blank" rel="noopener noreferrer">
+                                    {{ SEO_WHATSAPP_DISPLAY }}
+                                </a>
+                            </p>
                             <p>Email:<br>atendimento@priarantes.com</p>
+                            <p>Atendimento em domicílio disponível mediante consulta.</p>
 
                             <div class="footer-actions">
                                 {% if request.resolver_match.url_name != "public_visual_schedule" %}
@@ -203,7 +221,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                                 {% endif %}
 
                                 <a
-                                    href="https://wa.me/351910191046?text=Ol%C3%A1%2C%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es."
+                                    href="{{ SEO_WHATSAPP_LINK }}"
                                     class="btn btn-outline-secondary"
                                     target="_blank"
                                     rel="noopener noreferrer"
@@ -373,7 +391,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 {% endif %}
 <!-- Floating WhatsApp button -->
 <a
-    href="https://wa.me/351910191046?text=Ol%C3%A1%2C%20gostaria%20de%20mais%20informa%C3%A7%C3%B5es."
+    href="{{ SEO_WHATSAPP_LINK }}"
     class="whatsapp-floating-button"
     target="_blank"
     rel="noopener noreferrer"

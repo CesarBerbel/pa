@@ -43,7 +43,8 @@
 
                 <p class="luxury-subtitle mb-4">
                     Atendimento especializado em podologia, manicure, pedicure e apoio de enfermagem,
-                    com marcação online simples, segura e prática.
+                    com marcação online simples, segura e prática. Também disponível atendimento
+                    em domicílio, mediante disponibilidade.
                 </p>
 
                 <div class="luxury-hero-actions d-flex flex-column flex-md-row gap-3">
@@ -72,7 +73,8 @@
 
                 <p class="luxury-subtitle mb-4">
                     Atendimento especializado em podologia, manicure, pedicure e apoio de enfermagem,
-                    com marcação online simples, segura e prática.
+                    com marcação online simples, segura e prática. Também disponível atendimento
+                    em domicílio, mediante disponibilidade.
                 </p>
 
                 <div class="d-flex flex-column flex-md-row gap-3">
@@ -99,6 +101,39 @@
     </section>
 {% endif %}
 
+{% if PROMO_ACTIVE %}
+    <section id="promocao" class="promo-banner mb-5">
+        <div class="promo-banner-content">
+            <span class="luxury-eyebrow">Promoção por tempo limitado</span>
+
+            <h2 class="mt-2 mb-2">
+                {{ PROMO_DISCOUNT_PERCENT }}% de desconto em todos os serviços
+            </h2>
+
+            <p class="mb-3">
+                Use o código <strong>{{ PROMO_CODE }}</strong> ao marcar o seu horário.
+                Válido até {{ PROMO_VALID_UNTIL|date:"d/m/Y" }} para todas as categorias:
+                podologia, manicure, pedicure e enfermagem.
+            </p>
+
+            <div class="d-flex flex-column flex-md-row gap-3 justify-content-center">
+                <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary btn-lg px-5">
+                    Aproveitar promoção
+                </a>
+
+                <a
+                    href="{{ PROMO_WHATSAPP_LINK }}"
+                    class="btn btn-outline-secondary btn-lg px-5"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    Tirar dúvidas no WhatsApp
+                </a>
+            </div>
+        </div>
+    </section>
+{% endif %}
+
 <section class="trust-strip mb-5">
     <div class="trust-item">
         <strong>Atendimento cuidadoso</strong>
@@ -114,6 +149,11 @@
         <strong>Ambiente profissional</strong>
         <span>Organização, higiene e atenção</span>
     </div>
+
+    <div class="trust-item">
+        <strong>Atendimento em domicílio</strong>
+        <span>Disponível mediante consulta prévia</span>
+    </div>
 </section>
 
 <section id="marcacao" class="one-page-section mb-5">
@@ -124,9 +164,16 @@
                 Escolha o seu horário de forma simples
             </h2>
 
-            <p class="text-muted mb-4">
+            <p class="text-muted mb-3">
                 Consulte os horários disponíveis, escolha a categoria e o serviço desejado
                 e confirme a sua marcação em poucos passos.
+            </p>
+
+            <p class="text-muted mb-4">
+                <i class="bi bi-info-circle me-1"></i>
+                Cada pedido de horário é analisado e confirmado pela profissional antes
+                de ficar definitivo. Precisa de atendimento em domicílio? Fale connosco pelo
+                <a href="{{ SEO_WHATSAPP_LINK }}" target="_blank" rel="noopener noreferrer">WhatsApp</a>.
             </p>
 
             <div class="d-flex flex-column flex-md-row gap-3">
