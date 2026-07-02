@@ -115,6 +115,21 @@ if HOME_HERO_LAYOUT not in HOME_HERO_LAYOUT_CHOICES:
 
 
 # =============================================================================
+# Instagram (EmbedSocial)
+# =============================================================================
+
+# Valor do atributo "data-ref" gerado em https://embedsocial.com ao criar um
+# widget de Instagram Feed (Dashboard > o widget > Embed Code > data-ref="...").
+# Deixe em branco para ocultar o feed de fotos na homepage.
+INSTAGRAM_EMBEDSOCIAL_REF = config("INSTAGRAM_EMBEDSOCIAL_REF", default="").strip()
+
+INSTAGRAM_PROFILE_URL = config(
+    "INSTAGRAM_PROFILE_URL",
+    default="https://www.instagram.com/priarantespod",
+).strip()
+
+
+# =============================================================================
 # Promotion
 # =============================================================================
 
@@ -206,6 +221,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "config.context_processors.seo_settings",
                 "config.context_processors.promo_settings",
+                "config.context_processors.instagram_settings",
             ],
         },
     },

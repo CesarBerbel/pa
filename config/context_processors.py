@@ -72,3 +72,12 @@ def promo_settings(request):
         "PROMO_VALID_UNTIL": valid_until,
         "PROMO_WHATSAPP_LINK": f"https://wa.me/{whatsapp_digits}?text={promo_message}",
     }
+
+
+def instagram_settings(request):
+    """Expose the Instagram (EmbedSocial) embed to templates, if configured."""
+
+    return {
+        "INSTAGRAM_EMBEDSOCIAL_REF": settings.INSTAGRAM_EMBEDSOCIAL_REF,
+        "INSTAGRAM_PROFILE_URL": settings.INSTAGRAM_PROFILE_URL,
+    }

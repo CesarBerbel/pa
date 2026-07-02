@@ -441,6 +441,20 @@ h1, h2, h3, .hero-title, .section-title {
     text-transform: uppercase;
 }
 
+.coming-soon-badge {
+    display: inline-block;
+    background: var(--gold);
+    color: #2b2b2b;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-radius: 999px;
+    padding: 4px 12px;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
 .luxury-title {
     font-family: 'Playfair Display', serif;
     color: #2b2b2b;
@@ -1437,6 +1451,10 @@ html {
     color: #8b5e66;
 }
 
+.instagram-widget-wrapper {
+    min-height: 200px;
+}
+
 @media (max-width: 768px) {
     .one-page-section {
         padding: 36px 24px;
@@ -2325,21 +2343,23 @@ footer[id] {
     margin-left: calc(50% - 50vw);
     margin-right: calc(50% - 50vw);
     /* sobe o banner para encostar na navbar (cancela o padding-top do <main>) */
-    margin-top: -3rem;
+    margin-top: -4rem;
     display: flex;
     align-items: center;
-    min-height: clamp(460px, 78vh, 760px);
+    /* mais alto que o padrão: fotos de retrato precisam de mais altura
+       para não ficar com um zoom exagerado ao cobrir 100% da largura */
+    min-height: clamp(560px, 100vh, 1000px);
     overflow: hidden;
     /* parallax: o fundo fica fixo enquanto a página rola */
     background-image: var(--hero-bg);
     background-repeat: no-repeat;
     background-size: cover;
-    background-position: center right;
+    background-position: center 12%;
     background-attachment: fixed;
 }
 
 /* véu claro à esquerda para o texto ficar legível,
-   mantendo a foto visível à direita */
+   esfumaçando a foto para a esquerda e deixando o rosto visível à direita */
 .luxury-hero-photo::before {
     content: "";
     position: absolute;
@@ -2361,7 +2381,7 @@ footer[id] {
     width: 100%;
     max-width: 1140px;
     margin: 0 auto;
-    padding: 64px 24px;
+    padding: 32px 24px 64px;
 }
 
 .luxury-hero-photo-content {
@@ -2388,23 +2408,31 @@ footer[id] {
    foto aparecer abaixo do conteúdo. */
 @media (max-width: 768px) {
     .luxury-hero-photo {
-        margin-top: -1.5rem;
+        margin-top: -3rem;
         min-height: auto;
         background-attachment: scroll;
-        background-position: 72% top;
+        background-position: center top;
     }
 
     .luxury-hero-photo-inner {
-        padding: 36px 20px 230px;
+        padding: 20px 20px 150px;
+    }
+
+    /* Cartão próprio atrás do texto: assim o véu geral pode ficar bem
+       mais leve sem comprometer a leitura, revelando o rosto na foto. */
+    .luxury-hero-photo-content {
+        background: rgba(255, 247, 249, 0.88);
+        border-radius: 24px;
+        padding: 22px 20px;
     }
 
     .luxury-hero-photo::before {
         background: linear-gradient(
             180deg,
-            rgba(255, 247, 249, 0.97) 0%,
-            rgba(255, 247, 249, 0.88) 42%,
-            rgba(255, 247, 249, 0.3) 72%,
-            rgba(255, 247, 249, 0) 100%
+            rgba(255, 247, 249, 0.55) 0%,
+            rgba(255, 247, 249, 0.32) 28%,
+            rgba(255, 247, 249, 0.1) 50%,
+            rgba(255, 247, 249, 0) 68%
         );
     }
 
@@ -2550,6 +2578,17 @@ footer[id] {
     box-shadow: 0 16px 36px rgba(139, 94, 102, 0.14);
     color: #2b2b2b;
     transform: translateY(-4px);
+}
+
+.service-public-card.is-coming-soon {
+    opacity: 0.7;
+}
+
+.service-public-card.is-coming-soon:hover {
+    background: #fff7f9;
+    border-color: #f1d5db;
+    box-shadow: none;
+    transform: none;
 }
 
 .service-public-main {

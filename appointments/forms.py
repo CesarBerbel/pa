@@ -122,6 +122,7 @@ class PublicAppointmentForm(forms.Form):
         queryset=Service.objects.filter(
             is_active=True,
             category__is_active=True,
+            category__is_coming_soon=False,
         ).select_related("category"),
         empty_label="Selecione um serviço",
     )

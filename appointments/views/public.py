@@ -209,6 +209,7 @@ class PublicAvailableSlotsView(PublicBookingAvailabilityMixin, View):
                 pk=service_id,
                 is_active=True,
                 category__is_active=True,
+                category__is_coming_soon=False,
             )
             .select_related("category")
             .first()
@@ -473,6 +474,7 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
                 Service.objects.filter(
                     is_active=True,
                     category__is_active=True,
+                    category__is_coming_soon=False,
                 )
                 .select_related("category")
                 .order_by(
@@ -488,6 +490,7 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
                 pk=service_id,
                 is_active=True,
                 category__is_active=True,
+                category__is_coming_soon=False,
             )
             .select_related("category")
             .first()
@@ -537,6 +540,7 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
         context["service_categories"] = (
             ServiceCategory.objects.filter(
                 is_active=True,
+                is_coming_soon=False,
                 services__is_active=True,
             )
             .prefetch_related(
@@ -553,6 +557,7 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
             Service.objects.filter(
                 is_active=True,
                 category__is_active=True,
+                category__is_coming_soon=False,
             )
             .select_related("category")
             .order_by(

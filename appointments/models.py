@@ -18,6 +18,9 @@ class ServiceCategory(models.Model):
     display_order = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
 
+    # Shown publicly with an "Em breve" badge, but not yet bookable.
+    is_coming_soon = models.BooleanField(default=False)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

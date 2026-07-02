@@ -19,13 +19,15 @@ class ServiceCategoryAdmin(admin.ModelAdmin):
         "name",
         "slug",
         "is_active",
+        "is_coming_soon",
     )
     list_display_links = ("name",)
     list_editable = (
         "display_order",
         "is_active",
+        "is_coming_soon",
     )
-    list_filter = ("is_active",)
+    list_filter = ("is_active", "is_coming_soon")
     search_fields = (
         "name",
         "slug",

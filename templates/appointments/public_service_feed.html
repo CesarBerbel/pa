@@ -59,7 +59,12 @@
 
                         <div>
                             <span class="luxury-eyebrow">Categoria</span>
-                            <h2>{{ category.name }}</h2>
+                            <h2>
+                                {{ category.name }}
+                                {% if category.is_coming_soon %}
+                                    <span class="coming-soon-badge">Em breve</span>
+                                {% endif %}
+                            </h2>
                         </div>
                     </div>
 
@@ -71,37 +76,63 @@
 
                     <div class="service-card-list">
                         {% for service in category.services.all %}
-                            <a
-                                href="{% url 'appointments:public_visual_schedule' %}?service={{ service.pk }}"
-                                class="service-public-card"
-                            >
-                                <div class="service-public-main">
-                                    <strong>{{ service.name }}</strong>
+                            {% if category.is_coming_soon %}
+                                <div class="service-public-card is-coming-soon">
+                                    <div class="service-public-main">
+                                        <strong>{{ service.name }}</strong>
 
-                                    {% if service.description %}
-                                        <p>
-                                            {{ service.description|truncatechars:130 }}
-                                        </p>
-                                    {% endif %}
-                                </div>
+                                        {% if service.description %}
+                                            <p>
+                                                {{ service.description|truncatechars:130 }}
+                                            </p>
+                                        {% endif %}
+                                    </div>
 
-                                <div class="service-public-meta">
-                                    <span>
-                                        <i class="bi bi-clock"></i>
-                                        {{ service.duration_minutes }} min
+                                    <div class="service-public-meta">
+                                        <span>
+                                            <i class="bi bi-clock"></i>
+                                            {{ service.duration_minutes }} min
+                                        </span>
+                                    </div>
+
+                                    <span class="service-public-cta text-muted">
+                                        <i class="bi bi-hourglass-split"></i>
+                                        Em breve
                                     </span>
-
-                                    <span>
-                                        <i class="bi bi-tag"></i>
-                                        € {{ service.price }}
-                                    </span>
                                 </div>
+                            {% else %}
+                                <a
+                                    href="{% url 'appointments:public_visual_schedule' %}?service={{ service.pk }}"
+                                    class="service-public-card"
+                                >
+                                    <div class="service-public-main">
+                                        <strong>{{ service.name }}</strong>
 
-                                <span class="service-public-cta">
-                                    Ver horários
-                                    <i class="bi bi-arrow-right"></i>
-                                </span>
-                            </a>
+                                        {% if service.description %}
+                                            <p>
+                                                {{ service.description|truncatechars:130 }}
+                                            </p>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="service-public-meta">
+                                        <span>
+                                            <i class="bi bi-clock"></i>
+                                            {{ service.duration_minutes }} min
+                                        </span>
+
+                                        <span>
+                                            <i class="bi bi-tag"></i>
+                                            € {{ service.price }}
+                                        </span>
+                                    </div>
+
+                                    <span class="service-public-cta">
+                                        Ver horários
+                                        <i class="bi bi-arrow-right"></i>
+                                    </span>
+                                </a>
+                            {% endif %}
                         {% empty %}
                             <div class="service-public-empty">
                                 Nenhum serviço ativo nesta categoria.
