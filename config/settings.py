@@ -76,8 +76,6 @@ SEO_THEME_COLOR = config("SEO_THEME_COLOR", default="#a8755f")
 
 SEO_ROBOTS_DEFAULT = config("SEO_ROBOTS_DEFAULT", default="index,follow")
 
-SEO_BUSINESS_PHONE = config("SEO_BUSINESS_PHONE", default="+351910191046")
-
 SEO_WHATSAPP_NUMBER = config("SEO_WHATSAPP_NUMBER", default="+351938594367")
 
 SEO_BUSINESS_EMAIL = config("SEO_BUSINESS_EMAIL", default="atendimento@priarantes.com")

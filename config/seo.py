@@ -45,7 +45,7 @@ def build_home_structured_data(service_categories):
         "url": settings.SITE_URL.rstrip("/"),
         "image": absolute_url(settings.SEO_DEFAULT_IMAGE_PATH),
         "description": settings.SEO_DEFAULT_DESCRIPTION,
-        "telephone": settings.SEO_BUSINESS_PHONE,
+        "telephone": settings.SEO_WHATSAPP_NUMBER,
         "email": settings.SEO_BUSINESS_EMAIL,
         "priceRange": "€€",
         "address": {

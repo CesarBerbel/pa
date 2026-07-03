@@ -171,7 +171,7 @@ class WhatsAppAppointmentNotificationService:
             "appointment_time": appointment.start_time.strftime("%H:%M"),
             "reference_code": appointment.reference_code,
             "business_name": getattr(settings, "SEO_SITE_NAME", "Priscila Arantes PA"),
-            "business_phone": getattr(settings, "SEO_BUSINESS_PHONE", ""),
+            "business_phone": getattr(settings, "SEO_WHATSAPP_NUMBER", ""),
         }
 
     @staticmethod

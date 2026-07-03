@@ -40,7 +40,6 @@ def seo_settings(request):
         "SEO_LOCALE": settings.SEO_LOCALE,
         "SEO_THEME_COLOR": settings.SEO_THEME_COLOR,
         "SEO_ROBOTS_DEFAULT": settings.SEO_ROBOTS_DEFAULT,
-        "SEO_BUSINESS_PHONE_DISPLAY": _format_pt_phone(settings.SEO_BUSINESS_PHONE),
         "SEO_WHATSAPP_NUMBER": whatsapp_number,
         "SEO_WHATSAPP_DISPLAY": _format_pt_phone(whatsapp_number),
         "SEO_WHATSAPP_LINK": f"https://wa.me/{whatsapp_digits}?text={whatsapp_message}",

@@ -29,7 +29,7 @@ class Command(BaseCommand):
         "appointment_time": "10:00",
         "reference_code": "AGD-DEBUG",
         "business_name": "Priscila Arantes PA",
-        "business_phone": "+351910191046",
+        "business_phone": "+351938594367",
     }
 
     def add_arguments(self, parser):
@@ -234,7 +234,7 @@ class Command(BaseCommand):
             )
             context["business_phone"] = getattr(
                 settings,
-                "SEO_BUSINESS_PHONE",
+                "SEO_WHATSAPP_NUMBER",
                 context["business_phone"],
             )
 
