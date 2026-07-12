@@ -1,3 +1,5 @@
+import re
+
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
@@ -245,3 +247,50 @@ class WhatsAppMessageLog(models.Model):
             f"{self.appointment.reference_code} - "
             f"{self.template_name} - {self.status}"
         )
+
+
+class InstagramPost(models.Model):
+    # Publicação real do Instagram, cadastrada colando o código de incorporação
+    # oficial (Instagram > "..." > Copiar código de incorporação) e exibida
+    # como embed ao vivo (blockquote + embed.js) em carrossel no site.
+
+    embed_code = models.TextField(
+        help_text=(
+            "Cole aqui o código de incorporação do Instagram (no post, clique em "
+            "\"...\" → Copiar código de incorporação). Pode colar o bloco inteiro, "
+            "inclusive a linha &lt;script&gt; — ela é removida automaticamente ao salvar."
+        ),
+    )
+
+    display_order = models.PositiveIntegerField(default=0)
+
+    is_active = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["display_order", "-created_at"]
+        verbose_name = "Publicação do Instagram"
+        verbose_name_plural = "Publicações do Instagram"
+
+    def save(self, *args, **kwargs):
+        # Remove a(s) tag(s) <script> do trecho colado: o script do embed.js
+        # já é carregado uma única vez pelo template, para todos os posts.
+        self.embed_code = re.sub(
+            r"<script\b[^>]*>.*?</script>",
+            "",
+            self.embed_code,
+            flags=re.IGNORECASE | re.DOTALL,
+        ).strip()
+
+        super().save(*args, **kwargs)
+
+    @property
+    def permalink(self):
+        match = re.search(r'data-instgrm-permalink="([^"]+)"', self.embed_code)
+
+        return match.group(1) if match else ""
+
+    def __str__(self):
+        return self.permalink or f"Publicação #{self.pk}"

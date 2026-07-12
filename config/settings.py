@@ -113,13 +113,10 @@ if HOME_HERO_LAYOUT not in HOME_HERO_LAYOUT_CHOICES:
 
 
 # =============================================================================
-# Instagram (EmbedSocial)
+# Instagram
 # =============================================================================
-
-# Valor do atributo "data-ref" gerado em https://embedsocial.com ao criar um
-# widget de Instagram Feed (Dashboard > o widget > Embed Code > data-ref="...").
-# Deixe em branco para ocultar o feed de fotos na homepage.
-INSTAGRAM_EMBEDSOCIAL_REF = config("INSTAGRAM_EMBEDSOCIAL_REF", default="").strip()
+# As fotos do carrossel são cadastradas manualmente em Django Admin
+# (Notifications > Publicações do Instagram) — não há integração automática.
 
 INSTAGRAM_PROFILE_URL = config(
     "INSTAGRAM_PROFILE_URL",

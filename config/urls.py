@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.db.models import Prefetch
 from django.shortcuts import redirect, render
@@ -8,6 +9,7 @@ from accounts.views import DashboardView
 from appointments.models import Service, ServiceCategory
 from config.seo import build_home_structured_data
 from config.views import cookie_policy, privacy_policy, robots_txt, sitemap_xml
+from notifications.models import InstagramPost
 
 
 def home_view(request):
@@ -37,6 +39,7 @@ def home_view(request):
             "home_hero_layout": settings.HOME_HERO_LAYOUT,
             "service_categories": service_categories,
             "home_structured_data": build_home_structured_data(service_categories),
+            "instagram_posts": InstagramPost.objects.filter(is_active=True),
         },
     )
 
@@ -56,3 +59,7 @@ urlpatterns = [
         name="dashboard",
     ),
 ]
+
+if settings.DEBUG:
+    # Em produção, o servidor web (nginx/whitenoise) é quem deve servir MEDIA_ROOT.
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

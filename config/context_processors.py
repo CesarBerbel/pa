@@ -44,9 +44,8 @@ def seo_settings(request):
 
 
 def instagram_settings(request):
-    """Expose the Instagram (EmbedSocial) embed to templates, if configured."""
+    """Expose the Instagram profile link to templates."""
 
     return {
-        "INSTAGRAM_EMBEDSOCIAL_REF": settings.INSTAGRAM_EMBEDSOCIAL_REF,
         "INSTAGRAM_PROFILE_URL": settings.INSTAGRAM_PROFILE_URL,
     }

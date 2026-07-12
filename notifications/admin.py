@@ -1,9 +1,15 @@
+from django import forms
 from django.contrib import admin
 from django.shortcuts import get_object_or_404, render
 from django.urls import path, reverse
 from django.utils.html import format_html
 
-from .models import EmailEventSetting, EmailTemplate, WhatsAppMessageLog
+from .models import (
+    EmailEventSetting,
+    EmailTemplate,
+    InstagramPost,
+    WhatsAppMessageLog,
+)
 from .services import EmailTemplateService
 
 
@@ -276,5 +282,85 @@ class WhatsAppMessageLogAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         return False
 
-    def has_change_permission(self, request, obj=None):
-        return False
+
+class InstagramPostAdminForm(forms.ModelForm):
+    class Meta:
+        model = InstagramPost
+        fields = "__all__"
+        widgets = {
+            "embed_code": forms.Textarea(attrs={"rows": 10}),
+        }
+
+
+@admin.register(InstagramPost)
+class InstagramPostAdmin(admin.ModelAdmin):
+    # Manual list of real Instagram posts, shown via Instagram's own embed
+    # (blockquote + embed.js) in the homepage carousel.
+
+    form = InstagramPostAdminForm
+
+    list_display = (
+        "post_link",
+        "display_order",
+        "is_active",
+        "created_at",
+    )
+
+    list_display_links = ("post_link",)
+
+    list_editable = (
+        "display_order",
+        "is_active",
+    )
+
+    list_filter = ("is_active",)
+
+    search_fields = ("embed_code",)
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+
+    fieldsets = (
+        (
+            "Publicação",
+            {
+                "fields": ("embed_code",),
+                "description": (
+                    "No Instagram, abra a publicação → \"...\" → Copiar código de "
+                    "incorporação, e cole aqui o bloco inteiro."
+                ),
+            },
+        ),
+        (
+            "Exibição",
+            {
+                "fields": (
+                    "display_order",
+                    "is_active",
+                ),
+            },
+        ),
+        (
+            "Controle",
+            {
+                "fields": (
+                    "created_at",
+                    "updated_at",
+                ),
+            },
+        ),
+    )
+
+    def post_link(self, obj):
+        if not obj.permalink:
+            return "(sem link identificado)"
+
+        return format_html(
+            '<a href="{}" target="_blank" rel="noopener noreferrer">{}</a>',
+            obj.permalink,
+            obj.permalink,
+        )
+
+    post_link.short_description = "Publicação"

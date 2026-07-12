@@ -382,7 +382,7 @@
     </div>
 </section>
 
-{% if INSTAGRAM_EMBEDSOCIAL_REF or INSTAGRAM_PROFILE_URL %}
+{% if instagram_posts or INSTAGRAM_PROFILE_URL %}
     <section id="instagram" class="one-page-section mb-5">
         <div class="text-center mb-5">
             <span class="luxury-eyebrow">Instagram</span>
@@ -395,14 +395,55 @@
             </p>
         </div>
 
-        {% if INSTAGRAM_EMBEDSOCIAL_REF %}
-            <div class="instagram-widget-wrapper">
-                <div class="embedsocial-instagram" data-ref="{{ INSTAGRAM_EMBEDSOCIAL_REF }}"></div>
+        {% if instagram_posts %}
+            <div class="instagram-embed-carousel">
+                {% if instagram_posts|length > 1 %}
+                    <button class="instagram-embed-nav instagram-embed-nav-prev" type="button" aria-label="Anterior">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                {% endif %}
+
+                <div class="instagram-embed-track">
+                    {% for post in instagram_posts %}
+                        <div class="instagram-embed-item">
+                            {{ post.embed_code|safe }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                {% if instagram_posts|length > 1 %}
+                    <button class="instagram-embed-nav instagram-embed-nav-next" type="button" aria-label="Próximo">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                {% endif %}
             </div>
+
+            <script async src="//www.instagram.com/embed.js"></script>
+            <script>
+                document.addEventListener("DOMContentLoaded", function () {
+                    const track = document.querySelector(".instagram-embed-track");
+
+                    if (!track) {
+                        return;
+                    }
+
+                    const prevButton = document.querySelector(".instagram-embed-nav-prev");
+                    const nextButton = document.querySelector(".instagram-embed-nav-next");
+                    const scrollAmount = 340;
+
+                    prevButton?.addEventListener("click", function () {
+                        track.scrollBy({ left: -scrollAmount, behavior: "smooth" });
+                    });
+
+                    nextButton?.addEventListener("click", function () {
+                        track.scrollBy({ left: scrollAmount, behavior: "smooth" });
+                    });
+                });
+            </script>
         {% endif %}
 
         {% if INSTAGRAM_PROFILE_URL %}
-            <div class="text-center {% if INSTAGRAM_EMBEDSOCIAL_REF %}mt-4{% endif %}">
+            <div class="text-center {% if instagram_posts %}mt-4{% endif %}">
                 <a
                     href="{{ INSTAGRAM_PROFILE_URL }}"
                     target="_blank"
@@ -415,21 +456,6 @@
             </div>
         {% endif %}
     </section>
-
-    {% if INSTAGRAM_EMBEDSOCIAL_REF %}
-        <script>
-            (function (d, s, id) {
-                var js, fjs = d.getElementsByTagName(s)[0];
-                if (d.getElementById(id)) {
-                    return;
-                }
-                js = d.createElement(s);
-                js.id = id;
-                js.src = "https://embedsocial.com/cdn/ig.js";
-                fjs.parentNode.insertBefore(js, fjs);
-            }(document, "script", "EmbedSocialInstagramScript"));
-        </script>
-    {% endif %}
 {% endif %}
 
 {% if not user.is_superuser %}
