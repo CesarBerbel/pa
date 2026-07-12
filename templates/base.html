@@ -73,17 +73,6 @@
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 
-{% if not user.is_superuser and PROMO_ACTIVE %}
-    <div class="promo-topbar">
-        <a href="{% url 'home' %}#promocao">
-            <i class="bi bi-stars"></i>
-            {{ PROMO_DISCOUNT_PERCENT }}% de desconto em todos os serviços com o código
-            <strong>{{ PROMO_CODE }}</strong>
-            — válido até {{ PROMO_VALID_UNTIL|date:"d/m" }}
-        </a>
-    </div>
-{% endif %}
-
 <nav class="navbar navbar-expand-lg navbar-light public-navbar">
     <div class="container">
         <a class="navbar-brand d-flex align-items-center gap-2 fw-semibold" href="{% url 'home' %}">

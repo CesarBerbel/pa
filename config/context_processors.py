@@ -1,9 +1,6 @@
-from datetime import date
 from urllib.parse import quote, urljoin
 
 from django.conf import settings
-
-from config.promotions import get_active_promo_code
 
 
 def _format_pt_phone(phone):
@@ -43,33 +40,6 @@ def seo_settings(request):
         "SEO_WHATSAPP_NUMBER": whatsapp_number,
         "SEO_WHATSAPP_DISPLAY": _format_pt_phone(whatsapp_number),
         "SEO_WHATSAPP_LINK": f"https://wa.me/{whatsapp_digits}?text={whatsapp_message}",
-    }
-
-
-def promo_settings(request):
-    """Expose the current promotional campaign to templates, if still valid."""
-
-    is_active = get_active_promo_code() is not None
-    valid_until = None
-
-    if settings.PROMO_ENABLED:
-        try:
-            valid_until = date.fromisoformat(settings.PROMO_VALID_UNTIL)
-        except ValueError:
-            pass
-
-    whatsapp_digits = settings.SEO_WHATSAPP_NUMBER.lstrip("+")
-    promo_message = quote(
-        f"Olá! Vi a promoção de {settings.PROMO_DISCOUNT_PERCENT}% de desconto "
-        f"(código {settings.PROMO_CODE}) e gostaria de marcar um horário."
-    )
-
-    return {
-        "PROMO_ACTIVE": is_active,
-        "PROMO_DISCOUNT_PERCENT": settings.PROMO_DISCOUNT_PERCENT,
-        "PROMO_CODE": settings.PROMO_CODE,
-        "PROMO_VALID_UNTIL": valid_until,
-        "PROMO_WHATSAPP_LINK": f"https://wa.me/{whatsapp_digits}?text={promo_message}",
     }
 
 

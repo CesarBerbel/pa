@@ -47,6 +47,11 @@
                     em domicílio, mediante disponibilidade.
                 </p>
 
+                <a class="models-badge mb-4" href="#modelos" data-section-link>
+                    <i class="bi bi-stars"></i>
+                    Procuram-se modelos · 10€
+                </a>
+
                 <div class="luxury-hero-actions d-flex flex-column flex-md-row gap-3">
                     <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary btn-lg px-5">
                         Agendar horário
@@ -77,6 +82,11 @@
                     em domicílio, mediante disponibilidade.
                 </p>
 
+                <a class="models-badge mb-4" href="#modelos" data-section-link>
+                    <i class="bi bi-stars"></i>
+                    Procuram-se modelos · 10€
+                </a>
+
                 <div class="d-flex flex-column flex-md-row gap-3">
                     <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary btn-lg px-5">
                         Agendar horário
@@ -96,39 +106,6 @@
                         class="luxury-logo"
                     >
                 </div>
-            </div>
-        </div>
-    </section>
-{% endif %}
-
-{% if PROMO_ACTIVE %}
-    <section id="promocao" class="promo-banner mb-5">
-        <div class="promo-banner-content">
-            <span class="luxury-eyebrow">Promoção por tempo limitado</span>
-
-            <h2 class="mt-2 mb-2">
-                {{ PROMO_DISCOUNT_PERCENT }}% de desconto em todos os serviços
-            </h2>
-
-            <p class="mb-3">
-                Use o código <strong>{{ PROMO_CODE }}</strong> ao marcar o seu horário.
-                Válido até {{ PROMO_VALID_UNTIL|date:"d/m/Y" }} para todas as categorias:
-                podologia, manicure, pedicure e enfermagem.
-            </p>
-
-            <div class="d-flex flex-column flex-md-row gap-3 justify-content-center">
-                <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary btn-lg px-5">
-                    Aproveitar promoção
-                </a>
-
-                <a
-                    href="{{ PROMO_WHATSAPP_LINK }}"
-                    class="btn btn-outline-secondary btn-lg px-5"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    Tirar dúvidas no WhatsApp
-                </a>
             </div>
         </div>
     </section>
@@ -154,6 +131,54 @@
         <strong>Atendimento em domicílio</strong>
         <span>Disponível mediante consulta prévia</span>
     </div>
+</section>
+
+<section id="modelos" class="one-page-section mb-5 text-center">
+    <span class="luxury-eyebrow">Estamos precisando de</span>
+    <h2 class="models-banner-title">Modelos</h2>
+
+    <p class="text-muted mx-auto mb-4" style="max-width: 640px;">
+        Procuro pessoas com unha encravada, unha espessada ou deformada, calos e calosidades,
+        ou outras alterações nos pés e unhas, para compor o meu portfólio em Portugal.
+    </p>
+
+    <div class="models-banner-cards mx-auto" style="max-width: 700px;">
+        <div class="models-banner-list">
+            <h3>Procuro pessoas com:</h3>
+            <ul>
+                <li>Unha encravada</li>
+                <li>Unha espessada ou deformada</li>
+                <li>Calos e calosidades</li>
+                <li>Outras alterações nos pés e unhas</li>
+            </ul>
+        </div>
+
+        <div class="models-banner-price">
+            <span>Que só pagam</span>
+            <strong>10€</strong>
+            <small>Pelo valor do material</small>
+        </div>
+    </div>
+
+    <p class="models-banner-note mx-auto" style="max-width: 640px;">
+        Atendimento realizado <strong>apenas na alteração apresentada</strong>, de forma pontual.
+        Exemplo: somente na unha encravada, somente no calo ou somente na unha afetada.
+    </p>
+
+    <p class="models-banner-about mx-auto mb-4" style="max-width: 640px;">
+        Sou enfermeira e podóloga brasileira, com mais de 20 anos de experiência no cuidado dos
+        pés e unhas. Estou a iniciar esta nova fase profissional em Portugal e preciso de
+        modelos para compor o meu portfólio.
+    </p>
+
+    <a
+        href="https://wa.me/{{ SEO_WHATSAPP_NUMBER|cut:'+' }}?text={{ 'Olá! Vi o anúncio de modelos no site e gostaria de participar.'|urlencode }}"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="btn btn-primary btn-lg px-5"
+    >
+        Quero ser modelo — Enviar mensagem
+    </a>
 </section>
 
 <section id="marcacao" class="one-page-section mb-5">
@@ -405,6 +430,71 @@
             }(document, "script", "EmbedSocialInstagramScript"));
         </script>
     {% endif %}
+{% endif %}
+
+{% if not user.is_superuser %}
+    <div class="modal fade" id="modelsBannerModal" tabindex="-1" aria-labelledby="modelsBannerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content models-banner">
+                <button type="button" class="btn-close models-banner-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+
+                <div class="modal-body text-center">
+                    <span class="luxury-eyebrow">Estamos precisando de</span>
+                    <h2 class="models-banner-title" id="modelsBannerModalLabel">Modelos</h2>
+
+                    <div class="models-banner-cards">
+                        <div class="models-banner-list">
+                            <h3>Procuro pessoas com:</h3>
+                            <ul>
+                                <li>Unha encravada</li>
+                                <li>Unha espessada ou deformada</li>
+                                <li>Calos e calosidades</li>
+                                <li>Outras alterações nos pés e unhas</li>
+                            </ul>
+                        </div>
+
+                        <div class="models-banner-price">
+                            <span>Que só pagam</span>
+                            <strong>10€</strong>
+                            <small>Pelo valor do material</small>
+                        </div>
+                    </div>
+
+                    <p class="models-banner-note">
+                        Atendimento realizado <strong>apenas na alteração apresentada</strong>, de forma pontual.
+                        Exemplo: somente na unha encravada, somente no calo ou somente na unha afetada.
+                    </p>
+
+                    <p class="models-banner-about">
+                        Sou enfermeira e podóloga brasileira, com mais de 20 anos de experiência no cuidado dos
+                        pés e unhas. Estou a iniciar esta nova fase profissional em Portugal e preciso de
+                        modelos para compor o meu portfólio.
+                    </p>
+
+                    <a
+                        href="https://wa.me/{{ SEO_WHATSAPP_NUMBER|cut:'+' }}?text={{ 'Olá! Vi o anúncio de modelos no site e gostaria de participar.'|urlencode }}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="btn btn-primary btn-lg models-banner-cta"
+                    >
+                        Quero ser modelo — Enviar mensagem
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const modalEl = document.getElementById("modelsBannerModal");
+
+            if (!modalEl) {
+                return;
+            }
+
+            new bootstrap.Modal(modalEl).show();
+        });
+    </script>
 {% endif %}
 
 {% endblock %}

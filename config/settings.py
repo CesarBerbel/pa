@@ -128,20 +128,6 @@ INSTAGRAM_PROFILE_URL = config(
 
 
 # =============================================================================
-# Promotion
-# =============================================================================
-
-PROMO_ENABLED = config("PROMO_ENABLED", default=True, cast=bool)
-
-PROMO_DISCOUNT_PERCENT = config("PROMO_DISCOUNT_PERCENT", default=25, cast=int)
-
-PROMO_CODE = config("PROMO_CODE", default="BEMVINDA25")
-
-# Formato AAAA-MM-DD. A promoção deixa de aparecer automaticamente após esta data.
-PROMO_VALID_UNTIL = config("PROMO_VALID_UNTIL", default="2026-07-31")
-
-
-# =============================================================================
 # Public bookings
 # =============================================================================
 
@@ -218,7 +204,6 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "config.context_processors.seo_settings",
-                "config.context_processors.promo_settings",
                 "config.context_processors.instagram_settings",
             ],
         },
