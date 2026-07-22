@@ -26,15 +26,6 @@ def build_home_structured_data(service_categories):
                         "@type": "HealthAndBeautyBusiness",
                         "name": settings.SEO_SITE_NAME,
                     },
-                    "offers": {
-                        "@type": "Offer",
-                        "price": str(service.price),
-                        "priceCurrency": "EUR",
-                        "availability": "https://schema.org/InStock",
-                        "url": absolute_url(
-                            reverse("appointments:public_visual_schedule")
-                        ),
-                    },
                 }
             )
 
@@ -101,14 +92,9 @@ def build_service_feed_structured_data(service_categories):
                             "name": settings.SEO_SITE_NAME,
                             "url": settings.SITE_URL.rstrip("/"),
                         },
-                        "offers": {
-                            "@type": "Offer",
-                            "price": str(service.price),
-                            "priceCurrency": "EUR",
-                            "url": absolute_url(
-                                reverse("appointments:public_visual_schedule")
-                            ),
-                        },
+                        "url": absolute_url(
+                            reverse("appointments:public_visual_schedule")
+                        ),
                     },
                 }
             )
