@@ -19,6 +19,53 @@
 
 {% block content %}
 
+{# Aviso do novo local de atendimento. É intencionalmente efémero: não guarda #}
+{# estado, por isso reaparece a cada entrada ou recarregamento da página. #}
+<aside
+    id="salon-announcement"
+    class="salon-announcement"
+    aria-label="Novo local de atendimento"
+>
+    <div class="salon-announcement-content">
+        <span class="salon-announcement-icon" aria-hidden="true">
+            <i class="bi bi-geo-alt-fill"></i>
+        </span>
+
+        <div class="salon-announcement-text">
+            <span class="salon-announcement-kicker">Novo espaço</span>
+
+            <p class="salon-announcement-title">
+                Atendimento também no salão <a
+                    href="https://www.instagram.com/divah.pt"
+                    class="salon-announcement-brand"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Instagram do salão DIVAH, @divah.pt"
+                >DIVAH <i class="bi bi-instagram" aria-hidden="true"></i></a>, com hora marcada
+            </p>
+
+            <p class="salon-announcement-address">
+                Av. Sá da Bandeira, n.º 33 — Loja 108, 3000-351 Coimbra
+            </p>
+        </div>
+
+        <div class="salon-announcement-actions">
+            <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary">
+                Marcar horário
+            </a>
+
+            <button
+                type="button"
+                class="salon-announcement-close"
+                data-announcement-dismiss
+                aria-label="Fechar aviso"
+            >
+                <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
+        </div>
+    </div>
+</aside>
+
 {% if home_hero_layout == "logo_top" %}
     <section
         id="inicio"
@@ -399,5 +446,23 @@
         {% endif %}
     </section>
 {% endif %}
+
+<script>
+    (function () {
+        var announcement = document.getElementById("salon-announcement");
+
+        if (!announcement) {
+            return;
+        }
+
+        // Fecha apenas nesta visualização. Nada é persistido, para que o aviso
+        // volte a aparecer sempre que a página inicial for aberta ou recarregada.
+        announcement.addEventListener("click", function (event) {
+            if (event.target.closest("[data-announcement-dismiss]")) {
+                announcement.remove();
+            }
+        });
+    })();
+</script>
 
 {% endblock %}

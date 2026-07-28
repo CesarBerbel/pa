@@ -396,6 +396,19 @@ class Appointment(models.Model):
 
     class Meta:
         ordering = ["date", "start_time"]
+        constraints = [
+            # Database-level guard against double booking. Application validation
+            # can be bypassed by a concurrent request that passes availability
+            # checks before the other one commits.
+            # This covers collisions on the same slot start. Partial overlaps
+            # between services of different durations remain covered only by
+            # AvailabilityService.validate_appointment().
+            models.UniqueConstraint(
+                fields=["date", "start_time"],
+                condition=~models.Q(status="cancelled"),
+                name="unique_active_appointment_per_slot",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.reference_code} - {self.customer} - {self.service}"

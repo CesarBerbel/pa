@@ -78,49 +78,63 @@ def find_customer_by_email_or_phone(email="", phone=""):
     return None
 
 
+def update_customer_contact_details(customer, name="", phone="", email="", user=None):
+    # Refresh contact details of an existing customer without erasing stored data
+    # and without downgrading a registered customer back to guest.
+    update_fields = []
+
+    if name and customer.full_name != name:
+        customer.full_name = name
+        update_fields.append("full_name")
+
+    if phone and customer.phone != phone:
+        customer.phone = phone
+        update_fields.append("phone")
+
+    if email and customer.email != email:
+        customer.email = email
+        update_fields.append("email")
+
+    if user is not None:
+        if customer.user_id != user.pk:
+            customer.user = user
+            update_fields.append("user")
+
+        if customer.is_guest:
+            customer.is_guest = False
+            update_fields.append("is_guest")
+
+    if update_fields:
+        update_fields.append("updated_at")
+        customer.save(update_fields=update_fields)
+
+    return customer
+
+
 def find_or_create_customer(name, phone, email, user=None):
+    # Reuse an existing customer whenever the email or phone is already known.
+    # Public bookings run without a user, so skipping this lookup would create a
+    # duplicate customer record on every booking made by the same person.
     normalized_email = normalize_email(email)
     normalized_phone = normalize_phone(phone)
 
-    # Caso exista usuário (signup)
-    if user is not None:
-        customer = find_customer_by_email_or_phone(
-            email=normalized_email,
-            phone=normalized_phone,
-        )
+    customer = find_customer_by_email_or_phone(
+        email=normalized_email,
+        phone=normalized_phone,
+    )
 
-        if customer:
-            # Vincula o usuário ao cliente existente
-            customer.user = user
-            customer.is_guest = False
-            customer.full_name = name
-            customer.phone = normalized_phone or phone
-            customer.email = normalized_email
-            customer.save(
-                update_fields=[
-                    "user",
-                    "is_guest",
-                    "full_name",
-                    "phone",
-                    "email",
-                    "updated_at",
-                ]
-            )
-            return customer
-
-        # Se não encontrou, cria novo
-        return Customer.objects.create(
-            user=user,
-            is_guest=False,
-            full_name=name,
+    if customer:
+        return update_customer_contact_details(
+            customer=customer,
+            name=name,
             phone=normalized_phone or phone,
             email=normalized_email,
+            user=user,
         )
 
-    # Fluxo de guest (sem usuário)
     return Customer.objects.create(
-        user=None,
-        is_guest=True,
+        user=user,
+        is_guest=user is None,
         full_name=name,
         phone=normalized_phone or phone,
         email=normalized_email,

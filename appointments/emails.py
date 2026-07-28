@@ -1,11 +1,34 @@
+import logging
+
 from django.conf import settings
 from django.core import signing
 from django.core.mail import EmailMultiAlternatives
+from django.db import transaction
 from django.urls import reverse
 from django.utils.html import escape
 
 from notifications.models import EmailEventSetting
 from notifications.services import EmailEventSettingService, EmailTemplateService
+
+logger = logging.getLogger(__name__)
+
+
+def deliver_after_commit(send_function, *args, **kwargs):
+    # Transactional emails must never decide whether a business operation
+    # survives. Delivery runs only after the surrounding transaction commits,
+    # and a mail failure is logged instead of raised, so an unreachable SMTP
+    # server can no longer roll back or break a booking.
+    # Outside a transaction, on_commit() runs the callback immediately.
+    def deliver():
+        try:
+            send_function(*args, **kwargs)
+        except Exception:
+            logger.exception(
+                "Failed to send email through %s.",
+                getattr(send_function, "__name__", repr(send_function)),
+            )
+
+    transaction.on_commit(deliver)
 
 
 def generate_secure_link(appointment):

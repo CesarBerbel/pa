@@ -3,9 +3,12 @@ from datetime import datetime
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from django.db import transaction
+from django.db import IntegrityError, transaction
 
-from appointments.emails import send_appointment_confirmation_email
+from appointments.emails import (
+    deliver_after_commit,
+    send_appointment_confirmation_email,
+)
 from appointments.audit_services import AppointmentAuditService
 from appointments.models import Appointment, AppointmentLog, Service
 
@@ -87,7 +90,10 @@ class AppointmentService:
                 )
 
                 if send_email:
-                    send_appointment_confirmation_email(appointment)
+                    deliver_after_commit(
+                        send_appointment_confirmation_email,
+                        appointment,
+                    )
 
             return AppointmentCreationResult(
                 success=True,
@@ -99,6 +105,14 @@ class AppointmentService:
             return AppointmentCreationResult(
                 success=False,
                 message=error.messages[0] if hasattr(error, "messages") else str(error),
+            )
+
+        except IntegrityError:
+            # Last line of defence against a concurrent double booking that
+            # passed validation. The database constraint rejects the insert.
+            return AppointmentCreationResult(
+                success=False,
+                message="Este horário já não está disponível. Escolha outro horário.",
             )
 
     @staticmethod

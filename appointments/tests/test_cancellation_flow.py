@@ -102,11 +102,14 @@ class AppointmentCancellationFlowTests(TestCase):
         # Ensure centralized cancellation saves reason, timestamp, audit log, and email.
         reason = "Cliente não poderá comparecer no horário marcado."
 
-        result = AppointmentCancellationService.cancel(
-            appointment=self.appointment,
-            user=self.superuser,
-            cancellation_reason=reason,
-        )
+        # Cancellation emails are delivered after commit, so the callbacks must
+        # be executed explicitly inside the test transaction.
+        with self.captureOnCommitCallbacks(execute=True):
+            result = AppointmentCancellationService.cancel(
+                appointment=self.appointment,
+                user=self.superuser,
+                cancellation_reason=reason,
+            )
 
         self.assertTrue(result.success)
 
@@ -157,13 +160,14 @@ class AppointmentCancellationFlowTests(TestCase):
             kwargs={"pk": self.appointment.pk},
         )
 
-        response = client.post(
-            url,
-            data={
-                "cancellation_reason": reason,
-            },
-            follow=True,
-        )
+        with self.captureOnCommitCallbacks(execute=True):
+            response = client.post(
+                url,
+                data={
+                    "cancellation_reason": reason,
+                },
+                follow=True,
+            )
 
         self.assertEqual(response.status_code, 200)
 
@@ -232,14 +236,15 @@ class AppointmentCancellationFlowTests(TestCase):
 
         url = reverse("appointments:public_cancel")
 
-        response = client.post(
-            url,
-            data={
-                "reference_code": self.appointment.reference_code,
-                "cancellation_reason": reason,
-            },
-            follow=True,
-        )
+        with self.captureOnCommitCallbacks(execute=True):
+            response = client.post(
+                url,
+                data={
+                    "reference_code": self.appointment.reference_code,
+                    "cancellation_reason": reason,
+                },
+                follow=True,
+            )
 
         self.assertEqual(response.status_code, 200)
 
@@ -263,13 +268,14 @@ class AppointmentCancellationFlowTests(TestCase):
             kwargs={"reference_code": self.appointment.reference_code},
         )
 
-        response = client.post(
-            url,
-            data={
-                "cancellation_reason": reason,
-            },
-            follow=True,
-        )
+        with self.captureOnCommitCallbacks(execute=True):
+            response = client.post(
+                url,
+                data={
+                    "cancellation_reason": reason,
+                },
+                follow=True,
+            )
 
         self.assertEqual(response.status_code, 200)
 

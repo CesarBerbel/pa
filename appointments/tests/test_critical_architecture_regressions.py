@@ -189,14 +189,17 @@ class AvailabilityCriticalTests(CriticalArchitectureTestMixin, TestCase):
 )
 class AppointmentCreationCriticalTests(CriticalArchitectureTestMixin, TestCase):
     def test_creation_service_creates_appointment_log_and_confirmation_email(self):
-        result = AppointmentService.create_appointment(
-            customer=self.customer,
-            service=self.service,
-            date=self.appointment_date,
-            start_time=time(9, 0),
-            created_by=self.admin_user,
-            send_email=True,
-        )
+        # Confirmation emails are delivered after commit, so the callbacks must
+        # be executed explicitly inside the test transaction.
+        with self.captureOnCommitCallbacks(execute=True):
+            result = AppointmentService.create_appointment(
+                customer=self.customer,
+                service=self.service,
+                date=self.appointment_date,
+                start_time=time(9, 0),
+                created_by=self.admin_user,
+                send_email=True,
+            )
 
         self.assertTrue(result.success)
         self.assertIsNotNone(result.appointment)
@@ -238,11 +241,12 @@ class AppointmentUseCaseCriticalTests(CriticalArchitectureTestMixin, TestCase):
     def test_confirm_use_case_changes_status_logs_and_sends_email(self):
         appointment = self.create_appointment(status=Appointment.STATUS_SCHEDULED)
 
-        result = ConfirmAppointmentUseCase.execute(
-            appointment=appointment,
-            user=self.admin_user,
-            send_email=True,
-        )
+        with self.captureOnCommitCallbacks(execute=True):
+            result = ConfirmAppointmentUseCase.execute(
+                appointment=appointment,
+                user=self.admin_user,
+                send_email=True,
+            )
 
         appointment.refresh_from_db()
 

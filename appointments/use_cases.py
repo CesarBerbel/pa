@@ -6,7 +6,10 @@ from django.conf import settings
 from django.db import transaction
 
 from appointments.audit_services import AppointmentAuditService
-from appointments.emails import send_appointment_confirmation_email
+from appointments.emails import (
+    deliver_after_commit,
+    send_appointment_confirmation_email,
+)
 from appointments.models import Appointment, AppointmentLog
 from notifications.whatsapp import WhatsAppAppointmentNotificationService
 
@@ -71,7 +74,10 @@ class ConfirmAppointmentUseCase:
             )
 
             if send_email:
-                send_appointment_confirmation_email(appointment)
+                deliver_after_commit(
+                    send_appointment_confirmation_email,
+                    appointment,
+                )
 
         result_message = "Marcação confirmada com sucesso."
 

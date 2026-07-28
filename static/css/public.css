@@ -4374,3 +4374,157 @@ textarea.form-control,
         padding: 22px !important;
     }
 }
+
+/* =========================================================================
+   Aviso do salão DIVAH na página inicial
+   ========================================================================= */
+
+.salon-announcement {
+    display: block;
+    margin-bottom: 44px;
+    /* O hero seguinte é full-bleed e usa position: relative, por isso seria
+       pintado por cima do aviso na zona de sobreposição. */
+    position: relative;
+    z-index: 2;
+}
+
+/* O hero de foto sobe 4rem para encostar na navbar (cancela o padding-top do
+   <main>). Com o aviso acima dele, quem ocupa esse espaço é o aviso, logo a
+   subida deixa de fazer sentido e passaria por cima dele. */
+.salon-announcement + .luxury-hero-photo {
+    margin-top: 0;
+}
+
+.salon-announcement-content {
+    align-items: center;
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--white) 68%);
+    border: 1px solid rgba(139, 94, 102, 0.18);
+    border-radius: 28px;
+    box-shadow: 0 18px 44px rgba(139, 94, 102, 0.12);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 22px;
+    padding: 22px 26px;
+}
+
+.salon-announcement-icon {
+    align-items: center;
+    background: var(--primary);
+    border-radius: 50%;
+    color: var(--white);
+    display: inline-flex;
+    flex-shrink: 0;
+    font-size: 1.35rem;
+    height: 56px;
+    justify-content: center;
+    width: 56px;
+}
+
+.salon-announcement-text {
+    flex: 1 1 260px;
+    min-width: 0;
+}
+
+.salon-announcement-kicker {
+    color: var(--primary-dark);
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+}
+
+.salon-announcement-title {
+    color: var(--text-dark);
+    font-size: 1.1rem;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-bottom: 4px;
+}
+
+.salon-announcement-brand {
+    color: var(--primary-dark);
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.salon-announcement-brand i {
+    font-size: 0.9em;
+    margin-left: 2px;
+    vertical-align: baseline;
+}
+
+.salon-announcement-brand:hover,
+.salon-announcement-brand:focus-visible {
+    color: var(--primary-dark);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.salon-announcement-address {
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    margin-bottom: 0;
+}
+
+.salon-announcement-actions {
+    align-items: center;
+    display: flex;
+    flex-shrink: 0;
+    gap: 10px;
+}
+
+.salon-announcement-close {
+    align-items: center;
+    background: transparent;
+    border: 1px solid rgba(139, 94, 102, 0.25);
+    border-radius: 50%;
+    color: var(--primary-dark);
+    display: inline-flex;
+    font-size: 0.85rem;
+    height: 38px;
+    justify-content: center;
+    width: 38px;
+}
+
+.salon-announcement-close:hover,
+.salon-announcement-close:focus-visible {
+    background: var(--primary-light);
+    border-color: var(--primary-dark);
+}
+
+@media (max-width: 767.98px) {
+    .salon-announcement {
+        margin-bottom: 32px;
+    }
+
+    .salon-announcement-content {
+        border-radius: 22px;
+        gap: 16px;
+        padding: 18px;
+        position: relative;
+    }
+
+    .salon-announcement-icon {
+        font-size: 1.15rem;
+        height: 46px;
+        width: 46px;
+    }
+
+    .salon-announcement-actions {
+        width: 100%;
+    }
+
+    .salon-announcement-actions .btn {
+        flex: 1 1 auto;
+    }
+
+    .salon-announcement-close {
+        position: absolute;
+        right: 12px;
+        top: 12px;
+    }
+}

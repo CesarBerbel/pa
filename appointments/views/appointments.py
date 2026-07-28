@@ -85,6 +85,13 @@ class AppointmentUpdateView(SuperuserRequiredMixin, UpdateView):
     success_url = reverse_lazy("appointments:appointment_list")
 
     def dispatch(self, request, *args, **kwargs):
+        # Validate access before loading the appointment, otherwise anonymous
+        # users could infer appointment state from the redirect and message.
+        permission_denied_response = self.get_permission_denied_response()
+
+        if permission_denied_response:
+            return permission_denied_response
+
         # Prevent editing completed appointments even by direct URL access.
         appointment = self.get_object()
 
@@ -171,6 +178,13 @@ class AppointmentCancelView(SuperuserRequiredMixin, UpdateView):
         return kwargs
 
     def dispatch(self, request, *args, **kwargs):
+        # Validate access before loading the appointment, otherwise anonymous
+        # users could infer appointment state from the redirect and message.
+        permission_denied_response = self.get_permission_denied_response()
+
+        if permission_denied_response:
+            return permission_denied_response
+
         # Prevent opening the cancellation form for appointments that cannot be cancelled.
         appointment = self.get_object()
 

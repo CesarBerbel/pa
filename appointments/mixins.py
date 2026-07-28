@@ -10,3 +10,12 @@ class SuperuserRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
 
     def handle_no_permission(self):
         return redirect("home")
+
+    def get_permission_denied_response(self):
+        # Views that need to inspect the object inside dispatch() must run the
+        # access check first. Otherwise they load the object and can return an
+        # object-dependent redirect before authorization has been validated.
+        if self.test_func():
+            return None
+
+        return self.handle_no_permission()
