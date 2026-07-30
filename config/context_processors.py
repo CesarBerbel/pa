@@ -1,6 +1,7 @@
 from urllib.parse import quote, urljoin
 
 from django.conf import settings
+from django.urls import translate_url
 
 
 def _format_pt_phone(phone):
@@ -49,3 +50,30 @@ def instagram_settings(request):
     return {
         "INSTAGRAM_PROFILE_URL": settings.INSTAGRAM_PROFILE_URL,
     }
+
+
+def language_alternates(request):
+    """Expose the current page in every language, for hreflang tags.
+
+    translate_url() returns the path unchanged when it cannot be resolved, so
+    pages outside i18n_patterns (admin, robots.txt) degrade harmlessly.
+    """
+
+    site_url = settings.SITE_URL.rstrip("/")
+    current_path = request.get_full_path()
+
+    alternates = []
+
+    for code, name in settings.LANGUAGES:
+        translated_path = translate_url(current_path, code)
+
+        alternates.append(
+            {
+                "code": code,
+                "name": name,
+                "path": translated_path,
+                "url": urljoin(site_url + "/", translated_path.lstrip("/")),
+            }
+        )
+
+    return {"LANGUAGE_ALTERNATES": alternates}

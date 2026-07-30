@@ -37,17 +37,17 @@
 
                     <select id="service" name="service" class="form-select form-select-lg">
                         {% for category in service_categories %}
-                            <optgroup label="{{ category.name }}">
+                            <optgroup label="{{ category.display_name }}">
                                 {% for service in services %}
                                     {% if service.category_id == category.id %}
                                         <option
                                             value="{{ service.pk }}"
-                                            data-name="{{ service.name }}"
-                                            data-category="{{ category.name }}"
+                                            data-name="{{ service.display_name }}"
+                                            data-category="{{ category.display_name }}"
                                             data-duration="{{ service.duration_minutes }}"
                                             {% if selected_service and selected_service.pk == service.pk %}selected{% endif %}
                                         >
-                                            {{ service.name }} · {{ service.duration_minutes }} min
+                                            {{ service.display_name }} · {{ service.duration_minutes }} min
                                         </option>
                                     {% endif %}
                                 {% endfor %}
@@ -75,8 +75,8 @@
             {% if selected_service %}
                 <div class="app-service-summary mt-4">
                     <span>Serviço selecionado</span>
-                    <strong id="selected-service-name">{{ selected_service.name }}</strong>
-                    <small id="selected-service-category">{{ selected_service.category.name }}</small>
+                    <strong id="selected-service-name">{{ selected_service.display_name }}</strong>
+                    <small id="selected-service-category">{{ selected_service.category.display_name }}</small>
                     <small id="selected-service-duration">{{ selected_service.duration_minutes }} minutos</small>
                 </div>
             {% endif %}
@@ -98,7 +98,7 @@
                                             aria-expanded="{% if selected_service and selected_service.category_id == category.id %}true{% else %}false{% endif %}"
                                             aria-controls="service-category-{{ category.id }}"
                                         >
-                                            {{ category.name }}
+                                            {{ category.display_name }}
                                         </button>
                                     </h2>
 
@@ -110,7 +110,7 @@
                                     >
                                         <div class="accordion-body">
                                             <p class="small text-muted mb-3">
-                                                {{ category.description }}
+                                                {{ category.display_description }}
                                             </p>
 
                                             <div class="list-group list-group-flush">
@@ -121,7 +121,7 @@
                                                             class="list-group-item list-group-item-action px-0 {% if selected_service and selected_service.pk == service.pk %}fw-semibold{% endif %}"
                                                         >
                                                             <div class="d-flex justify-content-between gap-3">
-                                                                <span>{{ service.name }}</span>
+                                                                <span>{{ service.display_name }}</span>
                                                                 <small>{{ service.duration_minutes }} min</small>
                                                             </div>
                                                         </a>

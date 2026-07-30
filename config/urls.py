@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.conf.urls.i18n import i18n_patterns
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.db.models import Prefetch
@@ -44,12 +45,21 @@ def home_view(request):
     )
 
 
+# Fora do i18n_patterns: ficheiros lidos por crawlers e o admin do Django, que
+# não devem ganhar prefixo de idioma. "i18n/" expõe a view set_language usada
+# pelo seletor de idioma.
 urlpatterns = [
     path("robots.txt", robots_txt, name="robots_txt"),
     path("sitemap.xml", sitemap_xml, name="sitemap_xml"),
+    path("admin/", admin.site.urls),
+    path("i18n/", include("django.conf.urls.i18n")),
+]
+
+# prefix_default_language=False mantém o português na raiz (priarantes.com/) e
+# coloca o inglês sob /en/. Nenhum URL existente muda.
+urlpatterns += i18n_patterns(
     path("politica-de-privacidade/", privacy_policy, name="privacy_policy"),
     path("politica-de-cookies/", cookie_policy, name="cookie_policy"),
-    path("admin/", admin.site.urls),
     path("", home_view, name="home"),
     path("", include("accounts.urls")),
     path("", include("appointments.urls")),
@@ -58,7 +68,8 @@ urlpatterns = [
         DashboardView.as_view(),
         name="dashboard",
     ),
-]
+    prefix_default_language=False,
+)
 
 if settings.DEBUG:
     # Em produção, o servidor web (nginx/whitenoise) é quem deve servir MEDIA_ROOT.

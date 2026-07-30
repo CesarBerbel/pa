@@ -32,10 +32,25 @@ class ServiceCategoryAdmin(admin.ModelAdmin):
         "name",
         "slug",
         "description",
+        "name_en",
     )
     prepopulated_fields = {
         "slug": ("name",),
     }
+    fieldsets = (
+        (None, {"fields": ("name", "slug", "description")}),
+        (
+            "Tradução para inglês (páginas em /en/)",
+            {
+                "fields": ("name_en", "description_en"),
+                "description": (
+                    "Campos opcionais. Quando ficam vazios, a versão em inglês "
+                    "do site mostra o texto em português."
+                ),
+            },
+        ),
+        (None, {"fields": ("display_order", "is_active", "is_coming_soon")}),
+    )
 
 
 @admin.register(Service)
@@ -55,8 +70,23 @@ class ServiceAdmin(admin.ModelAdmin):
         "name",
         "description",
         "category__name",
+        "name_en",
     )
     autocomplete_fields = ("category",)
+    fieldsets = (
+        (None, {"fields": ("category", "name", "description")}),
+        (
+            "Tradução para inglês (páginas em /en/)",
+            {
+                "fields": ("name_en", "description_en"),
+                "description": (
+                    "Campos opcionais. Quando ficam vazios, a versão em inglês "
+                    "do site mostra o texto em português."
+                ),
+            },
+        ),
+        (None, {"fields": ("duration_minutes", "price", "is_active")}),
+    )
 
 
 @admin.register(Customer)

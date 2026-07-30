@@ -60,7 +60,7 @@
                         <div>
                             <span class="luxury-eyebrow">Categoria</span>
                             <h2>
-                                {{ category.name }}
+                                {{ category.display_name }}
                                 {% if category.is_coming_soon %}
                                     <span class="coming-soon-badge">Em breve</span>
                                 {% endif %}
@@ -68,9 +68,9 @@
                         </div>
                     </div>
 
-                    {% if category.description %}
+                    {% if category.display_description %}
                         <p class="service-category-description">
-                            {{ category.description }}
+                            {{ category.display_description }}
                         </p>
                     {% endif %}
 
@@ -79,11 +79,11 @@
                             {% if category.is_coming_soon %}
                                 <div class="service-public-card is-coming-soon">
                                     <div class="service-public-main">
-                                        <strong>{{ service.name }}</strong>
+                                        <strong>{{ service.display_name }}</strong>
 
-                                        {% if service.description %}
+                                        {% if service.display_description %}
                                             <p>
-                                                {{ service.description|truncatechars:130 }}
+                                                {{ service.display_description|truncatechars:130 }}
                                             </p>
                                         {% endif %}
                                     </div>
@@ -106,11 +106,11 @@
                                     class="service-public-card"
                                 >
                                     <div class="service-public-main">
-                                        <strong>{{ service.name }}</strong>
+                                        <strong>{{ service.display_name }}</strong>
 
-                                        {% if service.description %}
+                                        {% if service.display_description %}
                                             <p>
-                                                {{ service.description|truncatechars:130 }}
+                                                {{ service.display_description|truncatechars:130 }}
                                             </p>
                                         {% endif %}
                                     </div>

@@ -1,7 +1,7 @@
-{% load static %}
+{% load static i18n %}
 
 <!doctype html>
-<html lang="pt">
+<html lang="{{ LANGUAGE_CODE }}">
 <head>
     <!-- Google Tag Manager -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-MNST7R8CG5">
@@ -43,6 +43,11 @@
     <meta name="twitter:image" content="{% block twitter_image %}{{ SEO_DEFAULT_IMAGE_URL }}{% endblock %}">
 
     <link rel="sitemap" type="application/xml" title="Sitemap" href="{{ SEO_SITE_URL }}/sitemap.xml">
+
+    {# Diz ao Google que as versões pt/en são a mesma página noutro idioma. #}
+    {% for alternate in LANGUAGE_ALTERNATES %}
+        <link rel="alternate" hreflang="{{ alternate.code }}" href="{{ alternate.url }}">
+    {% endfor %}
 
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -86,7 +91,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             data-bs-target="#mainNavbar"
             aria-controls="mainNavbar"
             aria-expanded="false"
-            aria-label="Abrir menu"
+            aria-label="{% translate "Abrir menu" %}"
         >
         <span class="navbar-toggler-icon"></span>
         </button>
@@ -104,32 +109,73 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 </div>
             {% else %}
                 <div class="navbar-nav ms-lg-4 mt-3 mt-lg-0">
-                    <a class="nav-link" data-section-link href="{% url 'home' %}#marcacao">Marcação</a>
-                    <a class="nav-link" data-section-link href="{% url 'home' %}#sobre">Sobre</a>
-                    <a class="nav-link" data-section-link href="{% url 'home' %}#servicos">Serviços</a>
+                    <a class="nav-link" data-section-link href="{% url 'home' %}#marcacao">{% translate "Marcação" %}</a>
+                    <a class="nav-link" data-section-link href="{% url 'home' %}#sobre">{% translate "Sobre" %}</a>
+                    <a class="nav-link" data-section-link href="{% url 'home' %}#servicos">{% translate "Serviços" %}</a>
                     {% if INSTAGRAM_PROFILE_URL %}
-                        <a class="nav-link" data-section-link href="{% url 'home' %}#instagram">Instagram</a>
+                        <a class="nav-link" data-section-link href="{% url 'home' %}#instagram">{% translate "Instagram" %}</a>
                     {% endif %}
-                    <a class="nav-link" data-section-link href="{% url 'home' %}#contato">Contato</a>
+                    <a class="nav-link" data-section-link href="{% url 'home' %}#contato">{% translate "Contato" %}</a>
                     {% if user.is_authenticated and not user.is_superuser %}
                         <a class="nav-link" href="{% url 'appointments:customer_appointments' %}">
-                            Minhas marcações
+                            {% translate "Minhas marcações" %}
                         </a>
                     {% endif %}
                 </div>
             {% endif %}
 
-            <div class="ms-lg-auto mt-3 mt-lg-0">
+            <form
+                action="{% url 'set_language' %}"
+                method="post"
+                class="language-switcher ms-lg-auto mt-3 mt-lg-0"
+            >
+                {% csrf_token %}
+                {# O destino já vem traduzido de LANGUAGE_ALTERNATES. Deixar o #}
+                {# set_language traduzir sozinho falharia: nesse pedido o idioma #}
+                {# ativo é o do POST, e /en/... deixa de resolver. #}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+                <label class="visually-hidden" for="language-select">
+                    {% translate "Idioma" %}
+                </label>
+
+                <i class="bi bi-translate" aria-hidden="true"></i>
+
+                <select
+                    id="language-select"
+                    name="language"
+                    class="form-select form-select-sm"
+                    onchange="this.form.next.value = this.selectedOptions[0].dataset.path; this.form.submit();"
+                >
+                    {% for alternate in LANGUAGE_ALTERNATES %}
+                        <option
+                            value="{{ alternate.code }}"
+                            data-path="{{ alternate.path }}"
+                            {% if alternate.code == LANGUAGE_CODE %}selected{% endif %}
+                        >
+                            {{ alternate.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <noscript>
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">
+                        {% translate "Mudar" %}
+                    </button>
+                </noscript>
+            </form>
+
+            <div class="mt-3 mt-lg-0">
                 {% if user.is_authenticated %}
                     <form method="post" action="{% url 'accounts:logout' %}">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-outline-danger btn-sm w-100">
-                            Sair
+                            {% translate "Sair" %}
                         </button>
                     </form>
                 {% else %}
                     <a href="{% url 'accounts:login' %}" class="btn btn-outline-primary btn-sm w-100">
-                        Área do cliente
+                        {% translate "Área do cliente" %}
                     </a>
                 {% endif %}
             </div>
@@ -159,56 +205,56 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     <img src="{% static 'img/logo.png' %}" alt="Priscila Arantes PA">
 
                     <p>
-                        Cuidado, bem-estar e profissionalismo em podologia.
+                        {% translate "Cuidado, bem-estar e profissionalismo em podologia." %}
                     </p>
 
                     <div class="footer-hours">
-                        <h4>Horário de funcionamento</h4>
-                        <p>Todos os dias: 08:00 — 20:00</p>
-                        <p>Almoço: 13:00 — 14:00</p>
+                        <h4>{% translate "Horário de funcionamento" %}</h4>
+                        <p>{% translate "Todos os dias: 08:00 — 20:00" %}</p>
+                        <p>{% translate "Almoço: 13:00 — 14:00" %}</p>
                     </div>
                 </div>
 
                 <div class="footer-info-panel">
                     <div class="footer-columns">
                         <div>
-                            <h4>Links rápidos</h4>
+                            <h4>{% translate "Links rápidos" %}</h4>
 
-                            <a href="{% url 'home' %}#inicio">Início</a>
-                            <a href="{% url 'home' %}#marcacao">Marcação</a>
-                            <a href="{% url 'home' %}#sobre">Sobre</a>
-                            <a href="{% url 'home' %}#servicos">Serviços</a>
+                            <a href="{% url 'home' %}#inicio">{% translate "Início" %}</a>
+                            <a href="{% url 'home' %}#marcacao">{% translate "Marcação" %}</a>
+                            <a href="{% url 'home' %}#sobre">{% translate "Sobre" %}</a>
+                            <a href="{% url 'home' %}#servicos">{% translate "Serviços" %}</a>
                             {% if INSTAGRAM_PROFILE_URL %}
-                                <a href="{% url 'home' %}#instagram">Instagram</a>
+                                <a href="{% url 'home' %}#instagram">{% translate "Instagram" %}</a>
                             {% endif %}
-                            <a href="{% url 'privacy_policy' %}">Política de Privacidade</a>
-                            <a href="{% url 'cookie_policy' %}">Política de Cookies</a>
+                            <a href="{% url 'privacy_policy' %}">{% translate "Política de Privacidade" %}</a>
+                            <a href="{% url 'cookie_policy' %}">{% translate "Política de Cookies" %}</a>
                             <button type="button" class="footer-cookie-link" data-cookie-action="open-preferences">
-                                Gerir cookies
+                                {% translate "Gerir cookies" %}
                             </button>
                             {% if user.is_authenticated and not user.is_superuser %}
                                 <a class="nav-link" href="{% url 'appointments:customer_appointments' %}">
-                                    Minhas marcações
+                                    {% translate "Minhas marcações" %}
                                 </a>
                             {% endif %}
                         </div>
 
                         <div>
-                            <h4>Contato</h4>
+                            <h4>{% translate "Contato" %}</h4>
 
                             <p>
-                                WhatsApp:<br>
+                                {% translate "WhatsApp:" %}<br>
                                 <a href="{{ SEO_WHATSAPP_LINK }}" target="_blank" rel="noopener noreferrer">
                                     {{ SEO_WHATSAPP_DISPLAY }}
                                 </a>
                             </p>
-                            <p>Email:<br>atendimento@priarantes.com</p>
-                            <p>Atendimento em domicílio disponível mediante consulta.</p>
+                            <p>{% translate "Email:" %}<br>atendimento@priarantes.com</p>
+                            <p>{% translate "Atendimento em domicílio disponível mediante consulta." %}</p>
 
                             <div class="footer-actions">
                                 {% if request.resolver_match.url_name != "public_visual_schedule" %}
                                     <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary">
-                                        Agendar horário
+                                        {% translate "Agendar horário" %}
                                     </a>
                                 {% endif %}
 
@@ -218,7 +264,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                                     target="_blank"
                                     rel="noopener noreferrer"
                                 >
-                                    WhatsApp
+                                    {% translate "WhatsApp" %}
                                 </a>
                             </div>
                         </div>
@@ -228,13 +274,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <div id="google-map-cookie-placeholder" class="cookie-map-placeholder">
                             <i class="bi bi-geo-alt"></i>
                             <div>
-                                <strong>Mapa bloqueado por preferências de cookies</strong>
+                                <strong>{% translate "Mapa bloqueado por preferências de cookies" %}</strong>
                                 <p>
-                                    Para ver o mapa incorporado do Google, aceite cookies funcionais.
-                                    A marcação online continua disponível mesmo sem ativar esta opção.
+                                    {% translate "Para ver o mapa incorporado do Google, aceite cookies funcionais. A marcação online continua disponível mesmo sem ativar esta opção." %}
                                 </p>
                                 <button type="button" class="btn btn-outline-secondary btn-sm" data-cookie-action="open-preferences">
-                                    Gerir cookies
+                                    {% translate "Gerir cookies" %}
                                 </button>
                             </div>
                         </div>
@@ -243,7 +288,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             data-cookie-category="functional"
                             data-cookie-placeholder="#google-map-cookie-placeholder"
                             data-cookie-src="https://www.google.com/maps?q=DIVAH%2C%20Av.%20S%C3%A1%20da%20Bandeira%2033%2C%20Loja%20108%2C%203000-351%20Coimbra&amp;hl=pt-PT&amp;output=embed"
-                            title="Mapa com a localização do salão DIVAH - Av. Sá da Bandeira 33, Loja 108, Coimbra"
+                            title="{% translate "Mapa com a localização do salão DIVAH - Av. Sá da Bandeira 33, Loja 108, Coimbra" %}"
                             width="600"
                             height="450"
                             style="border:0;"
@@ -258,12 +303,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             </div>
 
             <div class="footer-bottom">
-                <span>© {% now "Y" %} Priscila Arantes. Todos os direitos reservados.</span>
+                <span>© {% now "Y" %} {% translate "Priscila Arantes. Todos os direitos reservados." %}</span>
 
                 <div class="footer-legal-links">
-                    <a href="{% url 'privacy_policy' %}">Política de Privacidade</a>
-                    <a href="{% url 'cookie_policy' %}">Política de Cookies</a>
-                    <button type="button" data-cookie-action="open-preferences">Gerir cookies</button>
+                    <a href="{% url 'privacy_policy' %}">{% translate "Política de Privacidade" %}</a>
+                    <a href="{% url 'cookie_policy' %}">{% translate "Política de Cookies" %}</a>
+                    <button type="button" data-cookie-action="open-preferences">{% translate "Gerir cookies" %}</button>
                 </div>
             </div>
 
@@ -274,31 +319,28 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <section
         id="cookie-consent-banner"
         class="cookie-consent-banner"
-        aria-label="Aviso de cookies"
+        aria-label="{% translate "Aviso de cookies" %}"
         hidden
     >
         <div class="cookie-consent-content">
             <div>
-                <span class="cookie-consent-kicker">Privacidade e cookies</span>
-                <h2>Este site utiliza cookies</h2>
+                <span class="cookie-consent-kicker">{% translate "Privacidade e cookies" %}</span>
+                <h2>{% translate "Este site utiliza cookies" %}</h2>
                 <p>
-                    Usamos cookies necessários para funcionamento e segurança.
-                    Com a sua autorização, também podemos ativar recursos funcionais,
-                    analíticos e de marketing. Pode aceitar, rejeitar ou personalizar
-                    as suas preferências.
+                    {% translate "Usamos cookies necessários para funcionamento e segurança. Com a sua autorização, também podemos ativar recursos funcionais, analíticos e de marketing. Pode aceitar, rejeitar ou personalizar as suas preferências." %}
                 </p>
-                <a href="{% url 'cookie_policy' %}">Ler Política de Cookies</a>
+                <a href="{% url 'cookie_policy' %}">{% translate "Ler Política de Cookies" %}</a>
             </div>
 
             <div class="cookie-consent-actions">
                 <button type="button" class="btn btn-primary" data-cookie-action="accept-all">
-                    Aceitar todos
+                    {% translate "Aceitar todos" %}
                 </button>
                 <button type="button" class="btn btn-outline-secondary" data-cookie-action="reject-optional">
-                    Rejeitar opcionais
+                    {% translate "Rejeitar opcionais" %}
                 </button>
                 <button type="button" class="btn btn-link" data-cookie-action="open-preferences">
-                    Personalizar
+                    {% translate "Personalizar" %}
                 </button>
             </div>
         </div>
@@ -315,68 +357,66 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     >
         <div class="cookie-preferences-header">
             <div>
-                <span class="cookie-consent-kicker">Centro de preferências</span>
-                <h2 id="cookie-preferences-title">Gerir cookies</h2>
+                <span class="cookie-consent-kicker">{% translate "Centro de preferências" %}</span>
+                <h2 id="cookie-preferences-title">{% translate "Gerir cookies" %}</h2>
             </div>
             <button
                 type="button"
                 class="cookie-preferences-close"
                 data-cookie-action="close-preferences"
-                aria-label="Fechar preferências de cookies"
+                aria-label="{% translate "Fechar preferências de cookies" %}"
             >
                 ×
             </button>
         </div>
 
         <p class="cookie-preferences-intro">
-            Pode ativar ou desativar categorias opcionais. Os cookies necessários
-            mantêm-se sempre ativos porque são indispensáveis para segurança,
-            formulários e funcionamento do site.
+            {% translate "Pode ativar ou desativar categorias opcionais. Os cookies necessários mantêm-se sempre ativos porque são indispensáveis para segurança, formulários e funcionamento do site." %}
         </p>
 
         <div class="cookie-preference-list">
             <label class="cookie-preference-item">
                 <input type="checkbox" data-cookie-preference="necessary" checked disabled>
                 <span>
-                    <strong>Necessários</strong>
-                    <small>Essenciais para sessão, segurança, formulários e gravação da escolha.</small>
+                    <strong>{% translate "Necessários" %}</strong>
+                    <small>{% translate "Essenciais para sessão, segurança, formulários e gravação da escolha." %}</small>
                 </span>
             </label>
 
             <label class="cookie-preference-item">
                 <input type="checkbox" data-cookie-preference="functional">
                 <span>
-                    <strong>Funcionais</strong>
-                    <small>Permitem recursos como o mapa incorporado de localização.</small>
+                    <strong>{% translate "Funcionais" %}</strong>
+                    <small>{% translate "Permitem recursos como o mapa incorporado de localização." %}</small>
                 </span>
             </label>
 
             <label class="cookie-preference-item">
                 <input type="checkbox" data-cookie-preference="analytics">
                 <span>
-                    <strong>Analíticos</strong>
-                    <small>Ajudam a compreender a utilização do site, se forem configurados no futuro.</small>
+                    <strong>{% translate "Analíticos" %}</strong>
+                    <small>{% translate "Ajudam a compreender a utilização do site, se forem configurados no futuro." %}</small>
                 </span>
             </label>
 
             <label class="cookie-preference-item">
                 <input type="checkbox" data-cookie-preference="marketing">
                 <span>
-                    <strong>Marketing</strong>
-                    <small>Permitem medição de campanhas e integrações publicitárias, se forem configuradas.</small>
+                    <strong>{% translate "Marketing" %}</strong>
+                    <small>{% translate "Permitem medição de campanhas e integrações publicitárias, se forem configuradas." %}</small>
                 </span>
             </label>
         </div>
 
         <div class="cookie-preferences-actions">
             <button type="button" class="btn btn-primary" data-cookie-action="save-preferences">
-                Guardar preferências
+                {% translate "Guardar preferências" %}
             </button>
             <button type="button" class="btn btn-outline-secondary" data-cookie-action="accept-all">
-                Aceitar todos
+                {% translate "Aceitar todos" %}
             </button>
             <button type="button" class="btn btn-link" data-cookie-action="reject-optional">
-                Rejeitar opcionais
+                {% translate "Rejeitar opcionais" %}
             </button>
         </div>
     </section>
@@ -387,7 +427,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     class="whatsapp-floating-button"
     target="_blank"
     rel="noopener noreferrer"
-    aria-label="Falar pelo WhatsApp"
+    aria-label="{% translate "Falar pelo WhatsApp" %}"
 >
     <svg
         xmlns="http://www.w3.org/2000/svg"

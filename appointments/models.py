@@ -7,6 +7,19 @@ from django.core.validators import MinValueValidator
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils.translation import get_language
+
+
+def get_localized_value(default_value, english_value):
+    # Public pages are also served in English under /en/. Catalog content lives
+    # in the database, so it cannot go through gettext. Fall back to the
+    # Portuguese value whenever the English one was left empty in the admin.
+    language = get_language() or ""
+
+    if language.lower().startswith("en") and english_value:
+        return english_value
+
+    return default_value
 
 
 class ServiceCategory(models.Model):
@@ -15,6 +28,19 @@ class ServiceCategory(models.Model):
     name = models.CharField(max_length=120, unique=True)
     slug = models.SlugField(max_length=140, unique=True)
     description = models.TextField(blank=True)
+
+    name_en = models.CharField(
+        max_length=120,
+        blank=True,
+        verbose_name="Nome (inglês)",
+        help_text="Usado nas páginas em /en/. Se ficar vazio, mostra o nome em português.",
+    )
+
+    description_en = models.TextField(
+        blank=True,
+        verbose_name="Descrição (inglês)",
+        help_text="Usada nas páginas em /en/. Se ficar vazia, mostra a descrição em português.",
+    )
     display_order = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
 
@@ -31,6 +57,14 @@ class ServiceCategory(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def display_name(self):
+        return get_localized_value(self.name, self.name_en)
+
+    @property
+    def display_description(self):
+        return get_localized_value(self.description, self.description_en)
 
 
 def get_default_service_category():
@@ -73,6 +107,19 @@ class Service(models.Model):
     name = models.CharField(max_length=120)
     description = models.TextField(blank=True)
 
+    name_en = models.CharField(
+        max_length=120,
+        blank=True,
+        verbose_name="Nome (inglês)",
+        help_text="Usado nas páginas em /en/. Se ficar vazio, mostra o nome em português.",
+    )
+
+    description_en = models.TextField(
+        blank=True,
+        verbose_name="Descrição (inglês)",
+        help_text="Usada nas páginas em /en/. Se ficar vazia, mostra a descrição em português.",
+    )
+
     duration_minutes = models.PositiveIntegerField(
         default=60,
         validators=[
@@ -103,6 +150,14 @@ class Service(models.Model):
             return f"{self.category.name} - {self.name}"
 
         return self.name
+
+    @property
+    def display_name(self):
+        return get_localized_value(self.name, self.name_en)
+
+    @property
+    def display_description(self):
+        return get_localized_value(self.description, self.description_en)
 
     def save(self, *args, **kwargs):
         # Service categories were added after the initial service model.

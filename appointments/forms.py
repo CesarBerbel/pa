@@ -111,7 +111,7 @@ class CategoryServiceChoiceField(forms.ModelChoiceField):
     # Displays services grouped by category in human-friendly labels.
 
     def label_from_instance(self, obj):
-        return f"{obj.category.name} — {obj.name}"
+        return f"{obj.category.display_name} — {obj.display_name}"
 
 
 class PublicAppointmentForm(forms.Form):

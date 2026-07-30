@@ -4502,3 +4502,43 @@ textarea.form-control,
         top: 12px;
     }
 }
+
+/* =========================================================================
+   Seletor de idioma
+   ========================================================================= */
+
+.language-switcher {
+    align-items: center;
+    display: flex;
+    gap: 6px;
+}
+
+.language-switcher i {
+    color: var(--primary-dark);
+    font-size: 1rem;
+}
+
+.language-switcher .form-select {
+    border: 1px solid rgba(139, 94, 102, 0.25);
+    border-radius: 999px;
+    color: var(--primary-dark);
+    font-weight: 600;
+    padding-block: 4px;
+    padding-inline: 12px 30px;
+    width: auto;
+}
+
+.language-switcher .form-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.2rem rgba(216, 167, 177, 0.3);
+}
+
+@media (max-width: 991.98px) {
+    .language-switcher {
+        justify-content: flex-start;
+    }
+
+    .language-switcher .form-select {
+        width: 100%;
+    }
+}

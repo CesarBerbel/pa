@@ -1,0 +1,459 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: pa\n"
+"Report-Msgid-Bugs-To: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: templates/home.html:45
+msgid ", com hora marcada"
+msgstr " — by appointment only"
+
+#: templates/home.html:227
+msgid "A proposta é oferecer um atendimento acolhedor e responsável, respeitando as necessidades de cada cliente e valorizando conforto, higiene e confiança."
+msgstr "The aim is to provide welcoming, responsible care that respects the needs of each client and values comfort, hygiene and trust."
+
+#: templates/base.html:94
+msgid "Abrir menu"
+msgstr "Open menu"
+
+#: templates/base.html:332
+#: templates/base.html:411
+msgid "Aceitar todos"
+msgstr "Accept all"
+
+#: templates/home.html:156
+msgid "Agenda simples e prática"
+msgstr "A simple, practical schedule"
+
+#: templates/base.html:252
+#: templates/home.html:98
+#: templates/home.html:126
+msgid "Agendar horário"
+msgstr "Book an appointment"
+
+#: templates/base.html:393
+msgid "Ajudam a compreender a utilização do site, se forem configurados no futuro."
+msgstr "Help us understand how the site is used, if enabled in the future."
+
+#: templates/base.html:209
+msgid "Almoço: 13:00 — 14:00"
+msgstr "Lunch: 1:00 pm — 2:00 pm"
+
+#: templates/home.html:160
+msgid "Ambiente profissional"
+msgstr "Professional setting"
+
+#: templates/base.html:392
+msgid "Analíticos"
+msgstr "Analytics"
+
+#: templates/home.html:343
+msgid "Anterior"
+msgstr "Previous"
+
+#: templates/home.html:245
+msgid "As áreas principais são categorias. Dentro de cada uma, escolha o serviço específico para marcar."
+msgstr "The main areas are categories. Within each one, choose the specific service you want to book."
+
+#: templates/home.html:150
+msgid "Atendimento cuidadoso"
+msgstr "Attentive care"
+
+#: templates/home.html:223
+msgid "Atendimento cuidadoso, humano e profissional"
+msgstr "Attentive, personal and professional care"
+
+#: templates/home.html:165
+msgid "Atendimento em domicílio"
+msgstr "Home visits"
+
+#: templates/base.html:247
+msgid "Atendimento em domicílio disponível mediante consulta."
+msgstr "Home visits available on request."
+
+#: templates/home.html:93
+#: templates/home.html:121
+msgid "Atendimento especializado em podologia, manicure, pedicure e apoio de enfermagem, com marcação online simples, segura e prática. Também disponível atendimento em domicílio, mediante disponibilidade."
+msgstr "Specialist care in podiatry, manicure, pedicure and nursing support, with simple, secure and practical online booking. Home visits are also available, subject to availability."
+
+#: templates/home.html:5
+msgid "Atendimento profissional em podologia, manicure, pedicure e enfermagem em Coimbra. Consulte os serviços disponíveis e marque o seu horário online."
+msgstr "Professional podiatry, manicure, pedicure and nursing care in Coimbra. Browse the available services and book your appointment online."
+
+#: templates/home.html:39
+msgid "Atendimento também no salão"
+msgstr "Also available at"
+
+#: templates/home.html:49
+msgid "Av. Sá da Bandeira, n.º 33 — Loja 108, 3000-351 Coimbra"
+msgstr "Av. Sá da Bandeira, no. 33 — Unit 108, 3000-351 Coimbra"
+
+#: templates/base.html:317
+msgid "Aviso de cookies"
+msgstr "Cookie notice"
+
+#: templates/home.html:231
+msgid "Cada marcação é pensada para proporcionar uma experiência tranquila, organizada e com acompanhamento adequado."
+msgstr "Every appointment is designed to be a calm, well-organised experience with proper follow-up."
+
+#: templates/home.html:184
+msgid "Cada pedido de horário é analisado e confirmado pela profissional antes de ficar definitivo. Precisa de atendimento em domicílio? Fale connosco pelo"
+msgstr "Every booking request is reviewed and confirmed by the practitioner before it becomes final. Need a home visit? Talk to us on"
+
+#: templates/home.html:202
+msgid "Categoria → Serviço → Agenda → Confirmação"
+msgstr "Category → Service → Schedule → Confirmation"
+
+#: templates/home.html:241
+msgid "Categorias e cuidados disponíveis"
+msgstr "Categories and available treatments"
+
+#: templates/base.html:355
+msgid "Centro de preferências"
+msgstr "Preference centre"
+
+#: templates/home.html:194
+msgid "Consultar código"
+msgstr "Look up a code"
+
+#: templates/home.html:102
+#: templates/home.html:130
+msgid "Consultar marcação"
+msgstr "Find my booking"
+
+#: templates/home.html:179
+msgid "Consulte os horários disponíveis, escolha a categoria e o serviço desejado e confirme a sua marcação em poucos passos."
+msgstr "Check the available times, choose the category and service you want, and confirm your booking in a few steps."
+
+#: templates/home.html:10
+msgid "Consulte serviços e marque online o seu horário com Priscila Arantes PA em Coimbra."
+msgstr "Browse services and book your appointment online with Priscila Arantes PA in Coimbra."
+
+#: templates/base.html:118
+#: templates/base.html:238
+msgid "Contato"
+msgstr "Contact"
+
+#: templates/home.html:215
+msgid "Cuidado profissional, atenção individualizada e compromisso com o bem-estar de cada cliente."
+msgstr "Professional care, individual attention and a commitment to the wellbeing of every client."
+
+#: templates/home.html:8
+msgid "Cuidado profissional, marcação online e atendimento personalizado em podologia, estética e enfermagem em Coimbra."
+msgstr "Professional care, online booking and personalised treatment in podiatry, beauty and nursing in Coimbra."
+
+#: templates/base.html:203
+msgid "Cuidado, bem-estar e profissionalismo em podologia."
+msgstr "Care, wellbeing and professionalism in podiatry."
+
+#: templates/home.html:87
+#: templates/home.html:115
+msgid "Cuidados profissionais com"
+msgstr "Professional care with"
+
+#: templates/home.html:166
+msgid "Disponível mediante consulta prévia"
+msgstr "Available by prior arrangement"
+
+#: templates/home.html:258
+msgid "Em breve"
+msgstr "Coming soon"
+
+#: templates/base.html:246
+msgid "Email:"
+msgstr "Email:"
+
+#: templates/home.html:319
+msgid "Enfermagem"
+msgstr "Nursing"
+
+#: templates/home.html:175
+msgid "Escolha o seu horário de forma simples"
+msgstr "Choose your time slot the easy way"
+
+#: templates/base.html:377
+msgid "Essenciais para sessão, segurança, formulários e gravação da escolha."
+msgstr "Essential for sessions, security, forms and storing your choice."
+
+#: templates/base.html:323
+msgid "Este site utiliza cookies"
+msgstr "This site uses cookies"
+
+#: templates/base.html:425
+msgid "Falar pelo WhatsApp"
+msgstr "Chat on WhatsApp"
+
+#: templates/home.html:62
+msgid "Fechar aviso"
+msgstr "Dismiss notice"
+
+#: templates/base.html:362
+msgid "Fechar preferências de cookies"
+msgstr "Close cookie preferences"
+
+#: templates/home.html:201
+msgid "Fluxo de marcação"
+msgstr "Booking steps"
+
+#: templates/home.html:151
+msgid "Foco em conforto e bem-estar"
+msgstr "Focused on comfort and wellbeing"
+
+#: templates/home.html:336
+msgid "Fotos e novidades direto do Instagram."
+msgstr "Photos and updates straight from Instagram."
+
+#: templates/base.html:384
+msgid "Funcionais"
+msgstr "Functional"
+
+#: templates/base.html:228
+#: templates/base.html:277
+#: templates/base.html:306
+#: templates/base.html:356
+msgid "Gerir cookies"
+msgstr "Manage cookies"
+
+#: templates/base.html:408
+msgid "Guardar preferências"
+msgstr "Save preferences"
+
+#: templates/base.html:207
+msgid "Horário de funcionamento"
+msgstr "Opening hours"
+
+#: templates/base.html:138
+msgid "Idioma"
+msgstr "Language"
+
+#: templates/base.html:116
+#: templates/base.html:223
+#: templates/home.html:330
+msgid "Instagram"
+msgstr "Instagram"
+
+#: templates/base.html:218
+msgid "Início"
+msgstr "Home"
+
+#: templates/base.html:327
+msgid "Ler Política de Cookies"
+msgstr "Read the Cookie Policy"
+
+#: templates/base.html:216
+msgid "Links rápidos"
+msgstr "Quick links"
+
+#: templates/home.html:303
+msgid "Manicure"
+msgstr "Manicure"
+
+#: templates/base.html:272
+msgid "Mapa bloqueado por preferências de cookies"
+msgstr "Map blocked by your cookie preferences"
+
+#: templates/base.html:286
+msgid "Mapa com a localização do salão DIVAH - Av. Sá da Bandeira 33, Loja 108, Coimbra"
+msgstr "Map showing the DIVAH salon - Av. Sá da Bandeira 33, Unit 108, Coimbra"
+
+#: templates/home.html:55
+msgid "Marcar horário"
+msgstr "Book now"
+
+#: templates/base.html:112
+#: templates/base.html:219
+msgid "Marcação"
+msgstr "Booking"
+
+#: templates/home.html:155
+#: templates/home.html:173
+msgid "Marcação online"
+msgstr "Online booking"
+
+#: templates/home.html:279
+msgid "Marcações em breve"
+msgstr "Bookings opening soon"
+
+#: templates/base.html:400
+msgid "Marketing"
+msgstr "Marketing"
+
+#: templates/base.html:121
+#: templates/base.html:232
+msgid "Minhas marcações"
+msgstr "My bookings"
+
+#: templates/base.html:158
+msgid "Mudar"
+msgstr "Change"
+
+#: templates/base.html:376
+msgid "Necessários"
+msgstr "Necessary"
+
+#: templates/home.html:35
+msgid "Novo espaço"
+msgstr "New location"
+
+#: templates/home.html:27
+msgid "Novo local de atendimento"
+msgstr "New practice location"
+
+#: templates/home.html:161
+msgid "Organização, higiene e atenção"
+msgstr "Organisation, hygiene and attention to detail"
+
+#: templates/base.html:274
+msgid "Para ver o mapa incorporado do Google, aceite cookies funcionais. A marcação online continua disponível mesmo sem ativar esta opção."
+msgstr "To see the embedded Google map, accept functional cookies. Online booking still works without enabling this option."
+
+#: templates/home.html:311
+msgid "Pedicure"
+msgstr "Pedicure"
+
+#: templates/home.html:312
+msgid "Pedicure simples, corte de unhas dos pés, verniz gel e hidratação profunda."
+msgstr "Basic pedicure, toenail trimming, gel polish and deep hydration."
+
+#: templates/base.html:401
+msgid "Permitem medição de campanhas e integrações publicitárias, se forem configuradas."
+msgstr "Allow campaign measurement and advertising integrations, if configured."
+
+#: templates/base.html:385
+msgid "Permitem recursos como o mapa incorporado de localização."
+msgstr "Enable features such as the embedded location map."
+
+#: templates/base.html:338
+msgid "Personalizar"
+msgstr "Customise"
+
+#: templates/base.html:369
+msgid "Pode ativar ou desativar categorias opcionais. Os cookies necessários mantêm-se sempre ativos porque são indispensáveis para segurança, formulários e funcionamento do site."
+msgstr "You can enable or disable optional categories. Necessary cookies always stay on because they are essential for security, forms and running the site."
+
+#: templates/home.html:295
+msgid "Podologia"
+msgstr "Podiatry"
+
+#: templates/home.html:84
+#: templates/home.html:112
+msgid "Podologia • Estética • Enfermagem"
+msgstr "Podiatry • Beauty • Nursing"
+
+#: templates/base.html:226
+#: templates/base.html:305
+msgid "Política de Cookies"
+msgstr "Cookie Policy"
+
+#: templates/base.html:225
+#: templates/base.html:304
+msgid "Política de Privacidade"
+msgstr "Privacy Policy"
+
+#: templates/home.html:4
+#: templates/home.html:7
+#: templates/home.html:9
+msgid "Priscila Arantes PA | Podologia, estética e enfermagem em Coimbra"
+msgstr "Priscila Arantes PA | Podiatry, beauty and nursing in Coimbra"
+
+#: templates/base.html:301
+msgid "Priscila Arantes. Todos os direitos reservados."
+msgstr "Priscila Arantes. All rights reserved."
+
+#: templates/base.html:322
+msgid "Privacidade e cookies"
+msgstr "Privacy and cookies"
+
+#: templates/home.html:357
+msgid "Próximo"
+msgstr "Next"
+
+#: templates/base.html:335
+#: templates/base.html:414
+msgid "Rejeitar opcionais"
+msgstr "Reject optional"
+
+#: templates/base.html:168
+msgid "Sair"
+msgstr "Log out"
+
+#: templates/home.html:396
+msgid "Seguir no Instagram"
+msgstr "Follow on Instagram"
+
+#: templates/base.html:114
+#: templates/base.html:221
+#: templates/home.html:239
+msgid "Serviços"
+msgstr "Services"
+
+#: templates/home.html:332
+msgid "Siga o nosso dia a dia"
+msgstr "Follow our day to day"
+
+#: templates/base.html:113
+#: templates/base.html:220
+msgid "Sobre"
+msgstr "About"
+
+#: templates/home.html:221
+msgid "Sobre a profissional"
+msgstr "About the practitioner"
+
+#: templates/base.html:208
+msgid "Todos os dias: 08:00 — 20:00"
+msgstr "Every day: 8:00 am — 8:00 pm"
+
+#: templates/home.html:296
+msgid "Tratamento de pés diabéticos, calosidades, unha encravada e avaliação podológica."
+msgstr "Diabetic foot care, callus treatment, ingrown toenails and podiatric assessment."
+
+#: templates/home.html:320
+msgid "Troca de penso, administração de medicação a idosos e avaliação de sinais vitais."
+msgstr "Dressing changes, medication administration for older adults and vital signs assessment."
+
+#: templates/home.html:304
+msgid "Unha em gel, manicure simples, cutícula russa e verniz gel mãos."
+msgstr "Gel nails, basic manicure, Russian cuticle work and gel polish for hands."
+
+#: templates/base.html:325
+msgid "Usamos cookies necessários para funcionamento e segurança. Com a sua autorização, também podemos ativar recursos funcionais, analíticos e de marketing. Pode aceitar, rejeitar ou personalizar as suas preferências."
+msgstr "We use necessary cookies for functionality and security. With your permission, we can also enable functional, analytics and marketing features. You can accept, reject or customise your preferences."
+
+#: templates/home.html:190
+msgid "Ver agenda disponível"
+msgstr "View available times"
+
+#: templates/home.html:283
+msgid "Ver serviços"
+msgstr "View services"
+
+#: templates/base.html:262
+msgid "WhatsApp"
+msgstr "WhatsApp"
+
+#: templates/base.html:241
+msgid "WhatsApp:"
+msgstr "WhatsApp:"
+
+#: templates/home.html:88
+#: templates/home.html:116
+msgid "delicadeza"
+msgstr "care"
+
+#: templates/home.html:89
+#: templates/home.html:117
+msgid "e organização"
+msgstr "and organisation"
+
+#: templates/home.html:6
+msgid "podologia Coimbra, manicure Coimbra, pedicure Coimbra, enfermagem Coimbra, pés diabéticos, unha em gel, troca de penso"
+msgstr "podiatry Coimbra, manicure Coimbra, pedicure Coimbra, nursing Coimbra, diabetic foot care, gel nails, dressing change"
+
+#: templates/base.html:173
+msgid "Área do cliente"
+msgstr "Client area"

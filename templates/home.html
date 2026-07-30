@@ -1,13 +1,13 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Priscila Arantes PA | Podologia, estética e enfermagem em Coimbra{% endblock %}
-{% block meta_description %}Atendimento profissional em podologia, manicure, pedicure e enfermagem em Coimbra. Consulte os serviços disponíveis e marque o seu horário online.{% endblock %}
-{% block meta_keywords %}podologia Coimbra, manicure Coimbra, pedicure Coimbra, enfermagem Coimbra, pés diabéticos, unha em gel, troca de penso{% endblock %}
-{% block og_title %}Priscila Arantes PA | Podologia, estética e enfermagem em Coimbra{% endblock %}
-{% block og_description %}Cuidado profissional, marcação online e atendimento personalizado em podologia, estética e enfermagem em Coimbra.{% endblock %}
-{% block twitter_title %}Priscila Arantes PA | Podologia, estética e enfermagem em Coimbra{% endblock %}
-{% block twitter_description %}Consulte serviços e marque online o seu horário com Priscila Arantes PA em Coimbra.{% endblock %}
+{% block title %}{% translate "Priscila Arantes PA | Podologia, estética e enfermagem em Coimbra" %}{% endblock %}
+{% block meta_description %}{% translate "Atendimento profissional em podologia, manicure, pedicure e enfermagem em Coimbra. Consulte os serviços disponíveis e marque o seu horário online." %}{% endblock %}
+{% block meta_keywords %}{% translate "podologia Coimbra, manicure Coimbra, pedicure Coimbra, enfermagem Coimbra, pés diabéticos, unha em gel, troca de penso" %}{% endblock %}
+{% block og_title %}{% translate "Priscila Arantes PA | Podologia, estética e enfermagem em Coimbra" %}{% endblock %}
+{% block og_description %}{% translate "Cuidado profissional, marcação online e atendimento personalizado em podologia, estética e enfermagem em Coimbra." %}{% endblock %}
+{% block twitter_title %}{% translate "Priscila Arantes PA | Podologia, estética e enfermagem em Coimbra" %}{% endblock %}
+{% block twitter_description %}{% translate "Consulte serviços e marque online o seu horário com Priscila Arantes PA em Coimbra." %}{% endblock %}
 
 {% block structured_data %}
     {% if home_structured_data %}
@@ -24,7 +24,7 @@
 <aside
     id="salon-announcement"
     class="salon-announcement"
-    aria-label="Novo local de atendimento"
+    aria-label="{% translate "Novo local de atendimento" %}"
 >
     <div class="salon-announcement-content">
         <span class="salon-announcement-icon" aria-hidden="true">
@@ -32,33 +32,34 @@
         </span>
 
         <div class="salon-announcement-text">
-            <span class="salon-announcement-kicker">Novo espaço</span>
+            <span class="salon-announcement-kicker">{% translate "Novo espaço" %}</span>
 
             <p class="salon-announcement-title">
-                Atendimento também no salão <a
+                {# A frase é dividida porque o nome do salão é um link. #}
+                {% translate "Atendimento também no salão" %} <a
                     href="https://www.instagram.com/divah.pt"
                     class="salon-announcement-brand"
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="Instagram do salão DIVAH, @divah.pt"
-                >DIVAH <i class="bi bi-instagram" aria-hidden="true"></i></a>, com hora marcada
+                >DIVAH <i class="bi bi-instagram" aria-hidden="true"></i></a>{% translate ", com hora marcada" %}
             </p>
 
             <p class="salon-announcement-address">
-                Av. Sá da Bandeira, n.º 33 — Loja 108, 3000-351 Coimbra
+                {% translate "Av. Sá da Bandeira, n.º 33 — Loja 108, 3000-351 Coimbra" %}
             </p>
         </div>
 
         <div class="salon-announcement-actions">
             <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary">
-                Marcar horário
+                {% translate "Marcar horário" %}
             </a>
 
             <button
                 type="button"
                 class="salon-announcement-close"
                 data-announcement-dismiss
-                aria-label="Fechar aviso"
+                aria-label="{% translate "Fechar aviso" %}"
             >
                 <i class="bi bi-x-lg" aria-hidden="true"></i>
             </button>
@@ -80,27 +81,25 @@
                     class="luxury-logo luxury-logo-transparent mb-4"
                 >
 
-                <span class="luxury-eyebrow">Podologia • Estética • Enfermagem</span>
+                <span class="luxury-eyebrow">{% translate "Podologia • Estética • Enfermagem" %}</span>
 
                 <h1 class="luxury-title mt-3 mb-4">
-                    Cuidados profissionais com
-                    <span class="signature-font">delicadeza</span>
-                    e organização
+                    {% translate "Cuidados profissionais com" %}
+                    <span class="signature-font">{% translate "delicadeza" %}</span>
+                    {% translate "e organização" %}
                 </h1>
 
                 <p class="luxury-subtitle mb-4">
-                    Atendimento especializado em podologia, manicure, pedicure e apoio de enfermagem,
-                    com marcação online simples, segura e prática. Também disponível atendimento
-                    em domicílio, mediante disponibilidade.
+                    {% translate "Atendimento especializado em podologia, manicure, pedicure e apoio de enfermagem, com marcação online simples, segura e prática. Também disponível atendimento em domicílio, mediante disponibilidade." %}
                 </p>
 
                 <div class="luxury-hero-actions d-flex flex-column flex-md-row gap-3">
                     <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary btn-lg px-5">
-                        Agendar horário
+                        {% translate "Agendar horário" %}
                     </a>
 
                     <a href="{% url 'appointments:public_appointment_lookup' %}" class="btn btn-outline-secondary btn-lg px-5">
-                        Consultar marcação
+                        {% translate "Consultar marcação" %}
                     </a>
                 </div>
             </div>
@@ -110,27 +109,25 @@
     <section id="inicio" class="luxury-hero mb-5">
         <div class="row align-items-center g-5">
             <div class="col-12 col-lg-6">
-                <span class="luxury-eyebrow">Podologia • Estética • Enfermagem</span>
+                <span class="luxury-eyebrow">{% translate "Podologia • Estética • Enfermagem" %}</span>
 
                 <h1 class="luxury-title mt-3 mb-4">
-                    Cuidados profissionais com
-                    <span class="signature-font">delicadeza</span>
-                    e organização
+                    {% translate "Cuidados profissionais com" %}
+                    <span class="signature-font">{% translate "delicadeza" %}</span>
+                    {% translate "e organização" %}
                 </h1>
 
                 <p class="luxury-subtitle mb-4">
-                    Atendimento especializado em podologia, manicure, pedicure e apoio de enfermagem,
-                    com marcação online simples, segura e prática. Também disponível atendimento
-                    em domicílio, mediante disponibilidade.
+                    {% translate "Atendimento especializado em podologia, manicure, pedicure e apoio de enfermagem, com marcação online simples, segura e prática. Também disponível atendimento em domicílio, mediante disponibilidade." %}
                 </p>
 
                 <div class="d-flex flex-column flex-md-row gap-3">
                     <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary btn-lg px-5">
-                        Agendar horário
+                        {% translate "Agendar horário" %}
                     </a>
 
                     <a href="{% url 'appointments:public_appointment_lookup' %}" class="btn btn-outline-secondary btn-lg px-5">
-                        Consultar marcação
+                        {% translate "Consultar marcação" %}
                     </a>
                 </div>
             </div>
@@ -150,61 +147,59 @@
 
 <section class="trust-strip mb-5">
     <div class="trust-item">
-        <strong>Atendimento cuidadoso</strong>
-        <span>Foco em conforto e bem-estar</span>
+        <strong>{% translate "Atendimento cuidadoso" %}</strong>
+        <span>{% translate "Foco em conforto e bem-estar" %}</span>
     </div>
 
     <div class="trust-item">
-        <strong>Marcação online</strong>
-        <span>Agenda simples e prática</span>
+        <strong>{% translate "Marcação online" %}</strong>
+        <span>{% translate "Agenda simples e prática" %}</span>
     </div>
 
     <div class="trust-item">
-        <strong>Ambiente profissional</strong>
-        <span>Organização, higiene e atenção</span>
+        <strong>{% translate "Ambiente profissional" %}</strong>
+        <span>{% translate "Organização, higiene e atenção" %}</span>
     </div>
 
     <div class="trust-item">
-        <strong>Atendimento em domicílio</strong>
-        <span>Disponível mediante consulta prévia</span>
+        <strong>{% translate "Atendimento em domicílio" %}</strong>
+        <span>{% translate "Disponível mediante consulta prévia" %}</span>
     </div>
 </section>
 
 <section id="marcacao" class="one-page-section mb-5">
     <div class="row align-items-center g-4">
         <div class="col-12 col-lg-6">
-            <span class="luxury-eyebrow">Marcação online</span>
+            <span class="luxury-eyebrow">{% translate "Marcação online" %}</span>
             <h2 class="section-title mt-2 mb-3">
-                Escolha o seu horário de forma simples
+                {% translate "Escolha o seu horário de forma simples" %}
             </h2>
 
             <p class="text-muted mb-3">
-                Consulte os horários disponíveis, escolha a categoria e o serviço desejado
-                e confirme a sua marcação em poucos passos.
+                {% translate "Consulte os horários disponíveis, escolha a categoria e o serviço desejado e confirme a sua marcação em poucos passos." %}
             </p>
 
             <p class="text-muted mb-4">
                 <i class="bi bi-info-circle me-1"></i>
-                Cada pedido de horário é analisado e confirmado pela profissional antes
-                de ficar definitivo. Precisa de atendimento em domicílio? Fale connosco pelo
+                {% translate "Cada pedido de horário é analisado e confirmado pela profissional antes de ficar definitivo. Precisa de atendimento em domicílio? Fale connosco pelo" %}
                 <a href="{{ SEO_WHATSAPP_LINK }}" target="_blank" rel="noopener noreferrer">WhatsApp</a>.
             </p>
 
             <div class="d-flex flex-column flex-md-row gap-3">
                 <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary btn-lg px-5">
-                    Ver agenda disponível
+                    {% translate "Ver agenda disponível" %}
                 </a>
 
                 <a href="{% url 'appointments:public_appointment_lookup' %}" class="btn btn-outline-secondary btn-lg px-5">
-                    Consultar código
+                    {% translate "Consultar código" %}
                 </a>
             </div>
         </div>
 
         <div class="col-12 col-lg-6">
             <div class="luxury-code-box">
-                <span>Fluxo de marcação</span>
-                <strong>Categoria → Serviço → Agenda → Confirmação</strong>
+                <span>{% translate "Fluxo de marcação" %}</span>
+                <strong>{% translate "Categoria → Serviço → Agenda → Confirmação" %}</strong>
             </div>
         </div>
     </div>
@@ -217,27 +212,23 @@
                 <span class="signature-font">Priscila Arantes</span>
                 <h2>Priscila Arantes PA</h2>
                 <p>
-                    Cuidado profissional, atenção individualizada e compromisso
-                    com o bem-estar de cada cliente.
+                    {% translate "Cuidado profissional, atenção individualizada e compromisso com o bem-estar de cada cliente." %}
                 </p>
             </div>
         </div>
 
         <div class="col-12 col-lg-7">
-            <span class="luxury-eyebrow">Sobre a profissional</span>
+            <span class="luxury-eyebrow">{% translate "Sobre a profissional" %}</span>
             <h2 class="section-title mt-2 mb-3">
-                Atendimento cuidadoso, humano e profissional
+                {% translate "Atendimento cuidadoso, humano e profissional" %}
             </h2>
 
             <p class="text-muted mb-3">
-                A proposta é oferecer um atendimento acolhedor e responsável,
-                respeitando as necessidades de cada cliente e valorizando conforto,
-                higiene e confiança.
+                {% translate "A proposta é oferecer um atendimento acolhedor e responsável, respeitando as necessidades de cada cliente e valorizando conforto, higiene e confiança." %}
             </p>
 
             <p class="text-muted mb-0">
-                Cada marcação é pensada para proporcionar uma experiência tranquila,
-                organizada e com acompanhamento adequado.
+                {% translate "Cada marcação é pensada para proporcionar uma experiência tranquila, organizada e com acompanhamento adequado." %}
             </p>
         </div>
     </div>
@@ -245,13 +236,13 @@
 
 <section id="servicos" class="mb-5">
     <div class="text-center mb-5">
-        <span class="luxury-eyebrow">Serviços</span>
+        <span class="luxury-eyebrow">{% translate "Serviços" %}</span>
         <h2 class="section-title mt-2">
-            Categorias e cuidados disponíveis
+            {% translate "Categorias e cuidados disponíveis" %}
         </h2>
 
         <p class="text-muted mb-0">
-            As áreas principais são categorias. Dentro de cada uma, escolha o serviço específico para marcar.
+            {% translate "As áreas principais são categorias. Dentro de cada uma, escolha o serviço específico para marcar." %}
         </p>
     </div>
 
@@ -264,20 +255,20 @@
                             <div class="luxury-icon">{{ forloop.counter|stringformat:"02d" }}</div>
 
                             {% if category.is_coming_soon %}
-                                <span class="coming-soon-badge">Em breve</span>
+                                <span class="coming-soon-badge">{% translate "Em breve" %}</span>
                             {% endif %}
                         </div>
 
-                        <h3>{{ category.name }}</h3>
+                        <h3>{{ category.display_name }}</h3>
 
                         <p>
-                            {{ category.description }}
+                            {{ category.display_description }}
                         </p>
 
                         <ul class="list-unstyled text-muted small mb-4">
                             {% for service in category.services.all|slice:":4" %}
                                 <li class="mb-2">
-                                    • {{ service.name }}
+                                    • {{ service.display_name }}
                                 </li>
                             {% endfor %}
                         </ul>
@@ -285,11 +276,11 @@
                         {% if category.is_coming_soon %}
                             <span class="text-muted small">
                                 <i class="bi bi-hourglass-split me-1"></i>
-                                Marcações em breve
+                                {% translate "Marcações em breve" %}
                             </span>
                         {% else %}
                             <a href="{% url 'appointments:public_service_feed' %}" class="btn btn-outline-secondary btn-sm">
-                                Ver serviços
+                                {% translate "Ver serviços" %}
                             </a>
                         {% endif %}
                     </div>
@@ -301,32 +292,32 @@
             <div class="col-12 col-md-3">
                 <div class="luxury-card h-100">
                     <div class="luxury-icon">01</div>
-                    <h3>Podologia</h3>
-                    <p>Tratamento de pés diabéticos, calosidades, unha encravada e avaliação podológica.</p>
+                    <h3>{% translate "Podologia" %}</h3>
+                    <p>{% translate "Tratamento de pés diabéticos, calosidades, unha encravada e avaliação podológica." %}</p>
                 </div>
             </div>
 
             <div class="col-12 col-md-3">
                 <div class="luxury-card h-100">
                     <div class="luxury-icon">02</div>
-                    <h3>Manicure</h3>
-                    <p>Unha em gel, manicure simples, cutícula russa e verniz gel mãos.</p>
+                    <h3>{% translate "Manicure" %}</h3>
+                    <p>{% translate "Unha em gel, manicure simples, cutícula russa e verniz gel mãos." %}</p>
                 </div>
             </div>
 
             <div class="col-12 col-md-3">
                 <div class="luxury-card h-100">
                     <div class="luxury-icon">03</div>
-                    <h3>Pedicure</h3>
-                    <p>Pedicure simples, corte de unhas dos pés, verniz gel e hidratação profunda.</p>
+                    <h3>{% translate "Pedicure" %}</h3>
+                    <p>{% translate "Pedicure simples, corte de unhas dos pés, verniz gel e hidratação profunda." %}</p>
                 </div>
             </div>
 
             <div class="col-12 col-md-3">
                 <div class="luxury-card h-100">
                     <div class="luxury-icon">04</div>
-                    <h3>Enfermagem</h3>
-                    <p>Troca de penso, administração de medicação a idosos e avaliação de sinais vitais.</p>
+                    <h3>{% translate "Enfermagem" %}</h3>
+                    <p>{% translate "Troca de penso, administração de medicação a idosos e avaliação de sinais vitais." %}</p>
                 </div>
             </div>
         </div>
@@ -336,20 +327,20 @@
 {% if instagram_posts or INSTAGRAM_PROFILE_URL %}
     <section id="instagram" class="one-page-section mb-5">
         <div class="text-center mb-5">
-            <span class="luxury-eyebrow">Instagram</span>
+            <span class="luxury-eyebrow">{% translate "Instagram" %}</span>
             <h2 class="section-title mt-2">
-                Siga o nosso dia a dia
+                {% translate "Siga o nosso dia a dia" %}
             </h2>
 
             <p class="text-muted mb-0">
-                Fotos e novidades direto do Instagram.
+                {% translate "Fotos e novidades direto do Instagram." %}
             </p>
         </div>
 
         {% if instagram_posts %}
             <div class="instagram-embed-carousel">
                 {% if instagram_posts|length > 1 %}
-                    <button class="instagram-embed-nav instagram-embed-nav-prev" type="button" aria-label="Anterior">
+                    <button class="instagram-embed-nav instagram-embed-nav-prev" type="button" aria-label="{% translate "Anterior" %}">
                         <i class="bi bi-chevron-left"></i>
                     </button>
                 {% endif %}
@@ -363,7 +354,7 @@
                 </div>
 
                 {% if instagram_posts|length > 1 %}
-                    <button class="instagram-embed-nav instagram-embed-nav-next" type="button" aria-label="Próximo">
+                    <button class="instagram-embed-nav instagram-embed-nav-next" type="button" aria-label="{% translate "Próximo" %}">
                         <i class="bi bi-chevron-right"></i>
                     </button>
                 {% endif %}
@@ -402,7 +393,7 @@
                     class="btn btn-outline-secondary btn-lg px-5"
                 >
                     <i class="bi bi-instagram me-2"></i>
-                    Seguir no Instagram
+                    {% translate "Seguir no Instagram" %}
                 </a>
             </div>
         {% endif %}

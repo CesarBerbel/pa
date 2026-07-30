@@ -19,9 +19,12 @@ def build_home_structured_data(service_categories):
             services.append(
                 {
                     "@type": "Service",
-                    "name": service.name,
-                    "description": service.description or f"Serviço de {category.name}",
-                    "serviceType": category.name,
+                    "name": service.display_name,
+                    "description": (
+                        service.display_description
+                        or f"Serviço de {category.display_name}"
+                    ),
+                    "serviceType": category.display_name,
                     "provider": {
                         "@type": "HealthAndBeautyBusiness",
                         "name": settings.SEO_SITE_NAME,

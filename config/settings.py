@@ -165,6 +165,9 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    # Precisa vir depois da sessão e antes do CommonMiddleware para resolver o
+    # idioma a partir do prefixo do URL, do cookie e do Accept-Language.
+    "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -200,8 +203,10 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "django.template.context_processors.i18n",
                 "config.context_processors.seo_settings",
                 "config.context_processors.instagram_settings",
+                "config.context_processors.language_alternates",
             ],
         },
     },
@@ -295,6 +300,17 @@ AUTH_PASSWORD_VALIDATORS = [
 # =============================================================================
 
 LANGUAGE_CODE = config("LANGUAGE_CODE", default="pt-pt")
+
+# Português continua na raiz do site e o inglês fica sob /en/, por causa de
+# prefix_default_language=False em config/urls.py. Nenhum URL atual muda.
+LANGUAGES = [
+    ("pt-pt", "Português"),
+    ("en", "English"),
+]
+
+LOCALE_PATHS = [
+    BASE_DIR / "locale",
+]
 
 TIME_ZONE = config("TIME_ZONE", default="Europe/Lisbon")
 

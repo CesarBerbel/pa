@@ -39,7 +39,7 @@
                                     <p>
                                         {% for service in form.fields.service.queryset %}
                                             {% if service.pk|stringformat:"s" == form.initial.service|stringformat:"s" %}
-                                                {{ service.category.name }} — {{ service.name }}
+                                                {{ service.category.display_name }} — {{ service.display_name }}
                                             {% endif %}
                                         {% endfor %}
                                     </p>
