@@ -16,6 +16,15 @@ class HomeSalonAnnouncementTests(TestCase):
         self.assertContains(response, "Av. Sá da Bandeira")
         self.assertContains(response, "Loja 108")
 
+    def test_navigation_links_to_the_instagram_section(self):
+        response = self.client.get(reverse("home"))
+        html = response.content.decode()
+
+        # The anchor must exist in the navigation and match a rendered section,
+        # otherwise the menu entry scrolls nowhere.
+        self.assertIn('href="/#instagram"', html)
+        self.assertIn('<section id="instagram"', html)
+
     def test_salon_name_links_to_its_instagram(self):
         response = self.client.get(reverse("home"))
 

@@ -1432,25 +1432,6 @@ html {
     margin: 0;
 }
 
-.testimonial-card {
-    background: #ffffff;
-    border: 1px solid #f1d5db;
-    border-radius: 28px;
-    padding: 30px;
-    height: 100%;
-    box-shadow: 0 14px 36px rgba(139, 94, 102, 0.08);
-}
-
-.testimonial-card p {
-    color: #6b6b6b;
-    line-height: 1.8;
-    margin-bottom: 20px;
-}
-
-.testimonial-card strong {
-    color: #8b5e66;
-}
-
 .instagram-embed-carousel {
     display: flex;
     align-items: center;
@@ -3869,7 +3850,6 @@ form .btn {
 .luxury-logo-card,
 .one-page-section,
 .about-card,
-.testimonial-card,
 .app-agenda-filter,
 .app-agenda-results,
 .internal-calendar-filter,
@@ -3898,7 +3878,6 @@ form .btn {
 .luxury-card,
 .one-page-section,
 .about-card,
-.testimonial-card,
 .app-agenda-filter,
 .app-agenda-results,
 .service-category-card,
@@ -4007,7 +3986,6 @@ form .btn {
 
 .luxury-card p,
 .about-card p,
-.testimonial-card p,
 .service-category-description {
     line-height: 1.6;
 }
@@ -4019,10 +3997,6 @@ form .btn {
 
 .about-card h2 {
     font-size: 1.55rem;
-}
-
-.testimonial-card {
-    padding: 24px;
 }
 
 /* Agenda pública e interna mais compactas */

@@ -107,7 +107,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     <a class="nav-link" data-section-link href="{% url 'home' %}#marcacao">Marcação</a>
                     <a class="nav-link" data-section-link href="{% url 'home' %}#sobre">Sobre</a>
                     <a class="nav-link" data-section-link href="{% url 'home' %}#servicos">Serviços</a>
-                    <a class="nav-link" data-section-link href="{% url 'home' %}#testemunhos">Testemunhos</a>
+                    {% if INSTAGRAM_PROFILE_URL %}
+                        <a class="nav-link" data-section-link href="{% url 'home' %}#instagram">Instagram</a>
+                    {% endif %}
                     <a class="nav-link" data-section-link href="{% url 'home' %}#contato">Contato</a>
                     {% if user.is_authenticated and not user.is_superuser %}
                         <a class="nav-link" href="{% url 'appointments:customer_appointments' %}">
@@ -176,7 +178,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             <a href="{% url 'home' %}#marcacao">Marcação</a>
                             <a href="{% url 'home' %}#sobre">Sobre</a>
                             <a href="{% url 'home' %}#servicos">Serviços</a>
-                            <a href="{% url 'home' %}#testemunhos">Testemunhos</a>
+                            {% if INSTAGRAM_PROFILE_URL %}
+                                <a href="{% url 'home' %}#instagram">Instagram</a>
+                            {% endif %}
                             <a href="{% url 'privacy_policy' %}">Política de Privacidade</a>
                             <a href="{% url 'cookie_policy' %}">Política de Cookies</a>
                             <button type="button" class="footer-cookie-link" data-cookie-action="open-preferences">
