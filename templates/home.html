@@ -265,10 +265,18 @@
                             {{ category.display_description }}
                         </p>
 
-                        <ul class="list-unstyled text-muted small mb-4">
+                        <ul class="list-unstyled text-muted small mb-4 service-teaser-list">
                             {% for service in category.services.all|slice:":4" %}
                                 <li class="mb-2">
-                                    • {{ service.display_name }}
+                                    <span class="service-teaser-name">
+                                        • {{ service.display_name }}
+                                    </span>
+
+                                    {% if category.show_prices %}
+                                        <span class="service-teaser-price">
+                                            {{ service.price|floatformat:"-2" }} €
+                                        </span>
+                                    {% endif %}
                                 </li>
                             {% endfor %}
                         </ul>

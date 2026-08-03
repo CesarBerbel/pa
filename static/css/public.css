@@ -4542,3 +4542,25 @@ textarea.form-control,
         width: 100%;
     }
 }
+
+/* =========================================================================
+   Preço dos serviços na lista resumida da página inicial
+   ========================================================================= */
+
+.service-teaser-list li {
+    align-items: baseline;
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+}
+
+.service-teaser-name {
+    min-width: 0;
+}
+
+.service-teaser-price {
+    color: var(--primary-dark);
+    flex-shrink: 0;
+    font-weight: 700;
+    white-space: nowrap;
+}

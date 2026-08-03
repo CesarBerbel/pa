@@ -47,6 +47,17 @@ class ServiceCategory(models.Model):
     # Shown publicly with an "Em breve" badge, but not yet bookable.
     is_coming_soon = models.BooleanField(default=False)
 
+    # Preços só aparecem no site nas categorias onde forem explicitamente
+    # ligados, para não publicar valores que ainda não foram revistos.
+    show_prices = models.BooleanField(
+        default=False,
+        verbose_name="Mostrar preços no site",
+        help_text=(
+            "Quando ligado, o preço de cada serviço desta categoria aparece "
+            "na página inicial e na lista de serviços."
+        ),
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

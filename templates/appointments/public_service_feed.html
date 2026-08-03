@@ -93,6 +93,13 @@
                                             <i class="bi bi-clock"></i>
                                             {{ service.duration_minutes }} min
                                         </span>
+
+                                        {% if category.show_prices %}
+                                            <span>
+                                                <i class="bi bi-tag"></i>
+                                                {{ service.price|floatformat:"-2" }} €
+                                            </span>
+                                        {% endif %}
                                     </div>
 
                                     <span class="service-public-cta text-muted">
@@ -123,7 +130,11 @@
 
                                         <span>
                                             <i class="bi bi-tag"></i>
-                                            Sob consulta
+                                            {% if category.show_prices %}
+                                                {{ service.price|floatformat:"-2" }} €
+                                            {% else %}
+                                                Sob consulta
+                                            {% endif %}
                                         </span>
                                     </div>
 

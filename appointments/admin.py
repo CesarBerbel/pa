@@ -20,14 +20,16 @@ class ServiceCategoryAdmin(admin.ModelAdmin):
         "slug",
         "is_active",
         "is_coming_soon",
+        "show_prices",
     )
     list_display_links = ("name",)
     list_editable = (
         "display_order",
         "is_active",
         "is_coming_soon",
+        "show_prices",
     )
-    list_filter = ("is_active", "is_coming_soon")
+    list_filter = ("is_active", "is_coming_soon", "show_prices")
     search_fields = (
         "name",
         "slug",
@@ -49,7 +51,10 @@ class ServiceCategoryAdmin(admin.ModelAdmin):
                 ),
             },
         ),
-        (None, {"fields": ("display_order", "is_active", "is_coming_soon")}),
+        (
+            None,
+            {"fields": ("display_order", "is_active", "is_coming_soon", "show_prices")},
+        ),
     )
 
 
