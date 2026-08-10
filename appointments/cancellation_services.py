@@ -64,7 +64,7 @@ class AppointmentCancellationService:
         if not cancellation_reason:
             return CancellationResult(
                 success=False,
-                message="Informe o motivo do cancelamento.",
+                message="Indique o motivo do cancelamento.",
                 appointment=appointment,
             )
 

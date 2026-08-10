@@ -23,7 +23,7 @@
         <div class="service-admin-metric-card">
             <span>Total</span>
             <strong>{{ service_total }}</strong>
-            <small>serviços cadastrados</small>
+            <small>serviços registados</small>
         </div>
 
         <div class="service-admin-metric-card is-active">
@@ -100,7 +100,7 @@
                                     {% if service.description %}
                                         <p>{{ service.description|truncatechars:150 }}</p>
                                     {% else %}
-                                        <p class="text-muted">Sem descrição cadastrada.</p>
+                                        <p class="text-muted">Sem descrição registada.</p>
                                     {% endif %}
                                 </div>
 
@@ -129,10 +129,10 @@
                                     <a
                                         href="{% url 'appointments:service_delete' service.pk %}"
                                         class="btn btn-outline-danger btn-sm"
-                                        aria-label="Excluir serviço {{ service.name }}"
+                                        aria-label="Eliminar serviço {{ service.name }}"
                                     >
                                         <i class="bi bi-trash"></i>
-                                        Excluir
+                                        Eliminar
                                     </a>
                                 </div>
                             </article>
@@ -146,7 +146,7 @@
             <div class="app-empty-icon">
                 <i class="bi bi-inbox"></i>
             </div>
-            <h3>Nenhum serviço cadastrado</h3>
+            <h3>Nenhum serviço registado</h3>
             <p>Crie o primeiro serviço para que ele possa aparecer na agenda pública.</p>
             <a href="{% url 'appointments:service_create' %}" class="btn btn-primary mt-3">
                 Criar primeiro serviço

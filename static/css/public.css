@@ -4350,74 +4350,52 @@ textarea.form-control,
 }
 
 /* =========================================================================
-   Aviso do salão DIVAH na página inicial
+   Modal do novo local de atendimento
    ========================================================================= */
 
-.salon-announcement {
-    display: block;
-    margin-bottom: 44px;
-    /* O hero seguinte é full-bleed e usa position: relative, por isso seria
-       pintado por cima do aviso na zona de sobreposição. */
-    position: relative;
-    z-index: 2;
-}
-
-/* O hero de foto sobe 4rem para encostar na navbar (cancela o padding-top do
-   <main>). Com o aviso acima dele, quem ocupa esse espaço é o aviso, logo a
-   subida deixa de fazer sentido e passaria por cima dele. */
-.salon-announcement + .luxury-hero-photo {
-    margin-top: 0;
-}
-
-.salon-announcement-content {
-    align-items: center;
-    background: linear-gradient(135deg, var(--primary-light) 0%, var(--white) 68%);
+.salon-modal .modal-content {
     border: 1px solid rgba(139, 94, 102, 0.18);
     border-radius: 28px;
-    box-shadow: 0 18px 44px rgba(139, 94, 102, 0.12);
-    display: flex;
-    flex-wrap: wrap;
-    gap: 22px;
+    box-shadow: 0 26px 80px rgba(40, 26, 22, 0.24);
+    overflow: hidden;
+}
+
+.salon-modal .modal-header {
+    align-items: flex-start;
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--white) 70%);
+    border-bottom: 1px solid rgba(139, 94, 102, 0.12);
     padding: 22px 26px;
 }
 
-.salon-announcement-icon {
-    align-items: center;
-    background: var(--primary);
-    border-radius: 50%;
-    color: var(--white);
-    display: inline-flex;
-    flex-shrink: 0;
-    font-size: 1.35rem;
-    height: 56px;
-    justify-content: center;
-    width: 56px;
-}
-
-.salon-announcement-text {
-    flex: 1 1 260px;
-    min-width: 0;
-}
-
-.salon-announcement-kicker {
+.salon-modal-kicker {
     color: var(--primary-dark);
-    display: inline-block;
+    display: block;
     font-size: 0.72rem;
     font-weight: 900;
     letter-spacing: 0.14em;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
     text-transform: uppercase;
 }
 
-.salon-announcement-title {
+.salon-modal-title {
     color: var(--text-dark);
-    font-size: 1.1rem;
-    font-weight: 600;
-    line-height: 1.4;
-    margin-bottom: 4px;
+    font-size: 1.9rem;
+    font-weight: 700;
+    line-height: 1.15;
+    margin: 0;
 }
 
-.salon-announcement-brand {
+.salon-modal .modal-body {
+    padding: 24px 26px 8px;
+}
+
+.salon-modal-lead {
+    color: var(--text-dark);
+    font-size: 1.05rem;
+    margin-bottom: 10px;
+}
+
+.salon-modal-brand {
     color: var(--primary-dark);
     font-weight: 800;
     letter-spacing: 0.04em;
@@ -4425,81 +4403,67 @@ textarea.form-control,
     white-space: nowrap;
 }
 
-.salon-announcement-brand i {
+.salon-modal-brand i {
     font-size: 0.9em;
     margin-left: 2px;
-    vertical-align: baseline;
 }
 
-.salon-announcement-brand:hover,
-.salon-announcement-brand:focus-visible {
+.salon-modal-brand:hover,
+.salon-modal-brand:focus-visible {
     color: var(--primary-dark);
     text-decoration: underline;
     text-underline-offset: 3px;
 }
 
-.salon-announcement-address {
+.salon-modal-address {
+    align-items: baseline;
     color: var(--text-muted);
-    font-size: 0.92rem;
-    margin-bottom: 0;
-}
-
-.salon-announcement-actions {
-    align-items: center;
     display: flex;
+    font-size: 0.95rem;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.salon-modal-address i {
+    color: var(--primary);
     flex-shrink: 0;
-    gap: 10px;
 }
 
-.salon-announcement-close {
-    align-items: center;
-    background: transparent;
-    border: 1px solid rgba(139, 94, 102, 0.25);
-    border-radius: 50%;
-    color: var(--primary-dark);
-    display: inline-flex;
-    font-size: 0.85rem;
-    height: 38px;
-    justify-content: center;
-    width: 38px;
+.salon-modal-map {
+    border: 1px solid rgba(139, 94, 102, 0.14);
+    border-radius: 18px;
+    overflow: hidden;
 }
 
-.salon-announcement-close:hover,
-.salon-announcement-close:focus-visible {
-    background: var(--primary-light);
-    border-color: var(--primary-dark);
+.salon-modal-map iframe {
+    display: block;
+    height: 280px;
+    width: 100%;
 }
 
-@media (max-width: 767.98px) {
-    .salon-announcement {
-        margin-bottom: 32px;
+.salon-modal .modal-footer {
+    border-top: 1px solid rgba(139, 94, 102, 0.12);
+    gap: 8px;
+    padding: 18px 26px;
+}
+
+@media (max-width: 575.98px) {
+    .salon-modal .modal-header,
+    .salon-modal .modal-body,
+    .salon-modal .modal-footer {
+        padding-inline: 18px;
     }
 
-    .salon-announcement-content {
-        border-radius: 22px;
-        gap: 16px;
-        padding: 18px;
-        position: relative;
+    .salon-modal-title {
+        font-size: 1.5rem;
     }
 
-    .salon-announcement-icon {
-        font-size: 1.15rem;
-        height: 46px;
-        width: 46px;
+    .salon-modal-map iframe {
+        height: 220px;
     }
 
-    .salon-announcement-actions {
-        width: 100%;
-    }
-
-    .salon-announcement-actions .btn {
+    .salon-modal .modal-footer .btn {
         flex: 1 1 auto;
-    }
-
-    .salon-announcement-close {
-        position: absolute;
-        right: 12px;
-        top: 12px;
     }
 }
 
@@ -4563,4 +4527,126 @@ textarea.form-control,
     flex-shrink: 0;
     font-weight: 700;
     white-space: nowrap;
+}
+
+/* =========================================================================
+   Seleção visual de horários para bloquear (agenda interna)
+   ========================================================================= */
+
+.slot-block-choice {
+    align-items: center;
+    cursor: pointer;
+    display: inline-flex;
+    gap: 8px;
+    margin: 0;
+    user-select: none;
+}
+
+.slot-block-choice input {
+    accent-color: #b3454f;
+    cursor: pointer;
+    height: 16px;
+    width: 16px;
+}
+
+.internal-slot-row.is-selected .calendar-empty-slot {
+    background: rgba(179, 69, 79, 0.08);
+    border-color: rgba(179, 69, 79, 0.35);
+}
+
+.slot-blocking-bar {
+    align-items: center;
+    background: var(--white);
+    border: 1px solid rgba(139, 94, 102, 0.2);
+    border-radius: 999px;
+    bottom: 20px;
+    box-shadow: 0 18px 44px rgba(40, 26, 22, 0.18);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    left: 50%;
+    max-width: min(720px, calc(100% - 32px));
+    padding: 12px 18px;
+    position: sticky;
+    transform: translateX(-50%);
+    width: fit-content;
+    z-index: 20;
+}
+
+.slot-blocking-summary {
+    display: flex;
+    flex-direction: column;
+    margin-right: 4px;
+}
+
+.slot-blocking-summary strong {
+    color: var(--text-dark);
+    font-size: 0.9rem;
+}
+
+.slot-blocking-summary small {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+
+.slot-blocking-bar .form-control {
+    max-width: 200px;
+}
+
+@media (max-width: 767.98px) {
+    .slot-blocking-bar {
+        border-radius: 20px;
+        max-width: calc(100% - 20px);
+    }
+
+    .slot-blocking-bar .form-control {
+        max-width: none;
+        width: 100%;
+    }
+}
+
+/* =========================================================================
+   Escolha entre cliente registado e cliente novo (marcação interna)
+   ========================================================================= */
+
+.customer-mode-switch {
+    background: #fdf7f8;
+    border: 1px solid #ead7dc;
+    border-radius: 18px;
+    margin-bottom: 20px;
+    padding: 16px 18px;
+}
+
+.customer-mode-switch .form-label,
+.customer-mode-switch legend {
+    color: #8b5e66;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+.customer-mode-switch .form-check {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    margin-bottom: 6px;
+    padding-left: 0;
+}
+
+.customer-mode-switch .form-check:last-child {
+    margin-bottom: 0;
+}
+
+.customer-mode-switch .form-check-input {
+    accent-color: #8b5e66;
+    flex-shrink: 0;
+    float: none;
+    margin: 0;
+}
+
+.customer-mode-switch .form-check-label {
+    cursor: pointer;
+    font-weight: 500;
 }

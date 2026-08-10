@@ -1,5 +1,7 @@
 from datetime import date, time, timedelta
 
+from freezegun import freeze_time
+
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.core import signing
@@ -476,10 +478,18 @@ class PublicAppointmentMagicLinkTests(AppointmentTestSetupMixin, TestCase):
 
     def test_old_magic_link_after_update_is_invalid(self):
         # Ensure token becomes invalid after appointment update.
+        #
+        # O tempo é congelado porque a invalidação assenta em updated_at mudar.
+        # Com o relógio real, as duas gravações caem por vezes no mesmo tick do
+        # Windows, o timestamp fica igual e o teste falha de forma aleatória.
+        with freeze_time("2026-01-01 10:00:00"):
+            self.appointment.save(update_fields=["updated_at"])
+
         token = self.build_token(self.appointment)
 
-        self.appointment.notes = "Updated notes"
-        self.appointment.save(update_fields=["notes", "updated_at"])
+        with freeze_time("2026-01-01 11:00:00"):
+            self.appointment.notes = "Updated notes"
+            self.appointment.save(update_fields=["notes", "updated_at"])
 
         response = self.client.get(
             reverse(
@@ -1758,6 +1768,9 @@ class AppointmentAuditLogTests(AppointmentTestSetupMixin, TestCase):
                 kwargs={"pk": appointment.pk},
             ),
             data={
+                # O formulário passou a distinguir cliente existente de cliente
+                # novo criado na mesma submissão.
+                "customer_mode": "existing",
                 "customer": self.customer.pk,
                 "service": self.service.pk,
                 "date": self.appointment_date.strftime("%Y-%m-%d"),

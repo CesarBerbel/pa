@@ -78,16 +78,18 @@ class AvailabilityService:
         if appointment.status == Appointment.STATUS_CANCELLED:
             return
 
-        if appointment.service and not appointment.service.is_active:
+        # Testar service_id em vez de service: num formulário submetido sem
+        # serviço, aceder a appointment.service levanta RelatedObjectDoesNotExist
+        # e rebenta com 500 antes de o Django poder mostrar o erro de campo.
+        if not appointment.service_id:
+            return
+
+        if not appointment.service.is_active:
             raise ValidationError(
                 "Não é possível marcar horário para um serviço inativo."
             )
 
-        if (
-            not appointment.date
-            or not appointment.start_time
-            or not appointment.service
-        ):
+        if not appointment.date or not appointment.start_time:
             return
 
         business_hour = cls.get_business_hour(appointment.date)

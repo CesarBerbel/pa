@@ -1,6 +1,10 @@
 from django import forms
+from django.core.exceptions import ValidationError
 
-from appointments.customer_services import validate_phone_for_brazil_or_portugal
+from appointments.customer_services import (
+    find_or_create_customer,
+    validate_phone_for_brazil_or_portugal,
+)
 
 from .models import (
     Appointment,
@@ -89,7 +93,57 @@ class CustomerForm(forms.ModelForm):
 
 
 class AppointmentForm(forms.ModelForm):
-    # Form used to create and edit appointments.
+    # Form used to create and edit appointments. Permite registar um cliente
+    # novo na mesma submissão, para não obrigar a sair para a página de
+    # clientes a meio de uma marcação feita ao telefone.
+
+    CUSTOMER_MODE_EXISTING = "existing"
+    CUSTOMER_MODE_NEW = "new"
+
+    CUSTOMER_MODE_CHOICES = [
+        (CUSTOMER_MODE_EXISTING, "Escolher cliente já registado"),
+        (CUSTOMER_MODE_NEW, "Registar cliente novo"),
+    ]
+
+    customer_mode = forms.ChoiceField(
+        label="Cliente",
+        choices=CUSTOMER_MODE_CHOICES,
+        initial=CUSTOMER_MODE_EXISTING,
+        widget=forms.RadioSelect,
+    )
+
+    new_customer_name = forms.CharField(
+        label="Nome completo do cliente novo",
+        max_length=255,
+        required=False,
+    )
+
+    new_customer_phone = forms.CharField(
+        label="Telefone do cliente novo",
+        max_length=30,
+        required=False,
+    )
+
+    new_customer_email = forms.EmailField(
+        label="Email do cliente novo",
+        required=False,
+        help_text="Opcional. Sem email, o cliente não recebe confirmação nem lembretes.",
+    )
+
+    # Campos declarados entram depois dos do modelo, o que deixaria a escolha
+    # do tipo de cliente no fim do formulário. A ordem é fixada aqui.
+    field_order = [
+        "customer_mode",
+        "customer",
+        "new_customer_name",
+        "new_customer_phone",
+        "new_customer_email",
+        "service",
+        "date",
+        "start_time",
+        "status",
+        "notes",
+    ]
 
     class Meta:
         model = Appointment
@@ -105,6 +159,50 @@ class AppointmentForm(forms.ModelForm):
             "date": forms.DateInput(attrs={"type": "date"}),
             "start_time": forms.TimeInput(attrs={"type": "time"}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # A obrigatoriedade passa a depender do modo escolhido e é verificada
+        # em clean(), não pelo campo em si.
+        self.fields["customer"].required = False
+        self.fields["customer"].label = "Cliente já registado"
+
+    def clean(self):
+        cleaned_data = super().clean()
+        mode = cleaned_data.get("customer_mode")
+
+        if mode == self.CUSTOMER_MODE_NEW:
+            cleaned_data["customer"] = self.resolve_new_customer(cleaned_data)
+        elif not cleaned_data.get("customer"):
+            self.add_error("customer", "Selecione o cliente ou registe um novo.")
+
+        return cleaned_data
+
+    def resolve_new_customer(self, cleaned_data):
+        # Reutiliza find_or_create_customer, que devolve o cliente existente
+        # quando o email ou o telefone já são conhecidos. Assim, reenviar o
+        # formulário depois de um erro de conflito não duplica o registo.
+        name = (cleaned_data.get("new_customer_name") or "").strip()
+        phone = (cleaned_data.get("new_customer_phone") or "").strip()
+        email = (cleaned_data.get("new_customer_email") or "").strip()
+
+        if not name:
+            self.add_error("new_customer_name", "Indique o nome do cliente novo.")
+
+        if not phone:
+            self.add_error("new_customer_phone", "Indique o telefone do cliente novo.")
+        else:
+            try:
+                phone = validate_phone_for_brazil_or_portugal(phone)
+            except ValidationError as error:
+                self.add_error("new_customer_phone", error.messages[0])
+                phone = ""
+
+        if not name or not phone:
+            return None
+
+        return find_or_create_customer(name=name, phone=phone, email=email)
 
 
 class CategoryServiceChoiceField(forms.ModelChoiceField):
@@ -277,7 +375,7 @@ class PublicCancelForm(forms.Form):
         widget=forms.Textarea(
             attrs={
                 "rows": 4,
-                "placeholder": "Informe o motivo do cancelamento.",
+                "placeholder": "Indique o motivo do cancelamento.",
             }
         ),
     )
@@ -294,7 +392,7 @@ class PublicCancelForm(forms.Form):
 
         if len(cancellation_reason) < 5:
             raise forms.ValidationError(
-                "Informe um motivo com pelo menos 5 caracteres."
+                "Indique um motivo com pelo menos 5 caracteres."
             )
 
         return cancellation_reason
@@ -348,12 +446,12 @@ class PublicAppointmentLookupForm(forms.Form):
 
         if not reference_code and not email:
             raise forms.ValidationError(
-                "Informe o código da marcação ou o email utilizado na marcação."
+                "Indique o código da marcação ou o email utilizado na marcação."
             )
 
         if reference_code and email:
             raise forms.ValidationError(
-                "Informe apenas uma das alternativas: código da marcação ou email."
+                "Indique apenas uma das alternativas: código da marcação ou email."
             )
 
         return cleaned_data
@@ -369,7 +467,7 @@ class AppointmentCancelForm(forms.Form):
         widget=forms.Textarea(
             attrs={
                 "rows": 4,
-                "placeholder": "Informe o motivo do cancelamento.",
+                "placeholder": "Indique o motivo do cancelamento.",
             }
         ),
     )
@@ -380,7 +478,7 @@ class AppointmentCancelForm(forms.Form):
 
         if len(cancellation_reason) < 5:
             raise forms.ValidationError(
-                "Informe um motivo com pelo menos 5 caracteres."
+                "Indique um motivo com pelo menos 5 caracteres."
             )
 
         return cancellation_reason

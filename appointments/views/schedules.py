@@ -1,10 +1,14 @@
 from datetime import datetime, timedelta
 
 from appointments.mixins import SuperuserRequiredMixin
+from django.contrib import messages
+from django.shortcuts import redirect
+from django.urls import reverse
 from django.utils import timezone
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, View
 
 from appointments.availability import AvailabilityService
+from appointments.blocking_services import ScheduleBlockingService
 from appointments.selectors import AppointmentSelectors
 
 
@@ -81,3 +85,36 @@ class VisualScheduleView(SuperuserRequiredMixin, TemplateView):
         context["slots"] = slots
 
         return context
+
+
+class VisualScheduleBlockView(SuperuserRequiredMixin, View):
+    # Cria bloqueios a partir dos horários marcados na agenda visual.
+
+    def post(self, request):
+        raw_date = request.POST.get("date", "")
+
+        try:
+            selected_date = datetime.strptime(raw_date, "%Y-%m-%d").date()
+        except ValueError:
+            messages.error(request, "Data inválida para bloqueio.")
+            return redirect("appointments:visual_schedule")
+
+        destino = (
+            f"{reverse('appointments:visual_schedule')}"
+            f"?date={selected_date.strftime('%Y-%m-%d')}"
+        )
+
+        result = ScheduleBlockingService.block_slots(
+            selected_date=selected_date,
+            times=ScheduleBlockingService.parse_slot_times(
+                request.POST.getlist("slots")
+            ),
+            title=request.POST.get("title", ""),
+        )
+
+        if result.success:
+            messages.success(request, result.message)
+        else:
+            messages.error(request, result.message)
+
+        return redirect(destino)

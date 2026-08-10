@@ -87,7 +87,7 @@ class AppointmentCancellationFlowTests(TestCase):
         )
 
         self.assertFalse(result.success)
-        self.assertEqual(result.message, "Informe o motivo do cancelamento.")
+        self.assertEqual(result.message, "Indique o motivo do cancelamento.")
 
         self.appointment.refresh_from_db()
 
@@ -197,7 +197,7 @@ class AppointmentCancellationFlowTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Informe um motivo com pelo menos 5 caracteres.")
+        self.assertContains(response, "Indique um motivo com pelo menos 5 caracteres.")
 
         self.appointment.refresh_from_db()
 

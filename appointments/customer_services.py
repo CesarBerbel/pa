@@ -40,7 +40,7 @@ def validate_phone_for_brazil_or_portugal(phone):
     normalized_phone = normalize_phone(phone)
 
     if not normalized_phone:
-        raise ValidationError("Informe um telefone válido do Brasil ou de Portugal.")
+        raise ValidationError("Indique um telefone válido do Brasil ou de Portugal.")
 
     digits = re.sub(r"\D", "", normalized_phone)
 

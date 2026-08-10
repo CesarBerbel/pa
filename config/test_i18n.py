@@ -1,13 +1,15 @@
 from decimal import Decimal
 
 from django.test import TestCase
+
+from config.test_utils import ResetLanguageMixin
 from django.urls import reverse
 from django.utils import translation
 
 from appointments.models import Service, ServiceCategory
 
 
-class LanguagePrefixRoutingTests(TestCase):
+class LanguagePrefixRoutingTests(ResetLanguageMixin, TestCase):
     # Portuguese stays at the site root and English lives under /en/, because
     # config/urls.py uses i18n_patterns with prefix_default_language=False.
 
@@ -37,7 +39,7 @@ class LanguagePrefixRoutingTests(TestCase):
         self.assertEqual(self.client.get("/en/agenda-publica/").status_code, 200)
 
 
-class LanguageSelectorTests(TestCase):
+class LanguageSelectorTests(ResetLanguageMixin, TestCase):
     def test_homepage_renders_the_language_selector(self):
         response = self.client.get("/")
 
@@ -81,7 +83,7 @@ class LanguageSelectorTests(TestCase):
         self.assertIn('hreflang="en"', html)
 
 
-class CatalogTranslationFallbackTests(TestCase):
+class CatalogTranslationFallbackTests(ResetLanguageMixin, TestCase):
     # Service names and descriptions live in the database, so they are
     # translated through dedicated fields instead of gettext.
 

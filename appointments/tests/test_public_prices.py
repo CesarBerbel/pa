@@ -1,9 +1,11 @@
 from django.test import TestCase
 
+from config.test_utils import ResetLanguageMixin
+
 from appointments.models import Service, ServiceCategory
 
 
-class PublicPriceVisibilityTests(TestCase):
+class PublicPriceVisibilityTests(ResetLanguageMixin, TestCase):
     # Prices are shown only in categories where show_prices is enabled, so that
     # values that have not been reviewed are never published by accident.
 

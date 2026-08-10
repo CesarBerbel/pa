@@ -18,6 +18,7 @@ from .views import (
     ServiceCreateView,
     ServiceListView,
     VisualScheduleView,
+    VisualScheduleBlockView,
     PublicAppointmentCreateView,
     PublicAppointmentSuccessView,
     PublicAvailableSlotsView,
@@ -52,6 +53,11 @@ urlpatterns = [
         name="public_visual_schedule",
     ),
     path("agenda/horarios/", VisualScheduleView.as_view(), name="visual_schedule"),
+    path(
+        "agenda/horarios/bloquear/",
+        VisualScheduleBlockView.as_view(),
+        name="visual_schedule_block",
+    ),
     path(
         "diagnostico/horarios/",
         ScheduleDiagnosticsView.as_view(),

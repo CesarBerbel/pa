@@ -39,7 +39,7 @@ class AppointmentService:
 
         if not system_user:
             raise ValidationError(
-                "Não existe usuário administrador para registrar marcações públicas."
+                "Não existe utilizador administrador para registar marcações públicas."
             )
 
         return system_user

@@ -374,7 +374,7 @@ class ScheduleBlock(models.Model):
         # Validate schedule block consistency
         if self.is_recurring and not self.recurring_weekdays:
             raise ValidationError(
-                "Informe pelo menos um dia da semana para o bloqueio recorrente."
+                "Indique pelo menos um dia da semana para o bloqueio recorrente."
             )
 
         if self.is_full_day:
@@ -382,7 +382,7 @@ class ScheduleBlock(models.Model):
 
         if not self.start_time or not self.end_time:
             raise ValidationError(
-                "Informe o horário inicial e final ou marque como dia inteiro."
+                "Indique o horário inicial e final ou marque como dia inteiro."
             )
 
         if self.end_time <= self.start_time:

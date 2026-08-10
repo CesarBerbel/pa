@@ -115,7 +115,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     {% if INSTAGRAM_PROFILE_URL %}
                         <a class="nav-link" data-section-link href="{% url 'home' %}#instagram">{% translate "Instagram" %}</a>
                     {% endif %}
-                    <a class="nav-link" data-section-link href="{% url 'home' %}#contato">{% translate "Contato" %}</a>
+                    <a class="nav-link" data-section-link href="{% url 'home' %}#contato">{% translate "Contacto" %}</a>
                     {% if user.is_authenticated and not user.is_superuser %}
                         <a class="nav-link" href="{% url 'appointments:customer_appointments' %}">
                             {% translate "Minhas marcações" %}
@@ -240,7 +240,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         </div>
 
                         <div>
-                            <h4>{% translate "Contato" %}</h4>
+                            <h4>{% translate "Contacto" %}</h4>
 
                             <p>
                                 {% translate "WhatsApp:" %}<br>

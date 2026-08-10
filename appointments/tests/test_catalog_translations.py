@@ -2,12 +2,14 @@ from importlib import import_module
 
 from django.apps import apps
 from django.test import TestCase
+
+from config.test_utils import ResetLanguageMixin
 from django.utils import translation
 
 from appointments.models import Service, ServiceCategory
 
 
-class SeededCatalogTranslationTests(TestCase):
+class SeededCatalogTranslationTests(ResetLanguageMixin, TestCase):
     # Migration 0010 fills the English catalog fields. The test database runs
     # every migration, so the seeded catalog must come out already translated.
 

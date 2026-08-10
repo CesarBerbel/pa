@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Excluir horas trabalhadas | Priscila Arantes PA{% endblock %}
+{% block title %}Eliminar horas trabalhadas | Priscila Arantes PA{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -10,11 +10,11 @@
             <div class="card-body p-4">
 
                 <h1 class="h4 mb-3 text-danger">
-                    Excluir horas trabalhadas
+                    Eliminar horas trabalhadas
                 </h1>
 
                 <div class="alert alert-warning">
-                    Esta ação é permanente. Ao excluir este horário, a agenda desse dia deixará de aceitar novas marcações enquanto não houver outro horário ativo cadastrado para ele.
+                    Esta ação é permanente. Ao eliminar este horário, a agenda desse dia deixará de aceitar novas marcações enquanto não houver outro horário ativo registado para ele.
                 </div>
 
                 <div class="border rounded p-3 mb-4 bg-light">
@@ -43,7 +43,7 @@
 
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-danger">
-                            Excluir horário
+                            Eliminar horário
                         </button>
 
                         <a href="{% url 'appointments:business_hour_list' %}" class="btn btn-outline-secondary">

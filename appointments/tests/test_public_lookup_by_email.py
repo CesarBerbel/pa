@@ -129,6 +129,6 @@ class PublicAppointmentLookupByEmailTests(AppointmentTestSetupMixin, TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(
             response,
-            "Informe apenas uma das alternativas: código da marcação ou email.",
+            "Indique apenas uma das alternativas: código da marcação ou email.",
         )
         self.assertEqual(len(mail.outbox), 0)

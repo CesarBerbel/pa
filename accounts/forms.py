@@ -15,7 +15,7 @@ class EmailAuthenticationForm(AuthenticationForm):
     username = forms.EmailField(label="Email")
 
     password = forms.CharField(
-        label="Senha",
+        label="Palavra-passe",
         widget=forms.PasswordInput(),
     )
 

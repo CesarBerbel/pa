@@ -245,7 +245,7 @@ class ReminderDiagnosticsView(SuperuserRequiredMixin, TemplateView):
 
             elif not appointment.customer.email:
                 status = "warning"
-                reason = "Cliente não tem email cadastrado."
+                reason = "Cliente não tem email registado."
                 can_send = False
 
             elif selected_date < timezone.localdate():

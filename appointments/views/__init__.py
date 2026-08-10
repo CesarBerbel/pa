@@ -40,6 +40,7 @@ from .schedule_blocks import (
 )
 from .schedules import (
     DailyAgendaView,
+    VisualScheduleBlockView,
     VisualScheduleView,
 )
 from .services import (
@@ -83,6 +84,7 @@ __all__ = [
     "ScheduleBlockListView",
     "ScheduleBlockUpdateView",
     "DailyAgendaView",
+    "VisualScheduleBlockView",
     "VisualScheduleView",
     "ServiceCreateView",
     "ServiceDeleteView",

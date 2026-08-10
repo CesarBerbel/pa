@@ -250,7 +250,7 @@ class WhatsAppMessageLog(models.Model):
 
 
 class InstagramPost(models.Model):
-    # Publicação real do Instagram, cadastrada colando o código de incorporação
+    # Publicação real do Instagram, registada colando o código de incorporação
     # oficial (Instagram > "..." > Copiar código de incorporação) e exibida
     # como embed ao vivo (blockquote + embed.js) em carrossel no site.
 
@@ -258,7 +258,7 @@ class InstagramPost(models.Model):
         help_text=(
             "Cole aqui o código de incorporação do Instagram (no post, clique em "
             "\"...\" → Copiar código de incorporação). Pode colar o bloco inteiro, "
-            "inclusive a linha &lt;script&gt; — ela é removida automaticamente ao salvar."
+            "inclusive a linha &lt;script&gt; — ela é removida automaticamente ao guardar."
         ),
     )
 

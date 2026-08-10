@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.template import Context, Template
 
 from .models import EmailEventSetting, EmailTemplate
@@ -65,8 +66,10 @@ class EmailTemplateService:
             "appointment_time": "10:30",
             "reference_code": "AGD-EXEMPLO",
             "cancellation_reason": "Cliente informou que não poderá comparecer.",
-            "magic_link": "https://seudominio.com/m/exemplo-token/",
-            "cancellation_link": "https://seudominio.com/cancelar/AGD-EXEMPLO/",
+            # Usa o domínio canónico real para a pré-visualização mostrar os
+            # links tal como a cliente os vai receber.
+            "magic_link": f"{settings.SITE_URL}/m/exemplo-token/",
+            "cancellation_link": f"{settings.SITE_URL}/cancelar/AGD-EXEMPLO/",
             "reminder_label": "1 dia antes",
             "intro": "A sua marcação foi confirmada.",
         }

@@ -102,3 +102,9 @@ yarn-error.log*
 *.zip
 
 chatgpt/
+
+# ----------------------
+# Backups da base de dados
+# ----------------------
+backups/
+*.dump

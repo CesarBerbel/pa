@@ -24,14 +24,39 @@
                     {% endif %}
                 </h1>
 
-                <form method="post" novalidate>
+                <form method="post" novalidate id="appointment-form">
                     {% csrf_token %}
 
-                    {{ form|crispy }}
+                    {{ form.non_field_errors }}
+
+                    {# Os campos são renderizados um a um para controlar a ordem #}
+                    {# e para ter âncoras estáveis, em vez de depender dos IDs   #}
+                    {# gerados pelo crispy.                                      #}
+                    <div class="customer-mode-switch">
+                        {{ form.customer_mode|as_crispy_field }}
+                    </div>
+
+                    <div data-customer-existing>
+                        {{ form.customer|as_crispy_field }}
+                    </div>
+
+                    <div data-customer-new hidden>
+                        {{ form.new_customer_name|as_crispy_field }}
+                        {{ form.new_customer_phone|as_crispy_field }}
+                        {{ form.new_customer_email|as_crispy_field }}
+                    </div>
+
+                    <hr class="my-4">
+
+                    {{ form.service|as_crispy_field }}
+                    {{ form.date|as_crispy_field }}
+                    {{ form.start_time|as_crispy_field }}
+                    {{ form.status|as_crispy_field }}
+                    {{ form.notes|as_crispy_field }}
 
                     <div class="d-flex gap-2 mt-3">
                         <button type="submit" class="btn btn-primary">
-                            Salvar
+                            Guardar
                         </button>
 
                         <a href="{% url 'appointments:appointment_list' %}" class="btn btn-outline-secondary">
@@ -39,6 +64,38 @@
                         </a>
                     </div>
                 </form>
+
+                <script>
+                    (function () {
+                        var form = document.getElementById("appointment-form");
+
+                        if (!form) {
+                            return;
+                        }
+
+                        var blocoExistente = form.querySelector("[data-customer-existing]");
+                        var blocoNovo = form.querySelector("[data-customer-new]");
+                        var opcoes = form.querySelectorAll("input[name='customer_mode']");
+
+                        function aplicar() {
+                            var escolhida = form.querySelector(
+                                "input[name='customer_mode']:checked"
+                            );
+                            var criarNovo = Boolean(escolhida) && escolhida.value === "new";
+
+                            blocoExistente.hidden = criarNovo;
+                            blocoNovo.hidden = !criarNovo;
+                        }
+
+                        Array.prototype.forEach.call(opcoes, function (opcao) {
+                            opcao.addEventListener("change", aplicar);
+                        });
+
+                        // Corre também no arranque para repor o estado certo
+                        // quando o formulário volta com erros de validação.
+                        aplicar();
+                    })();
+                </script>
             </div>
         </div>
 

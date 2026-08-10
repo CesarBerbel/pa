@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Excluir bloqueio | Priscila Arantes PA{% endblock %}
+{% block title %}Eliminar bloqueio | Priscila Arantes PA{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -10,11 +10,11 @@
             <div class="card-body p-4">
 
                 <h1 class="h4 mb-3 text-danger">
-                    Excluir bloqueio de agenda
+                    Eliminar bloqueio de agenda
                 </h1>
 
                 <div class="alert alert-warning">
-                    Esta ação é permanente. Ao excluir este bloqueio, o horário poderá voltar a ficar disponível para novas marcações.
+                    Esta ação é permanente. Ao eliminar este bloqueio, o horário poderá voltar a ficar disponível para novas marcações.
                 </div>
 
                 <div class="border rounded p-3 mb-4 bg-light">
@@ -64,7 +64,7 @@
 
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-danger">
-                            Excluir bloqueio
+                            Eliminar bloqueio
                         </button>
 
                         <a href="{% url 'appointments:schedule_block_list' %}" class="btn btn-outline-secondary">

@@ -47,10 +47,11 @@ def generate_secure_link(appointment):
 
 
 def build_full_url(path):
-    # Builds an absolute URL for emails.
-    site_url = getattr(settings, "SITE_URL", "https://seudominio.com")
-
-    return f"{site_url}{path}"
+    # Builds an absolute URL for emails using the canonical domain.
+    # SITE_URL sempre existe (tem default em settings.py) e já vem sem barra
+    # final, por isso não há fallback: um placeholder aqui só produziria links
+    # partidos dentro de emails já enviados.
+    return f"{settings.SITE_URL}{path}"
 
 
 def send_rendered_email(subject, body_text, body_html, recipient_list):

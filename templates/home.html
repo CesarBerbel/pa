@@ -19,53 +19,98 @@
 
 {% block content %}
 
-{# Aviso do novo local de atendimento. É intencionalmente efémero: não guarda #}
-{# estado, por isso reaparece a cada entrada ou recarregamento da página. #}
-<aside
-    id="salon-announcement"
-    class="salon-announcement"
-    aria-label="{% translate "Novo local de atendimento" %}"
+{# Modal do novo local de atendimento. Não guarda estado: reaparece a cada #}
+{# entrada ou recarregamento da página inicial. #}
+<div
+    class="modal fade salon-modal"
+    id="salon-modal"
+    tabindex="-1"
+    aria-labelledby="salon-modal-title"
+    aria-hidden="true"
 >
-    <div class="salon-announcement-content">
-        <span class="salon-announcement-icon" aria-hidden="true">
-            <i class="bi bi-geo-alt-fill"></i>
-        </span>
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
 
-        <div class="salon-announcement-text">
-            <span class="salon-announcement-kicker">{% translate "Novo espaço" %}</span>
+            <div class="modal-header">
+                <div>
+                    <span class="salon-modal-kicker">{% translate "Novo espaço" %}</span>
+                    <h2 class="salon-modal-title" id="salon-modal-title">
+                        {% translate "Galeria Avenida" %}
+                    </h2>
+                </div>
 
-            <p class="salon-announcement-title">
-                {# A frase é dividida porque o nome do salão é um link. #}
-                {% translate "Atendimento também no salão" %} <a
-                    href="https://www.instagram.com/divah.pt"
-                    class="salon-announcement-brand"
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="{% translate "Fechar aviso" %}"
+                ></button>
+            </div>
+
+            <div class="modal-body">
+                <p class="salon-modal-lead">
+                    {# A frase é dividida porque o nome do salão é um link. #}
+                    {% translate "Atendimento também no salão" %} <a
+                        href="https://www.instagram.com/divah.pt"
+                        class="salon-modal-brand"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="Instagram do salão DIVAH, @divah.pt"
+                    >DIVAH <i class="bi bi-instagram" aria-hidden="true"></i></a>{% translate ", com hora marcada" %}
+                </p>
+
+                <p class="salon-modal-address">
+                    <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
+                    {% translate "Av. Sá da Bandeira, n.º 33 — Loja 108, 3000-351 Coimbra" %}
+                </p>
+
+                <div class="salon-modal-map">
+                    <div id="salon-modal-map-placeholder" class="cookie-map-placeholder">
+                        <i class="bi bi-geo-alt"></i>
+                        <div>
+                            <strong>{% translate "Mapa bloqueado por preferências de cookies" %}</strong>
+                            <p>
+                                {% translate "Para ver o mapa incorporado do Google, aceite cookies funcionais. A marcação online continua disponível mesmo sem ativar esta opção." %}
+                            </p>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" data-cookie-action="open-preferences">
+                                {% translate "Gerir cookies" %}
+                            </button>
+                        </div>
+                    </div>
+
+                    <iframe
+                        data-cookie-category="functional"
+                        data-cookie-placeholder="#salon-modal-map-placeholder"
+                        data-cookie-src="https://www.google.com/maps?q=DIVAH%2C%20Av.%20S%C3%A1%20da%20Bandeira%2033%2C%20Loja%20108%2C%203000-351%20Coimbra&amp;hl=pt-PT&amp;output=embed"
+                        title="{% translate "Mapa com a localização do salão DIVAH - Av. Sá da Bandeira 33, Loja 108, Coimbra" %}"
+                        style="border:0;"
+                        allowfullscreen=""
+                        loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade"
+                        hidden
+                    ></iframe>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <a
+                    href="https://www.google.com/maps?q=DIVAH%2C%20Av.%20S%C3%A1%20da%20Bandeira%2033%2C%20Loja%20108%2C%203000-351%20Coimbra"
+                    class="btn btn-outline-secondary"
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label="Instagram do salão DIVAH, @divah.pt"
-                >DIVAH <i class="bi bi-instagram" aria-hidden="true"></i></a>{% translate ", com hora marcada" %}
-            </p>
+                >
+                    <i class="bi bi-box-arrow-up-right me-1" aria-hidden="true"></i>
+                    {% translate "Abrir no Google Maps" %}
+                </a>
 
-            <p class="salon-announcement-address">
-                {% translate "Av. Sá da Bandeira, n.º 33 — Loja 108, 3000-351 Coimbra" %}
-            </p>
-        </div>
+                <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary">
+                    {% translate "Marcar horário" %}
+                </a>
+            </div>
 
-        <div class="salon-announcement-actions">
-            <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary">
-                {% translate "Marcar horário" %}
-            </a>
-
-            <button
-                type="button"
-                class="salon-announcement-close"
-                data-announcement-dismiss
-                aria-label="{% translate "Fechar aviso" %}"
-            >
-                <i class="bi bi-x-lg" aria-hidden="true"></i>
-            </button>
         </div>
     </div>
-</aside>
+</div>
 
 {% if home_hero_layout == "logo_top" %}
     <section
@@ -409,21 +454,50 @@
 {% endif %}
 
 <script>
-    (function () {
-        var announcement = document.getElementById("salon-announcement");
+    // Este bloco é renderizado dentro do <main>, antes dos <script> do fim do
+    // base.html. Esperar pelo DOMContentLoaded garante que o bundle do
+    // Bootstrap e o cookie_consent.js já correram.
+    document.addEventListener("DOMContentLoaded", function () {
+        var element = document.getElementById("salon-modal");
 
-        if (!announcement) {
+        if (!element || typeof bootstrap === "undefined") {
             return;
         }
 
-        // Fecha apenas nesta visualização. Nada é persistido, para que o aviso
-        // volte a aparecer sempre que a página inicial for aberta ou recarregada.
-        announcement.addEventListener("click", function (event) {
-            if (event.target.closest("[data-announcement-dismiss]")) {
-                announcement.remove();
+        // Nada é persistido: o modal abre em cada entrada ou recarregamento.
+        function abrir() {
+            bootstrap.Modal.getOrCreateInstance(element).show();
+        }
+
+        var consentimento = window.paCookieConsent;
+        var jaRespondeu = !consentimento || Boolean(consentimento.get());
+
+        // Numa primeira visita o pedido de consentimento tem prioridade: o
+        // modal só abre depois de respondido, para não tapar o banner.
+        if (jaRespondeu) {
+            abrir();
+            return;
+        }
+
+        var cookieBanner = document.getElementById("cookie-consent-banner");
+
+        if (!cookieBanner) {
+            abrir();
+            return;
+        }
+
+        var observer = new MutationObserver(function () {
+            if (cookieBanner.hidden) {
+                observer.disconnect();
+                abrir();
             }
         });
-    })();
+
+        observer.observe(cookieBanner, {
+            attributes: true,
+            attributeFilter: ["hidden"],
+        });
+    });
 </script>
 
 {% endblock %}

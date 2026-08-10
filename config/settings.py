@@ -115,7 +115,7 @@ if HOME_HERO_LAYOUT not in HOME_HERO_LAYOUT_CHOICES:
 # =============================================================================
 # Instagram
 # =============================================================================
-# As fotos do carrossel são cadastradas manualmente em Django Admin
+# As fotos do carrossel são registadas manualmente em Django Admin
 # (Notifications > Publicações do Instagram) — não há integração automática.
 
 INSTAGRAM_PROFILE_URL = config(
@@ -344,7 +344,7 @@ MEDIA_URL = config("MEDIA_URL", default="/media/")
 
 MEDIA_ROOT = BASE_DIR / config("MEDIA_ROOT", default="media")
 
-# WhiteNoise serve os arquivos estáticos comprimidos direto pelo Django em produção.
+# WhiteNoise serve os ficheiros estáticos comprimidos direto pelo Django em produção.
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",

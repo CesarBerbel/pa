@@ -297,7 +297,16 @@
 
                             <div class="internal-slot-content">
                                 <div class="calendar-empty-slot">
-                                    <span>Horário livre</span>
+                                    <label class="slot-block-choice">
+                                        <input
+                                            type="checkbox"
+                                            form="slot-blocking-form"
+                                            name="slots"
+                                            value="{{ slot.time_value }}"
+                                            data-slot-checkbox
+                                        >
+                                        <span>Horário livre</span>
+                                    </label>
 
                                     <a
                                         href="{% url 'appointments:appointment_create' %}?date={{ selected_date|date:'Y-m-d' }}&start_time={{ slot.time_value }}"
@@ -318,12 +327,97 @@
                 {% endfor %}
 
             </div>
+
+            {# As checkboxes dos slots livres pertencem a este formulário via #}
+            {# atributo form=, por isso ele pode ficar fora da lista. #}
+            <form
+                method="post"
+                id="slot-blocking-form"
+                action="{% url 'appointments:visual_schedule_block' %}"
+                class="slot-blocking-bar"
+                hidden
+            >
+                {% csrf_token %}
+                <input type="hidden" name="date" value="{{ selected_date|date:'Y-m-d' }}">
+
+                <div class="slot-blocking-summary">
+                    <strong data-slot-count>0 horários selecionados</strong>
+                    <small>Horários encostados são unidos num único bloqueio.</small>
+                </div>
+
+                <input
+                    type="text"
+                    name="title"
+                    class="form-control form-control-sm"
+                    maxlength="120"
+                    placeholder="Motivo (opcional)"
+                >
+
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-slot-clear>
+                    Limpar
+                </button>
+
+                <button type="submit" class="btn btn-sm btn-danger">
+                    Bloquear selecionados
+                </button>
+            </form>
+
+            <script>
+                (function () {
+                    var form = document.getElementById("slot-blocking-form");
+
+                    if (!form) {
+                        return;
+                    }
+
+                    var caixas = Array.prototype.slice.call(
+                        document.querySelectorAll("[data-slot-checkbox]")
+                    );
+                    var contador = form.querySelector("[data-slot-count]");
+
+                    function atualizar() {
+                        var escolhidas = caixas.filter(function (caixa) {
+                            return caixa.checked;
+                        });
+
+                        caixas.forEach(function (caixa) {
+                            var linha = caixa.closest(".internal-slot-row");
+
+                            if (linha) {
+                                linha.classList.toggle("is-selected", caixa.checked);
+                            }
+                        });
+
+                        form.hidden = escolhidas.length === 0;
+                        contador.textContent =
+                            escolhidas.length === 1
+                                ? "1 horário selecionado"
+                                : escolhidas.length + " horários selecionados";
+                    }
+
+                    caixas.forEach(function (caixa) {
+                        caixa.addEventListener("change", atualizar);
+                    });
+
+                    form.querySelector("[data-slot-clear]").addEventListener(
+                        "click",
+                        function () {
+                            caixas.forEach(function (caixa) {
+                                caixa.checked = false;
+                            });
+                            atualizar();
+                        }
+                    );
+
+                    atualizar();
+                })();
+            </script>
         {% endif %}
 
     {% else %}
         <div class="app-empty-state">
             <h3>Sem horário de funcionamento</h3>
-            <p>Não existe horário ativo para esta data. Cadastre o horário no admin antes de usar a agenda.</p>
+            <p>Não existe horário ativo para esta data. Registe o horário no admin antes de usar a agenda.</p>
         </div>
     {% endif %}
 

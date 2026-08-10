@@ -360,7 +360,7 @@ class PublicCancelAppointmentByCodeView(TemplateView):
         )
 
         if not cancellation_reason:
-            messages.error(request, "Informe o motivo do cancelamento.")
+            messages.error(request, "Indique o motivo do cancelamento.")
             return redirect(
                 "appointments:public_cancel_by_code",
                 reference_code=appointment.reference_code,

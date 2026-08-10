@@ -7,7 +7,7 @@
     <div>
         <h1 class="h4 mb-1">Horas trabalhadas</h1>
         <p class="text-muted mb-0">
-            Cadastre os dias e horários em que a agenda pode receber marcações.
+            Registe os dias e horários em que a agenda pode receber marcações.
         </p>
     </div>
 
@@ -34,7 +34,7 @@
     <strong>Importante:</strong>
     o almoço e outros períodos sem atendimento devem continuar a ser configurados em
     <a href="{% url 'appointments:schedule_block_list' %}" class="alert-link">Bloqueios</a>.
-    Esta tela controla apenas o intervalo geral de trabalho de cada dia.
+    Esta ecrã controla apenas o intervalo geral de trabalho de cada dia.
 </div>
 
 <div class="card shadow-sm border-0">
@@ -102,8 +102,8 @@
                                             class="btn btn-outline-danger btn-sm business-hour-action-button d-inline-flex align-items-center justify-content-center"
                                             data-bs-toggle="tooltip"
                                             data-bs-placement="top"
-                                            data-bs-title="Excluir horário"
-                                            aria-label="Excluir horário de {{ business_hour.get_weekday_display }}"
+                                            data-bs-title="Eliminar horário"
+                                            aria-label="Eliminar horário de {{ business_hour.get_weekday_display }}"
                                         >
                                             <i class="bi bi-trash"></i>
                                         </a>
@@ -117,11 +117,11 @@
         {% else %}
             <div class="text-center py-4">
                 <p class="text-muted mb-3">
-                    Nenhum horário trabalhado cadastrado.
+                    Nenhum horário trabalhado registado.
                 </p>
 
                 <a href="{% url 'appointments:business_hour_create' %}" class="btn btn-primary">
-                    Cadastrar primeiro horário
+                    Registar primeiro horário
                 </a>
             </div>
         {% endif %}
