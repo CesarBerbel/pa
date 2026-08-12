@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% load crispy_forms_tags %}
+
+{% block title %}Nota de evolução | Priscila Arantes PA{% endblock %}
+
+{# Registo clínico: não deve ser indexado nem seguido. #}
+{% block meta_robots %}noindex,nofollow{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+            <div>
+                <span class="luxury-eyebrow">Nota de evolução</span>
+                <h1 class="h4 mt-2 mb-0">{{ appointment.customer.full_name }}</h1>
+                <small class="text-muted">
+                    {{ appointment.reference_code }} ·
+                    {{ appointment.service.name }} ·
+                    {{ appointment.date|date:"d/m/Y" }} às {{ appointment.start_time|time:"H:i" }}
+                </small>
+            </div>
+
+            <div class="d-flex gap-2">
+                <a
+                    href="{% url 'appointments:patient_record' appointment.customer.pk %}"
+                    class="btn btn-outline-secondary btn-sm"
+                >
+                    Ver anamnese
+                </a>
+
+                <a href="{% url 'appointments:appointment_list' %}" class="btn btn-outline-secondary btn-sm">
+                    Voltar às marcações
+                </a>
+            </div>
+        </div>
+
+        {% if appointment.customer.patient_record.risk_alerts %}
+            <div class="alert alert-warning d-flex flex-wrap gap-2 align-items-center">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <strong>Atenção no atendimento:</strong>
+                {% for alerta in appointment.customer.patient_record.risk_alerts %}
+                    <span class="badge text-bg-warning">{{ alerta }}</span>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    {{ form|crispy }}
+
+                    <div class="d-flex gap-2 mt-3">
+                        <button type="submit" class="btn btn-primary">
+                            Guardar nota
+                        </button>
+
+                        <a href="{% url 'appointments:appointment_list' %}" class="btn btn-outline-secondary">
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+
+                {% if object.created_by and object.updated_at %}
+                    <p class="text-muted small mb-0 mt-4">
+                        Última alteração em {{ object.updated_at|date:"d/m/Y H:i" }}
+                        por {{ object.created_by.full_name|default:object.created_by.email }}.
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

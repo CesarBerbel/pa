@@ -52,6 +52,18 @@ def instagram_settings(request):
     }
 
 
+def clinical_settings(request):
+    """Expõe o prazo de conservação dos registos clínicos.
+
+    Zero significa "por definir": a ficha avisa e a política de privacidade
+    omite o prazo, para não publicar um compromisso que não foi assumido.
+    """
+
+    return {
+        "clinical_retention_years": settings.CLINICAL_RECORD_RETENTION_YEARS,
+    }
+
+
 def language_alternates(request):
     """Expose the current page in every language, for hreflang tags.
 

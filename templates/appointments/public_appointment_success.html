@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 
-{% block title %}Marcação recebida | Priscila Arantes PA{% endblock %}
+{% load i18n %}
+
+{% block title %}{% translate "Marcação recebida" %} | Priscila Arantes PA{% endblock %}
 {% block meta_robots %}noindex,nofollow{% endblock %}
 
 {% block content %}
@@ -8,20 +10,18 @@
     <div class="col-12 col-lg-6">
         <div class="card shadow-sm border-0 premium-form-card">
             <div class="card-body p-5 text-center">
-                <span class="luxury-eyebrow">Marcação recebida</span>
+                <span class="luxury-eyebrow">{% translate "Marcação recebida" %}</span>
 
                 <h1 class="h4 mt-2 mb-3">
-                    O seu pedido de horário foi registado com sucesso
+                    {% translate "O seu pedido de horário foi registado com sucesso" %}
                 </h1>
 
                 <p class="text-muted mb-3">
-                    O horário fica reservado, mas ainda será analisado e confirmado
-                    pela profissional. Entraremos em contacto caso seja necessário
-                    algum ajuste.
+                    {% translate "O horário fica reservado, mas ainda será analisado e confirmado pela profissional. Entraremos em contacto caso seja necessário algum ajuste." %}
                 </p>
 
                 <p class="text-muted mb-3">
-                    Guarde este código para consultar ou cancelar a marcação:
+                    {% translate "Guarde este código para consultar ou cancelar a marcação:" %}
                 </p>
 
                 <div class="success-reference-code mb-4">
@@ -34,12 +34,12 @@
                         <input type="hidden" name="reference_code" value="{{ reference_code }}">
 
                         <button type="submit" class="btn btn-primary w-100">
-                            Consultar marcação
+                            {% translate "Consultar marcação" %}
                         </button>
                     </form>
 
                     <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-outline-secondary">
-                        Fazer nova marcação
+                        {% translate "Fazer nova marcação" %}
                     </a>
                 </div>
             </div>

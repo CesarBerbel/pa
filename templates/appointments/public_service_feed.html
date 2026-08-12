@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% load i18n %}
+
 {% block title %}Serviços | Podologia, manicure, pedicure e enfermagem em Coimbra{% endblock %}
 {% block meta_description %}Conheça os serviços de podologia, manicure, pedicure e enfermagem da Priscila Arantes PA em Coimbra e marque online o seu horário.{% endblock %}
 {% block meta_keywords %}serviços podologia Coimbra, manicure Coimbra, pedicure Coimbra, enfermagem Coimbra, unha em gel, pés diabéticos, troca de penso{% endblock %}
@@ -20,21 +22,21 @@
 <section class="one-page-section service-feed-page mb-5">
     <div class="service-feed-hero mb-5">
         <div>
-            <span class="luxury-eyebrow">Categorias e serviços</span>
+            <span class="luxury-eyebrow">{% translate "Categorias e serviços" %}</span>
 
             <h1 class="section-title mt-2 mb-3">
-                Escolha o cuidado ideal para si
+                {% translate "Escolha o cuidado ideal para si" %}
             </h1>
 
             <p class="service-feed-lead mb-0">
-                Podologia, manicure, pedicure e enfermagem estão organizadas por categoria para facilitar a escolha do serviço e o agendamento online.
+                {% translate "Podologia, manicure, pedicure e enfermagem estão organizadas por categoria para facilitar a escolha do serviço e o agendamento online." %}
             </p>
         </div>
 
         <div class="service-feed-hero-card">
             <i class="bi bi-stars"></i>
-            <strong>Atendimento personalizado</strong>
-            <span>Escolha o serviço e avance diretamente para a agenda disponível.</span>
+            <strong>{% translate "Atendimento personalizado" %}</strong>
+            <span>{% translate "Escolha o serviço e avance diretamente para a agenda disponível." %}</span>
         </div>
     </div>
 
@@ -58,11 +60,11 @@
                         </div>
 
                         <div>
-                            <span class="luxury-eyebrow">Categoria</span>
+                            <span class="luxury-eyebrow">{% translate "Categoria" %}</span>
                             <h2>
                                 {{ category.display_name }}
                                 {% if category.is_coming_soon %}
-                                    <span class="coming-soon-badge">Em breve</span>
+                                    <span class="coming-soon-badge">{% translate "Em breve" %}</span>
                                 {% endif %}
                             </h2>
                         </div>
@@ -89,11 +91,6 @@
                                     </div>
 
                                     <div class="service-public-meta">
-                                        <span>
-                                            <i class="bi bi-clock"></i>
-                                            {{ service.duration_minutes }} min
-                                        </span>
-
                                         {% if category.show_prices %}
                                             <span>
                                                 <i class="bi bi-tag"></i>
@@ -104,7 +101,7 @@
 
                                     <span class="service-public-cta text-muted">
                                         <i class="bi bi-hourglass-split"></i>
-                                        Em breve
+                                        {% translate "Em breve" %}
                                     </span>
                                 </div>
                             {% else %}
@@ -124,29 +121,24 @@
 
                                     <div class="service-public-meta">
                                         <span>
-                                            <i class="bi bi-clock"></i>
-                                            {{ service.duration_minutes }} min
-                                        </span>
-
-                                        <span>
                                             <i class="bi bi-tag"></i>
                                             {% if category.show_prices %}
                                                 {{ service.price|floatformat:"-2" }} €
                                             {% else %}
-                                                Sob consulta
+                                                {% translate "Sob consulta" %}
                                             {% endif %}
                                         </span>
                                     </div>
 
                                     <span class="service-public-cta">
-                                        Ver horários
+                                        {% translate "Ver horários" %}
                                         <i class="bi bi-arrow-right"></i>
                                     </span>
                                 </a>
                             {% endif %}
                         {% empty %}
                             <div class="service-public-empty">
-                                Nenhum serviço ativo nesta categoria.
+                                {% translate "Nenhum serviço ativo nesta categoria." %}
                             </div>
                         {% endfor %}
                     </div>
@@ -158,20 +150,20 @@
             <div class="app-empty-icon">
                 <i class="bi bi-inbox"></i>
             </div>
-            <h3>Nenhum serviço ativo registado</h3>
-            <p>Registe categorias e serviços ativos para exibir o feed público.</p>
+            <h3>{% translate "Nenhum serviço ativo registado" %}</h3>
+            <p>{% translate "Registe categorias e serviços ativos para exibir o feed público." %}</p>
         </div>
     {% endif %}
 
     <div class="service-feed-bottom-cta mt-5">
         <div>
-            <span class="luxury-eyebrow">Pronto para marcar?</span>
-            <h2>Consulte a agenda disponível</h2>
-            <p>Escolha o serviço, selecione a data e reserve o melhor horário.</p>
+            <span class="luxury-eyebrow">{% translate "Pronto para marcar?" %}</span>
+            <h2>{% translate "Consulte a agenda disponível" %}</h2>
+            <p>{% translate "Escolha o serviço, selecione a data e reserve o melhor horário." %}</p>
         </div>
 
         <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary btn-lg px-5">
-            Ver agenda disponível
+            {% translate "Ver agenda disponível" %}
         </a>
     </div>
 </section>

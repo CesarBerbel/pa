@@ -281,6 +281,19 @@
                                 <td class="text-end">
                                     <div class="d-inline-flex flex-wrap justify-content-end gap-2">
 
+                                        {% if user.has_clinical_access %}
+                                            <a
+                                                href="{% url 'appointments:clinical_note' appointment.pk %}"
+                                                class="btn btn-sm appointment-action-button d-inline-flex align-items-center justify-content-center {% if appointment.clinical_note %}btn-outline-success{% else %}btn-outline-secondary{% endif %}"
+                                                data-bs-toggle="tooltip"
+                                                data-bs-placement="top"
+                                                data-bs-title="Nota de evolução"
+                                                aria-label="Nota de evolução de {{ appointment.reference_code }}"
+                                            >
+                                                <i class="bi bi-clipboard2-pulse"></i>
+                                            </a>
+                                        {% endif %}
+
                                         {% if appointment.status != "completed" %}
                                             <a
                                                 href="{% url 'appointments:appointment_update' appointment.pk %}"

@@ -2,7 +2,7 @@ from django.utils import timezone
 from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView
-from appointments.mixins import SuperuserRequiredMixin
+from appointments.mixins import InternalAreaRequiredMixin
 from appointments.models import Appointment, Customer
 from .forms import EmailAuthenticationForm, CustomerSignupForm
 from django.views.generic import CreateView
@@ -71,7 +71,7 @@ class CustomerSignupView(CreateView):
         return redirect("appointments:public_visual_schedule")
 
 
-class DashboardView(SuperuserRequiredMixin, TemplateView):
+class DashboardView(InternalAreaRequiredMixin, TemplateView):
     template_name = "dashboard.html"
 
     def get_percentage(self, part, total):

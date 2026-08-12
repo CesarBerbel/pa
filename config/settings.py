@@ -82,12 +82,12 @@ SEO_BUSINESS_EMAIL = config("SEO_BUSINESS_EMAIL", default="atendimento@priarante
 
 SEO_BUSINESS_STREET_ADDRESS = config(
     "SEO_BUSINESS_STREET_ADDRESS",
-    default="R. Vale de São Miguel 5",
+    default="Av. Sá da Bandeira 33, Loja 108",
 )
 
 SEO_BUSINESS_LOCALITY = config("SEO_BUSINESS_LOCALITY", default="Coimbra")
 
-SEO_BUSINESS_POSTAL_CODE = config("SEO_BUSINESS_POSTAL_CODE", default="3020-113")
+SEO_BUSINESS_POSTAL_CODE = config("SEO_BUSINESS_POSTAL_CODE", default="3000-351")
 
 SEO_BUSINESS_COUNTRY = config("SEO_BUSINESS_COUNTRY", default="PT")
 
@@ -136,6 +136,27 @@ PUBLIC_BOOKING_MIN_ADVANCE_HOURS = config(
 
 if PUBLIC_BOOKING_MIN_ADVANCE_HOURS < 0:
     PUBLIC_BOOKING_MIN_ADVANCE_HOURS = 0
+
+
+# =============================================================================
+# Registos clínicos
+# =============================================================================
+
+# Prazo de conservação das fichas de anamnese e notas de evolução, em anos.
+#
+# A legislação da podologia não fixa um prazo único: tem de ser definido pela
+# responsável, considerando a legislação de saúde e de proteção de dados. Zero
+# significa "por definir" — nesse estado o sistema avisa na área interna e a
+# política de privacidade não anuncia prazo nenhum, para não publicar um
+# compromisso que não foi assumido.
+#
+# A eliminação nunca é automática: o comando report_clinical_retention apenas
+# lista o que ultrapassou o prazo, para decisão caso a caso.
+CLINICAL_RECORD_RETENTION_YEARS = config(
+    "CLINICAL_RECORD_RETENTION_YEARS",
+    default=0,
+    cast=int,
+)
 
 
 # =============================================================================
@@ -207,6 +228,7 @@ TEMPLATES = [
                 "config.context_processors.seo_settings",
                 "config.context_processors.instagram_settings",
                 "config.context_processors.language_alternates",
+                "config.context_processors.clinical_settings",
             ],
         },
     },
@@ -539,8 +561,7 @@ WHATSAPP_TEMPLATE_LANGUAGE_CODE = config(
 WHATSAPP_TEMPLATE_BODY_PARAMETERS = env_list(
     "WHATSAPP_TEMPLATE_BODY_PARAMETERS",
     default=(
-        "customer_name,service_name,appointment_date,"
-        "appointment_time,reference_code"
+        "customer_name,service_name,appointment_date," "appointment_time,reference_code"
     ),
 )
 

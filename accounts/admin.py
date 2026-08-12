@@ -14,12 +14,14 @@ class UserAdmin(DjangoUserAdmin):
         "email",
         "full_name",
         "phone",
-        "is_staff",
+        "is_internal_staff",
+        "can_access_clinical_data",
         "is_active",
     ]
 
     list_filter = [
-        "is_staff",
+        "is_internal_staff",
+        "can_access_clinical_data",
         "is_active",
         "is_superuser",
     ]
@@ -38,15 +40,30 @@ class UserAdmin(DjangoUserAdmin):
         (None, {"fields": ("email", "password")}),
         ("Personal information", {"fields": ("full_name", "phone")}),
         (
+            "Acesso ao sistema",
+            {
+                "fields": (
+                    "is_internal_staff",
+                    "can_access_clinical_data",
+                ),
+                "description": (
+                    "Quem trabalha na receção precisa apenas do acesso à área "
+                    "interna. O acesso a dados clínicos é reservado a quem "
+                    "presta os cuidados."
+                ),
+            },
+        ),
+        (
             "Permissions",
             {
+                "classes": ("collapse",),
                 "fields": (
                     "is_active",
                     "is_staff",
                     "is_superuser",
                     "groups",
                     "user_permissions",
-                )
+                ),
             },
         ),
         ("Important dates", {"fields": ("last_login", "date_joined")}),
@@ -63,7 +80,8 @@ class UserAdmin(DjangoUserAdmin):
                     "phone",
                     "password1",
                     "password2",
-                    "is_staff",
+                    "is_internal_staff",
+                    "can_access_clinical_data",
                     "is_active",
                 ),
             },

@@ -6,6 +6,7 @@ from .business_hours import (
 )
 from .appointments import (
     AppointmentCancelView,
+    ClinicalNoteUpdateView,
     AppointmentCompleteView,
     AppointmentConfirmView,
     AppointmentCreateView,
@@ -16,6 +17,7 @@ from .appointments import (
 )
 from .customers import (
     CustomerCreateView,
+    PatientRecordUpdateView,
     CustomerDeleteView,
     CustomerListView,
     CustomerUpdateView,
@@ -57,6 +59,7 @@ __all__ = [
     "BusinessHourDeleteView",
     "BusinessHourCreateView",
     "AppointmentCancelView",
+    "ClinicalNoteUpdateView",
     "AppointmentCompleteView",
     "AppointmentConfirmView",
     "AppointmentCreateView",
@@ -65,6 +68,7 @@ __all__ = [
     "CustomerAppointmentDetailView",
     "CustomerAppointmentsView",
     "CustomerCreateView",
+    "PatientRecordUpdateView",
     "CustomerDeleteView",
     "CustomerListView",
     "CustomerUpdateView",

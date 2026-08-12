@@ -9,7 +9,9 @@ from appointments.customer_services import (
 from .models import (
     Appointment,
     BusinessHour,
+    ClinicalNote,
     Customer,
+    PatientRecord,
     ScheduleBlock,
     Service,
     get_default_service_category,
@@ -25,17 +27,23 @@ class BusinessHourForm(forms.ModelForm):
             "weekday",
             "start_time",
             "end_time",
+            "second_start_time",
+            "second_end_time",
             "is_active",
         ]
         labels = {
             "weekday": "Dia da semana",
-            "start_time": "Hora inicial",
-            "end_time": "Hora final",
+            "start_time": "Hora inicial (manhã)",
+            "end_time": "Hora final (manhã)",
+            "second_start_time": "Hora inicial (tarde)",
+            "second_end_time": "Hora final (tarde)",
             "is_active": "Ativo",
         }
         widgets = {
             "start_time": forms.TimeInput(attrs={"type": "time"}),
             "end_time": forms.TimeInput(attrs={"type": "time"}),
+            "second_start_time": forms.TimeInput(attrs={"type": "time"}),
+            "second_end_time": forms.TimeInput(attrs={"type": "time"}),
         }
 
 
@@ -203,6 +211,58 @@ class AppointmentForm(forms.ModelForm):
             return None
 
         return find_or_create_customer(name=name, phone=phone, email=email)
+
+
+class PatientRecordForm(forms.ModelForm):
+    # Ficha de anamnese. Só usada na área interna: contém dados de saúde.
+
+    class Meta:
+        model = PatientRecord
+        fields = [
+            "main_complaint",
+            "has_diabetes",
+            "has_circulatory_issues",
+            "has_cardiovascular_issues",
+            "is_smoker",
+            "has_allergies",
+            "allergies",
+            "medical_history",
+            "current_medication",
+            "previous_surgeries",
+            "footwear_notes",
+            "notes",
+            "consent_confirmed",
+        ]
+        widgets = {
+            "main_complaint": forms.Textarea(attrs={"rows": 3}),
+            "allergies": forms.Textarea(attrs={"rows": 2}),
+            "medical_history": forms.Textarea(attrs={"rows": 3}),
+            "current_medication": forms.Textarea(attrs={"rows": 3}),
+            "previous_surgeries": forms.Textarea(attrs={"rows": 3}),
+            "footwear_notes": forms.Textarea(attrs={"rows": 3}),
+            "notes": forms.Textarea(attrs={"rows": 4}),
+        }
+
+
+class ClinicalNoteForm(forms.ModelForm):
+    # Nota de evolução de uma consulta: o que foi feito.
+
+    class Meta:
+        model = ClinicalNote
+        fields = ["procedures", "observations", "recommendations"]
+        widgets = {
+            "procedures": forms.Textarea(attrs={"rows": 4}),
+            "observations": forms.Textarea(attrs={"rows": 4}),
+            "recommendations": forms.Textarea(attrs={"rows": 3}),
+        }
+
+    def clean_procedures(self):
+        procedures = (self.cleaned_data.get("procedures") or "").strip()
+
+        if not procedures:
+            raise ValidationError("Descreva os atos praticados nesta consulta.")
+
+        return procedures
 
 
 class CategoryServiceChoiceField(forms.ModelChoiceField):

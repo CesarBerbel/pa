@@ -71,7 +71,7 @@
     {% block structured_data %}{% endblock %}
     {% block extra_head %}{% endblock %}
 </head>
-<body class="app-layout {% if user.is_authenticated and user.is_superuser %}internal-layout{% else %}public-layout{% endif %}">
+<body class="app-layout {% if user.has_internal_access %}internal-layout{% else %}public-layout{% endif %}">
 
 <!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P8N76B5D"
@@ -97,7 +97,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </button>
 
         <div class="collapse navbar-collapse" id="mainNavbar">
-            {% if user.is_authenticated and user.is_superuser %}
+            {% if user.has_internal_access %}
                 <div class="navbar-nav ms-lg-4 mt-3 mt-lg-0">
                     <a class="nav-link" href="{% url 'appointments:visual_schedule' %}">Agenda visual</a>
                     <a class="nav-link" href="{% url 'appointments:reminder_diagnostics' %}">Diagnóstico</a>
@@ -116,7 +116,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <a class="nav-link" data-section-link href="{% url 'home' %}#instagram">{% translate "Instagram" %}</a>
                     {% endif %}
                     <a class="nav-link" data-section-link href="{% url 'home' %}#contato">{% translate "Contacto" %}</a>
-                    {% if user.is_authenticated and not user.is_superuser %}
+                    {% if user.is_authenticated and not user.has_internal_access %}
                         <a class="nav-link" href="{% url 'appointments:customer_appointments' %}">
                             {% translate "Minhas marcações" %}
                         </a>
@@ -195,7 +195,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     {% block content %}{% endblock %}
 </main>
-{% if not user.is_superuser %}
+{% if not user.has_internal_access %}
     <footer id="contato" class="site-footer">
         <div class="container">
 
@@ -232,7 +232,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             <button type="button" class="footer-cookie-link" data-cookie-action="open-preferences">
                                 {% translate "Gerir cookies" %}
                             </button>
-                            {% if user.is_authenticated and not user.is_superuser %}
+                            {% if user.is_authenticated and not user.has_internal_access %}
                                 <a class="nav-link" href="{% url 'appointments:customer_appointments' %}">
                                     {% translate "Minhas marcações" %}
                                 </a>
@@ -315,7 +315,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </div>
     </footer>
 {% endif %}
-{% if not user.is_superuser %}
+{% if not user.has_internal_access %}
     <section
         id="cookie-consent-banner"
         class="cookie-consent-banner"

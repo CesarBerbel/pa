@@ -27,8 +27,15 @@ class PublicBookingAvailabilityMixin:
     slot_minutes = 30
 
     def get_available_slots_for(self, service, selected_date):
-        # Delegate public slot generation to the domain availability service.
+        # Só os horários livres. Usado na validação da submissão.
         return AvailabilityService.get_public_available_slots(
+            service=service,
+            selected_date=selected_date,
+        )
+
+    def get_public_slot_grid(self, service, selected_date):
+        # Grelha completa mostrada à cliente: futuros, livres e ocupados.
+        return AvailabilityService.build_public_slots(
             service=service,
             selected_date=selected_date,
         )
@@ -217,10 +224,7 @@ class PublicAvailableSlotsView(PublicBookingAvailabilityMixin, View):
         except ValueError:
             return JsonResponse({"slots": []})
 
-        slots = AvailabilityService.filter_public_slots_by_cutoff(
-            slots=self.get_available_slots_for(service, selected_date),
-            selected_date=selected_date,
-        )
+        slots = self.get_public_slot_grid(service, selected_date)
         availability_status = AvailabilityService.get_availability_status(
             service,
             selected_date,
@@ -521,7 +525,7 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
         }
 
         if selected_service:
-            slots = self.get_available_slots_for(
+            slots = self.get_public_slot_grid(
                 selected_service,
                 selected_date,
             )

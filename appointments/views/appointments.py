@@ -1,21 +1,29 @@
 from django.conf import settings
 from django.contrib import messages
-from appointments.mixins import SuperuserRequiredMixin, LoginRequiredMixin
-from django.shortcuts import redirect
-from django.urls import reverse_lazy
+from appointments.mixins import (
+    ClinicalAccessRequiredMixin,
+    InternalAreaRequiredMixin,
+    LoginRequiredMixin,
+)
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.generic import CreateView, ListView, TemplateView, UpdateView, View
 
 from appointments.audit_services import AppointmentAuditService
 from appointments.cancellation_services import AppointmentCancellationService
-from appointments.forms import AppointmentCancelForm, AppointmentForm
-from appointments.models import Appointment, AppointmentLog, Service
+from appointments.forms import (
+    AppointmentCancelForm,
+    AppointmentForm,
+    ClinicalNoteForm,
+)
+from appointments.models import Appointment, AppointmentLog, ClinicalNote, Service
 from appointments.selectors import AppointmentFilters, AppointmentSelectors
 from appointments.use_cases import ConfirmAppointmentUseCase, CompleteAppointmentUseCase
 from notifications.whatsapp import WhatsAppAppointmentNotificationService
 
 
-class AppointmentListView(SuperuserRequiredMixin, ListView):
+class AppointmentListView(InternalAreaRequiredMixin, ListView):
     # Lists appointments with filters and ordering.
 
     model = Appointment
@@ -41,7 +49,7 @@ class AppointmentListView(SuperuserRequiredMixin, ListView):
         return context
 
 
-class AppointmentCreateView(SuperuserRequiredMixin, CreateView):
+class AppointmentCreateView(InternalAreaRequiredMixin, CreateView):
     # Creates a new appointment.
 
     model = Appointment
@@ -76,7 +84,7 @@ class AppointmentCreateView(SuperuserRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class AppointmentUpdateView(SuperuserRequiredMixin, UpdateView):
+class AppointmentUpdateView(InternalAreaRequiredMixin, UpdateView):
     # Edits an existing appointment only if it is not completed.
 
     model = Appointment
@@ -163,7 +171,7 @@ class AppointmentUpdateView(SuperuserRequiredMixin, UpdateView):
         return response
 
 
-class AppointmentCancelView(SuperuserRequiredMixin, UpdateView):
+class AppointmentCancelView(InternalAreaRequiredMixin, UpdateView):
     # Shows an internal cancellation form and cancels an appointment with a required reason.
 
     model = Appointment
@@ -228,7 +236,7 @@ class AppointmentCancelView(SuperuserRequiredMixin, UpdateView):
         return self.form_invalid(form)
 
 
-class AppointmentConfirmView(SuperuserRequiredMixin, View):
+class AppointmentConfirmView(InternalAreaRequiredMixin, View):
     # Confirms an appointment without deleting it.
 
     def post(self, request, pk):
@@ -247,7 +255,7 @@ class AppointmentConfirmView(SuperuserRequiredMixin, View):
         return redirect("appointments:appointment_list")
 
 
-class AppointmentCompleteView(SuperuserRequiredMixin, View):
+class AppointmentCompleteView(InternalAreaRequiredMixin, View):
     # Marks an appointment as completed only if it is confirmed.
 
     def post(self, request, pk):
@@ -303,3 +311,47 @@ class CustomerAppointmentDetailView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         context["appointment"] = self.get_appointment()
         return context
+
+
+class ClinicalNoteUpdateView(ClinicalAccessRequiredMixin, UpdateView):
+    """Nota de evolução de uma marcação: os atos praticados.
+
+    Criada na primeira abertura, tal como a ficha de anamnese, para não obrigar
+    a um passo separado no meio do atendimento.
+    """
+
+    model = ClinicalNote
+    form_class = ClinicalNoteForm
+    template_name = "appointments/clinical_note_form.html"
+
+    def get_appointment(self):
+        return get_object_or_404(
+            Appointment.objects.select_related("customer", "service"),
+            pk=self.kwargs["pk"],
+        )
+
+    def get_object(self, queryset=None):
+        note, _created = ClinicalNote.objects.get_or_create(
+            appointment=self.get_appointment(),
+        )
+
+        return note
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["appointment"] = self.object.appointment
+        return context
+
+    def form_valid(self, form):
+        if not self.object.created_by_id:
+            form.instance.created_by = self.request.user
+
+        messages.success(self.request, "Nota de evolução guardada.")
+
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse(
+            "appointments:clinical_note",
+            kwargs={"pk": self.object.appointment_id},
+        )

@@ -31,11 +31,15 @@ class ConfirmAppointmentUseCase:
 
         if appointment.status == Appointment.STATUS_COMPLETED:
             return UseCaseResult(
-                False, "Marcações concluídas não podem ser confirmadas novamente.", appointment
+                False,
+                "Marcações concluídas não podem ser confirmadas novamente.",
+                appointment,
             )
 
         if appointment.status == Appointment.STATUS_CONFIRMED:
-            return UseCaseResult(True, "Esta marcação já estava confirmada.", appointment)
+            return UseCaseResult(
+                True, "Esta marcação já estava confirmada.", appointment
+            )
 
         with transaction.atomic():
             appointment = (
@@ -46,7 +50,9 @@ class ConfirmAppointmentUseCase:
 
             if appointment.status == Appointment.STATUS_CANCELLED:
                 return UseCaseResult(
-                    False, "Marcações canceladas não podem ser confirmadas.", appointment
+                    False,
+                    "Marcações canceladas não podem ser confirmadas.",
+                    appointment,
                 )
 
             if appointment.status == Appointment.STATUS_COMPLETED:

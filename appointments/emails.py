@@ -397,4 +397,3 @@ def send_open_appointments_lookup_email(recipient_email, appointments):
         body_html=body_html,
         recipient_list=[recipient_email],
     )
-

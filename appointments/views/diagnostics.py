@@ -1,13 +1,13 @@
 from datetime import datetime, timedelta
 
-from appointments.mixins import SuperuserRequiredMixin
+from appointments.mixins import InternalAreaRequiredMixin
 from django.utils import timezone
 from django.views.generic import TemplateView
 
 from appointments.models import Appointment, BusinessHour, ScheduleBlock, Service
 
 
-class ScheduleDiagnosticsView(SuperuserRequiredMixin, TemplateView):
+class ScheduleDiagnosticsView(InternalAreaRequiredMixin, TemplateView):
     # Shows detailed diagnostics for available and blocked schedule slots
 
     template_name = "appointments/schedule_diagnostics.html"
@@ -194,7 +194,7 @@ class ScheduleDiagnosticsView(SuperuserRequiredMixin, TemplateView):
         return context
 
 
-class ReminderDiagnosticsView(SuperuserRequiredMixin, TemplateView):
+class ReminderDiagnosticsView(InternalAreaRequiredMixin, TemplateView):
     # Shows diagnostics for appointment reminders without changing database data
 
     template_name = "appointments/reminder_diagnostics.html"

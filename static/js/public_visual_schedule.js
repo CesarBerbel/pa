@@ -102,9 +102,30 @@ $(document).ready(function () {
             return;
         }
 
+        const labelAvailable = slotsContainer.data("label-available") || "Disponível";
+        const labelReserved = slotsContainer.data("label-reserved") || "Reservado";
+        const labelBook = slotsContainer.data("label-book") || "Marcar";
+
         let html = `<div class="app-slots-grid">`;
 
         slots.forEach(function (slot) {
+            // Horários ocupados continuam visíveis, mas sem ligação: a cliente
+            // vê a agenda cheia em vez de um dia aparentemente vazio.
+            if (slot.is_available === false) {
+                html += `
+                    <div class="app-slot-card is-reserved" aria-disabled="true">
+                        <span class="app-slot-time">
+                            ${escapeHtml(slot.label)}
+                        </span>
+
+                        <span class="app-slot-status">
+                            ${escapeHtml(labelReserved)}
+                        </span>
+                    </div>
+                `;
+                return;
+            }
+
             const appointmentUrl = `${bookingUrl}?service=${encodeURIComponent(serviceId)}&date=${encodeURIComponent(selectedDate)}&start_time=${encodeURIComponent(slot.value)}`;
 
             html += `
@@ -114,11 +135,11 @@ $(document).ready(function () {
                     </span>
 
                     <span class="app-slot-status">
-                        Disponível
+                        ${escapeHtml(labelAvailable)}
                     </span>
 
                     <span class="app-slot-cta">
-                        Marcar
+                        ${escapeHtml(labelBook)}
                     </span>
                 </a>
             `;
@@ -150,7 +171,6 @@ $(document).ready(function () {
 
         $("#selected-service-name").text(selectedOption.data("name") || selectedOption.text());
         $("#selected-service-category").text(selectedOption.data("category") || "");
-        $("#selected-service-duration").text((selectedOption.data("duration") || "") + " minutos");
     }
 
     function loadAvailableSlots() {

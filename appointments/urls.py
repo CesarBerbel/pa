@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import (
     AppointmentCancelView,
+    ClinicalNoteUpdateView,
     AppointmentCreateView,
     AppointmentListView,
     AppointmentUpdateView,
@@ -10,6 +11,7 @@ from .views import (
     BusinessHourDeleteView,
     BusinessHourCreateView,
     CustomerCreateView,
+    PatientRecordUpdateView,
     CustomerListView,
     DailyAgendaView,
     ScheduleBlockCreateView,
@@ -121,6 +123,11 @@ urlpatterns = [
         name="customer_update",
     ),
     path(
+        "clientes/<int:pk>/anamnese/",
+        PatientRecordUpdateView.as_view(),
+        name="patient_record",
+    ),
+    path(
         "clientes/<int:pk>/apagar/",
         CustomerDeleteView.as_view(),
         name="customer_delete",
@@ -172,6 +179,11 @@ urlpatterns = [
         "marcacoes/<int:pk>/cancelar/",
         AppointmentCancelView.as_view(),
         name="appointment_cancel",
+    ),
+    path(
+        "marcacoes/<int:pk>/nota-clinica/",
+        ClinicalNoteUpdateView.as_view(),
+        name="clinical_note",
     ),
     path(
         "marcacoes/<int:pk>/confirmar/",

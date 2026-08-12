@@ -65,7 +65,6 @@ class AppointmentTestSetupMixin:
             },
         )
 
-
     def get_future_business_date(self, weekday=0, min_days=7):
         # Return a stable future date for public availability tests without
         # depending on freezegun class decorators. This avoids compatibility
@@ -337,7 +336,8 @@ class PublicAppointmentFlowTests(AppointmentTestSetupMixin, TestCase):
         self.assertEqual(Appointment.objects.count(), 1)
 
     def test_public_schedule_does_not_show_occupied_slot(self):
-        # Ensure occupied slots are not shown in the public schedule context.
+        # A grelha pública passou a incluir os horários ocupados, marcados
+        # com is_available=False, para o dia cheio parecer cheio.
         AppointmentService.create_appointment(
             customer=self.customer,
             service=self.service,
@@ -355,10 +355,11 @@ class PublicAppointmentFlowTests(AppointmentTestSetupMixin, TestCase):
             },
         )
 
-        slot_values = [slot["value"] for slot in response.context["slots"]]
+        slots = {slot["value"]: slot["is_available"] for slot in response.context["slots"]}
 
         self.assertEqual(response.status_code, 200)
-        self.assertNotIn("10:00", slot_values)
+        self.assertIn("10:00", slots)
+        self.assertFalse(slots["10:00"])
 
     def test_public_cancel_scheduled_appointment_by_code(self):
         # Ensure scheduled public appointments can be cancelled by reference code.
@@ -717,7 +718,7 @@ class PublicAvailableSlotsViewTests(AppointmentTestSetupMixin, TestCase):
         self.assertIn("10:00", slot_values)
 
     def test_available_slots_endpoint_hides_occupied_slot(self):
-        # Ensure AJAX endpoint does not return occupied slots.
+        # O endpoint devolve o horário ocupado marcado como indisponível.
         AppointmentService.create_appointment(
             customer=self.customer,
             service=self.service,
@@ -738,14 +739,14 @@ class PublicAvailableSlotsViewTests(AppointmentTestSetupMixin, TestCase):
         self.assertEqual(response.status_code, 200)
 
         data = response.json()
-        slot_values = [slot["value"] for slot in data["slots"]]
+        slots = {slot["value"]: slot["is_available"] for slot in data["slots"]}
 
-        self.assertNotIn("10:00", slot_values)
-        self.assertNotIn("10:30", slot_values)
-        self.assertIn("11:00", slot_values)
+        self.assertFalse(slots["10:00"])
+        self.assertFalse(slots["10:30"])
+        self.assertTrue(slots["11:00"])
 
     def test_available_slots_endpoint_hides_blocked_slot(self):
-        # Ensure AJAX endpoint does not return slots that conflict with schedule blocks.
+        # O endpoint devolve o horário bloqueado marcado como indisponível.
         ScheduleBlock.objects.create(
             title="Lunch break",
             block_type=ScheduleBlock.BLOCK_TYPE_BREAK,
@@ -767,10 +768,10 @@ class PublicAvailableSlotsViewTests(AppointmentTestSetupMixin, TestCase):
         self.assertEqual(response.status_code, 200)
 
         data = response.json()
-        slot_values = [slot["value"] for slot in data["slots"]]
+        slots = {slot["value"]: slot["is_available"] for slot in data["slots"]}
 
-        self.assertNotIn("12:00", slot_values)
-        self.assertNotIn("12:30", slot_values)
+        self.assertFalse(slots["12:00"])
+        self.assertFalse(slots["12:30"])
 
     def test_available_slots_endpoint_returns_empty_list_for_invalid_service(self):
         # Ensure invalid service returns empty slot list.
@@ -1834,7 +1835,7 @@ class PublicVisualScheduleAjaxTests(AppointmentTestSetupMixin, TestCase):
         self.assertIn("label", data["slots"][0])
 
     def test_ajax_slots_endpoint_does_not_return_occupied_slot(self):
-        # Ensure AJAX endpoint hides slots occupied by existing appointments.
+        # O horário ocupado continua na resposta, marcado como indisponível.
         AppointmentService.create_appointment(
             customer=self.customer,
             service=self.service,
@@ -1852,13 +1853,13 @@ class PublicVisualScheduleAjaxTests(AppointmentTestSetupMixin, TestCase):
             },
         )
 
-        slot_values = [slot["value"] for slot in response.json()["slots"]]
+        slots = {slot["value"]: slot["is_available"] for slot in response.json()["slots"]}
 
-        self.assertNotIn("10:00", slot_values)
-        self.assertNotIn("10:30", slot_values)
+        self.assertFalse(slots["10:00"])
+        self.assertFalse(slots["10:30"])
 
     def test_ajax_slots_endpoint_does_not_return_blocked_slot(self):
-        # Ensure AJAX endpoint hides slots blocked by schedule blocks.
+        # O horário bloqueado continua na resposta, marcado como indisponível.
         ScheduleBlock.objects.create(
             title="Blocked period",
             block_type=ScheduleBlock.BLOCK_TYPE_BREAK,
@@ -1877,10 +1878,10 @@ class PublicVisualScheduleAjaxTests(AppointmentTestSetupMixin, TestCase):
             },
         )
 
-        slot_values = [slot["value"] for slot in response.json()["slots"]]
+        slots = {slot["value"]: slot["is_available"] for slot in response.json()["slots"]}
 
-        self.assertNotIn("12:00", slot_values)
-        self.assertNotIn("12:30", slot_values)
+        self.assertFalse(slots["12:00"])
+        self.assertFalse(slots["12:30"])
 
     def test_public_visual_schedule_page_contains_ajax_container(self):
         # Ensure visual schedule template exposes the AJAX container expected by JavaScript.

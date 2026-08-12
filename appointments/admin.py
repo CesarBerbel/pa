@@ -7,6 +7,9 @@ from .models import (
     BusinessHour,
     Customer,
     ScheduleBlock,
+    ClinicalNote,
+    PatientRecord,
+    PatientRecordLog,
     Service,
     ServiceCategory,
 )
@@ -216,11 +219,15 @@ class BusinessHourAdmin(admin.ModelAdmin):
         "weekday",
         "start_time",
         "end_time",
+        "second_start_time",
+        "second_end_time",
         "is_active",
     )
     list_editable = (
         "start_time",
         "end_time",
+        "second_start_time",
+        "second_end_time",
         "is_active",
     )
     list_filter = ("is_active",)
@@ -283,3 +290,58 @@ class AppointmentReminderLogAdmin(admin.ModelAdmin):
         "error_message",
         "sent_at",
     )
+
+
+@admin.register(PatientRecord)
+class PatientRecordAdmin(admin.ModelAdmin):
+    # Dados de saúde: o admin fica atrás da mesma autenticação da área interna,
+    # mas a edição habitual faz-se na ficha em /clientes/<id>/anamnese/.
+
+    list_display = (
+        "customer",
+        "has_diabetes",
+        "has_circulatory_issues",
+        "has_allergies",
+        "updated_at",
+    )
+    list_filter = (
+        "has_diabetes",
+        "has_circulatory_issues",
+        "has_cardiovascular_issues",
+        "has_allergies",
+    )
+    search_fields = ("customer__full_name", "customer__email", "customer__phone")
+    autocomplete_fields = ("customer",)
+    readonly_fields = ("created_at", "updated_at", "updated_by")
+
+
+@admin.register(ClinicalNote)
+class ClinicalNoteAdmin(admin.ModelAdmin):
+    # Registo clínico por consulta. A edição habitual faz-se em
+    # /marcacoes/<id>/nota-clinica/.
+
+    list_display = ("appointment", "created_by", "updated_at")
+    search_fields = (
+        "appointment__reference_code",
+        "appointment__customer__full_name",
+        "procedures",
+    )
+    autocomplete_fields = ("appointment",)
+    readonly_fields = ("created_at", "updated_at", "created_by")
+
+
+@admin.register(PatientRecordLog)
+class PatientRecordLogAdmin(admin.ModelAdmin):
+    # Histórico de alterações. Só leitura: alterar o histórico esvaziaria a
+    # garantia de integridade que ele existe para dar.
+
+    list_display = ("record", "performed_by", "created_at")
+    list_filter = ("created_at",)
+    search_fields = ("record__customer__full_name", "description")
+    readonly_fields = ("record", "performed_by", "description", "created_at")
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False

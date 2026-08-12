@@ -37,6 +37,39 @@ class AvailabilityService:
         ).first()
 
     @classmethod
+    def get_business_periods(cls, selected_date, business_hour=None):
+        """Períodos de trabalho do dia, como pares de datetime.
+
+        Um dia com pausa de almoço tem dois períodos. Todo o cálculo de
+        disponibilidade passa por aqui, para a pausa não depender de um
+        bloqueio recorrente.
+        """
+
+        business_hour = business_hour or cls.get_business_hour(selected_date)
+
+        if not business_hour:
+            return []
+
+        return [
+            (
+                datetime.combine(selected_date, inicio),
+                datetime.combine(selected_date, fim),
+            )
+            for inicio, fim in business_hour.periods
+        ]
+
+    @classmethod
+    def get_business_day_bounds(cls, selected_date, business_hour=None):
+        # Início do primeiro período e fim do último, para comparações que
+        # olham para o dia como um todo.
+        periods = cls.get_business_periods(selected_date, business_hour)
+
+        if not periods:
+            return None, None
+
+        return periods[0][0], periods[-1][1]
+
+    @classmethod
     def get_active_blocks_for_date(cls, selected_date):
         return [
             block
@@ -92,9 +125,9 @@ class AvailabilityService:
         if not appointment.date or not appointment.start_time:
             return
 
-        business_hour = cls.get_business_hour(appointment.date)
+        periods = cls.get_business_periods(appointment.date)
 
-        if not business_hour:
+        if not periods:
             raise ValidationError(
                 "Não há horário de funcionamento ativo para este dia."
             )
@@ -102,10 +135,14 @@ class AvailabilityService:
         appointment_start = appointment.get_start_datetime()
         appointment_end = appointment.get_end_datetime()
 
-        business_start = datetime.combine(appointment.date, business_hour.start_time)
-        business_end = datetime.combine(appointment.date, business_hour.end_time)
+        # Tem de caber inteira num período: um atendimento que começasse antes
+        # do almoço e terminasse depois atravessaria a pausa.
+        cabe = any(
+            appointment_start >= inicio and appointment_end <= fim
+            for inicio, fim in periods
+        )
 
-        if appointment_start < business_start or appointment_end > business_end:
+        if not cabe:
             raise ValidationError("A marcação está fora do horário de funcionamento.")
 
         for block in cls.get_active_blocks_for_date(appointment.date):
@@ -144,8 +181,9 @@ class AvailabilityService:
                 "block_notes": "",
             }
 
-        business_start = datetime.combine(selected_date, business_hour.start_time)
-        business_end = datetime.combine(selected_date, business_hour.end_time)
+        business_start, business_end = cls.get_business_day_bounds(
+            selected_date, business_hour
+        )
 
         for block in cls.get_active_blocks_for_date(selected_date):
             block_start = block.get_start_datetime_for_date(selected_date)
@@ -205,13 +243,12 @@ class AvailabilityService:
 
     @classmethod
     def get_full_day_block_for_date(cls, selected_date, business_hour=None):
-        business_hour = business_hour or cls.get_business_hour(selected_date)
+        business_start, business_end = cls.get_business_day_bounds(
+            selected_date, business_hour
+        )
 
-        if not business_hour:
+        if business_start is None:
             return None
-
-        business_start = datetime.combine(selected_date, business_hour.start_time)
-        business_end = datetime.combine(selected_date, business_hour.end_time)
 
         for block in cls.get_active_blocks_for_date(selected_date):
             block_start = block.get_start_datetime_for_date(selected_date)
@@ -231,13 +268,11 @@ class AvailabilityService:
         selected_date,
         enforce_minimum_advance=False,
     ):
-        business_hour = cls.get_business_hour(selected_date)
+        periods = cls.get_business_periods(selected_date)
 
-        if not business_hour:
+        if not periods:
             return []
 
-        current_datetime = datetime.combine(selected_date, business_hour.start_time)
-        business_end_datetime = datetime.combine(selected_date, business_hour.end_time)
         public_cutoff_datetime = None
 
         if enforce_minimum_advance:
@@ -245,49 +280,99 @@ class AvailabilityService:
                 selected_date
             )
 
-            if public_cutoff_datetime:
-                if public_cutoff_datetime > business_end_datetime:
-                    return []
-
-                current_datetime = max(
-                    current_datetime,
-                    public_cutoff_datetime,
-                )
-
-        current_datetime = cls.round_datetime_up_to_slot(current_datetime)
-
         appointments = cls.get_active_appointments_for_date(selected_date)
         blocks = cls.get_active_blocks_for_date(selected_date)
+        duration = timedelta(minutes=service.duration_minutes)
         available_slots = []
 
-        while (
-            current_datetime + timedelta(minutes=service.duration_minutes)
-            <= business_end_datetime
-        ):
-            slot_start = current_datetime
-            slot_end = slot_start + timedelta(minutes=service.duration_minutes)
+        for period_start, period_end in periods:
+            current_datetime = period_start
 
-            has_conflict = cls._has_conflict(
-                slot_start, slot_end, appointments, blocks, selected_date
-            )
+            if public_cutoff_datetime:
+                if public_cutoff_datetime >= period_end:
+                    continue
 
-            violates_public_cutoff = (
-                enforce_minimum_advance
-                and public_cutoff_datetime
-                and slot_start < public_cutoff_datetime
-            )
+                current_datetime = max(current_datetime, public_cutoff_datetime)
 
-            if not has_conflict and not violates_public_cutoff:
-                available_slots.append(
-                    AvailableSlot(
-                        value=slot_start.strftime("%H:%M"),
-                        label=slot_start.strftime("%H:%M"),
-                    ).as_dict()
+            current_datetime = cls.round_datetime_up_to_slot(current_datetime)
+
+            # O atendimento tem de terminar dentro do mesmo período.
+            while current_datetime + duration <= period_end:
+                slot_start = current_datetime
+                slot_end = slot_start + duration
+
+                has_conflict = cls._has_conflict(
+                    slot_start, slot_end, appointments, blocks, selected_date
                 )
 
-            current_datetime += timedelta(minutes=cls.slot_minutes)
+                if not has_conflict:
+                    available_slots.append(
+                        AvailableSlot(
+                            value=slot_start.strftime("%H:%M"),
+                            label=slot_start.strftime("%H:%M"),
+                        ).as_dict()
+                    )
+
+                current_datetime += timedelta(minutes=cls.slot_minutes)
 
         return available_slots
+
+    @classmethod
+    def build_public_slots(cls, service, selected_date):
+        """Grelha pública completa do dia, a partir do corte de antecedência.
+
+        Ao contrário de get_public_available_slots(), devolve também os horários
+        já ocupados, marcados com is_available=False. Mostrar a agenda cheia dá
+        à cliente a noção do que resta, em vez de a deixar a adivinhar por que
+        motivo o dia parece vazio.
+
+        Horários passados continuam de fora: propor um horário que já não pode
+        ser marcado seria pior do que não o mostrar.
+        """
+
+        periods = cls.get_business_periods(selected_date)
+
+        if not periods or not service:
+            return []
+
+        cutoff = cls.get_public_booking_cutoff_datetime(selected_date)
+        appointments = cls.get_active_appointments_for_date(selected_date)
+        blocks = cls.get_active_blocks_for_date(selected_date)
+        duration = timedelta(minutes=service.duration_minutes)
+
+        slots = []
+
+        for period_start, period_end in periods:
+            current = period_start
+
+            if cutoff:
+                if cutoff >= period_end:
+                    continue
+
+                current = max(current, cutoff)
+
+            current = cls.round_datetime_up_to_slot(current)
+
+            while current + duration <= period_end:
+                ocupado = cls._has_conflict(
+                    current,
+                    current + duration,
+                    appointments,
+                    blocks,
+                    selected_date,
+                )
+
+                slots.append(
+                    {
+                        "value": current.strftime("%H:%M"),
+                        "label": current.strftime("%H:%M"),
+                        "is_available": not ocupado,
+                    }
+                )
+
+                current += timedelta(minutes=cls.slot_minutes)
+
+        return slots
 
     @classmethod
     def get_public_available_slots(cls, service, selected_date):
@@ -434,14 +519,40 @@ class AvailabilityService:
     @classmethod
     def build_visual_slots(cls, selected_date, slot_minutes=30):
         business_hour = cls.get_business_hour(selected_date)
+        periods = cls.get_business_periods(selected_date, business_hour)
 
-        if not business_hour:
+        if not periods:
             return business_hour, []
 
-        current_datetime = datetime.combine(selected_date, business_hour.start_time)
-        end_datetime = datetime.combine(selected_date, business_hour.end_time)
         appointments = cls.get_active_appointments_for_date(selected_date)
         blocks = cls.get_active_blocks_for_date(selected_date)
+        slots = []
+
+        for period_start, end_datetime in periods:
+            slots.extend(
+                cls._build_period_slots(
+                    selected_date=selected_date,
+                    period_start=period_start,
+                    end_datetime=end_datetime,
+                    appointments=appointments,
+                    blocks=blocks,
+                    slot_minutes=slot_minutes,
+                )
+            )
+
+        return business_hour, slots
+
+    @classmethod
+    def _build_period_slots(
+        cls,
+        selected_date,
+        period_start,
+        end_datetime,
+        appointments,
+        blocks,
+        slot_minutes,
+    ):
+        current_datetime = period_start
         slots = []
 
         while current_datetime < end_datetime:
@@ -477,7 +588,7 @@ class AvailabilityService:
             slots.append(slot_data)
             current_datetime += timedelta(minutes=slot_minutes)
 
-        return business_hour, slots
+        return slots
 
     @classmethod
     def _duration_to_slot_count(cls, duration_minutes, slot_minutes):

@@ -32,9 +32,9 @@
 
 <div class="alert alert-info">
     <strong>Importante:</strong>
-    o almoço e outros períodos sem atendimento devem continuar a ser configurados em
+    a pausa de almoço faz-se dividindo o dia em dois períodos, aqui mesmo.
+    Para folgas, férias e pausas pontuais, use
     <a href="{% url 'appointments:schedule_block_list' %}" class="alert-link">Bloqueios</a>.
-    Esta ecrã controla apenas o intervalo geral de trabalho de cada dia.
 </div>
 
 <div class="card shadow-sm border-0">
@@ -45,9 +45,9 @@
                     <thead>
                         <tr>
                             <th>Dia da semana</th>
-                            <th>Início</th>
-                            <th>Fim</th>
-                            <th>Total bruto</th>
+                            <th>Manhã</th>
+                            <th>Tarde</th>
+                            <th>Total</th>
                             <th>Status</th>
                             <th class="text-end">Ações</th>
                         </tr>
@@ -61,11 +61,15 @@
                                 </td>
 
                                 <td>
-                                    {{ business_hour.start_time|time:"H:i" }}
+                                    {{ business_hour.start_time|time:"H:i" }} – {{ business_hour.end_time|time:"H:i" }}
                                 </td>
 
                                 <td>
-                                    {{ business_hour.end_time|time:"H:i" }}
+                                    {% if business_hour.has_second_period %}
+                                        {{ business_hour.second_start_time|time:"H:i" }} – {{ business_hour.second_end_time|time:"H:i" }}
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
                                 </td>
 
                                 <td>

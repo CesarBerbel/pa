@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% load i18n %}
+
 {% block title %}Política de Privacidade | Priscila Arantes PA{% endblock %}
 {% block meta_description %}Política de Privacidade do site Priscila Arantes PA, com informação sobre recolha, utilização, conservação e direitos dos titulares dos dados.{% endblock %}
 {% block meta_keywords %}política de privacidade, proteção de dados, RGPD, Priscila Arantes PA{% endblock %}
@@ -11,164 +13,150 @@
 {% block content %}
 <section class="legal-page">
     <div class="legal-hero">
-        <span class="luxury-eyebrow">Proteção de dados</span>
-        <h1>Política de Privacidade</h1>
+        <span class="luxury-eyebrow">{% translate "Proteção de dados" %}</span>
+        <h1>{% translate "Política de Privacidade" %}</h1>
         <p>
-            Esta política explica como a Priscila Arantes PA recolhe, utiliza,
-            conserva e protege os dados pessoais tratados através deste site,
-            do formulário de marcação online e dos canais de contacto associados.
+            {% translate "Esta política explica como a Priscila Arantes PA recolhe, utiliza, conserva e protege os dados pessoais tratados através deste site, do formulário de marcação online e dos canais de contacto associados." %}
         </p>
-        <small>Última atualização: 10 de junho de 2026</small>
+        <small>{% translate "Última atualização: 10 de junho de 2026" %}</small>
     </div>
 
     <div class="legal-content-card">
-        <h2>1. Responsável pelo tratamento</h2>
+        <h2>{% translate "1. Responsável pelo tratamento" %}</h2>
         <p>
-            A entidade responsável pelo tratamento dos dados pessoais recolhidos através
-            deste site é <strong>Priscila Arantes PA</strong>, com atendimento em
-            <strong>R. Vale de São Miguel 5, 3020-113 Coimbra, Portugal</strong>.
+            {% blocktranslate %}A entidade responsável pelo tratamento dos dados pessoais recolhidos através deste site é <strong>Priscila Arantes PA</strong>, com sede em <strong>R. Vale de São Miguel, Lote 5, 3020-113 Coimbra, Portugal</strong>.{% endblocktranslate %}
         </p>
         <p>
-            Contactos: WhatsApp
-            <a href="{{ SEO_WHATSAPP_LINK }}" target="_blank" rel="noopener noreferrer">
-                <strong>{{ SEO_WHATSAPP_DISPLAY }}</strong>
-            </a>
-            e email
-            <a href="mailto:atendimento@priarantes.com">atendimento@priarantes.com</a>.
+            {% blocktranslate %}O atendimento é prestado na <strong>Galeria Avenida — Av. Sá da Bandeira, n.º 33, Loja 108, 3000-351 Coimbra</strong>.{% endblocktranslate %}
+        </p>
+        <p>
+            {% blocktranslate with link=SEO_WHATSAPP_LINK numero=SEO_WHATSAPP_DISPLAY %}Contactos: WhatsApp <a href="{{ link }}" target="_blank" rel="noopener noreferrer"><strong>{{ numero }}</strong></a> e email <a href="mailto:atendimento@priarantes.com">atendimento@priarantes.com</a>.{% endblocktranslate %}
         </p>
 
-        <h2>2. Dados pessoais recolhidos</h2>
+        <h2>{% translate "2. Dados pessoais recolhidos" %}</h2>
         <p>
-            Podemos recolher os seguintes dados, conforme a utilização do site e dos serviços:
+            {% translate "Podemos recolher os seguintes dados, conforme a utilização do site e dos serviços:" %}
         </p>
         <ul>
-            <li>nome completo;</li>
-            <li>telefone;</li>
-            <li>endereço de email, quando informado;</li>
-            <li>serviço pretendido, data, horário e observações da marcação;</li>
-            <li>dados necessários para criação e utilização de conta de cliente, quando aplicável;</li>
-            <li>informação técnica básica, como endereço IP, tipo de navegador, data e hora de acesso;</li>
-            <li>preferências de cookies guardadas no navegador.</li>
+            <li>{% translate "nome completo;" %}</li>
+            <li>{% translate "telefone;" %}</li>
+            <li>{% translate "endereço de email, quando informado;" %}</li>
+            <li>{% translate "serviço pretendido, data, horário e observações da marcação;" %}</li>
+            <li>{% translate "dados necessários para criação e utilização de conta de cliente, quando aplicável;" %}</li>
+            <li>{% translate "informação técnica básica, como endereço IP, tipo de navegador, data e hora de acesso;" %}</li>
+            <li>{% translate "preferências de cookies guardadas no navegador." %}</li>
         </ul>
 
-        <h2>3. Finalidades do tratamento</h2>
-        <p>Os dados pessoais são tratados para as seguintes finalidades:</p>
+        <h2>{% translate "3. Finalidades do tratamento" %}</h2>
+        <p>{% translate "Os dados pessoais são tratados para as seguintes finalidades:" %}</p>
         <ul>
-            <li>permitir a marcação, gestão, alteração e cancelamento de horários;</li>
-            <li>identificar o cliente e prestar o serviço solicitado;</li>
-            <li>enviar confirmações, avisos e comunicações relacionadas com a marcação;</li>
-            <li>responder a pedidos enviados por telefone, email, WhatsApp ou formulário;</li>
-            <li>manter a segurança, prevenção de abusos e funcionamento técnico do site;</li>
-            <li>cumprir obrigações legais, fiscais, contabilísticas ou regulatórias, quando aplicável;</li>
-            <li>melhorar a experiência de utilização do site, quando exista consentimento para cookies opcionais.</li>
+            <li>{% translate "permitir a marcação, gestão, alteração e cancelamento de horários;" %}</li>
+            <li>{% translate "identificar o cliente e prestar o serviço solicitado;" %}</li>
+            <li>{% translate "enviar confirmações, avisos e comunicações relacionadas com a marcação;" %}</li>
+            <li>{% translate "responder a pedidos enviados por telefone, email, WhatsApp ou formulário;" %}</li>
+            <li>{% translate "manter a segurança, prevenção de abusos e funcionamento técnico do site;" %}</li>
+            <li>{% translate "cumprir obrigações legais, fiscais, contabilísticas ou regulatórias, quando aplicável;" %}</li>
+            <li>{% translate "melhorar a experiência de utilização do site, quando exista consentimento para cookies opcionais." %}</li>
         </ul>
 
-        <h2>4. Fundamentos legais</h2>
-        <p>O tratamento de dados pessoais pode assentar nos seguintes fundamentos:</p>
+        <h2>{% translate "4. Fundamentos legais" %}</h2>
+        <p>{% translate "O tratamento de dados pessoais pode assentar nos seguintes fundamentos:" %}</p>
         <ul>
             <li>
-                <strong>execução de contrato ou diligências pré-contratuais</strong>,
-                para responder ao pedido de marcação e prestar o serviço solicitado;
+                {% blocktranslate %}<strong>execução de contrato ou diligências pré-contratuais</strong>, para responder ao pedido de marcação e prestar o serviço solicitado;{% endblocktranslate %}
             </li>
             <li>
-                <strong>cumprimento de obrigação legal</strong>, quando seja necessário manter
-                informação para efeitos fiscais, contabilísticos ou regulatórios;
+                {% blocktranslate %}<strong>cumprimento de obrigação legal</strong>, quando seja necessário manter informação para efeitos fiscais, contabilísticos ou regulatórios;{% endblocktranslate %}
             </li>
             <li>
-                <strong>interesse legítimo</strong>, para segurança do site, prevenção de fraude,
-                gestão administrativa e defesa de direitos;
+                {% blocktranslate %}<strong>interesse legítimo</strong>, para segurança do site, prevenção de fraude, gestão administrativa e defesa de direitos;{% endblocktranslate %}
             </li>
             <li>
-                <strong>consentimento</strong>, quando a utilização depender de autorização livre,
-                específica e informada, como cookies opcionais ou comunicações não essenciais.
+                {% blocktranslate %}<strong>consentimento</strong>, quando a utilização depender de autorização livre, específica e informada, como cookies opcionais ou comunicações não essenciais.{% endblocktranslate %}
             </li>
         </ul>
 
-        <h2>5. Conservação dos dados</h2>
+        <h2>{% translate "5. Conservação dos dados" %}</h2>
         <p>
-            Os dados são conservados apenas pelo período necessário para cumprir as finalidades
-            indicadas nesta política, salvo quando exista obrigação legal de conservação por
-            período superior ou necessidade legítima de defesa de direitos.
+            {% translate "Os dados são conservados apenas pelo período necessário para cumprir as finalidades indicadas nesta política, salvo quando exista obrigação legal de conservação por período superior ou necessidade legítima de defesa de direitos." %}
         </p>
         <p>
-            Dados de marcações e contactos podem ser mantidos enquanto forem necessários para
-            gestão do atendimento, histórico operacional, cumprimento de obrigações legais e
-            resolução de eventuais reclamações.
+            {% translate "Dados de marcações e contactos podem ser mantidos enquanto forem necessários para gestão do atendimento, histórico operacional, cumprimento de obrigações legais e resolução de eventuais reclamações." %}
         </p>
 
-        <h2>6. Partilha de dados com terceiros</h2>
+        <h2>{% translate "6. Partilha de dados com terceiros" %}</h2>
         <p>
-            Os dados pessoais não são vendidos. Podem ser tratados por prestadores de serviços
-            estritamente necessários ao funcionamento do site e do atendimento, tais como:
+            {% translate "Os dados pessoais não são vendidos. Podem ser tratados por prestadores de serviços estritamente necessários ao funcionamento do site e do atendimento, tais como:" %}
         </p>
         <ul>
-            <li>serviços de alojamento, infraestrutura e manutenção técnica;</li>
-            <li>serviços de email, mensagens ou comunicação com clientes;</li>
-            <li>ferramentas de mapas e localização, quando o utilizador aceitar cookies funcionais;</li>
-            <li>autoridades públicas, quando exista obrigação legal.</li>
+            <li>{% translate "serviços de alojamento, infraestrutura e manutenção técnica;" %}</li>
+            <li>{% translate "serviços de email, mensagens ou comunicação com clientes;" %}</li>
+            <li>{% translate "ferramentas de mapas e localização, quando o utilizador aceitar cookies funcionais;" %}</li>
+            <li>{% translate "autoridades públicas, quando exista obrigação legal." %}</li>
         </ul>
         <p>
-            Sempre que aplicável, estes terceiros devem tratar os dados de acordo com instruções,
-            medidas de segurança adequadas e legislação de proteção de dados em vigor.
+            {% translate "Sempre que aplicável, estes terceiros devem tratar os dados de acordo com instruções, medidas de segurança adequadas e legislação de proteção de dados em vigor." %}
         </p>
 
-        <h2>7. Transferências internacionais</h2>
+        <h2>{% translate "7. Transferências internacionais" %}</h2>
         <p>
-            Alguns fornecedores tecnológicos podem tratar informação fora do Espaço Económico
-            Europeu. Quando tal ocorrer, devem ser adotadas garantias adequadas previstas no RGPD,
-            como decisões de adequação, cláusulas contratuais-tipo ou mecanismos equivalentes.
+            {% translate "Alguns fornecedores tecnológicos podem tratar informação fora do Espaço Económico Europeu. Quando tal ocorrer, devem ser adotadas garantias adequadas previstas no RGPD, como decisões de adequação, cláusulas contratuais-tipo ou mecanismos equivalentes." %}
         </p>
 
-        <h2>8. Segurança</h2>
+        <h2>{% translate "8. Segurança" %}</h2>
         <p>
-            São adotadas medidas técnicas e organizativas adequadas para proteger os dados pessoais
-            contra acesso não autorizado, perda, alteração ou divulgação indevida. Ainda assim,
-            nenhum sistema ligado à Internet pode garantir segurança absoluta.
+            {% translate "São adotadas medidas técnicas e organizativas adequadas para proteger os dados pessoais contra acesso não autorizado, perda, alteração ou divulgação indevida. Ainda assim, nenhum sistema ligado à Internet pode garantir segurança absoluta." %}
         </p>
 
-        <h2>9. Direitos dos titulares dos dados</h2>
-        <p>Nos termos do RGPD, o titular dos dados pode solicitar:</p>
+        <h2>{% translate "9. Direitos dos titulares dos dados" %}</h2>
+        <p>{% translate "Nos termos do RGPD, o titular dos dados pode solicitar:" %}</p>
         <ul>
-            <li>acesso aos seus dados pessoais;</li>
-            <li>retificação de dados inexatos ou incompletos;</li>
-            <li>apagamento dos dados, quando legalmente aplicável;</li>
-            <li>limitação do tratamento;</li>
-            <li>oposição ao tratamento baseado em interesse legítimo;</li>
-            <li>portabilidade dos dados, quando aplicável;</li>
-            <li>retirada do consentimento, sem comprometer tratamentos realizados antes da retirada.</li>
+            <li>{% translate "acesso aos seus dados pessoais;" %}</li>
+            <li>{% translate "retificação de dados inexatos ou incompletos;" %}</li>
+            <li>{% translate "apagamento dos dados, quando legalmente aplicável;" %}</li>
+            <li>{% translate "limitação do tratamento;" %}</li>
+            <li>{% translate "oposição ao tratamento baseado em interesse legítimo;" %}</li>
+            <li>{% translate "portabilidade dos dados, quando aplicável;" %}</li>
+            <li>{% translate "retirada do consentimento, sem comprometer tratamentos realizados antes da retirada." %}</li>
         </ul>
         <p>
-            Para exercer estes direitos, contacte
-            <a href="mailto:atendimento@priarantes.com">atendimento@priarantes.com</a>.
-            O titular tem ainda o direito de apresentar reclamação junto da
-            <strong>Comissão Nacional de Proteção de Dados (CNPD)</strong>.
+            {% blocktranslate %}Para exercer estes direitos, contacte <a href="mailto:atendimento@priarantes.com">atendimento@priarantes.com</a>. O titular tem ainda o direito de apresentar reclamação junto da <strong>Comissão Nacional de Proteção de Dados (CNPD)</strong>.{% endblocktranslate %}
         </p>
 
-        <h2>10. Dados sensíveis nas observações</h2>
+        <h2>{% translate "10. Dados de saúde e registo clínico" %}</h2>
         <p>
-            O campo de observações da marcação deve ser usado apenas para informação necessária
-            ao atendimento. Evite inserir dados sensíveis ou informação clínica detalhada que não
-            seja indispensável para a marcação. Caso seja necessário tratar informação sensível,
-            esse tratamento deverá respeitar as regras específicas do RGPD.
+            {% translate "No âmbito da prestação de cuidados de podologia é elaborado um registo clínico, composto por uma ficha de anamnese e por notas de evolução de cada consulta. Esse registo pode incluir antecedentes de saúde, alergias, medicação habitual, cirurgias anteriores e a descrição dos atos praticados." %}
         </p>
-
-        <h2>11. Menores de idade</h2>
         <p>
-            A marcação de serviços para menores deve ser realizada ou autorizada por titular das
-            responsabilidades parentais ou representante legal, quando aplicável.
+            {% translate "Os dados de saúde são categoria especial de dados nos termos do artigo 9.º do RGPD. São tratados no contexto da prestação de cuidados de saúde, por profissional sujeito a dever de sigilo, e no cumprimento das obrigações aplicáveis ao exercício da podologia, nomeadamente a Lei n.º 65/2014, de 28 de agosto." %}
+        </p>
+        <p>
+            {% translate "O acesso ao registo clínico está limitado a quem dele necessita para a prestação dos cuidados. Quem desempenhe apenas funções administrativas, como a marcação de consultas, não tem acesso à informação clínica. Todas as alterações ao registo ficam documentadas, com identificação de quem as fez e quando." %}
+        </p>
+        {% if clinical_retention_years %}
+            <p>
+                {% blocktranslate with anos=clinical_retention_years %}O registo clínico é conservado durante <strong>{{ anos }} ano(s)</strong> após o último contacto, findos os quais é eliminado de forma segura ou anonimizado, salvo se existir fundamento legal ou clínico para a sua conservação por período superior.{% endblocktranslate %}
+            </p>
+        {% endif %}
+        <p>
+            {% translate "O campo de observações da marcação deve ser usado apenas para informação necessária ao atendimento. Informação clínica detalhada pertence ao registo clínico e não ao campo de observações." %}
         </p>
 
-        <h2>12. Cookies</h2>
+        <h2>{% translate "11. Menores de idade" %}</h2>
+        <p>
+            {% translate "A marcação de serviços para menores deve ser realizada ou autorizada por titular das responsabilidades parentais ou representante legal, quando aplicável." %}
+        </p>
+
+        <h2>{% translate "12. Cookies" %}</h2>
         <p>
             Este site utiliza cookies técnicos necessários ao funcionamento e pode utilizar cookies
             opcionais mediante consentimento. Para mais detalhes, consulte a
             <a href="{% url 'cookie_policy' %}">Política de Cookies</a>.
         </p>
 
-        <h2>13. Alterações a esta política</h2>
+        <h2>{% translate "13. Alterações a esta política" %}</h2>
         <p>
-            Esta Política de Privacidade pode ser atualizada para refletir alterações legais,
-            técnicas ou operacionais. A versão publicada nesta página é a versão em vigor.
+            {% translate "Esta Política de Privacidade pode ser atualizada para refletir alterações legais, técnicas ou operacionais. A versão publicada nesta página é a versão em vigor." %}
         </p>
     </div>
 </section>

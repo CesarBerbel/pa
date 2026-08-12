@@ -1,5 +1,5 @@
 from django.contrib import messages
-from appointments.mixins import SuperuserRequiredMixin
+from appointments.mixins import InternalAreaRequiredMixin
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView, TemplateView, UpdateView
@@ -8,7 +8,7 @@ from appointments.forms import ScheduleBlockForm
 from appointments.models import ScheduleBlock
 
 
-class ScheduleBlockListView(SuperuserRequiredMixin, ListView):
+class ScheduleBlockListView(InternalAreaRequiredMixin, ListView):
     # Lists schedule blocks.
 
     model = ScheduleBlock
@@ -23,7 +23,7 @@ class ScheduleBlockListView(SuperuserRequiredMixin, ListView):
         )
 
 
-class ScheduleBlockCreateView(SuperuserRequiredMixin, CreateView):
+class ScheduleBlockCreateView(InternalAreaRequiredMixin, CreateView):
     # Creates a new schedule block.
 
     model = ScheduleBlock
@@ -36,7 +36,7 @@ class ScheduleBlockCreateView(SuperuserRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class ScheduleBlockUpdateView(SuperuserRequiredMixin, UpdateView):
+class ScheduleBlockUpdateView(InternalAreaRequiredMixin, UpdateView):
     # Updates an existing schedule block.
 
     model = ScheduleBlock
@@ -49,7 +49,7 @@ class ScheduleBlockUpdateView(SuperuserRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-class ScheduleBlockDeleteView(SuperuserRequiredMixin, TemplateView):
+class ScheduleBlockDeleteView(InternalAreaRequiredMixin, TemplateView):
     # Shows delete confirmation on GET and deletes schedule block on POST.
 
     template_name = "appointments/schedule_block_confirm_delete.html"

@@ -15,7 +15,7 @@ from notifications.models import InstagramPost
 
 def home_view(request):
     # Show public homepage for anonymous users and dashboard for authenticated users.
-    if request.user.is_authenticated and request.user.is_superuser:
+    if request.user.is_authenticated and request.user.has_internal_access:
         return redirect("dashboard")
 
     service_categories = (

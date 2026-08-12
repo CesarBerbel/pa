@@ -40,6 +40,27 @@ class User(AbstractUser):
     full_name = models.CharField(max_length=255)
     phone = models.CharField(max_length=30, blank=True)
 
+    # Dois níveis distintos, porque a informação clínica não pode ficar
+    # acessível a quem só trata da receção: quem marca consultas não tem de
+    # ver a anamnese da cliente.
+    is_internal_staff = models.BooleanField(
+        default=False,
+        verbose_name="Acesso à área interna",
+        help_text=(
+            "Permite gerir marcações, clientes, serviços e agenda. "
+            "Não dá acesso a informação clínica."
+        ),
+    )
+
+    can_access_clinical_data = models.BooleanField(
+        default=False,
+        verbose_name="Acesso a dados clínicos",
+        help_text=(
+            "Permite ver e editar fichas de anamnese e notas de evolução. "
+            "Reservado a quem presta os cuidados."
+        ),
+    )
+
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["full_name"]
 
@@ -47,3 +68,11 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.email
+
+    @property
+    def has_internal_access(self):
+        return self.is_superuser or self.is_internal_staff
+
+    @property
+    def has_clinical_access(self):
+        return self.is_superuser or self.can_access_clinical_data

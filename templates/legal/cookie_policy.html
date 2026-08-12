@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% load i18n %}
+
 {% block title %}Política de Cookies | Priscila Arantes PA{% endblock %}
 {% block meta_description %}Política de Cookies do site Priscila Arantes PA, com categorias de cookies, finalidades e gestão de consentimento.{% endblock %}
 {% block meta_keywords %}política de cookies, consentimento de cookies, RGPD, Priscila Arantes PA{% endblock %}
@@ -11,135 +13,113 @@
 {% block content %}
 <section class="legal-page">
     <div class="legal-hero">
-        <span class="luxury-eyebrow">Preferências de navegação</span>
-        <h1>Política de Cookies</h1>
+        <span class="luxury-eyebrow">{% translate "Preferências de navegação" %}</span>
+        <h1>{% translate "Política de Cookies" %}</h1>
         <p>
-            Esta política explica o que são cookies, que categorias podem ser utilizadas
-            neste site e como pode aceitar, rejeitar ou alterar as suas preferências.
+            {% translate "Esta política explica o que são cookies, que categorias podem ser utilizadas neste site e como pode aceitar, rejeitar ou alterar as suas preferências." %}
         </p>
-        <small>Última atualização: 10 de junho de 2026</small>
+        <small>{% translate "Última atualização: 10 de junho de 2026" %}</small>
     </div>
 
     <div class="legal-content-card">
-        <h2>1. O que são cookies?</h2>
+        <h2>{% translate "1. O que são cookies?" %}</h2>
         <p>
-            Cookies são pequenos ficheiros guardados no navegador do utilizador quando visita
-            um site. Podem permitir o funcionamento técnico da página, guardar preferências,
-            proteger formulários, medir utilização ou ativar funcionalidades externas.
+            {% translate "Cookies são pequenos ficheiros guardados no navegador do utilizador quando visita um site. Podem permitir o funcionamento técnico da página, guardar preferências, proteger formulários, medir utilização ou ativar funcionalidades externas." %}
         </p>
 
-        <h2>2. Como usamos cookies</h2>
+        <h2>{% translate "2. Como usamos cookies" %}</h2>
         <p>
-            Este site usa cookies necessários para funcionamento, segurança e gestão do
-            consentimento. Cookies opcionais apenas devem ser ativados quando o utilizador
-            aceitar a respetiva categoria.
+            {% translate "Este site usa cookies necessários para funcionamento, segurança e gestão do consentimento. Cookies opcionais apenas devem ser ativados quando o utilizador aceitar a respetiva categoria." %}
         </p>
 
-        <h2>3. Categorias de cookies</h2>
+        <h2>{% translate "3. Categorias de cookies" %}</h2>
 
         <div class="cookie-policy-table-wrap">
             <table class="table cookie-policy-table">
                 <thead>
                     <tr>
-                        <th>Categoria</th>
-                        <th>Finalidade</th>
-                        <th>Obrigatório?</th>
+                        <th>{% translate "Categoria" %}</th>
+                        <th>{% translate "Finalidade" %}</th>
+                        <th>{% translate "Obrigatório?" %}</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td><strong>Necessários</strong></td>
+                        <td><strong>{% translate "Necessários" %}</strong></td>
                         <td>
-                            Permitem o funcionamento essencial do site, incluindo sessão,
-                            segurança CSRF, envio de formulários e gravação da preferência
-                            de consentimento.
+                            {% translate "Permitem o funcionamento essencial do site, incluindo sessão, segurança CSRF, envio de formulários e gravação da preferência de consentimento." %}
                         </td>
-                        <td>Sim</td>
+                        <td>{% translate "Sim" %}</td>
                     </tr>
                     <tr>
-                        <td><strong>Funcionais</strong></td>
+                        <td><strong>{% translate "Funcionais" %}</strong></td>
                         <td>
-                            Ativam recursos de terceiros que melhoram a experiência, como
-                            mapa incorporado de localização. No estado atual, o mapa do Google
-                            só é carregado depois de consentimento funcional.
+                            {% translate "Ativam recursos de terceiros que melhoram a experiência, como mapa incorporado de localização. No estado atual, o mapa do Google só é carregado depois de consentimento funcional." %}
                         </td>
-                        <td>Não</td>
+                        <td>{% translate "Não" %}</td>
                     </tr>
                     <tr>
-                        <td><strong>Analíticos</strong></td>
+                        <td><strong>{% translate "Analíticos" %}</strong></td>
                         <td>
-                            Poderão ser usados futuramente para medir visitas e desempenho do site.
-                            Não devem ser ativados sem consentimento prévio.
+                            {% translate "Poderão ser usados futuramente para medir visitas e desempenho do site. Não devem ser ativados sem consentimento prévio." %}
                         </td>
-                        <td>Não</td>
+                        <td>{% translate "Não" %}</td>
                     </tr>
                     <tr>
-                        <td><strong>Marketing</strong></td>
+                        <td><strong>{% translate "Marketing" %}</strong></td>
                         <td>
-                            Poderão ser usados futuramente para campanhas, medição de anúncios
-                            ou integrações publicitárias, sempre mediante consentimento.
+                            {% translate "Poderão ser usados futuramente para campanhas, medição de anúncios ou integrações publicitárias, sempre mediante consentimento." %}
                         </td>
-                        <td>Não</td>
+                        <td>{% translate "Não" %}</td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
-        <h2>4. Cookies e tecnologias atualmente previstos</h2>
+        <h2>{% translate "4. Cookies e tecnologias atualmente previstos" %}</h2>
         <ul>
             <li>
-                <strong>pa_cookie_consent</strong>: guarda a escolha do utilizador sobre cookies.
-                É necessário para não apresentar o aviso repetidamente.
+                <strong>pa_cookie_consent</strong>: {% translate "guarda a escolha do utilizador sobre cookies. É necessário para não apresentar o aviso repetidamente." %}
             </li>
             <li>
-                <strong>csrftoken</strong>: cookie técnico de segurança usado pelo Django para
-                proteger formulários contra submissões indevidas.
+                <strong>csrftoken</strong>: {% translate "cookie técnico de segurança usado pelo Django para proteger formulários contra submissões indevidas." %}
             </li>
             <li>
-                <strong>sessionid</strong>: cookie técnico de sessão, quando necessário para login
-                ou funcionalidades autenticadas.
+                <strong>sessionid</strong>: {% translate "cookie técnico de sessão, quando necessário para login ou funcionalidades autenticadas." %}
             </li>
             <li>
-                <strong>Google Maps incorporado</strong>: recurso funcional externo usado para
-                apresentar a localização. Só é carregado após consentimento para cookies funcionais.
+                <strong>Google Maps incorporado</strong>: {% translate "recurso funcional externo usado para apresentar a localização. Só é carregado após consentimento para cookies funcionais." %}
             </li>
         </ul>
 
-        <h2>5. Como gerir o consentimento</h2>
+        <h2>{% translate "5. Como gerir o consentimento" %}</h2>
         <p>
-            Ao entrar no site, pode aceitar todos os cookies, rejeitar cookies opcionais
-            ou personalizar categorias. Também pode alterar a sua escolha a qualquer momento.
+            {% translate "Ao entrar no site, pode aceitar todos os cookies, rejeitar cookies opcionais ou personalizar categorias. Também pode alterar a sua escolha a qualquer momento." %}
         </p>
 
         <button type="button" class="btn btn-primary" data-cookie-action="open-preferences">
-            Gerir preferências de cookies
+            {% translate "Gerir preferências de cookies" %}
         </button>
 
-        <h2>6. Como apagar cookies no navegador</h2>
+        <h2>{% translate "6. Como apagar cookies no navegador" %}</h2>
         <p>
-            Pode apagar cookies diretamente nas definições do navegador. O caminho exato depende
-            do navegador utilizado, mas normalmente está disponível nas áreas de privacidade,
-            segurança, histórico ou dados de navegação.
+            {% translate "Pode apagar cookies diretamente nas definições do navegador. O caminho exato depende do navegador utilizado, mas normalmente está disponível nas áreas de privacidade, segurança, histórico ou dados de navegação." %}
         </p>
 
-        <h2>7. Consequências da rejeição</h2>
+        <h2>{% translate "7. Consequências da rejeição" %}</h2>
         <p>
-            A rejeição de cookies opcionais não impede a utilização principal do site nem a marcação
-            de horários. No entanto, alguns recursos externos, como o mapa incorporado, podem ficar
-            desativados até que seja dado consentimento funcional.
+            {% translate "A rejeição de cookies opcionais não impede a utilização principal do site nem a marcação de horários. No entanto, alguns recursos externos, como o mapa incorporado, podem ficar desativados até que seja dado consentimento funcional." %}
         </p>
 
-        <h2>8. Relação com a Política de Privacidade</h2>
+        <h2>{% translate "8. Relação com a Política de Privacidade" %}</h2>
         <p>
-            Para informação sobre tratamento de dados pessoais, finalidades, conservação e direitos
-            dos titulares, consulte a
-            <a href="{% url 'privacy_policy' %}">Política de Privacidade</a>.
+            {% url 'privacy_policy' as url_privacidade %}
+            {% blocktranslate with privacidade=url_privacidade %}Para informação sobre tratamento de dados pessoais, finalidades, conservação e direitos dos titulares, consulte a <a href="{{ privacidade }}">Política de Privacidade</a>.{% endblocktranslate %}
         </p>
 
-        <h2>9. Alterações a esta política</h2>
+        <h2>{% translate "9. Alterações a esta política" %}</h2>
         <p>
-            Esta Política de Cookies pode ser atualizada sempre que houver alterações técnicas,
-            legais ou operacionais. A versão publicada nesta página é a versão em vigor.
+            {% translate "Esta Política de Cookies pode ser atualizada sempre que houver alterações técnicas, legais ou operacionais. A versão publicada nesta página é a versão em vigor." %}
         </p>
     </div>
 </section>

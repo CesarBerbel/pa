@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.db.models import Count, Prefetch, Q
-from appointments.mixins import SuperuserRequiredMixin
+from appointments.mixins import InternalAreaRequiredMixin
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView, TemplateView, UpdateView
@@ -40,7 +40,7 @@ class PublicServiceFeedView(TemplateView):
         return context
 
 
-class ServiceListView(SuperuserRequiredMixin, ListView):
+class ServiceListView(InternalAreaRequiredMixin, ListView):
     # Lists available services
 
     model = Service
@@ -78,7 +78,7 @@ class ServiceListView(SuperuserRequiredMixin, ListView):
         return context
 
 
-class ServiceCreateView(SuperuserRequiredMixin, CreateView):
+class ServiceCreateView(InternalAreaRequiredMixin, CreateView):
     # Creates a new service
 
     model = Service
@@ -91,7 +91,7 @@ class ServiceCreateView(SuperuserRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class ServiceUpdateView(SuperuserRequiredMixin, UpdateView):
+class ServiceUpdateView(InternalAreaRequiredMixin, UpdateView):
     # Updates an existing service
 
     model = Service
@@ -104,7 +104,7 @@ class ServiceUpdateView(SuperuserRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-class ServiceDeleteView(SuperuserRequiredMixin, TemplateView):
+class ServiceDeleteView(InternalAreaRequiredMixin, TemplateView):
     # Shows delete confirmation on GET and deletes service on POST
 
     template_name = "appointments/service_confirm_delete.html"

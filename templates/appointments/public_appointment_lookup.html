@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 
-{% load crispy_forms_tags %}
+{% load crispy_forms_tags i18n %}
 
-{% block title %}Consultar marcação | Priscila Arantes PA{% endblock %}
+{% block title %}{% translate "Consultar marcação" %} | Priscila Arantes PA{% endblock %}
 {% block meta_robots %}noindex,nofollow{% endblock %}
 
 {% block content %}
@@ -13,15 +13,15 @@
             <div class="card-body p-4 text-center">
 
                 <h1 class="h4 mb-2">
-                    Consultar marcação
+                    {% translate "Consultar marcação" %}
                 </h1>
 
                 <p class="text-muted mb-4">
-                    Consulte diretamente pelo código da marcação ou informe o email utilizado na marcação para receber os detalhes e o código de referência.
+                    {% translate "Consulte diretamente pelo código da marcação ou informe o email utilizado na marcação para receber os detalhes e o código de referência." %}
                 </p>
 
                 <div class="alert alert-info text-start small mb-4">
-                    <strong>Consulta por email:</strong> por segurança, os dados da marcação não são exibidos nesta página. Se houver alguma marcação em aberto associada ao email informado, enviaremos os detalhes para esse endereço.
+                    <strong>{% translate "Consulta por email:" %}</strong> {% translate "por segurança, os dados da marcação não são exibidos nesta página. Se houver alguma marcação em aberto associada ao email informado, enviaremos os detalhes para esse endereço." %}
                 </div>
 
                 <form method="post" novalidate>
@@ -30,7 +30,7 @@
                     {{ form|crispy }}
 
                     <button type="submit" class="btn btn-primary w-100 mt-3">
-                        Consultar
+                        {% translate "Consultar" %}
                     </button>
                 </form>
 
@@ -63,7 +63,7 @@
 
                     <div class="alert alert-dark text-center">
                         <div class="small text-uppercase text-muted">
-                            Código da marcação
+                            {% translate "Código da marcação" %}
                         </div>
                         <div class="fs-4 fw-bold">
                             {{ appointment.reference_code }}
@@ -74,7 +74,7 @@
                         <div class="col-12 col-md-6">
                             <div class="border rounded p-3 h-100 bg-light">
                                 <div class="small text-muted">
-                                    Cliente
+                                    {% translate "Cliente" %}
                                 </div>
                                 <div class="fw-semibold">
                                     {{ appointment.customer.full_name }}
@@ -85,7 +85,7 @@
                         <div class="col-12 col-md-6">
                             <div class="border rounded p-3 h-100 bg-light">
                                 <div class="small text-muted">
-                                    Serviço
+                                    {% translate "Serviço" %}
                                 </div>
                                 <div class="fw-semibold">
                                     {{ appointment.service.display_name }}
@@ -96,7 +96,7 @@
                         <div class="col-12 col-md-6">
                             <div class="border rounded p-3 h-100 bg-light">
                                 <div class="small text-muted">
-                                    Data
+                                    {% translate "Data" %}
                                 </div>
                                 <div class="fw-semibold">
                                     {{ appointment.date|date:"d/m/Y" }}
@@ -107,7 +107,7 @@
                         <div class="col-12 col-md-6">
                             <div class="border rounded p-3 h-100 bg-light">
                                 <div class="small text-muted">
-                                    Horário
+                                    {% translate "Horário" %}
                                 </div>
                                 <div class="fw-semibold">
                                     {{ appointment.start_time|time:"H:i" }}
@@ -119,7 +119,7 @@
                     {% if appointment.notes %}
                         <div class="border rounded p-3 mb-4">
                             <div class="small text-muted">
-                                Observações
+                                {% translate "Observações" %}
                             </div>
                             <div>
                                 {{ appointment.notes }}
@@ -133,7 +133,7 @@
                                 href="{% url 'appointments:public_cancel_by_code' appointment.reference_code %}"
                                 class="btn btn-outline-danger"
                             >
-                                Cancelar esta marcação
+                                {% translate "Cancelar esta marcação" %}
                             </a>
                         {% endif %}
 
@@ -141,7 +141,7 @@
                             href="{% url 'appointments:public_appointment_create' %}"
                             class="btn btn-primary"
                         >
-                            Fazer nova marcação
+                            {% translate "Fazer nova marcação" %}
                         </a>
                     </div>
 

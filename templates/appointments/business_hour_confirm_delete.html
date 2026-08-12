@@ -25,7 +25,7 @@
 
                     <p class="mb-2">
                         <strong>Horário:</strong>
-                        {{ business_hour.start_time|time:"H:i" }} às {{ business_hour.end_time|time:"H:i" }}
+                        {% for inicio, fim in business_hour.periods %}{% if not forloop.first %} e {% endif %}{{ inicio|time:"H:i" }} às {{ fim|time:"H:i" }}{% endfor %}
                     </p>
 
                     <p class="mb-0">

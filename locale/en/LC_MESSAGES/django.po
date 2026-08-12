@@ -12,9 +12,125 @@ msgstr ""
 msgid ", com hora marcada"
 msgstr " — by appointment only"
 
+#: templates/legal/cookie_policy.html:25
+msgid "1. O que são cookies?"
+msgstr "1. What are cookies?"
+
+#: templates/legal/privacy_policy.html:25
+msgid "1. Responsável pelo tratamento"
+msgstr "1. Data controller"
+
+#: templates/legal/privacy_policy.html:126
+msgid "10. Dados de saúde e registo clínico"
+msgstr "10. Health data and clinical records"
+
+#: templates/legal/privacy_policy.html:145
+msgid "11. Menores de idade"
+msgstr "11. Minors"
+
+#: templates/legal/privacy_policy.html:150
+msgid "12. Cookies"
+msgstr "12. Cookies"
+
+#: templates/legal/privacy_policy.html:157
+msgid "13. Alterações a esta política"
+msgstr "13. Changes to this policy"
+
+#: templates/legal/cookie_policy.html:30
+msgid "2. Como usamos cookies"
+msgstr "2. How we use cookies"
+
+#: templates/legal/privacy_policy.html:36
+msgid "2. Dados pessoais recolhidos"
+msgstr "2. Personal data collected"
+
+#: templates/legal/cookie_policy.html:35
+msgid "3. Categorias de cookies"
+msgstr "3. Cookie categories"
+
+#: templates/legal/privacy_policy.html:50
+msgid "3. Finalidades do tratamento"
+msgstr "3. Purposes of processing"
+
+#: templates/legal/cookie_policy.html:79
+msgid "4. Cookies e tecnologias atualmente previstos"
+msgstr "4. Cookies and technologies currently planned"
+
+#: templates/legal/privacy_policy.html:62
+msgid "4. Fundamentos legais"
+msgstr "4. Legal bases"
+
+#: templates/legal/cookie_policy.html:95
+msgid "5. Como gerir o consentimento"
+msgstr "5. Managing your consent"
+
+#: templates/legal/privacy_policy.html:79
+msgid "5. Conservação dos dados"
+msgstr "5. Data retention"
+
+#: templates/legal/cookie_policy.html:104
+msgid "6. Como apagar cookies no navegador"
+msgstr "6. Deleting cookies in your browser"
+
+#: templates/legal/privacy_policy.html:87
+msgid "6. Partilha de dados com terceiros"
+msgstr "6. Sharing data with third parties"
+
+#: templates/legal/cookie_policy.html:109
+msgid "7. Consequências da rejeição"
+msgstr "7. Consequences of refusing"
+
+#: templates/legal/privacy_policy.html:101
+msgid "7. Transferências internacionais"
+msgstr "7. International transfers"
+
+#: templates/legal/cookie_policy.html:114
+msgid "8. Relação com a Política de Privacidade"
+msgstr "8. Relationship with the Privacy Policy"
+
+#: templates/legal/privacy_policy.html:106
+msgid "8. Segurança"
+msgstr "8. Security"
+
+#: templates/legal/cookie_policy.html:120
+msgid "9. Alterações a esta política"
+msgstr "9. Changes to this policy"
+
+#: templates/legal/privacy_policy.html:111
+msgid "9. Direitos dos titulares dos dados"
+msgstr "9. Data subject rights"
+
+#: templates/legal/privacy_policy.html:75
+msgid "<strong>consentimento</strong>, quando a utilização depender de autorização livre, específica e informada, como cookies opcionais ou comunicações não essenciais."
+msgstr "<strong>consent</strong>, where use depends on freely given, specific and informed authorisation, such as optional cookies or non-essential communications."
+
+#: templates/legal/privacy_policy.html:69
+msgid "<strong>cumprimento de obrigação legal</strong>, quando seja necessário manter informação para efeitos fiscais, contabilísticos ou regulatórios;"
+msgstr "<strong>compliance with a legal obligation</strong>, where information must be kept for tax, accounting or regulatory purposes;"
+
+#: templates/legal/privacy_policy.html:66
+msgid "<strong>execução de contrato ou diligências pré-contratuais</strong>, para responder ao pedido de marcação e prestar o serviço solicitado;"
+msgstr "<strong>performance of a contract or pre-contractual steps</strong>, in order to respond to the booking request and provide the requested service;"
+
+#: templates/legal/privacy_policy.html:72
+msgid "<strong>interesse legítimo</strong>, para segurança do site, prevenção de fraude, gestão administrativa e defesa de direitos;"
+msgstr "<strong>legitimate interest</strong>, for site security, fraud prevention, administrative management and defence of legal claims;"
+
+#: templates/legal/privacy_policy.html:27
+msgid "A entidade responsável pelo tratamento dos dados pessoais recolhidos através deste site é <strong>Priscila Arantes PA</strong>, com sede em <strong>R. Vale de São Miguel, Lote 5, 3020-113 Coimbra, Portugal</strong>."
+msgstr "The controller of the personal data collected through this site is <strong>Priscila Arantes PA</strong>, with registered address at <strong>R. Vale de São Miguel, Lote 5, 3020-113 Coimbra, Portugal</strong>."
+
+#: templates/legal/privacy_policy.html:147
+msgid "A marcação de serviços para menores deve ser realizada ou autorizada por titular das responsabilidades parentais ou representante legal, quando aplicável."
+msgstr "Bookings for minors must be made or authorised by a holder of parental responsibility or legal representative, where applicable."
+
 #: templates/home.html:272
 msgid "A proposta é oferecer um atendimento acolhedor e responsável, respeitando as necessidades de cada cliente e valorizando conforto, higiene e confiança."
 msgstr "The aim is to provide welcoming, responsible care that respects the needs of each client and values comfort, hygiene and trust."
+
+#: templates/legal/cookie_policy.html:111
+msgid "A rejeição de cookies opcionais não impede a utilização principal do site nem a marcação de horários. No entanto, alguns recursos externos, como o mapa incorporado, podem ficar desativados até que seja dado consentimento funcional."
+msgstr "Refusing optional cookies does not prevent normal use of the site or online booking. Some external features, such as the embedded map, stay disabled until functional consent is given."
 
 #: templates/base.html:94
 msgid "Abrir menu"
@@ -29,6 +145,14 @@ msgstr "Open in Google Maps"
 msgid "Aceitar todos"
 msgstr "Accept all"
 
+#: templates/accounts/login.html:16
+msgid "Acesso ao Sistema"
+msgstr "Sign in"
+
+#: templates/appointments/public_visual_schedule.html:17
+msgid "Agenda online"
+msgstr "Online schedule"
+
 #: templates/home.html:201
 msgid "Agenda simples e prática"
 msgstr "A simple, practical schedule"
@@ -39,9 +163,17 @@ msgstr "A simple, practical schedule"
 msgid "Agendar horário"
 msgstr "Book an appointment"
 
+#: templates/accounts/login.html:30
+msgid "Ainda não tenho conta"
+msgstr "I don't have an account yet"
+
 #: templates/base.html:398
 msgid "Ajudam a compreender a utilização do site, se forem configurados no futuro."
 msgstr "Help us understand how the site is used, if enabled in the future."
+
+#: templates/legal/privacy_policy.html:103
+msgid "Alguns fornecedores tecnológicos podem tratar informação fora do Espaço Económico Europeu. Quando tal ocorrer, devem ser adotadas garantias adequadas previstas no RGPD, como decisões de adequação, cláusulas contratuais-tipo ou mecanismos equivalentes."
+msgstr "Some technology providers may process information outside the European Economic Area. Where that happens, appropriate safeguards under the GDPR must be applied, such as adequacy decisions, standard contractual clauses or equivalent mechanisms."
 
 #: templates/base.html:214
 msgid "Almoço: 13:00 — 14:00"
@@ -52,12 +184,21 @@ msgid "Ambiente profissional"
 msgstr "Professional setting"
 
 #: templates/base.html:397
+#: templates/legal/cookie_policy.html:62
 msgid "Analíticos"
 msgstr "Analytics"
 
 #: templates/home.html:396
 msgid "Anterior"
 msgstr "Previous"
+
+#: templates/appointments/public_appointment_form.html:136
+msgid "Antes de confirmar"
+msgstr "Before you confirm"
+
+#: templates/legal/cookie_policy.html:97
+msgid "Ao entrar no site, pode aceitar todos os cookies, rejeitar cookies opcionais ou personalizar categorias. Também pode alterar a sua escolha a qualquer momento."
+msgstr "When you enter the site you can accept all cookies, reject optional ones or customise categories. You can change your choice at any time."
 
 #: templates/home.html:290
 msgid "As áreas principais são categorias. Dentro de cada uma, escolha o serviço específico para marcar."
@@ -84,6 +225,10 @@ msgstr "Home visits available on request."
 msgid "Atendimento especializado em podologia, manicure, pedicure e apoio de enfermagem, com marcação online simples, segura e prática. Também disponível atendimento em domicílio, mediante disponibilidade."
 msgstr "Specialist care in podiatry, manicure, pedicure and nursing support, with simple, secure and practical online booking. Home visits are also available, subject to availability."
 
+#: templates/appointments/public_service_feed.html:38
+msgid "Atendimento personalizado"
+msgstr "Personalised care"
+
 #: templates/home.html:5
 msgid "Atendimento profissional em podologia, manicure, pedicure e enfermagem em Coimbra. Consulte os serviços disponíveis e marque o seu horário online."
 msgstr "Professional podiatry, manicure, pedicure and nursing care in Coimbra. Browse the available services and book your appointment online."
@@ -91,6 +236,10 @@ msgstr "Professional podiatry, manicure, pedicure and nursing care in Coimbra. B
 #: templates/home.html:53
 msgid "Atendimento também no salão"
 msgstr "Also available at"
+
+#: templates/legal/cookie_policy.html:57
+msgid "Ativam recursos de terceiros que melhoram a experiência, como mapa incorporado de localização. No estado atual, o mapa do Google só é carregado depois de consentimento funcional."
+msgstr "Enable third-party features that improve the experience, such as the embedded location map. Currently the Google map only loads after functional consent."
 
 #: templates/home.html:64
 msgid "Av. Sá da Bandeira, n.º 33 — Loja 108, 3000-351 Coimbra"
@@ -108,6 +257,33 @@ msgstr "Every appointment is designed to be a calm, well-organised experience wi
 msgid "Cada pedido de horário é analisado e confirmado pela profissional antes de ficar definitivo. Precisa de atendimento em domicílio? Fale connosco pelo"
 msgstr "Every booking request is reviewed and confirmed by the practitioner before it becomes final. Need a home visit? Talk to us on"
 
+#: templates/appointments/public_cancel_success.html:5
+msgid "Cancelado com sucesso"
+msgstr "Cancelled successfully"
+
+#: templates/appointments/public_appointment_lookup.html:136
+msgid "Cancelar esta marcação"
+msgstr "Cancel this booking"
+
+#: templates/appointments/public_cancel_form.html:5
+#: templates/appointments/public_cancel_form.html:16
+#: templates/appointments/public_cancel_form.html:29
+msgid "Cancelar marcação"
+msgstr "Cancel booking"
+
+#: templates/appointments/public_appointment_form.html:68
+msgid "Carregando horários disponíveis..."
+msgstr "Loading available times…"
+
+#: templates/appointments/public_service_feed.html:63
+#: templates/legal/cookie_policy.html:41
+msgid "Categoria"
+msgstr "Category"
+
+#: templates/appointments/public_visual_schedule.html:35
+msgid "Categoria e serviço"
+msgstr "Category and service"
+
 #: templates/home.html:247
 msgid "Categoria → Serviço → Agenda → Confirmação"
 msgstr "Category → Service → Schedule → Confirmation"
@@ -116,18 +292,71 @@ msgstr "Category → Service → Schedule → Confirmation"
 msgid "Categorias e cuidados disponíveis"
 msgstr "Categories and available treatments"
 
+#: templates/appointments/public_service_feed.html:25
+msgid "Categorias e serviços"
+msgstr "Categories and services"
+
 #: templates/base.html:360
 msgid "Centro de preferências"
 msgstr "Preference centre"
+
+#: templates/appointments/public_appointment_lookup.html:77
+msgid "Cliente"
+msgstr "Client"
+
+#: templates/appointments/public_cancel_by_code.html:46
+msgid "Cliente:"
+msgstr "Client:"
+
+#: templates/appointments/public_appointment_form.html:143
+msgid "Com uma conta, os seus dados ficam guardados para próximas marcações. Também poderá consultar as suas marcações com mais facilidade."
+msgstr "With an account, your details are saved for future bookings and you can check your appointments more easily."
+
+#: templates/appointments/public_cancel_by_code.html:5
+#: templates/appointments/public_cancel_by_code.html:32
+#: templates/appointments/public_cancel_by_code.html:85
+msgid "Confirmar cancelamento"
+msgstr "Confirm cancellation"
+
+#: templates/appointments/public_appointment_form.html:114
+msgid "Confirmar marcação"
+msgstr "Confirm booking"
+
+#: templates/appointments/public_appointment_form.html:19
+msgid "Confirme os dados da sua marcação."
+msgstr "Please check your booking details."
+
+#: templates/appointments/public_cancel_by_code.html:36
+msgid "Confirme se deseja cancelar esta marcação."
+msgstr "Please confirm that you want to cancel this booking."
+
+#: templates/appointments/public_appointment_lookup.html:24
+msgid "Consulta por email:"
+msgstr "Lookup by email:"
+
+#: templates/appointments/public_appointment_lookup.html:33
+msgid "Consultar"
+msgstr "Search"
 
 #: templates/home.html:239
 msgid "Consultar código"
 msgstr "Look up a code"
 
+#: templates/appointments/public_appointment_lookup.html:5
+#: templates/appointments/public_appointment_lookup.html:16
+#: templates/appointments/public_appointment_success.html:37
 #: templates/home.html:147
 #: templates/home.html:175
 msgid "Consultar marcação"
 msgstr "Find my booking"
+
+#: templates/appointments/public_service_feed.html:161
+msgid "Consulte a agenda disponível"
+msgstr "Check the available schedule"
+
+#: templates/appointments/public_appointment_lookup.html:20
+msgid "Consulte diretamente pelo código da marcação ou informe o email utilizado na marcação para receber os detalhes e o código de referência."
+msgstr "Search directly with your booking code, or enter the email used for the booking to receive the details and reference code."
 
 #: templates/home.html:224
 msgid "Consulte os horários disponíveis, escolha a categoria e o serviço desejado e confirme a sua marcação em poucos passos."
@@ -141,6 +370,28 @@ msgstr "Browse services and book your appointment online with Priscila Arantes P
 #: templates/base.html:243
 msgid "Contacto"
 msgstr "Contact"
+
+#: templates/legal/privacy_policy.html:33
+msgid "Contactos: WhatsApp <a href=\"{{ link }}\" target=\"_blank\" rel=\"noopener noreferrer\"><strong>{{ numero }}</strong></a> e email <a href=\"mailto:atendimento@priarantes.com\">atendimento@priarantes.com</a>."
+msgstr "Contacts: WhatsApp <a href=\"{{ link }}\" target=\"_blank\" rel=\"noopener noreferrer\"><strong>{{ numero }}</strong></a> and email <a href=\"mailto:atendimento@priarantes.com\">atendimento@priarantes.com</a>."
+
+#: templates/appointments/public_appointment_form.html:148
+msgid "Continuar sem registo"
+msgstr "Continue without an account"
+
+#: templates/legal/cookie_policy.html:27
+msgid "Cookies são pequenos ficheiros guardados no navegador do utilizador quando visita um site. Podem permitir o funcionamento técnico da página, guardar preferências, proteger formulários, medir utilização ou ativar funcionalidades externas."
+msgstr "Cookies are small files stored in your browser when you visit a site. They can enable the technical functioning of the page, store preferences, protect forms, measure usage or enable external features."
+
+#: templates/accounts/customer_signup.html:5
+#: templates/accounts/customer_signup.html:19
+#: templates/accounts/customer_signup.html:33
+msgid "Criar conta"
+msgstr "Create account"
+
+#: templates/appointments/public_appointment_form.html:152
+msgid "Criar conta com estes dados"
+msgstr "Create an account with these details"
 
 #: templates/home.html:260
 msgid "Cuidado profissional, atenção individualizada e compromisso com o bem-estar de cada cliente."
@@ -159,10 +410,51 @@ msgstr "Care, wellbeing and professionalism in podiatry."
 msgid "Cuidados profissionais com"
 msgstr "Professional care with"
 
+#: templates/appointments/public_appointment_lookup.html:66
+msgid "Código da marcação"
+msgstr "Booking code"
+
+#: templates/appointments/public_cancel_success.html:20
+msgid "Código da marcação:"
+msgstr "Booking code:"
+
+#: templates/appointments/public_cancel_by_code.html:41
+msgid "Código:"
+msgstr "Code:"
+
+#: templates/legal/privacy_policy.html:84
+msgid "Dados de marcações e contactos podem ser mantidos enquanto forem necessários para gestão do atendimento, histórico operacional, cumprimento de obrigações legais e resolução de eventuais reclamações."
+msgstr "Booking and contact data may be kept for as long as needed to manage appointments, maintain operational history, comply with legal obligations and resolve any complaints."
+
+#: templates/appointments/public_appointment_form.html:49
+#: templates/appointments/public_appointment_lookup.html:99
+#: templates/appointments/public_visual_schedule.html:60
+msgid "Data"
+msgstr "Date"
+
+#: templates/appointments/public_cancel_by_code.html:56
+msgid "Data:"
+msgstr "Date:"
+
+#: templates/appointments/public_appointment_form.html:139
+msgid "Deseja criar uma conta?"
+msgstr "Would you like to create an account?"
+
+#: templates/appointments/public_visual_schedule.html:142
+msgid "Disponibilidade"
+msgstr "Availability"
+
+#: templates/appointments/public_visual_schedule.html:180
+#: templates/appointments/public_visual_schedule.html:197
+msgid "Disponível"
+msgstr "Available"
+
 #: templates/home.html:211
 msgid "Disponível mediante consulta prévia"
 msgstr "Available by prior arrangement"
 
+#: templates/appointments/public_service_feed.html:67
+#: templates/appointments/public_service_feed.html:104
 #: templates/home.html:303
 msgid "Em breve"
 msgstr "Coming soon"
@@ -175,13 +467,73 @@ msgstr "Email:"
 msgid "Enfermagem"
 msgstr "Nursing"
 
+#: templates/accounts/login.html:25
+msgid "Entrar"
+msgstr "Sign in"
+
+#: templates/appointments/public_service_feed.html:28
+msgid "Escolha o cuidado ideal para si"
+msgstr "Find the right care for you"
+
+#: templates/appointments/public_visual_schedule.html:20
+msgid "Escolha o melhor horário"
+msgstr "Choose the best time"
+
+#: templates/appointments/public_service_feed.html:39
+msgid "Escolha o serviço e avance diretamente para a agenda disponível."
+msgstr "Pick a service and go straight to the available schedule."
+
+#: templates/appointments/public_service_feed.html:162
+msgid "Escolha o serviço, selecione a data e reserve o melhor horário."
+msgstr "Pick a service, choose a date and book the best time."
+
 #: templates/home.html:220
 msgid "Escolha o seu horário de forma simples"
 msgstr "Choose your time slot the easy way"
 
+#: templates/appointments/public_visual_schedule.html:168
+msgid "Esgotado"
+msgstr "Fully booked"
+
 #: templates/base.html:382
 msgid "Essenciais para sessão, segurança, formulários e gravação da escolha."
 msgstr "Essential for sessions, security, forms and storing your choice."
+
+#: templates/legal/cookie_policy.html:122
+msgid "Esta Política de Cookies pode ser atualizada sempre que houver alterações técnicas, legais ou operacionais. A versão publicada nesta página é a versão em vigor."
+msgstr "This Cookie Policy may be updated whenever there are technical, legal or operational changes. The version published on this page is the one in force."
+
+#: templates/legal/privacy_policy.html:159
+msgid "Esta Política de Privacidade pode ser atualizada para refletir alterações legais, técnicas ou operacionais. A versão publicada nesta página é a versão em vigor."
+msgstr "This Privacy Policy may be updated to reflect legal, technical or operational changes. The version published on this page is the one in force."
+
+#: templates/appointments/public_cancel_by_code.html:19
+msgid "Esta marcação já está cancelada"
+msgstr "This booking has already been cancelled"
+
+#: templates/legal/privacy_policy.html:19
+msgid "Esta política explica como a Priscila Arantes PA recolhe, utiliza, conserva e protege os dados pessoais tratados através deste site, do formulário de marcação online e dos canais de contacto associados."
+msgstr "This policy explains how Priscila Arantes PA collects, uses, retains and protects the personal data processed through this site, the online booking form and the associated contact channels."
+
+#: templates/legal/cookie_policy.html:19
+msgid "Esta política explica o que são cookies, que categorias podem ser utilizadas neste site e como pode aceitar, rejeitar ou alterar as suas preferências."
+msgstr "This policy explains what cookies are, which categories may be used on this site, and how you can accept, reject or change your preferences."
+
+#: templates/appointments/public_appointment_form.html:60
+msgid "Este horário foi selecionado pela agenda disponível."
+msgstr "This time was selected from the available schedule."
+
+#: templates/appointments/public_cancel_success.html:32
+msgid "Este horário voltou a ficar disponível para novas marcações."
+msgstr "This time slot is available for booking again."
+
+#: templates/appointments/public_appointment_form.html:110
+msgid "Este pedido de horário será analisado e confirmado pela profissional antes de ficar definitivo."
+msgstr "This booking request will be reviewed and confirmed by the practitioner before it becomes final."
+
+#: templates/legal/cookie_policy.html:32
+msgid "Este site usa cookies necessários para funcionamento, segurança e gestão do consentimento. Cookies opcionais apenas devem ser ativados quando o utilizador aceitar a respetiva categoria."
+msgstr "This site uses necessary cookies for functionality, security and consent management. Optional cookies are only enabled once you accept the corresponding category."
 
 #: templates/base.html:328
 msgid "Este site utiliza cookies"
@@ -191,6 +543,13 @@ msgstr "This site uses cookies"
 msgid "Falar pelo WhatsApp"
 msgstr "Chat on WhatsApp"
 
+#: templates/appointments/public_appointment_lookup.html:144
+#: templates/appointments/public_appointment_success.html:42
+#: templates/appointments/public_cancel_by_code.html:27
+#: templates/appointments/public_cancel_success.html:36
+msgid "Fazer nova marcação"
+msgstr "Make a new booking"
+
 #: templates/home.html:46
 msgid "Fechar aviso"
 msgstr "Dismiss notice"
@@ -198,6 +557,14 @@ msgstr "Dismiss notice"
 #: templates/base.html:367
 msgid "Fechar preferências de cookies"
 msgstr "Close cookie preferences"
+
+#: templates/appointments/public_visual_schedule.html:85
+msgid "Feed de serviços"
+msgstr "Service list"
+
+#: templates/legal/cookie_policy.html:42
+msgid "Finalidade"
+msgstr "Purpose"
 
 #: templates/home.html:246
 msgid "Fluxo de marcação"
@@ -212,6 +579,7 @@ msgid "Fotos e novidades direto do Instagram."
 msgstr "Photos and updates straight from Instagram."
 
 #: templates/base.html:389
+#: templates/legal/cookie_policy.html:55
 msgid "Funcionais"
 msgstr "Functional"
 
@@ -227,17 +595,46 @@ msgstr "Galeria Avenida"
 msgid "Gerir cookies"
 msgstr "Manage cookies"
 
+#: templates/legal/cookie_policy.html:101
+msgid "Gerir preferências de cookies"
+msgstr "Manage cookie preferences"
+
 #: templates/base.html:413
 msgid "Guardar preferências"
 msgstr "Save preferences"
+
+#: templates/appointments/public_appointment_success.html:24
+msgid "Guarde este código para consultar ou cancelar a marcação:"
+msgstr "Keep this code to look up or cancel your booking:"
+
+#: templates/accounts/customer_signup.html:23
+msgid "Guarde os seus dados para futuras marcações."
+msgstr "Save your details for future bookings."
+
+#: templates/appointments/public_appointment_form.html:54
+#: templates/appointments/public_appointment_lookup.html:110
+msgid "Horário"
+msgstr "Time"
 
 #: templates/base.html:212
 msgid "Horário de funcionamento"
 msgstr "Opening hours"
 
+#: templates/appointments/public_cancel_by_code.html:61
+msgid "Horário:"
+msgstr "Time:"
+
 #: templates/base.html:139
 msgid "Idioma"
 msgstr "Language"
+
+#: templates/appointments/public_cancel_form.html:20
+msgid "Indique o código da sua marcação."
+msgstr "Enter your booking code."
+
+#: templates/appointments/public_cancel_by_code.html:80
+msgid "Indique o motivo do cancelamento."
+msgstr "Enter the reason for cancelling."
 
 #: templates/base.html:116
 #: templates/base.html:228
@@ -249,13 +646,25 @@ msgstr "Instagram"
 msgid "Início"
 msgstr "Home"
 
+#: templates/accounts/customer_signup.html:39
+msgid "Já tenho conta"
+msgstr "I already have an account"
+
 #: templates/base.html:332
 msgid "Ler Política de Cookies"
 msgstr "Read the Cookie Policy"
 
+#: templates/appointments/public_appointment_form.html:96
+msgid "Li e aceito a <a href=\"{{ privacidade }}\" target=\"_blank\" rel=\"noopener noreferrer\">Política de Privacidade</a> e a <a href=\"{{ cookies }}\" target=\"_blank\" rel=\"noopener noreferrer\">Política de Cookies</a>."
+msgstr "I have read and accept the <a href=\"{{ privacidade }}\" target=\"_blank\" rel=\"noopener noreferrer\">Privacy Policy</a> and the <a href=\"{{ cookies }}\" target=\"_blank\" rel=\"noopener noreferrer\">Cookie Policy</a>."
+
 #: templates/base.html:221
 msgid "Links rápidos"
 msgstr "Quick links"
+
+#: templates/accounts/login.html:5
+msgid "Login"
+msgstr "Sign in"
 
 #: templates/home.html:356
 msgid "Manicure"
@@ -271,6 +680,12 @@ msgstr "Map blocked by your cookie preferences"
 msgid "Mapa com a localização do salão DIVAH - Av. Sá da Bandeira 33, Loja 108, Coimbra"
 msgstr "Map showing the DIVAH salon - Av. Sá da Bandeira 33, Unit 108, Coimbra"
 
+#: templates/appointments/public_visual_schedule.html:182
+#: templates/appointments/public_visual_schedule.html:201
+msgid "Marcar"
+msgstr "Book"
+
+#: templates/appointments/public_appointment_form.html:15
 #: templates/home.html:107
 msgid "Marcar horário"
 msgstr "Book now"
@@ -280,16 +695,30 @@ msgstr "Book now"
 msgid "Marcação"
 msgstr "Booking"
 
+#: templates/appointments/public_cancel_success.html:16
+msgid "Marcação cancelada com sucesso"
+msgstr "Booking cancelled successfully"
+
+#: templates/appointments/public_cancel_by_code.html:97
+msgid "Marcação não encontrada"
+msgstr "Booking not found"
+
 #: templates/home.html:200
 #: templates/home.html:218
 msgid "Marcação online"
 msgstr "Online booking"
+
+#: templates/appointments/public_appointment_success.html:5
+#: templates/appointments/public_appointment_success.html:13
+msgid "Marcação recebida"
+msgstr "Booking received"
 
 #: templates/home.html:332
 msgid "Marcações em breve"
 msgstr "Bookings opening soon"
 
 #: templates/base.html:405
+#: templates/legal/cookie_policy.html:69
 msgid "Marketing"
 msgstr "Marketing"
 
@@ -298,21 +727,121 @@ msgstr "Marketing"
 msgid "Minhas marcações"
 msgstr "My bookings"
 
+#: templates/appointments/public_cancel_by_code.html:71
+msgid "Motivo do cancelamento"
+msgstr "Reason for cancelling"
+
 #: templates/base.html:163
 msgid "Mudar"
 msgstr "Change"
 
 #: templates/base.html:381
+#: templates/legal/cookie_policy.html:48
 msgid "Necessários"
 msgstr "Necessary"
+
+#: templates/appointments/public_appointment_form.html:72
+msgid "Nenhum horário disponível para o serviço e data selecionados."
+msgstr "No times available for the selected service and date."
+
+#: templates/appointments/public_service_feed.html:141
+msgid "Nenhum serviço ativo nesta categoria."
+msgstr "No active services in this category."
+
+#: templates/appointments/public_service_feed.html:153
+#: templates/appointments/public_visual_schedule.html:255
+msgid "Nenhum serviço ativo registado"
+msgstr "No active services registered"
+
+#: templates/legal/privacy_policy.html:128
+msgid "No âmbito da prestação de cuidados de podologia é elaborado um registo clínico, composto por uma ficha de anamnese e por notas de evolução de cada consulta. Esse registo pode incluir antecedentes de saúde, alergias, medicação habitual, cirurgias anteriores e a descrição dos atos praticados."
+msgstr "As part of providing podiatry care, a clinical record is kept, consisting of a medical history form and progress notes for each appointment. That record may include health history, allergies, regular medication, previous surgery and a description of the procedures performed."
+
+#: templates/legal/privacy_policy.html:112
+msgid "Nos termos do RGPD, o titular dos dados pode solicitar:"
+msgstr "Under the GDPR, the data subject may request:"
 
 #: templates/home.html:36
 msgid "Novo espaço"
 msgstr "New location"
 
+#: templates/legal/cookie_policy.html:59
+#: templates/legal/cookie_policy.html:66
+#: templates/legal/cookie_policy.html:73
+msgid "Não"
+msgstr "No"
+
+#: templates/appointments/public_cancel_by_code.html:90
+msgid "Não cancelar"
+msgstr "Don't cancel"
+
+#: templates/legal/privacy_policy.html:134
+msgid "O acesso ao registo clínico está limitado a quem dele necessita para a prestação dos cuidados. Quem desempenhe apenas funções administrativas, como a marcação de consultas, não tem acesso à informação clínica. Todas as alterações ao registo ficam documentadas, com identificação de quem as fez e quando."
+msgstr "Access to the clinical record is limited to those who need it in order to provide care. Anyone performing only administrative duties, such as scheduling appointments, has no access to clinical information. Every change to the record is documented, identifying who made it and when."
+
+#: templates/legal/privacy_policy.html:30
+msgid "O atendimento é prestado na <strong>Galeria Avenida — Av. Sá da Bandeira, n.º 33, Loja 108, 3000-351 Coimbra</strong>."
+msgstr "Care is provided at <strong>Galeria Avenida — Av. Sá da Bandeira, no. 33, Unit 108, 3000-351 Coimbra</strong>."
+
+#: templates/legal/privacy_policy.html:142
+msgid "O campo de observações da marcação deve ser usado apenas para informação necessária ao atendimento. Informação clínica detalhada pertence ao registo clínico e não ao campo de observações."
+msgstr "The booking notes field should only be used for information needed for the appointment. Detailed clinical information belongs in the clinical record, not in the notes field."
+
+#: templates/appointments/public_cancel_by_code.html:101
+msgid "O código informado não existe ou está incorreto."
+msgstr "That code does not exist or is incorrect."
+
+#: templates/appointments/public_appointment_success.html:20
+msgid "O horário fica reservado, mas ainda será analisado e confirmado pela profissional. Entraremos em contacto caso seja necessário algum ajuste."
+msgstr "The slot is held for you, but still needs to be reviewed and confirmed by the practitioner. We will get in touch if anything needs adjusting."
+
+#: templates/legal/privacy_policy.html:138
+msgid "O registo clínico é conservado durante <strong>{{ anos }} ano(s)</strong> após o último contacto, findos os quais é eliminado de forma segura ou anonimizado, salvo se existir fundamento legal ou clínico para a sua conservação por período superior."
+msgstr "The clinical record is kept for <strong>{{ anos }} year(s)</strong> after the last contact, after which it is securely deleted or anonymised, unless there is a legal or clinical basis for keeping it longer."
+
+#: templates/appointments/public_appointment_success.html:16
+msgid "O seu pedido de horário foi registado com sucesso"
+msgstr "Your booking request was submitted successfully"
+
+#: templates/legal/privacy_policy.html:63
+msgid "O tratamento de dados pessoais pode assentar nos seguintes fundamentos:"
+msgstr "The processing of personal data may rely on the following legal bases:"
+
+#: templates/legal/cookie_policy.html:43
+msgid "Obrigatório?"
+msgstr "Required?"
+
+#: templates/appointments/public_appointment_lookup.html:122
+msgid "Observações"
+msgstr "Notes"
+
 #: templates/home.html:206
 msgid "Organização, higiene e atenção"
 msgstr "Organisation, hygiene and attention to detail"
+
+#: templates/legal/privacy_policy.html:131
+msgid "Os dados de saúde são categoria especial de dados nos termos do artigo 9.º do RGPD. São tratados no contexto da prestação de cuidados de saúde, por profissional sujeito a dever de sigilo, e no cumprimento das obrigações aplicáveis ao exercício da podologia, nomeadamente a Lei n.º 65/2014, de 28 de agosto."
+msgstr "Health data is a special category of data under Article 9 of the GDPR. It is processed in the context of providing health care, by a professional bound by a duty of confidentiality, and in compliance with the obligations applicable to the practice of podiatry, in particular Portuguese Law no. 65/2014 of 28 August."
+
+#: templates/legal/privacy_policy.html:89
+msgid "Os dados pessoais não são vendidos. Podem ser tratados por prestadores de serviços estritamente necessários ao funcionamento do site e do atendimento, tais como:"
+msgstr "Personal data is not sold. It may be processed by service providers strictly necessary for the operation of the site and the service, such as:"
+
+#: templates/legal/privacy_policy.html:51
+msgid "Os dados pessoais são tratados para as seguintes finalidades:"
+msgstr "Personal data is processed for the following purposes:"
+
+#: templates/legal/privacy_policy.html:81
+msgid "Os dados são conservados apenas pelo período necessário para cumprir as finalidades indicadas nesta política, salvo quando exista obrigação legal de conservação por período superior ou necessidade legítima de defesa de direitos."
+msgstr "Data is kept only for as long as needed to fulfil the purposes set out in this policy, unless there is a legal obligation to retain it for longer or a legitimate need to defend legal claims."
+
+#: templates/legal/privacy_policy.html:123
+msgid "Para exercer estes direitos, contacte <a href=\"mailto:atendimento@priarantes.com\">atendimento@priarantes.com</a>. O titular tem ainda o direito de apresentar reclamação junto da <strong>Comissão Nacional de Proteção de Dados (CNPD)</strong>."
+msgstr "To exercise these rights, contact <a href=\"mailto:atendimento@priarantes.com\">atendimento@priarantes.com</a>. The data subject also has the right to lodge a complaint with the <strong>Portuguese Data Protection Authority (CNPD)</strong>."
+
+#: templates/legal/cookie_policy.html:117
+msgid "Para informação sobre tratamento de dados pessoais, finalidades, conservação e direitos dos titulares, consulte a <a href=\"{{ privacidade }}\">Política de Privacidade</a>."
+msgstr "For information on the processing of personal data, purposes, retention and data subject rights, see the <a href=\"{{ privacidade }}\">Privacy Policy</a>."
 
 #: templates/base.html:279
 #: templates/home.html:73
@@ -331,6 +860,10 @@ msgstr "Basic pedicure, toenail trimming, gel polish and deep hydration."
 msgid "Permitem medição de campanhas e integrações publicitárias, se forem configuradas."
 msgstr "Allow campaign measurement and advertising integrations, if configured."
 
+#: templates/legal/cookie_policy.html:50
+msgid "Permitem o funcionamento essencial do site, incluindo sessão, segurança CSRF, envio de formulários e gravação da preferência de consentimento."
+msgstr "Enable the essential functioning of the site, including sessions, CSRF protection, form submission and storing your consent preference."
+
 #: templates/base.html:390
 msgid "Permitem recursos como o mapa incorporado de localização."
 msgstr "Enable features such as the embedded location map."
@@ -339,9 +872,25 @@ msgstr "Enable features such as the embedded location map."
 msgid "Personalizar"
 msgstr "Customise"
 
+#: templates/legal/cookie_policy.html:106
+msgid "Pode apagar cookies diretamente nas definições do navegador. O caminho exato depende do navegador utilizado, mas normalmente está disponível nas áreas de privacidade, segurança, histórico ou dados de navegação."
+msgstr "You can delete cookies directly in your browser settings. The exact path depends on the browser, but it is usually under privacy, security, history or browsing data."
+
 #: templates/base.html:374
 msgid "Pode ativar ou desativar categorias opcionais. Os cookies necessários mantêm-se sempre ativos porque são indispensáveis para segurança, formulários e funcionamento do site."
 msgstr "You can enable or disable optional categories. Necessary cookies always stay on because they are essential for security, forms and running the site."
+
+#: templates/legal/privacy_policy.html:38
+msgid "Podemos recolher os seguintes dados, conforme a utilização do site e dos serviços:"
+msgstr "We may collect the following data, depending on how you use the site and the services:"
+
+#: templates/legal/cookie_policy.html:71
+msgid "Poderão ser usados futuramente para campanhas, medição de anúncios ou integrações publicitárias, sempre mediante consentimento."
+msgstr "May be used in future for campaigns, ad measurement or advertising integrations, always subject to consent."
+
+#: templates/legal/cookie_policy.html:64
+msgid "Poderão ser usados futuramente para medir visitas e desempenho do site. Não devem ser ativados sem consentimento prévio."
+msgstr "May be used in future to measure visits and site performance. They must not be enabled without prior consent."
 
 #: templates/home.html:348
 msgid "Podologia"
@@ -352,15 +901,25 @@ msgstr "Podiatry"
 msgid "Podologia • Estética • Enfermagem"
 msgstr "Podiatry • Beauty • Nursing"
 
+#: templates/appointments/public_service_feed.html:32
+msgid "Podologia, manicure, pedicure e enfermagem estão organizadas por categoria para facilitar a escolha do serviço e o agendamento online."
+msgstr "Podiatry, manicure, pedicure and nursing are organised by category to make choosing a service and booking online easier."
+
 #: templates/base.html:231
 #: templates/base.html:310
+#: templates/legal/cookie_policy.html:17
 msgid "Política de Cookies"
 msgstr "Cookie Policy"
 
 #: templates/base.html:230
 #: templates/base.html:309
+#: templates/legal/privacy_policy.html:17
 msgid "Política de Privacidade"
 msgstr "Privacy Policy"
+
+#: templates/legal/cookie_policy.html:16
+msgid "Preferências de navegação"
+msgstr "Browsing preferences"
 
 #: templates/home.html:4
 #: templates/home.html:7
@@ -376,14 +935,39 @@ msgstr "Priscila Arantes. All rights reserved."
 msgid "Privacidade e cookies"
 msgstr "Privacy and cookies"
 
+#: templates/appointments/public_service_feed.html:160
+msgid "Pronto para marcar?"
+msgstr "Ready to book?"
+
+#: templates/legal/privacy_policy.html:16
+msgid "Proteção de dados"
+msgstr "Data protection"
+
 #: templates/home.html:410
 msgid "Próximo"
 msgstr "Next"
+
+#: templates/appointments/public_service_feed.html:154
+msgid "Registe categorias e serviços ativos para exibir o feed público."
+msgstr "Register active categories and services to show the public list."
+
+#: templates/appointments/public_visual_schedule.html:256
+msgid "Registe uma categoria e pelo menos um serviço ativo para exibir horários disponíveis."
+msgstr "Register a category and at least one active service to show available times."
 
 #: templates/base.html:340
 #: templates/base.html:419
 msgid "Rejeitar opcionais"
 msgstr "Reject optional"
+
+#: templates/appointments/public_visual_schedule.html:181
+#: templates/appointments/public_visual_schedule.html:214
+msgid "Reservado"
+msgstr "Booked"
+
+#: templates/appointments/public_appointment_form.html:34
+msgid "Resumo da marcação"
+msgstr "Booking summary"
 
 #: templates/base.html:173
 msgid "Sair"
@@ -392,6 +976,27 @@ msgstr "Log out"
 #: templates/home.html:449
 msgid "Seguir no Instagram"
 msgstr "Follow on Instagram"
+
+#: templates/appointments/public_visual_schedule.html:24
+msgid "Selecione a categoria, escolha o serviço, defina a data e reserve o seu horário disponível."
+msgstr "Select the category, choose the service, set the date and book your available time."
+
+#: templates/legal/privacy_policy.html:98
+msgid "Sempre que aplicável, estes terceiros devem tratar os dados de acordo com instruções, medidas de segurança adequadas e legislação de proteção de dados em vigor."
+msgstr "Where applicable, these third parties must process the data in accordance with instructions, appropriate security measures and the data protection legislation in force."
+
+#: templates/appointments/public_appointment_form.html:38
+#: templates/appointments/public_appointment_lookup.html:88
+msgid "Serviço"
+msgstr "Service"
+
+#: templates/appointments/public_visual_schedule.html:76
+msgid "Serviço selecionado"
+msgstr "Selected service"
+
+#: templates/appointments/public_cancel_by_code.html:51
+msgid "Serviço:"
+msgstr "Service:"
 
 #: templates/base.html:114
 #: templates/base.html:226
@@ -403,6 +1008,14 @@ msgstr "Services"
 msgid "Siga o nosso dia a dia"
 msgstr "Follow our day to day"
 
+#: templates/legal/cookie_policy.html:52
+msgid "Sim"
+msgstr "Yes"
+
+#: templates/appointments/public_service_feed.html:128
+msgid "Sob consulta"
+msgstr "On request"
+
 #: templates/base.html:113
 #: templates/base.html:225
 msgid "Sobre"
@@ -411,6 +1024,14 @@ msgstr "About"
 #: templates/home.html:266
 msgid "Sobre a profissional"
 msgstr "About the practitioner"
+
+#: templates/legal/privacy_policy.html:108
+msgid "São adotadas medidas técnicas e organizativas adequadas para proteger os dados pessoais contra acesso não autorizado, perda, alteração ou divulgação indevida. Ainda assim, nenhum sistema ligado à Internet pode garantir segurança absoluta."
+msgstr "Appropriate technical and organisational measures are in place to protect personal data against unauthorised access, loss, alteration or improper disclosure. Even so, no internet-connected system can guarantee absolute security."
+
+#: templates/appointments/public_cancel_by_code.html:105
+msgid "Tentar outro código"
+msgstr "Try another code"
 
 #: templates/base.html:213
 msgid "Todos os dias: 08:00 — 20:00"
@@ -432,13 +1053,22 @@ msgstr "Gel nails, basic manicure, Russian cuticle work and gel polish for hands
 msgid "Usamos cookies necessários para funcionamento e segurança. Com a sua autorização, também podemos ativar recursos funcionais, analíticos e de marketing. Pode aceitar, rejeitar ou personalizar as suas preferências."
 msgstr "We use necessary cookies for functionality and security. With your permission, we can also enable functional, analytics and marketing features. You can accept, reject or customise your preferences."
 
+#: templates/appointments/public_service_feed.html:166
 #: templates/home.html:235
 msgid "Ver agenda disponível"
 msgstr "View available times"
 
+#: templates/appointments/public_service_feed.html:134
+msgid "Ver horários"
+msgstr "View times"
+
 #: templates/home.html:336
 msgid "Ver serviços"
 msgstr "View services"
+
+#: templates/appointments/public_appointment_form.html:122
+msgid "Voltar para agenda"
+msgstr "Back to the schedule"
 
 #: templates/base.html:267
 msgid "WhatsApp"
@@ -447,6 +1077,34 @@ msgstr "WhatsApp"
 #: templates/base.html:246
 msgid "WhatsApp:"
 msgstr "WhatsApp:"
+
+#: templates/legal/privacy_policy.html:114
+msgid "acesso aos seus dados pessoais;"
+msgstr "access to their personal data;"
+
+#: templates/legal/privacy_policy.html:116
+msgid "apagamento dos dados, quando legalmente aplicável;"
+msgstr "erasure of the data, where legally applicable;"
+
+#: templates/legal/privacy_policy.html:95
+msgid "autoridades públicas, quando exista obrigação legal."
+msgstr "public authorities, where there is a legal obligation."
+
+#: templates/legal/cookie_policy.html:85
+msgid "cookie técnico de segurança usado pelo Django para proteger formulários contra submissões indevidas."
+msgstr "technical security cookie used by Django to protect forms against improper submissions."
+
+#: templates/legal/cookie_policy.html:88
+msgid "cookie técnico de sessão, quando necessário para login ou funcionalidades autenticadas."
+msgstr "technical session cookie, where needed for login or authenticated features."
+
+#: templates/legal/privacy_policy.html:58
+msgid "cumprir obrigações legais, fiscais, contabilísticas ou regulatórias, quando aplicável;"
+msgstr "comply with legal, tax, accounting or regulatory obligations, where applicable;"
+
+#: templates/legal/privacy_policy.html:45
+msgid "dados necessários para criação e utilização de conta de cliente, quando aplicável;"
+msgstr "data needed to create and use a client account, where applicable;"
 
 #: templates/home.html:133
 #: templates/home.html:161
@@ -458,10 +1116,108 @@ msgstr "care"
 msgid "e organização"
 msgstr "and organisation"
 
+#: templates/legal/privacy_policy.html:43
+msgid "endereço de email, quando informado;"
+msgstr "email address, when provided;"
+
+#: templates/legal/privacy_policy.html:55
+msgid "enviar confirmações, avisos e comunicações relacionadas com a marcação;"
+msgstr "send confirmations, reminders and communications about the booking;"
+
+#: templates/legal/privacy_policy.html:94
+msgid "ferramentas de mapas e localização, quando o utilizador aceitar cookies funcionais;"
+msgstr "map and location tools, when you accept functional cookies;"
+
+#: templates/legal/cookie_policy.html:82
+msgid "guarda a escolha do utilizador sobre cookies. É necessário para não apresentar o aviso repetidamente."
+msgstr "stores your cookie choice. It is needed so the notice is not shown repeatedly."
+
+#: templates/legal/privacy_policy.html:54
+msgid "identificar o cliente e prestar o serviço solicitado;"
+msgstr "identify the client and provide the requested service;"
+
+#: templates/legal/privacy_policy.html:46
+msgid "informação técnica básica, como endereço IP, tipo de navegador, data e hora de acesso;"
+msgstr "basic technical information such as IP address, browser type, date and time of access;"
+
+#: templates/legal/privacy_policy.html:117
+msgid "limitação do tratamento;"
+msgstr "restriction of processing;"
+
+#: templates/legal/privacy_policy.html:57
+msgid "manter a segurança, prevenção de abusos e funcionamento técnico do site;"
+msgstr "maintain security, prevent abuse and keep the site working;"
+
+#: templates/legal/privacy_policy.html:59
+msgid "melhorar a experiência de utilização do site, quando exista consentimento para cookies opcionais."
+msgstr "improve the site experience, where consent has been given for optional cookies."
+
+#: templates/legal/privacy_policy.html:41
+msgid "nome completo;"
+msgstr "full name;"
+
+#: templates/legal/privacy_policy.html:118
+msgid "oposição ao tratamento baseado em interesse legítimo;"
+msgstr "objection to processing based on legitimate interest;"
+
+#: templates/legal/privacy_policy.html:53
+msgid "permitir a marcação, gestão, alteração e cancelamento de horários;"
+msgstr "allow appointments to be booked, managed, changed and cancelled;"
+
 #: templates/home.html:6
 msgid "podologia Coimbra, manicure Coimbra, pedicure Coimbra, enfermagem Coimbra, pés diabéticos, unha em gel, troca de penso"
 msgstr "podiatry Coimbra, manicure Coimbra, pedicure Coimbra, nursing Coimbra, diabetic foot care, gel nails, dressing change"
 
+#: templates/appointments/public_appointment_lookup.html:24
+msgid "por segurança, os dados da marcação não são exibidos nesta página. Se houver alguma marcação em aberto associada ao email informado, enviaremos os detalhes para esse endereço."
+msgstr "for security, booking details are not shown on this page. If there is an open booking linked to that email, we will send the details to that address."
+
+#: templates/legal/privacy_policy.html:119
+msgid "portabilidade dos dados, quando aplicável;"
+msgstr "data portability, where applicable;"
+
+#: templates/legal/privacy_policy.html:47
+msgid "preferências de cookies guardadas no navegador."
+msgstr "cookie preferences stored in the browser."
+
+#: templates/legal/cookie_policy.html:91
+msgid "recurso funcional externo usado para apresentar a localização. Só é carregado após consentimento para cookies funcionais."
+msgstr "external functional feature used to show the location. It only loads after consent for functional cookies."
+
+#: templates/legal/privacy_policy.html:56
+msgid "responder a pedidos enviados por telefone, email, WhatsApp ou formulário;"
+msgstr "respond to requests sent by phone, email, WhatsApp or the contact form;"
+
+#: templates/legal/privacy_policy.html:115
+msgid "retificação de dados inexatos ou incompletos;"
+msgstr "rectification of inaccurate or incomplete data;"
+
+#: templates/legal/privacy_policy.html:120
+msgid "retirada do consentimento, sem comprometer tratamentos realizados antes da retirada."
+msgstr "withdrawal of consent, without affecting processing carried out before the withdrawal."
+
+#: templates/legal/privacy_policy.html:44
+msgid "serviço pretendido, data, horário e observações da marcação;"
+msgstr "the service requested, date, time and booking notes;"
+
+#: templates/legal/privacy_policy.html:92
+msgid "serviços de alojamento, infraestrutura e manutenção técnica;"
+msgstr "hosting, infrastructure and technical maintenance services;"
+
+#: templates/legal/privacy_policy.html:93
+msgid "serviços de email, mensagens ou comunicação com clientes;"
+msgstr "email, messaging or client communication services;"
+
+#: templates/legal/privacy_policy.html:42
+msgid "telefone;"
+msgstr "phone number;"
+
+#: templates/accounts/customer_signup.html:16
 #: templates/base.html:178
 msgid "Área do cliente"
 msgstr "Client area"
+
+#: templates/legal/cookie_policy.html:21
+#: templates/legal/privacy_policy.html:21
+msgid "Última atualização: 10 de junho de 2026"
+msgstr "Last updated: 10 June 2026"

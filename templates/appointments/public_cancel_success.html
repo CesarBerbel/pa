@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 
-{% block title %}Cancelado com sucesso{% endblock %}
+{% load i18n %}
+
+{% block title %}{% translate "Cancelado com sucesso" %}{% endblock %}
 {% block meta_robots %}noindex,nofollow{% endblock %}
 
 {% block content %}
@@ -11,11 +13,11 @@
             <div class="card-body p-4 text-center">
 
                 <h1 class="h5 mb-3 text-danger">
-                    Marcação cancelada com sucesso
+                    {% translate "Marcação cancelada com sucesso" %}
                 </h1>
 
                 <p class="text-muted">
-                    Código da marcação:
+                    {% translate "Código da marcação:" %}
                 </p>
 
                 <div class="alert alert-danger fw-bold">
@@ -27,11 +29,11 @@
                 {% endif %}
                 
                 <p class="text-muted mb-4 mt-3">
-                    Este horário voltou a ficar disponível para novas marcações.
+                    {% translate "Este horário voltou a ficar disponível para novas marcações." %}
                 </p>
 
                 <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary">
-                    Fazer nova marcação
+                    {% translate "Fazer nova marcação" %}
                 </a>
 
             </div>

@@ -1,5 +1,5 @@
 from django.contrib import messages
-from appointments.mixins import SuperuserRequiredMixin
+from appointments.mixins import InternalAreaRequiredMixin
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView, TemplateView, UpdateView
@@ -8,7 +8,7 @@ from appointments.forms import BusinessHourForm
 from appointments.models import BusinessHour
 
 
-class BusinessHourListView(SuperuserRequiredMixin, ListView):
+class BusinessHourListView(InternalAreaRequiredMixin, ListView):
     # Lists registered working hours.
 
     model = BusinessHour
@@ -20,7 +20,7 @@ class BusinessHourListView(SuperuserRequiredMixin, ListView):
         return BusinessHour.objects.order_by("weekday")
 
 
-class BusinessHourCreateView(SuperuserRequiredMixin, CreateView):
+class BusinessHourCreateView(InternalAreaRequiredMixin, CreateView):
     # Creates a new working hour entry.
 
     model = BusinessHour
@@ -33,7 +33,7 @@ class BusinessHourCreateView(SuperuserRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class BusinessHourUpdateView(SuperuserRequiredMixin, UpdateView):
+class BusinessHourUpdateView(InternalAreaRequiredMixin, UpdateView):
     # Updates an existing working hour entry.
 
     model = BusinessHour
@@ -46,7 +46,7 @@ class BusinessHourUpdateView(SuperuserRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-class BusinessHourDeleteView(SuperuserRequiredMixin, TemplateView):
+class BusinessHourDeleteView(InternalAreaRequiredMixin, TemplateView):
     # Shows delete confirmation on GET and deletes working hour on POST.
 
     template_name = "appointments/business_hour_confirm_delete.html"

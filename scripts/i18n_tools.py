@@ -42,6 +42,12 @@ TEMPLATE_TAG_PATTERN = re.compile(
     r"{%\s*(?:translate|trans)\s+(\"(?:[^\"\\]|\\.)*\"|'(?:[^'\\]|\\.)*')",
 )
 
+# {% blocktranslate %}…{% endblocktranslate %} numa só linha. O texto entre as
+# tags é o próprio msgid, incluindo o HTML inline que ele contenha.
+BLOCK_TAG_PATTERN = re.compile(
+    r"{%\s*blocktranslate[^%]*%}(.*?){%\s*endblocktranslate\s*%}",
+)
+
 PYTHON_CALL_PATTERN = re.compile(
     r"(?:gettext_lazy|gettext|pgettext|_)\(\s*(\"(?:[^\"\\]|\\.)*\"|'(?:[^'\\]|\\.)*')",
 )
@@ -105,6 +111,17 @@ def collect_messages() -> dict[str, list[str]]:
                 text = unquote_literal(match.group(1))
 
                 if not text.strip():
+                    continue
+
+                messages.setdefault(text, []).append(f"{relative}:{number}")
+
+            if path.suffix != ".html":
+                continue
+
+            for match in BLOCK_TAG_PATTERN.finditer(line):
+                text = match.group(1).strip()
+
+                if not text:
                     continue
 
                 messages.setdefault(text, []).append(f"{relative}:{number}")

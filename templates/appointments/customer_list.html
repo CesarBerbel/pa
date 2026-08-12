@@ -42,12 +42,35 @@
                     <tbody>
                         {% for customer in customers %}
                             <tr>
-                                <td>{{ customer.full_name }}</td>
+                                <td>
+                                    {{ customer.full_name }}
+
+                                    {# Os avisos são informação clínica: só #}
+                                    {# aparecem a quem tem esse nível de acesso. #}
+                                    {% if user.has_clinical_access %}
+                                        {% for alerta in customer.patient_record.risk_alerts %}
+                                            <span class="badge text-bg-warning ms-1">{{ alerta }}</span>
+                                        {% endfor %}
+                                    {% endif %}
+                                </td>
                                 <td>{{ customer.email|default:"-" }}</td>
                                 <td>{{ customer.phone }}</td>
 
                                 <td class="text-end">
                                     <div class="d-inline-flex flex-wrap justify-content-end gap-2">
+
+                                        {% if user.has_clinical_access %}
+                                        <a
+                                            href="{% url 'appointments:patient_record' customer.pk %}"
+                                            class="btn btn-sm customer-action-button d-inline-flex align-items-center justify-content-center {% if customer.patient_record.is_filled %}btn-outline-success{% else %}btn-outline-secondary{% endif %}"
+                                            data-bs-toggle="tooltip"
+                                            data-bs-placement="top"
+                                            data-bs-title="{% if customer.patient_record.is_filled %}Ver ficha de anamnese{% else %}Preencher ficha de anamnese{% endif %}"
+                                            aria-label="Ficha de anamnese de {{ customer.full_name }}"
+                                        >
+                                            <i class="bi bi-clipboard2-pulse"></i>
+                                        </a>
+                                        {% endif %}
 
                                         <a
                                             href="{% url 'appointments:customer_update' customer.pk %}"

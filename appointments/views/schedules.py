@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from appointments.mixins import SuperuserRequiredMixin
+from appointments.mixins import InternalAreaRequiredMixin
 from django.contrib import messages
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -12,7 +12,7 @@ from appointments.blocking_services import ScheduleBlockingService
 from appointments.selectors import AppointmentSelectors
 
 
-class DailyAgendaView(SuperuserRequiredMixin, TemplateView):
+class DailyAgendaView(InternalAreaRequiredMixin, TemplateView):
     # Shows appointments grouped by a selected day
 
     template_name = "appointments/daily_agenda.html"
@@ -43,7 +43,7 @@ class DailyAgendaView(SuperuserRequiredMixin, TemplateView):
         return context
 
 
-class VisualScheduleView(SuperuserRequiredMixin, TemplateView):
+class VisualScheduleView(InternalAreaRequiredMixin, TemplateView):
     # Shows a visual daily schedule with appointments and blocked periods
 
     template_name = "appointments/visual_schedule.html"
@@ -87,7 +87,7 @@ class VisualScheduleView(SuperuserRequiredMixin, TemplateView):
         return context
 
 
-class VisualScheduleBlockView(SuperuserRequiredMixin, View):
+class VisualScheduleBlockView(InternalAreaRequiredMixin, View):
     # Cria bloqueios a partir dos horários marcados na agenda visual.
 
     def post(self, request):

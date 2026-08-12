@@ -210,6 +210,199 @@ class Customer(models.Model):
         return self.full_name
 
 
+class PatientRecord(models.Model):
+    """Ficha de anamnese de uma cliente.
+
+    Contém dados de saúde, que o RGPD trata como categoria especial (artigo
+    9.º). É por isso acessível apenas na área interna, atrás de autenticação de
+    administrador, e nunca exposta em páginas públicas nem em emails.
+
+    Há uma ficha por cliente, revista ao longo do tempo: o histórico de saúde
+    pertence à pessoa e não a uma marcação isolada.
+    """
+
+    customer = models.OneToOneField(
+        Customer,
+        on_delete=models.CASCADE,
+        related_name="patient_record",
+        verbose_name="Cliente",
+    )
+
+    main_complaint = models.TextField(
+        blank=True,
+        verbose_name="Motivo da consulta",
+        help_text="Queixa principal e há quanto tempo dura.",
+    )
+
+    # Sinalizadores clínicos. São campos próprios, e não texto livre, para
+    # poderem aparecer como aviso na lista de clientes: em podologia, diabetes
+    # e problemas de circulação mudam a forma de tratar.
+    has_diabetes = models.BooleanField(
+        default=False,
+        verbose_name="Diabetes",
+    )
+
+    has_circulatory_issues = models.BooleanField(
+        default=False,
+        verbose_name="Problemas de circulação",
+    )
+
+    has_cardiovascular_issues = models.BooleanField(
+        default=False,
+        verbose_name="Problemas cardiovasculares",
+    )
+
+    has_allergies = models.BooleanField(
+        default=False,
+        verbose_name="Alergias",
+    )
+
+    is_smoker = models.BooleanField(
+        default=False,
+        verbose_name="Fumadora",
+    )
+
+    allergies = models.TextField(
+        blank=True,
+        verbose_name="Quais alergias",
+        help_text="Obrigatório quando existem alergias.",
+    )
+
+    medical_history = models.TextField(
+        blank=True,
+        verbose_name="Outros antecedentes",
+        help_text="Doenças relevantes não cobertas pelas opções acima.",
+    )
+
+    current_medication = models.TextField(
+        blank=True,
+        verbose_name="Medicação habitual",
+    )
+
+    previous_surgeries = models.TextField(
+        blank=True,
+        verbose_name="Cirurgias e tratamentos anteriores",
+    )
+
+    footwear_notes = models.TextField(
+        blank=True,
+        verbose_name="Calçado e hábitos",
+        help_text="Tipo de calçado usado, atividade física, tempo em pé.",
+    )
+
+    notes = models.TextField(
+        blank=True,
+        verbose_name="Observações",
+    )
+
+    consent_confirmed = models.BooleanField(
+        default=False,
+        verbose_name="Cliente informada sobre o registo clínico",
+        help_text=(
+            "Confirma que a cliente foi informada de que estes dados de saúde "
+            "são registados e para que servem."
+        ),
+    )
+
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="updated_patient_records",
+        verbose_name="Última alteração por",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["customer__full_name"]
+        verbose_name = "Ficha de anamnese"
+        verbose_name_plural = "Fichas de anamnese"
+
+    def __str__(self):
+        return f"Anamnese de {self.customer.full_name}"
+
+    def clean(self):
+        # Saber que há alergia sem saber qual não serve para nada no momento
+        # do atendimento.
+        if self.has_allergies and not self.allergies.strip():
+            raise ValidationError({"allergies": "Indique quais são as alergias."})
+
+    @property
+    def risk_alerts(self):
+        # Avisos a mostrar junto do nome da cliente.
+        alertas = []
+
+        if self.has_diabetes:
+            alertas.append("Diabetes")
+
+        if self.has_circulatory_issues:
+            alertas.append("Circulação")
+
+        if self.has_cardiovascular_issues:
+            alertas.append("Cardiovascular")
+
+        if self.has_allergies:
+            alertas.append("Alergias")
+
+        return alertas
+
+    @property
+    def is_filled(self):
+        # Uma ficha criada e deixada em branco não conta como preenchida.
+        return any(
+            [
+                self.main_complaint.strip(),
+                self.medical_history.strip(),
+                self.current_medication.strip(),
+                self.previous_surgeries.strip(),
+                self.footwear_notes.strip(),
+                self.notes.strip(),
+                self.risk_alerts,
+            ]
+        )
+
+
+class PatientRecordLog(models.Model):
+    """Histórico de alterações de uma ficha de anamnese.
+
+    A conservação digital de registos clínicos exige garantir a integridade da
+    informação. Saber apenas quem fez a última alteração não chega: é preciso
+    poder reconstituir o que mudou, quando e por quem — por exemplo quando uma
+    alergia é apagada por engano.
+    """
+
+    record = models.ForeignKey(
+        PatientRecord,
+        on_delete=models.CASCADE,
+        related_name="logs",
+    )
+
+    performed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="patient_record_logs",
+    )
+
+    description = models.TextField(
+        verbose_name="Alterações",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Alteração de ficha"
+        verbose_name_plural = "Alterações de fichas"
+
+    def __str__(self):
+        return f"{self.record.customer.full_name} - {self.created_at:%Y-%m-%d %H:%M}"
+
+
 class BusinessHour(models.Model):
     # Defines working hours per weekday
 
@@ -224,26 +417,67 @@ class BusinessHour(models.Model):
     ]
 
     weekday = models.IntegerField(choices=WEEKDAY_CHOICES, unique=True)
-    start_time = models.TimeField()
-    end_time = models.TimeField()
+    start_time = models.TimeField(verbose_name="Hora inicial")
+    end_time = models.TimeField(verbose_name="Hora final")
+
+    # Segundo período do dia. Existe para a pausa de almoço ficar implícita no
+    # horário de trabalho, em vez de depender de um bloqueio recorrente que é
+    # preciso lembrar de manter.
+    second_start_time = models.TimeField(
+        blank=True,
+        null=True,
+        verbose_name="Hora inicial (tarde)",
+        help_text="Deixe vazio se trabalhar em período único.",
+    )
+
+    second_end_time = models.TimeField(
+        blank=True,
+        null=True,
+        verbose_name="Hora final (tarde)",
+    )
+
     is_active = models.BooleanField(default=True)
 
     class Meta:
         ordering = ["weekday"]
 
     def __str__(self):
-        return f"{self.get_weekday_display()} - {self.start_time} às {self.end_time}"
+        periodos = " e ".join(f"{inicio} às {fim}" for inicio, fim in self.periods)
+
+        return f"{self.get_weekday_display()} - {periodos}"
+
+    @property
+    def periods(self):
+        # Períodos de trabalho do dia, na ordem. Um dia de período único
+        # devolve uma lista de um só elemento, para o resto do sistema poder
+        # tratar sempre da mesma maneira.
+        periodos = []
+
+        if self.start_time and self.end_time:
+            periodos.append((self.start_time, self.end_time))
+
+        if self.second_start_time and self.second_end_time:
+            periodos.append((self.second_start_time, self.second_end_time))
+
+        return periodos
+
+    @property
+    def has_second_period(self):
+        return bool(self.second_start_time and self.second_end_time)
 
     @property
     def duration_minutes(self):
-        # Return gross working duration in minutes for display purposes.
-        if not self.start_time or not self.end_time:
-            return 0
+        # Soma dos períodos, já sem a pausa entre eles.
+        total = 0
+        referencia = datetime.today()
 
-        start_datetime = datetime.combine(datetime.today(), self.start_time)
-        end_datetime = datetime.combine(datetime.today(), self.end_time)
+        for inicio, fim in self.periods:
+            delta = datetime.combine(referencia, fim) - datetime.combine(
+                referencia, inicio
+            )
+            total += int(delta.total_seconds() / 60)
 
-        return int((end_datetime - start_datetime).total_seconds() / 60)
+        return total
 
     @property
     def duration_display(self):
@@ -258,10 +492,38 @@ class BusinessHour(models.Model):
         return f"{hours}h"
 
     def clean(self):
-        # Validate that end time is after start time
-        if self.end_time <= self.start_time:
+        if self.start_time and self.end_time and self.end_time <= self.start_time:
             raise ValidationError(
                 "O horário final deve ser maior que o horário inicial."
+            )
+
+        # Os dois campos da tarde andam sempre juntos: só um preenchido seria
+        # um período sem fim ou sem início.
+        if bool(self.second_start_time) != bool(self.second_end_time):
+            raise ValidationError(
+                "Preencha a hora inicial e a hora final da tarde, ou deixe "
+                "ambas vazias."
+            )
+
+        if not self.has_second_period:
+            return
+
+        if self.second_end_time <= self.second_start_time:
+            raise ValidationError(
+                {
+                    "second_end_time": (
+                        "A hora final da tarde deve ser maior que a inicial."
+                    )
+                }
+            )
+
+        if self.end_time and self.second_start_time < self.end_time:
+            raise ValidationError(
+                {
+                    "second_start_time": (
+                        "O período da tarde tem de começar depois do fim da manhã."
+                    )
+                }
             )
 
 
@@ -607,3 +869,61 @@ class AppointmentReminderLog(models.Model):
         return (
             f"{self.appointment.reference_code} - {self.reminder_type} - {self.status}"
         )
+
+
+class ClinicalNote(models.Model):
+    """Nota de evolução de uma consulta: o que foi efetivamente feito.
+
+    A ficha de anamnese guarda o histórico da pessoa; esta guarda os atos
+    praticados em cada sessão, que a legislação exige constarem do registo
+    clínico. Uma nota por marcação.
+    """
+
+    appointment = models.OneToOneField(
+        Appointment,
+        on_delete=models.CASCADE,
+        related_name="clinical_note",
+        verbose_name="Marcação",
+    )
+
+    procedures = models.TextField(
+        verbose_name="Atos praticados",
+        help_text="O que foi feito nesta consulta.",
+    )
+
+    observations = models.TextField(
+        blank=True,
+        verbose_name="Observações clínicas",
+        help_text="Estado encontrado, evolução desde a última consulta.",
+    )
+
+    recommendations = models.TextField(
+        blank=True,
+        verbose_name="Indicações dadas",
+        help_text="Cuidados recomendados e próximos passos.",
+    )
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="clinical_notes",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-appointment__date", "-appointment__start_time"]
+        verbose_name = "Nota de evolução"
+        verbose_name_plural = "Notas de evolução"
+
+    def __str__(self):
+        return f"Nota de {self.appointment.reference_code}"
+
+    def clean(self):
+        if not self.procedures.strip():
+            raise ValidationError(
+                {"procedures": "Descreva os atos praticados nesta consulta."}
+            )
