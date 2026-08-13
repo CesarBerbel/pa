@@ -83,6 +83,8 @@ class PatientRecordFlowTests(TestCase):
             "previous_surgeries": "",
             "footwear_notes": "",
             "notes": "",
+            # O select de risco é sempre submetido pelo browser.
+            "diabetic_foot_risk": "na",
         }
         data.update(overrides)
         return data
@@ -179,3 +181,147 @@ class PatientRecordFlowTests(TestCase):
 
         with self.assertRaises(ValidationError):
             record.full_clean()
+
+
+class PodiatryAnamnesisTests(TestCase):
+    """A ficha segue a estrutura de uma anamnese podológica.
+
+    Além dos antecedentes, guarda o exame do pé, a avaliação vascular e
+    neurológica e o plano — que é o que a legislação espera de um registo
+    clínico claro e adequado.
+    """
+
+    def setUp(self):
+        User = get_user_model()
+
+        self.admin_user = User.objects.create_superuser(
+            email="admin@example.com",
+            password="StrongPassword123",
+            full_name="Admin User",
+        )
+
+        self.customer = Customer.objects.create(
+            full_name="Maria Silva",
+            email="maria@example.com",
+            phone="+351910000000",
+        )
+
+        self.client.force_login(self.admin_user)
+        self.url = reverse(
+            "appointments:patient_record",
+            kwargs={"pk": self.customer.pk},
+        )
+
+    def payload(self, **overrides):
+        data = {
+            "birth_date": "",
+            "profession": "",
+            "main_complaint": "",
+            "allergies": "",
+            "medical_history": "",
+            "current_medication": "",
+            "previous_surgeries": "",
+            "skin_assessment": "",
+            "nail_assessment": "",
+            "foot_deformities": "",
+            "gait_assessment": "",
+            "footwear_notes": "",
+            "vascular_assessment": "",
+            "neurological_assessment": "",
+            "diabetic_foot_risk": "na",
+            "treatment_plan": "",
+            "notes": "",
+        }
+        data.update(overrides)
+        return data
+
+    def test_every_model_field_is_reachable_in_a_section(self):
+        # Um campo fora das secções ficaria invisível no ecrã sem ninguém dar
+        # por isso. A rede de segurança do formulário tem de estar vazia.
+        response = self.client.get(self.url)
+        form = response.context["form"]
+
+        self.assertEqual([campo.name for campo in form.missing_fields()], [])
+
+    def test_sections_cover_the_expected_areas(self):
+        response = self.client.get(self.url)
+        titulos = [seccao["title"] for seccao in response.context["form"].sections()]
+
+        self.assertEqual(
+            titulos,
+            [
+                "Identificação",
+                "Motivo da consulta",
+                "Antecedentes",
+                "Exame podológico",
+                "Vascular e neurológico",
+                "Plano e observações",
+            ],
+        )
+
+    def test_examination_fields_are_stored(self):
+        self.client.post(
+            self.url,
+            data=self.payload(
+                skin_assessment="Hiperqueratose no antepé.",
+                nail_assessment="Onicomicose no hálux direito.",
+                foot_deformities="Hallux valgus bilateral.",
+                vascular_assessment="Pulsos presentes e simétricos.",
+                neurological_assessment="Monofilamento sem alterações.",
+                treatment_plan="Desbaste e reavaliação em 4 semanas.",
+            ),
+        )
+
+        record = PatientRecord.objects.get()
+
+        self.assertIn("Hiperqueratose", record.skin_assessment)
+        self.assertIn("Onicomicose", record.nail_assessment)
+        self.assertIn("Hallux valgus", record.foot_deformities)
+        self.assertIn("Pulsos", record.vascular_assessment)
+        self.assertIn("Monofilamento", record.neurological_assessment)
+        self.assertIn("Desbaste", record.treatment_plan)
+
+    def test_neuropathy_is_a_risk_alert(self):
+        # Sem sensibilidade protetora, a cliente pode não sentir dor durante o
+        # tratamento: é dos avisos que mais muda a conduta.
+        self.client.post(self.url, data=self.payload(has_neuropathy="on"))
+
+        self.assertIn("Neuropatia", PatientRecord.objects.get().risk_alerts)
+
+    def test_high_diabetic_risk_is_a_risk_alert(self):
+        self.client.post(self.url, data=self.payload(diabetic_foot_risk="high"))
+
+        self.assertIn(
+            "Pé diabético: risco alto",
+            PatientRecord.objects.get().risk_alerts,
+        )
+
+    def test_low_diabetic_risk_is_not_an_alert(self):
+        self.client.post(self.url, data=self.payload(diabetic_foot_risk="low"))
+
+        self.assertEqual(PatientRecord.objects.get().risk_alerts, [])
+
+    def test_age_is_calculated_from_the_birth_date(self):
+        self.client.post(self.url, data=self.payload(birth_date="1980-01-01"))
+
+        record = PatientRecord.objects.get()
+
+        self.assertIsNotNone(record.age)
+        self.assertGreater(record.age, 40)
+
+    def test_age_is_none_without_a_birth_date(self):
+        self.client.post(self.url, data=self.payload())
+
+        self.assertIsNone(PatientRecord.objects.get().age)
+
+    def test_examination_text_alone_counts_as_filled(self):
+        self.client.post(self.url, data=self.payload(nail_assessment="Sem alterações."))
+
+        self.assertTrue(PatientRecord.objects.get().is_filled)
+
+    def test_page_renders_the_touch_friendly_layout(self):
+        response = self.client.get(self.url)
+
+        self.assertContains(response, "anamnesis-accordion")
+        self.assertContains(response, "anamnesis-flags")
+        self.assertContains(response, "anamnesis-actions")

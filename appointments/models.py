@@ -252,6 +252,46 @@ class PatientRecord(models.Model):
         verbose_name="Problemas cardiovasculares",
     )
 
+    has_hypertension = models.BooleanField(
+        default=False,
+        verbose_name="Hipertensão arterial",
+    )
+
+    has_neuropathy = models.BooleanField(
+        default=False,
+        verbose_name="Neuropatia periférica",
+    )
+
+    has_coagulation_issues = models.BooleanField(
+        default=False,
+        verbose_name="Alterações da coagulação ou anticoagulantes",
+    )
+
+    has_rheumatic_disease = models.BooleanField(
+        default=False,
+        verbose_name="Doença reumática (artrite, artrose)",
+    )
+
+    has_thyroid_disease = models.BooleanField(
+        default=False,
+        verbose_name="Alterações da tiroide",
+    )
+
+    has_kidney_disease = models.BooleanField(
+        default=False,
+        verbose_name="Doença renal",
+    )
+
+    has_skin_condition = models.BooleanField(
+        default=False,
+        verbose_name="Doença dermatológica (psoríase, eczema)",
+    )
+
+    is_pregnant = models.BooleanField(
+        default=False,
+        verbose_name="Grávida",
+    )
+
     has_allergies = models.BooleanField(
         default=False,
         verbose_name="Alergias",
@@ -295,6 +335,82 @@ class PatientRecord(models.Model):
         verbose_name="Observações",
     )
 
+    birth_date = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name="Data de nascimento",
+        help_text="A idade condiciona a avaliação vascular e neurológica.",
+    )
+
+    profession = models.CharField(
+        max_length=120,
+        blank=True,
+        verbose_name="Profissão",
+        help_text="Tempo em pé e tipo de calçado de trabalho são relevantes.",
+    )
+
+    # --- Exame podológico ---
+
+    skin_assessment = models.TextField(
+        blank=True,
+        verbose_name="Pele",
+        help_text="Hidratação, hiperqueratose, fissuras, maceração interdigital.",
+    )
+
+    nail_assessment = models.TextField(
+        blank=True,
+        verbose_name="Unhas",
+        help_text="Onicomicose, onicocriptose, onicogrifose, hematoma subungueal.",
+    )
+
+    foot_deformities = models.TextField(
+        blank=True,
+        verbose_name="Deformidades e apoio",
+        help_text="Hallux valgus, dedos em garra, pé plano ou cavo, zonas de pressão.",
+    )
+
+    vascular_assessment = models.TextField(
+        blank=True,
+        verbose_name="Avaliação vascular",
+        help_text="Pulsos pedioso e tibial posterior, temperatura, cor, edema.",
+    )
+
+    neurological_assessment = models.TextField(
+        blank=True,
+        verbose_name="Avaliação neurológica",
+        help_text="Sensibilidade ao monofilamento, diapasão, reflexos.",
+    )
+
+    gait_assessment = models.TextField(
+        blank=True,
+        verbose_name="Marcha",
+    )
+
+    DIABETIC_RISK_NOT_APPLICABLE = "na"
+    DIABETIC_RISK_LOW = "low"
+    DIABETIC_RISK_MODERATE = "moderate"
+    DIABETIC_RISK_HIGH = "high"
+
+    DIABETIC_RISK_CHOICES = [
+        (DIABETIC_RISK_NOT_APPLICABLE, "Não aplicável"),
+        (DIABETIC_RISK_LOW, "Baixo"),
+        (DIABETIC_RISK_MODERATE, "Moderado"),
+        (DIABETIC_RISK_HIGH, "Alto"),
+    ]
+
+    diabetic_foot_risk = models.CharField(
+        max_length=10,
+        choices=DIABETIC_RISK_CHOICES,
+        default=DIABETIC_RISK_NOT_APPLICABLE,
+        verbose_name="Risco de pé diabético",
+    )
+
+    treatment_plan = models.TextField(
+        blank=True,
+        verbose_name="Plano de tratamento",
+        help_text="Cuidados previstos, periodicidade e indicações dadas.",
+    )
+
     consent_confirmed = models.BooleanField(
         default=False,
         verbose_name="Cliente informada sobre o registo clínico",
@@ -324,6 +440,19 @@ class PatientRecord(models.Model):
     def __str__(self):
         return f"Anamnese de {self.customer.full_name}"
 
+    @property
+    def age(self):
+        if not self.birth_date:
+            return None
+
+        hoje = datetime.today().date()
+        anos = hoje.year - self.birth_date.year
+
+        if (hoje.month, hoje.day) < (self.birth_date.month, self.birth_date.day):
+            anos -= 1
+
+        return anos
+
     def clean(self):
         # Saber que há alergia sem saber qual não serve para nada no momento
         # do atendimento.
@@ -332,11 +461,17 @@ class PatientRecord(models.Model):
 
     @property
     def risk_alerts(self):
-        # Avisos a mostrar junto do nome da cliente.
+        # Avisos a mostrar junto do nome da cliente. Só entram aqui as condições
+        # que mudam a conduta no momento do atendimento.
         alertas = []
 
         if self.has_diabetes:
             alertas.append("Diabetes")
+
+        if self.has_neuropathy:
+            # Perda de sensibilidade protetora: a cliente pode não sentir dor
+            # durante o tratamento.
+            alertas.append("Neuropatia")
 
         if self.has_circulatory_issues:
             alertas.append("Circulação")
@@ -344,23 +479,42 @@ class PatientRecord(models.Model):
         if self.has_cardiovascular_issues:
             alertas.append("Cardiovascular")
 
+        if self.has_coagulation_issues:
+            alertas.append("Coagulação")
+
         if self.has_allergies:
             alertas.append("Alergias")
+
+        if self.diabetic_foot_risk == self.DIABETIC_RISK_HIGH:
+            alertas.append("Pé diabético: risco alto")
 
         return alertas
 
     @property
     def is_filled(self):
         # Uma ficha criada e deixada em branco não conta como preenchida.
+        campos_de_texto = [
+            self.main_complaint,
+            self.medical_history,
+            self.current_medication,
+            self.previous_surgeries,
+            self.footwear_notes,
+            self.notes,
+            self.skin_assessment,
+            self.nail_assessment,
+            self.foot_deformities,
+            self.vascular_assessment,
+            self.neurological_assessment,
+            self.gait_assessment,
+            self.treatment_plan,
+            self.profession,
+        ]
+
         return any(
             [
-                self.main_complaint.strip(),
-                self.medical_history.strip(),
-                self.current_medication.strip(),
-                self.previous_surgeries.strip(),
-                self.footwear_notes.strip(),
-                self.notes.strip(),
-                self.risk_alerts,
+                any(campo.strip() for campo in campos_de_texto),
+                bool(self.birth_date),
+                bool(self.risk_alerts),
             ]
         )
 

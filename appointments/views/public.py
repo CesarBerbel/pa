@@ -434,16 +434,28 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
 
     template_name = "appointments/public_visual_schedule.html"
 
+    days_in_strip = 7
+
     def get_week_days(self, selected_date, selected_service=None):
-        # Build a practical 7-day navigation starting from the selected week.
-        # Each day receives a compact availability status so the public agenda
-        # can visually distinguish closed or fully blocked days.
-        start_of_week = selected_date - timedelta(days=selected_date.weekday())
+        """Faixa dos próximos dias, a começar em hoje.
+
+        Antes começava sempre na segunda-feira da semana escolhida, o que numa
+        quinta-feira mostrava três dias já passados e sem utilidade nenhuma.
+        Agora corre para a frente e atravessa a semana quando é preciso.
+        """
+
+        today = timezone.localdate()
+        start_date = today
+
+        # Quando a cliente salta para uma data distante pelo campo de data, a
+        # faixa acompanha-a; caso contrário mantém-se ancorada em hoje.
+        if selected_date > today + timedelta(days=self.days_in_strip - 1):
+            start_date = selected_date
 
         week_days = []
 
-        for index in range(7):
-            current_date = start_of_week + timedelta(days=index)
+        for index in range(self.days_in_strip):
+            current_date = start_date + timedelta(days=index)
             availability_status = AvailabilityService.get_availability_status(
                 selected_service,
                 current_date,
@@ -495,16 +507,20 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
         )
 
     def get_selected_date(self):
-        # Get selected date from query string or use today
+        # Data escolhida, nunca no passado: um dia que já passou não tem
+        # horários para oferecer, e mostrá-lo só confunde.
+        today = timezone.localdate()
         date_value = self.request.GET.get("date")
 
         if not date_value:
-            return timezone.localdate()
+            return today
 
         try:
-            return datetime.strptime(date_value, "%Y-%m-%d").date()
+            selected_date = datetime.strptime(date_value, "%Y-%m-%d").date()
         except ValueError:
-            return timezone.localdate()
+            return today
+
+        return max(selected_date, today)
 
     def get_context_data(self, **kwargs):
         # Add public visual schedule data to context
@@ -570,6 +586,7 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
         context["slots"] = slots
         context["availability_status"] = availability_status
         context["week_days"] = self.get_week_days(selected_date, selected_service)
+        context["today"] = timezone.localdate()
 
         return context
 

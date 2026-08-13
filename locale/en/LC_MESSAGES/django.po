@@ -440,12 +440,12 @@ msgstr "Date:"
 msgid "Deseja criar uma conta?"
 msgstr "Would you like to create an account?"
 
-#: templates/appointments/public_visual_schedule.html:142
+#: templates/appointments/public_visual_schedule.html:145
 msgid "Disponibilidade"
 msgstr "Availability"
 
-#: templates/appointments/public_visual_schedule.html:180
-#: templates/appointments/public_visual_schedule.html:197
+#: templates/appointments/public_visual_schedule.html:183
+#: templates/appointments/public_visual_schedule.html:200
 msgid "Disponível"
 msgstr "Available"
 
@@ -491,7 +491,7 @@ msgstr "Pick a service, choose a date and book the best time."
 msgid "Escolha o seu horário de forma simples"
 msgstr "Choose your time slot the easy way"
 
-#: templates/appointments/public_visual_schedule.html:168
+#: templates/appointments/public_visual_schedule.html:171
 msgid "Esgotado"
 msgstr "Fully booked"
 
@@ -558,7 +558,7 @@ msgstr "Dismiss notice"
 msgid "Fechar preferências de cookies"
 msgstr "Close cookie preferences"
 
-#: templates/appointments/public_visual_schedule.html:85
+#: templates/appointments/public_visual_schedule.html:88
 msgid "Feed de serviços"
 msgstr "Service list"
 
@@ -680,8 +680,8 @@ msgstr "Map blocked by your cookie preferences"
 msgid "Mapa com a localização do salão DIVAH - Av. Sá da Bandeira 33, Loja 108, Coimbra"
 msgstr "Map showing the DIVAH salon - Av. Sá da Bandeira 33, Unit 108, Coimbra"
 
-#: templates/appointments/public_visual_schedule.html:182
-#: templates/appointments/public_visual_schedule.html:201
+#: templates/appointments/public_visual_schedule.html:185
+#: templates/appointments/public_visual_schedule.html:204
 msgid "Marcar"
 msgstr "Book"
 
@@ -749,7 +749,7 @@ msgid "Nenhum serviço ativo nesta categoria."
 msgstr "No active services in this category."
 
 #: templates/appointments/public_service_feed.html:153
-#: templates/appointments/public_visual_schedule.html:255
+#: templates/appointments/public_visual_schedule.html:258
 msgid "Nenhum serviço ativo registado"
 msgstr "No active services registered"
 
@@ -951,7 +951,7 @@ msgstr "Next"
 msgid "Registe categorias e serviços ativos para exibir o feed público."
 msgstr "Register active categories and services to show the public list."
 
-#: templates/appointments/public_visual_schedule.html:256
+#: templates/appointments/public_visual_schedule.html:259
 msgid "Registe uma categoria e pelo menos um serviço ativo para exibir horários disponíveis."
 msgstr "Register a category and at least one active service to show available times."
 
@@ -960,8 +960,8 @@ msgstr "Register a category and at least one active service to show available ti
 msgid "Rejeitar opcionais"
 msgstr "Reject optional"
 
-#: templates/appointments/public_visual_schedule.html:181
-#: templates/appointments/public_visual_schedule.html:214
+#: templates/appointments/public_visual_schedule.html:184
+#: templates/appointments/public_visual_schedule.html:217
 msgid "Reservado"
 msgstr "Booked"
 
@@ -990,7 +990,7 @@ msgstr "Where applicable, these third parties must process the data in accordanc
 msgid "Serviço"
 msgstr "Service"
 
-#: templates/appointments/public_visual_schedule.html:76
+#: templates/appointments/public_visual_schedule.html:79
 msgid "Serviço selecionado"
 msgstr "Selected service"
 

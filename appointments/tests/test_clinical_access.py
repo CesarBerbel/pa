@@ -177,6 +177,8 @@ class PatientRecordHistoryTests(TestCase):
             "previous_surgeries": "",
             "footwear_notes": "",
             "notes": "",
+            # O select de risco é sempre submetido pelo browser.
+            "diabetic_foot_risk": "na",
         }
         data.update(overrides)
         return data

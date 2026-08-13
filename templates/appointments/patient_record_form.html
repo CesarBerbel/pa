@@ -8,164 +8,183 @@
 {% block meta_robots %}noindex,nofollow{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-12 col-lg-8">
+<div class="anamnesis-page">
 
-        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
-            <div>
-                <span class="luxury-eyebrow">Ficha de anamnese</span>
-                <h1 class="h4 mt-2 mb-0">{{ customer.full_name }}</h1>
-                <small class="text-muted">
-                    {{ customer.phone }}
-                    {% if customer.email %} · {{ customer.email }}{% endif %}
-                </small>
-            </div>
-
-            <a href="{% url 'appointments:customer_list' %}" class="btn btn-outline-secondary btn-sm">
-                Voltar aos clientes
-            </a>
+    <div class="anamnesis-header">
+        <div>
+            <span class="luxury-eyebrow">Ficha de anamnese</span>
+            <h1 class="h4 mt-2 mb-0">{{ customer.full_name }}</h1>
+            <small class="text-muted">
+                {{ customer.phone }}
+                {% if customer.email %} · {{ customer.email }}{% endif %}
+                {% if object.age %} · {{ object.age }} anos{% endif %}
+            </small>
         </div>
 
-        {% if object.risk_alerts %}
-            <div class="alert alert-warning d-flex flex-wrap gap-2 align-items-center">
-                <i class="bi bi-exclamation-triangle-fill"></i>
-                <strong>Atenção no atendimento:</strong>
-                {% for alerta in object.risk_alerts %}
-                    <span class="badge text-bg-warning">{{ alerta }}</span>
+        <a href="{% url 'appointments:customer_list' %}" class="btn btn-outline-secondary">
+            Voltar
+        </a>
+    </div>
+
+    {% if object.risk_alerts %}
+        <div class="alert alert-warning anamnesis-alert">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <strong>Atenção no atendimento:</strong>
+            {% for alerta in object.risk_alerts %}
+                <span class="badge text-bg-warning">{{ alerta }}</span>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="alert alert-info small">
+        <i class="bi bi-shield-lock me-1"></i>
+        Estes são dados de saúde. Ficam visíveis apenas a quem tem acesso
+        clínico e nunca são enviados por email nem mostrados no site público.
+    </div>
+
+    {% if not clinical_retention_years %}
+        <div class="alert alert-warning small">
+            <i class="bi bi-clock-history me-1"></i>
+            <strong>Prazo de conservação por definir.</strong>
+            Enquanto não for definido, a política de privacidade não anuncia
+            prazo nenhum. Defina <code>CLINICAL_RECORD_RETENTION_YEARS</code>
+            assim que souber o prazo aplicável.
+        </div>
+    {% endif %}
+
+    <form method="post" novalidate id="anamnesis-form">
+        {% csrf_token %}
+
+        {{ form.non_field_errors }}
+
+        {# Secções fechadas por omissão: num tablet, uma lista longa obriga a #}
+        {# rolar muito e perde-se o contexto. Abre-se uma de cada vez. #}
+        <div class="accordion anamnesis-accordion" id="anamnesisAccordion">
+            {% for section in form.sections %}
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading-{{ section.id }}">
+                        <button
+                            class="accordion-button {% if not forloop.first %}collapsed{% endif %}"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#section-{{ section.id }}"
+                            aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}"
+                            aria-controls="section-{{ section.id }}"
+                        >
+                            {{ section.title }}
+                        </button>
+                    </h2>
+
+                    <div
+                        id="section-{{ section.id }}"
+                        class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
+                        aria-labelledby="heading-{{ section.id }}"
+                    >
+                        <div class="accordion-body">
+                            {% if section.flags %}
+                                {# Alvos grandes: numa mesa de trabalho, com luvas, #}
+                                {# uma caixa de 16px é impossível de acertar. #}
+                                <div class="anamnesis-flags">
+                                    {% for field in section.flags %}
+                                        <label class="anamnesis-flag" for="{{ field.id_for_label }}">
+                                            {{ field }}
+                                            <span>{{ field.label }}</span>
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+
+                            {% for field in section.regular %}
+                                {{ field|as_crispy_field }}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        {% if form.missing_fields %}
+            <div class="card border-0 shadow-sm mt-3">
+                <div class="card-body">
+                    <p class="text-muted small">Outros campos</p>
+                    {% for field in form.missing_fields %}
+                        {{ field|as_crispy_field }}
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        {# Barra fixa: em tablet, o botão de guardar não pode ficar a dez #}
+        {# ecrãs de distância do campo que se acabou de preencher. #}
+        <div class="anamnesis-actions">
+            <span class="anamnesis-actions-hint">
+                {% if object.updated_at and object.updated_by %}
+                    Alterada em {{ object.updated_at|date:"d/m/Y H:i" }}
+                    por {{ object.updated_by.full_name|default:object.updated_by.email }}
+                {% else %}
+                    Ficha ainda por preencher
+                {% endif %}
+            </span>
+
+            <button type="submit" class="btn btn-primary btn-lg">
+                Guardar ficha
+            </button>
+        </div>
+    </form>
+
+    {% if clinical_notes %}
+        <div class="card shadow-sm border-0 mt-4">
+            <div class="card-body p-4">
+                <h2 class="h6 text-uppercase text-muted mb-3">Consultas anteriores</h2>
+
+                {% for nota in clinical_notes %}
+                    <div class="clinical-note-entry">
+                        <div class="d-flex flex-wrap justify-content-between gap-2">
+                            <strong>
+                                {{ nota.appointment.date|date:"d/m/Y" }} ·
+                                {{ nota.appointment.service.name }}
+                            </strong>
+
+                            <a href="{% url 'appointments:clinical_note' nota.appointment.pk %}" class="small">
+                                Abrir
+                            </a>
+                        </div>
+
+                        <p class="mb-1">{{ nota.procedures|linebreaksbr }}</p>
+
+                        {% if nota.observations %}
+                            <p class="text-muted small mb-0">{{ nota.observations|linebreaksbr }}</p>
+                        {% endif %}
+                    </div>
                 {% endfor %}
             </div>
-        {% endif %}
-
-        <div class="alert alert-info small">
-            <i class="bi bi-shield-lock me-1"></i>
-            Estes são dados de saúde. Ficam visíveis apenas a quem tem acesso
-            clínico e nunca são enviados por email nem mostrados no site público.
         </div>
+    {% endif %}
 
-        {% if not clinical_retention_years %}
-            <div class="alert alert-warning small">
-                <i class="bi bi-clock-history me-1"></i>
-                <strong>Prazo de conservação por definir.</strong>
-                Enquanto não for definido, a política de privacidade não anuncia
-                prazo nenhum. Defina <code>CLINICAL_RECORD_RETENTION_YEARS</code>
-                assim que souber o prazo aplicável.
-            </div>
-        {% endif %}
-
-        <div class="card shadow-sm border-0">
+    {% if record_logs %}
+        <div class="card shadow-sm border-0 mt-4">
             <div class="card-body p-4">
-                <form method="post" novalidate>
-                    {% csrf_token %}
+                <h2 class="h6 text-uppercase text-muted mb-3">Histórico de alterações</h2>
 
-                    {{ form.non_field_errors }}
+                <p class="text-muted small">
+                    Registo de quem alterou o quê, para garantir a integridade
+                    da informação clínica.
+                </p>
 
-                    <h2 class="h6 text-uppercase text-muted mb-3">Motivo</h2>
-                    {{ form.main_complaint|as_crispy_field }}
+                {% for registo in record_logs %}
+                    <div class="clinical-note-entry">
+                        <div class="small text-muted">
+                            {{ registo.created_at|date:"d/m/Y H:i" }}
+                            ·
+                            {{ registo.performed_by.full_name|default:registo.performed_by.email|default:"—" }}
+                        </div>
 
-                    <hr class="my-4">
-
-                    <h2 class="h6 text-uppercase text-muted mb-3">Antecedentes</h2>
-
-                    <div class="patient-record-flags mb-3">
-                        {{ form.has_diabetes|as_crispy_field }}
-                        {{ form.has_circulatory_issues|as_crispy_field }}
-                        {{ form.has_cardiovascular_issues|as_crispy_field }}
-                        {{ form.is_smoker|as_crispy_field }}
-                        {{ form.has_allergies|as_crispy_field }}
+                        <pre class="clinical-log-changes">{{ registo.description }}</pre>
                     </div>
-
-                    {{ form.allergies|as_crispy_field }}
-                    {{ form.medical_history|as_crispy_field }}
-                    {{ form.current_medication|as_crispy_field }}
-                    {{ form.previous_surgeries|as_crispy_field }}
-
-                    <hr class="my-4">
-
-                    <h2 class="h6 text-uppercase text-muted mb-3">Rotina</h2>
-                    {{ form.footwear_notes|as_crispy_field }}
-                    {{ form.notes|as_crispy_field }}
-
-                    <hr class="my-4">
-
-                    {{ form.consent_confirmed|as_crispy_field }}
-
-                    <div class="d-flex gap-2 mt-4">
-                        <button type="submit" class="btn btn-primary">
-                            Guardar ficha
-                        </button>
-
-                        <a href="{% url 'appointments:customer_list' %}" class="btn btn-outline-secondary">
-                            Cancelar
-                        </a>
-                    </div>
-                </form>
-
-                {% if object.updated_at and object.updated_by %}
-                    <p class="text-muted small mb-0 mt-4">
-                        Última alteração em {{ object.updated_at|date:"d/m/Y H:i" }}
-                        por {{ object.updated_by.full_name|default:object.updated_by.email }}.
-                    </p>
-                {% endif %}
+                {% endfor %}
             </div>
         </div>
+    {% endif %}
 
-        {% if clinical_notes %}
-            <div class="card shadow-sm border-0 mt-4">
-                <div class="card-body p-4">
-                    <h2 class="h6 text-uppercase text-muted mb-3">Consultas anteriores</h2>
-
-                    {% for nota in clinical_notes %}
-                        <div class="clinical-note-entry">
-                            <div class="d-flex flex-wrap justify-content-between gap-2">
-                                <strong>
-                                    {{ nota.appointment.date|date:"d/m/Y" }} ·
-                                    {{ nota.appointment.service.name }}
-                                </strong>
-
-                                <a
-                                    href="{% url 'appointments:clinical_note' nota.appointment.pk %}"
-                                    class="small"
-                                >
-                                    Abrir
-                                </a>
-                            </div>
-
-                            <p class="mb-1">{{ nota.procedures|linebreaksbr }}</p>
-
-                            {% if nota.observations %}
-                                <p class="text-muted small mb-0">{{ nota.observations|linebreaksbr }}</p>
-                            {% endif %}
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
-        {% endif %}
-
-        {% if record_logs %}
-            <div class="card shadow-sm border-0 mt-4">
-                <div class="card-body p-4">
-                    <h2 class="h6 text-uppercase text-muted mb-3">Histórico de alterações</h2>
-
-                    <p class="text-muted small">
-                        Registo de quem alterou o quê, para garantir a integridade
-                        da informação clínica.
-                    </p>
-
-                    {% for registo in record_logs %}
-                        <div class="clinical-note-entry">
-                            <div class="small text-muted">
-                                {{ registo.created_at|date:"d/m/Y H:i" }}
-                                ·
-                                {{ registo.performed_by.full_name|default:registo.performed_by.email|default:"—" }}
-                            </div>
-
-                            <pre class="clinical-log-changes">{{ registo.description }}</pre>
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
-        {% endif %}
-
-    </div>
 </div>
 {% endblock %}

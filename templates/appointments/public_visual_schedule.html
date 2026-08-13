@@ -60,11 +60,14 @@
                         {% translate "Data" %}
                     </label>
 
+                    {# min impede o browser de oferecer datas passadas, que #}
+                    {# a vista também recusa do lado do servidor. #}
                     <input
                         type="date"
                         id="date"
                         name="date"
                         value="{{ selected_date|date:'Y-m-d' }}"
+                        min="{{ today|date:'Y-m-d' }}"
                         class="form-control form-control-lg"
                     >
                 </div>

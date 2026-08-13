@@ -214,34 +214,157 @@ class AppointmentForm(forms.ModelForm):
 
 
 class PatientRecordForm(forms.ModelForm):
-    # Ficha de anamnese. Só usada na área interna: contém dados de saúde.
+    """Anamnese podológica. Só usada na área interna: contém dados de saúde.
+
+    Os campos estão agrupados em secções que o template usa para montar o
+    acordeão. Manter os grupos aqui, e não no template, evita que um campo novo
+    no modelo fique invisível por esquecimento.
+    """
+
+    # Antecedentes marcados com um toque. São caixas e não texto livre porque
+    # alimentam os avisos que aparecem no atendimento.
+    CAMPOS_ANTECEDENTES = [
+        "has_diabetes",
+        "has_neuropathy",
+        "has_circulatory_issues",
+        "has_cardiovascular_issues",
+        "has_hypertension",
+        "has_coagulation_issues",
+        "has_rheumatic_disease",
+        "has_thyroid_disease",
+        "has_kidney_disease",
+        "has_skin_condition",
+        "is_pregnant",
+        "is_smoker",
+        "has_allergies",
+    ]
+
+    SECCOES = [
+        (
+            "identificacao",
+            "Identificação",
+            ["birth_date", "profession"],
+        ),
+        (
+            "motivo",
+            "Motivo da consulta",
+            ["main_complaint"],
+        ),
+        (
+            "antecedentes",
+            "Antecedentes",
+            CAMPOS_ANTECEDENTES
+            + [
+                "allergies",
+                "medical_history",
+                "current_medication",
+                "previous_surgeries",
+            ],
+        ),
+        (
+            "exame",
+            "Exame podológico",
+            [
+                "skin_assessment",
+                "nail_assessment",
+                "foot_deformities",
+                "gait_assessment",
+                "footwear_notes",
+            ],
+        ),
+        (
+            "vascular",
+            "Vascular e neurológico",
+            [
+                "vascular_assessment",
+                "neurological_assessment",
+                "diabetic_foot_risk",
+            ],
+        ),
+        (
+            "plano",
+            "Plano e observações",
+            ["treatment_plan", "notes", "consent_confirmed"],
+        ),
+    ]
 
     class Meta:
         model = PatientRecord
         fields = [
+            "birth_date",
+            "profession",
             "main_complaint",
             "has_diabetes",
+            "has_neuropathy",
             "has_circulatory_issues",
             "has_cardiovascular_issues",
+            "has_hypertension",
+            "has_coagulation_issues",
+            "has_rheumatic_disease",
+            "has_thyroid_disease",
+            "has_kidney_disease",
+            "has_skin_condition",
+            "is_pregnant",
             "is_smoker",
             "has_allergies",
             "allergies",
             "medical_history",
             "current_medication",
             "previous_surgeries",
+            "skin_assessment",
+            "nail_assessment",
+            "foot_deformities",
+            "gait_assessment",
             "footwear_notes",
+            "vascular_assessment",
+            "neurological_assessment",
+            "diabetic_foot_risk",
+            "treatment_plan",
             "notes",
             "consent_confirmed",
         ]
         widgets = {
+            "birth_date": forms.DateInput(attrs={"type": "date"}),
             "main_complaint": forms.Textarea(attrs={"rows": 3}),
             "allergies": forms.Textarea(attrs={"rows": 2}),
             "medical_history": forms.Textarea(attrs={"rows": 3}),
             "current_medication": forms.Textarea(attrs={"rows": 3}),
             "previous_surgeries": forms.Textarea(attrs={"rows": 3}),
+            "skin_assessment": forms.Textarea(attrs={"rows": 3}),
+            "nail_assessment": forms.Textarea(attrs={"rows": 3}),
+            "foot_deformities": forms.Textarea(attrs={"rows": 3}),
+            "gait_assessment": forms.Textarea(attrs={"rows": 2}),
             "footwear_notes": forms.Textarea(attrs={"rows": 3}),
+            "vascular_assessment": forms.Textarea(attrs={"rows": 3}),
+            "neurological_assessment": forms.Textarea(attrs={"rows": 3}),
+            "treatment_plan": forms.Textarea(attrs={"rows": 4}),
             "notes": forms.Textarea(attrs={"rows": 4}),
         }
+
+    def sections(self):
+        # Devolve (id, título, [campos ligados]) para o template iterar.
+        for identificador, titulo, nomes in self.SECCOES:
+            yield {
+                "id": identificador,
+                "title": titulo,
+                "fields": [self[nome] for nome in nomes if nome in self.fields],
+                "flags": [
+                    self[nome]
+                    for nome in nomes
+                    if nome in self.CAMPOS_ANTECEDENTES and nome in self.fields
+                ],
+                "regular": [
+                    self[nome]
+                    for nome in nomes
+                    if nome not in self.CAMPOS_ANTECEDENTES and nome in self.fields
+                ],
+            }
+
+    def missing_fields(self):
+        # Rede de segurança: um campo do modelo que fique fora das secções
+        # deixaria de ser editável sem ninguém dar por isso.
+        agrupados = {nome for _i, _t, nomes in self.SECCOES for nome in nomes}
+        return [self[nome] for nome in self.fields if nome not in agrupados]
 
 
 class ClinicalNoteForm(forms.ModelForm):
