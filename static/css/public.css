@@ -4839,3 +4839,55 @@ textarea.form-control,
     color: #a8755f;
     font-weight: 600;
 }
+
+/* =========================================================================
+   Página offline da PWA
+   ========================================================================= */
+
+.offline-icon {
+    color: var(--primary);
+    font-size: 3rem;
+}
+
+/* =========================================================================
+   Entrada com biometria
+   ========================================================================= */
+
+.passkey-divider {
+    align-items: center;
+    color: var(--text-muted);
+    display: flex;
+    font-size: 0.8rem;
+    gap: 12px;
+    margin: 20px 0 14px;
+    text-transform: uppercase;
+}
+
+.passkey-divider::before,
+.passkey-divider::after {
+    background: #ead7dc;
+    content: "";
+    flex: 1;
+    height: 1px;
+}
+
+.passkey-device {
+    align-items: center;
+    border: 1px solid #ead7dc;
+    border-radius: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding: 14px 16px;
+}
+
+.passkey-device-name {
+    font-weight: 600;
+}
+
+.passkey-device small {
+    color: var(--text-muted);
+    display: block;
+}

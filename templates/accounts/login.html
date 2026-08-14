@@ -1,8 +1,12 @@
 {% extends "base.html" %}
 
-{% load crispy_forms_tags i18n %}
+{% load crispy_forms_tags i18n static %}
 
 {% block title %}{% translate "Login" %} | Priscila Arantes PA{% endblock %}
+
+{% block extra_scripts %}
+    <script src="{% static 'js/passkeys.js' %}"></script>
+{% endblock %}
 {% block meta_robots %}noindex,nofollow{% endblock %}
 
 {% block content %}
@@ -25,6 +29,27 @@
                         {% translate "Entrar" %}
                     </button>
                 </form>
+
+                {# Entrada com biometria. O botão só aparece em dispositivos #}
+                {# que a suportam; os restantes usam a palavra-passe acima. #}
+                <div data-passkey-requires-support hidden>
+                    <div class="passkey-divider">
+                        <span>{% translate "ou" %}</span>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="btn btn-outline-secondary w-100"
+                        data-passkey-login
+                        data-options-url="{% url 'accounts:passkey_auth_options' %}"
+                        data-verify-url="{% url 'accounts:passkey_auth_verify' %}"
+                    >
+                        <i class="bi bi-fingerprint me-2" aria-hidden="true"></i>
+                        {% translate "Entrar com digital" %}
+                    </button>
+                </div>
+
+                <div class="alert alert-danger mt-3" data-passkey-error hidden></div>
                 <div class="text-center mt-4">
                     <a href="{% url 'accounts:customer_signup' %}" class="luxury-link">
                         {% translate "Ainda não tenho conta" %}

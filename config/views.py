@@ -1,8 +1,11 @@
 from html import escape
+from pathlib import Path
 
 from django.conf import settings
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
+from django.template.loader import render_to_string
+from django.templatetags.static import static
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_GET
@@ -111,3 +114,109 @@ def cookie_policy(request):
     """Render the public cookie policy page."""
 
     return render(request, "legal/cookie_policy.html")
+
+
+@require_GET
+def manifest_webmanifest(request):
+    """Manifesto da aplicação, servido na raiz.
+
+    É gerado a partir das definições para o nome e a cor acompanharem o resto
+    do site sem duplicação.
+    """
+
+    manifest = {
+        "name": settings.SEO_SITE_NAME,
+        "short_name": "Priscila Arantes",
+        "description": settings.SEO_DEFAULT_DESCRIPTION,
+        "lang": settings.LANGUAGE_CODE,
+        "start_url": "/",
+        "scope": "/",
+        "display": "standalone",
+        "orientation": "portrait",
+        "background_color": "#FFF7F9",
+        "theme_color": settings.SEO_THEME_COLOR,
+        "icons": [
+            {
+                "src": static("img/icon-192.png"),
+                "sizes": "192x192",
+                "type": "image/png",
+                "purpose": "any",
+            },
+            {
+                "src": static("img/icon-512.png"),
+                "sizes": "512x512",
+                "type": "image/png",
+                "purpose": "any",
+            },
+            {
+                # O Android recorta o ícone; este tem margem para o logo não
+                # sair cortado.
+                "src": static("img/icon-maskable-512.png"),
+                "sizes": "512x512",
+                "type": "image/png",
+                "purpose": "maskable",
+            },
+        ],
+        "shortcuts": [
+            {
+                "name": "Marcar horário",
+                "url": reverse("appointments:public_visual_schedule"),
+            },
+            {
+                "name": "Consultar marcação",
+                "url": reverse("appointments:public_appointment_lookup"),
+            },
+        ],
+    }
+
+    return JsonResponse(manifest, content_type="application/manifest+json")
+
+
+@require_GET
+def service_worker(request):
+    """Service worker servido na raiz, para o âmbito cobrir o site inteiro.
+
+    Deliberadamente **não** guarda páginas em cache. Numa agenda, uma página
+    guardada mostraria horários que entretanto já foram ocupados, e alguém
+    tentaria marcar um horário que já não existe. Só os ficheiros estáticos são
+    guardados; sem rede, aparece a página offline.
+    """
+
+    conteudo = render_to_string(
+        "pwa/service_worker.js",
+        {
+            "cache_version": _service_worker_version(),
+            "offline_url": reverse("offline"),
+            "precache_urls": [
+                static("css/public.css"),
+                static("img/icon-192.png"),
+                static("img/logo.png"),
+            ],
+        },
+    )
+
+    response = HttpResponse(conteudo, content_type="application/javascript")
+
+    # Sem isto, um browser com o service worker antigo em cache podia demorar a
+    # aceitar uma versão nova.
+    response["Cache-Control"] = "no-cache"
+
+    return response
+
+
+def _service_worker_version():
+    # A versão muda quando o CSS muda, o que faz o browser descartar a cache
+    # antiga em vez de servir estilos desatualizados.
+    caminho = Path(settings.BASE_DIR) / "static" / "css" / "public.css"
+
+    try:
+        return str(int(caminho.stat().st_mtime))
+    except OSError:
+        return "1"
+
+
+@require_GET
+def offline(request):
+    """Página mostrada quando não há rede."""
+
+    return render(request, "pwa/offline.html")

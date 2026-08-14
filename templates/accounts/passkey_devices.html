@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% load static i18n %}
+
+{% block title %}{% translate "Entrar com digital" %} | Priscila Arantes PA{% endblock %}
+{% block meta_robots %}noindex,nofollow{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-7">
+
+        <div class="mb-4">
+            <span class="luxury-eyebrow">{% translate "Segurança" %}</span>
+            <h1 class="h4 mt-2 mb-0">{% translate "Entrar com digital" %}</h1>
+        </div>
+
+        <div class="alert alert-info small">
+            <i class="bi bi-shield-lock me-1"></i>
+            {% translate "A sua digital nunca sai do aparelho. Este site guarda apenas uma chave pública, que serve para verificar assinaturas e não permite entrar em mais lado nenhum." %}
+        </div>
+
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-4">
+                <h2 class="h6 text-uppercase text-muted mb-3">
+                    {% translate "Registar este aparelho" %}
+                </h2>
+
+                {% csrf_token %}
+
+                {% if not host_matches %}
+                    <div class="alert alert-warning small mb-0">
+                        {% blocktranslate with dominio=canonical_host %}Abra o site em <strong>{{ dominio }}</strong> para registar um aparelho. Uma chave criada noutro endereço não funcionaria no principal.{% endblocktranslate %}
+                    </div>
+                {% else %}
+                    <div data-passkey-requires-support hidden>
+                        <div class="mb-3">
+                            <label for="device-name" class="form-label">
+                                {% translate "Nome do aparelho" %}
+                            </label>
+                            <input
+                                type="text"
+                                id="device-name"
+                                class="form-control"
+                                maxlength="80"
+                                placeholder="{% translate "Telemóvel pessoal" %}"
+                                data-passkey-name
+                            >
+                        </div>
+
+                        <button
+                            type="button"
+                            class="btn btn-primary"
+                            data-passkey-register
+                            data-options-url="{% url 'accounts:passkey_register_options' %}"
+                            data-verify-url="{% url 'accounts:passkey_register_verify' %}"
+                        >
+                            <i class="bi bi-fingerprint me-2" aria-hidden="true"></i>
+                            {% translate "Registar aparelho" %}
+                        </button>
+                    </div>
+
+                    <div class="alert alert-warning small mb-0" data-passkey-unsupported hidden>
+                        {% translate "Este aparelho ou navegador não suporta entrada por biometria. Continue a usar a palavra-passe." %}
+                    </div>
+                {% endif %}
+
+                <div class="alert alert-danger mt-3" data-passkey-error hidden></div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <h2 class="h6 text-uppercase text-muted mb-3">
+                    {% translate "Aparelhos registados" %}
+                </h2>
+
+                {% for credential in credentials %}
+                    <div class="passkey-device">
+                        <div>
+                            <span class="passkey-device-name">{{ credential.name }}</span>
+                            <small>
+                                {% translate "Registado em" %}
+                                {{ credential.created_at|date:"d/m/Y" }}
+                                {% if credential.last_used_at %}
+                                    · {% translate "última utilização" %}
+                                    {{ credential.last_used_at|date:"d/m/Y H:i" }}
+                                {% else %}
+                                    · {% translate "ainda não utilizado" %}
+                                {% endif %}
+                            </small>
+                        </div>
+
+                        <form method="post" action="{% url 'accounts:passkey_delete' credential.pk %}">
+                            {% csrf_token %}
+                            <button
+                                type="submit"
+                                class="btn btn-outline-danger btn-sm"
+                                onclick="return confirm('{% translate "Remover este aparelho?" %}');"
+                            >
+                                {% translate "Remover" %}
+                            </button>
+                        </form>
+                    </div>
+                {% empty %}
+                    <p class="text-muted mb-0">
+                        {% translate "Ainda não há aparelhos registados. A palavra-passe continua a funcionar normalmente." %}
+                    </p>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+    <script src="{% static 'js/passkeys.js' %}"></script>
+{% endblock %}

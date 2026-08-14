@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 
-from .models import User
+from .models import User, WebAuthnCredential
 
 
 @admin.register(User)
@@ -87,3 +87,49 @@ class UserAdmin(DjangoUserAdmin):
             },
         ),
     )
+
+
+@admin.register(WebAuthnCredential)
+class WebAuthnCredentialAdmin(admin.ModelAdmin):
+    # Só de leitura: uma credencial nasce da cerimónia com o aparelho e não
+    # pode ser escrita à mão. O que faz sentido daqui é ver quem tem o quê e
+    # revogar um aparelho perdido.
+
+    list_display = [
+        "name",
+        "user",
+        "created_at",
+        "last_used_at",
+        "sign_count",
+    ]
+
+    list_filter = [
+        "created_at",
+        "last_used_at",
+    ]
+
+    search_fields = [
+        "name",
+        "user__email",
+        "user__full_name",
+    ]
+
+    ordering = [
+        "-created_at",
+    ]
+
+    readonly_fields = [
+        "user",
+        "credential_id",
+        "public_key",
+        "sign_count",
+        "name",
+        "created_at",
+        "last_used_at",
+    ]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False

@@ -1,5 +1,13 @@
+import json
+
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponse, JsonResponse
+from django.urls import reverse
 from django.utils import timezone
+from django.views.generic import View
 from django.contrib.auth.views import LoginView, LogoutView
+
+from accounts import passkey_services
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView
 from appointments.mixins import InternalAreaRequiredMixin
@@ -147,3 +155,112 @@ class DashboardView(InternalAreaRequiredMixin, TemplateView):
         }
 
         return context
+
+
+class PasskeyDeviceListView(LoginRequiredMixin, TemplateView):
+    """Dispositivos registados para entrar com biometria."""
+
+    template_name = "accounts/passkey_devices.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context["credentials"] = self.request.user.webauthn_credentials.all()
+        context["canonical_host"] = passkey_services.get_rp_id()
+        context["host_matches"] = passkey_services.host_matches_canonical_domain(
+            self.request
+        )
+
+        return context
+
+
+class PasskeyRegisterOptionsView(LoginRequiredMixin, View):
+    def post(self, request):
+        if not passkey_services.host_matches_canonical_domain(request):
+            return JsonResponse(
+                {
+                    "error": (
+                        "Abra o site em "
+                        f"{passkey_services.get_rp_id()} para registar o dispositivo."
+                    )
+                },
+                status=400,
+            )
+
+        return HttpResponse(
+            passkey_services.build_registration_options(request, request.user),
+            content_type="application/json",
+        )
+
+
+class PasskeyRegisterVerifyView(LoginRequiredMixin, View):
+    def post(self, request):
+        try:
+            payload = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Pedido inválido."}, status=400)
+
+        result = passkey_services.complete_registration(
+            request=request,
+            user=request.user,
+            credential=payload.get("credential"),
+            device_name=payload.get("name", ""),
+        )
+
+        if not result.success:
+            return JsonResponse({"error": result.message}, status=400)
+
+        return JsonResponse({"message": result.message})
+
+
+class PasskeyAuthOptionsView(View):
+    # Sem login: é este o passo que antecede a autenticação.
+
+    def post(self, request):
+        return HttpResponse(
+            passkey_services.build_authentication_options(request),
+            content_type="application/json",
+        )
+
+
+class PasskeyAuthVerifyView(View):
+    def post(self, request):
+        try:
+            payload = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Pedido inválido."}, status=400)
+
+        result = passkey_services.complete_authentication(
+            request=request,
+            credential=payload.get("credential"),
+        )
+
+        if not result.success:
+            return JsonResponse({"error": result.message}, status=400)
+
+        login(
+            request,
+            result.user,
+            backend="django.contrib.auth.backends.ModelBackend",
+        )
+
+        destino = (
+            reverse("dashboard")
+            if result.user.has_internal_access
+            else reverse("appointments:customer_appointments")
+        )
+
+        return JsonResponse({"redirect_url": destino})
+
+
+class PasskeyDeleteView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        # Filtrado pelo utilizador: ninguém remove o dispositivo de outra pessoa.
+        removidos, _ = request.user.webauthn_credentials.filter(pk=pk).delete()
+
+        if removidos:
+            messages.success(request, "Dispositivo removido.")
+        else:
+            messages.error(request, "Dispositivo não encontrado.")
+
+        return redirect("accounts:passkey_devices")

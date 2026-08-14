@@ -9,7 +9,15 @@ from django.urls import include, path
 from accounts.views import DashboardView
 from appointments.models import Service, ServiceCategory
 from config.seo import build_home_structured_data
-from config.views import cookie_policy, privacy_policy, robots_txt, sitemap_xml
+from config.views import (
+    cookie_policy,
+    manifest_webmanifest,
+    offline,
+    privacy_policy,
+    robots_txt,
+    service_worker,
+    sitemap_xml,
+)
 from notifications.models import InstagramPost
 
 
@@ -53,6 +61,11 @@ urlpatterns = [
     path("sitemap.xml", sitemap_xml, name="sitemap_xml"),
     path("admin/", admin.site.urls),
     path("i18n/", include("django.conf.urls.i18n")),
+    # Manifesto e service worker vivem na raiz: o âmbito de um service
+    # worker é a pasta onde é servido, e a partir de /static/ não cobriria
+    # o site todo.
+    path("manifest.webmanifest", manifest_webmanifest, name="manifest"),
+    path("sw.js", service_worker, name="service_worker"),
 ]
 
 # prefix_default_language=False mantém o português na raiz (priarantes.com/) e
@@ -60,6 +73,7 @@ urlpatterns = [
 urlpatterns += i18n_patterns(
     path("politica-de-privacidade/", privacy_policy, name="privacy_policy"),
     path("politica-de-cookies/", cookie_policy, name="cookie_policy"),
+    path("offline/", offline, name="offline"),
     path("", home_view, name="home"),
     path("", include("accounts.urls")),
     path("", include("appointments.urls")),
