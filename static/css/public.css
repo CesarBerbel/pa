@@ -5113,3 +5113,26 @@ textarea.form-control,
     text-transform: uppercase;
     white-space: nowrap;
 }
+
+/* =========================================================================
+   Agenda pública: o que existe só no telemóvel e o que existe só no ecrã largo
+
+   No telemóvel a escolha é toda por lista — serviço e dia — e no fim ficam só
+   os cartões do dia escolhido. A faixa de dias e o catálogo de serviços são
+   formas de navegar por aquilo que a lista já resolve, e num ecrã estreito
+   afastam os horários para longe.
+   ========================================================================= */
+
+[data-agenda-mobile-only] {
+    display: none;
+}
+
+@media (max-width: 767px) {
+    [data-agenda-desktop-only] {
+        display: none;
+    }
+
+    [data-agenda-mobile-only] {
+        display: block;
+    }
+}

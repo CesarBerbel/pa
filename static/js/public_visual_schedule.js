@@ -3,6 +3,9 @@ $(document).ready(function () {
 
     const serviceInput = $("#service");
     const dateInput = $("#date");
+    // No telemóvel a data escolhe-se por lista, mas quem manda continua a ser
+    // #date: um único estado, dois controlos a escrever nele.
+    const daySelect = $("#day-select");
     const filterForm = $("#agenda-filter-form");
     const filterPanel = $(".app-agenda-filter");
     const resultsPanel = $(".app-agenda-results");
@@ -163,6 +166,41 @@ $(document).ready(function () {
                 dayLink.addClass("is-active");
             }
         });
+
+        updateDaySelect(selectedDate);
+    }
+
+    function formatarDia(valor) {
+        // "segunda-feira, 18 de agosto"
+        const partes = valor.split("-");
+        const data = new Date(partes[0], partes[1] - 1, partes[2]);
+
+        return data.toLocaleDateString(document.documentElement.lang || "pt-PT", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+        });
+    }
+
+    function updateDaySelect(selectedDate) {
+        if (!daySelect.length || daySelect.val() === selectedDate) {
+            return;
+        }
+
+        // A lista só traz os dias em que a clínica abre. Se a data vier de
+        // outro sítio — do campo de data ou de um link — a opção pode não
+        // existir, e a lista ficaria em branco a mostrar um dia diferente
+        // daquele que a página está a apresentar.
+        if (!daySelect.find(`option[value="${selectedDate}"]`).length) {
+            daySelect.append(
+                $("<option>", {
+                    value: selectedDate,
+                    text: formatarDia(selectedDate),
+                })
+            );
+        }
+
+        daySelect.val(selectedDate);
     }
 
     function updateServiceSummary() {
@@ -226,6 +264,11 @@ $(document).ready(function () {
 
     serviceInput.on("change", loadAvailableSlots);
     dateInput.on("change", loadAvailableSlots);
+
+    daySelect.on("change", function () {
+        dateInput.val(daySelect.val());
+        loadAvailableSlots();
+    });
 
     $(".app-week-day").on("click", function (event) {
         // Load selected week day without full page reload.

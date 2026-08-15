@@ -56,7 +56,7 @@
                 </div>
 
                 <div class="mb-4">
-                    <label for="date" class="form-label">
+                    <label for="date" class="form-label" data-agenda-desktop-only>
                         {% translate "Data" %}
                     </label>
 
@@ -69,7 +69,30 @@
                         value="{{ selected_date|date:'Y-m-d' }}"
                         min="{{ today|date:'Y-m-d' }}"
                         class="form-control form-control-lg"
+                        data-agenda-desktop-only
                     >
+
+                    {# No telemóvel não há faixa de dias, por isso a data #}
+                    {# escolhe-se aqui. Continua a escrever no campo acima, #}
+                    {# que é quem manda: assim não há dois estados a divergir. #}
+                    <label for="day-select" class="form-label" data-agenda-mobile-only>
+                        {% translate "Dia" %}
+                    </label>
+
+                    <select
+                        id="day-select"
+                        class="form-select form-select-lg"
+                        data-agenda-mobile-only
+                    >
+                        {% for dia in day_options %}
+                            <option
+                                value="{{ dia|date:'Y-m-d' }}"
+                                {% if dia == selected_date %}selected{% endif %}
+                            >
+                                {{ dia|date:"l, j \d\e F"|capfirst }}
+                            </option>
+                        {% endfor %}
+                    </select>
                 </div>
 
             </form>
@@ -88,7 +111,7 @@
         {# depois dos horários, senão obriga a percorrer o acordeão inteiro #}
         {# antes de chegar ao que a página serve para fazer. #}
         {% if service_categories %}
-            <section class="app-agenda-feed">
+            <section class="app-agenda-feed" data-agenda-desktop-only>
                 <div class="card border-0 shadow-sm agenda-service-feed-card">
                     <div class="card-body">
                         <span class="luxury-eyebrow">{% translate "Feed de serviços" %}</span>
@@ -162,7 +185,7 @@
                 </div>
 
                 {% if week_days %}
-                    <div class="app-week-strip mb-4">
+                    <div class="app-week-strip mb-4" data-agenda-desktop-only>
                         {% for day in week_days %}
                             <a
                                 href="{% url 'appointments:public_visual_schedule' %}?service={{ selected_service.pk }}&date={{ day.date|date:'Y-m-d' }}"

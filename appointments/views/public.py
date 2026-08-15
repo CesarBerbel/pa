@@ -14,7 +14,7 @@ from appointments.forms import (
     PublicAppointmentLookupForm,
     PublicCancelForm,
 )
-from appointments.models import Appointment, Service, ServiceCategory
+from appointments.models import Appointment, BusinessHour, Service, ServiceCategory
 from appointments.customer_services import find_or_create_customer
 from appointments.lookup_services import PublicAppointmentLookupService
 from appointments.appointment_services import AppointmentService
@@ -436,6 +436,46 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
 
     days_in_strip = 7
 
+    # No telemóvel não há faixa de dias: a escolha passa por uma lista. Chega
+    # para três a quatro semanas, que é o horizonte de quem marca podologia.
+    days_in_selector = 21
+    selector_search_window = 60
+
+    def get_day_options(self, selected_date):
+        """Dias oferecidos na lista de datas do telemóvel.
+
+        Só entram dias em que a clínica abre. Uma lista com domingos que depois
+        aparecem sempre esgotados faria a cliente pensar que não há vaga
+        nenhuma.
+        """
+
+        dias_abertos = set(
+            BusinessHour.objects.filter(is_active=True).values_list(
+                "weekday", flat=True
+            )
+        )
+
+        today = timezone.localdate()
+        dias = []
+
+        for index in range(self.selector_search_window):
+            if len(dias) >= self.days_in_selector:
+                break
+
+            dia = today + timedelta(days=index)
+
+            if dia.weekday() in dias_abertos:
+                dias.append(dia)
+
+        # A data escolhida tem de estar na lista, mesmo que seja um dia
+        # fechado ou esteja além do horizonte: sem isso a lista mostraria outro
+        # dia diferente do que a página está a apresentar.
+        if selected_date not in dias:
+            dias.append(selected_date)
+            dias.sort()
+
+        return dias
+
     def get_week_days(self, selected_date, selected_service=None):
         """Faixa dos próximos dias, a começar em hoje.
 
@@ -586,6 +626,7 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
         context["slots"] = slots
         context["availability_status"] = availability_status
         context["week_days"] = self.get_week_days(selected_date, selected_service)
+        context["day_options"] = self.get_day_options(selected_date)
         context["today"] = timezone.localdate()
 
         return context

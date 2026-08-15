@@ -140,7 +140,7 @@ msgstr "Your fingerprint never leaves your device. This site only stores a publi
 msgid "Abra o site em <strong>{{ dominio }}</strong> para registar um aparelho. Uma chave criada noutro endereço não funcionaria no principal."
 msgstr "Open the site at <strong>{{ dominio }}</strong> to register a device. A key created at another address would not work on the main one."
 
-#: templates/base.html:102
+#: templates/base.html:115
 msgid "Abrir menu"
 msgstr "Open menu"
 
@@ -148,8 +148,8 @@ msgstr "Open menu"
 msgid "Abrir no Google Maps"
 msgstr "Open in Google Maps"
 
-#: templates/base.html:353
-#: templates/base.html:432
+#: templates/base.html:416
+#: templates/base.html:495
 msgid "Aceitar todos"
 msgstr "Accept all"
 
@@ -165,7 +165,7 @@ msgstr "Online schedule"
 msgid "Agenda simples e prática"
 msgstr "A simple, practical schedule"
 
-#: templates/base.html:273
+#: templates/base.html:336
 #: templates/home.html:143
 #: templates/home.html:171
 msgid "Agendar horário"
@@ -179,7 +179,7 @@ msgstr "No devices registered yet. Your password still works as usual."
 msgid "Ainda não tenho conta"
 msgstr "I don't have an account yet"
 
-#: templates/base.html:414
+#: templates/base.html:477
 msgid "Ajudam a compreender a utilização do site, se forem configurados no futuro."
 msgstr "Help us understand how the site is used, if enabled in the future."
 
@@ -187,7 +187,7 @@ msgstr "Help us understand how the site is used, if enabled in the future."
 msgid "Alguns fornecedores tecnológicos podem tratar informação fora do Espaço Económico Europeu. Quando tal ocorrer, devem ser adotadas garantias adequadas previstas no RGPD, como decisões de adequação, cláusulas contratuais-tipo ou mecanismos equivalentes."
 msgstr "Some technology providers may process information outside the European Economic Area. Where that happens, appropriate safeguards under the GDPR must be applied, such as adequacy decisions, standard contractual clauses or equivalent mechanisms."
 
-#: templates/base.html:230
+#: templates/base.html:293
 msgid "Almoço: 13:00 — 14:00"
 msgstr "Lunch: 1:00 pm — 2:00 pm"
 
@@ -195,7 +195,7 @@ msgstr "Lunch: 1:00 pm — 2:00 pm"
 msgid "Ambiente profissional"
 msgstr "Professional setting"
 
-#: templates/base.html:413
+#: templates/base.html:476
 #: templates/legal/cookie_policy.html:62
 msgid "Analíticos"
 msgstr "Analytics"
@@ -232,7 +232,7 @@ msgstr "Attentive, personal and professional care"
 msgid "Atendimento em domicílio"
 msgstr "Home visits"
 
-#: templates/base.html:268
+#: templates/base.html:331
 msgid "Atendimento em domicílio disponível mediante consulta."
 msgstr "Home visits available on request."
 
@@ -261,7 +261,7 @@ msgstr "Enable third-party features that improve the experience, such as the emb
 msgid "Av. Sá da Bandeira, n.º 33 — Loja 108, 3000-351 Coimbra"
 msgstr "Av. Sá da Bandeira, no. 33 — Unit 108, 3000-351 Coimbra"
 
-#: templates/base.html:338
+#: templates/base.html:401
 msgid "Aviso de cookies"
 msgstr "Cookie notice"
 
@@ -312,7 +312,7 @@ msgstr "Categories and available treatments"
 msgid "Categorias e serviços"
 msgstr "Categories and services"
 
-#: templates/base.html:376
+#: templates/base.html:439
 msgid "Centro de preferências"
 msgstr "Preference centre"
 
@@ -382,8 +382,8 @@ msgstr "Check the available times, choose the category and service you want, and
 msgid "Consulte serviços e marque online o seu horário com Priscila Arantes PA em Coimbra."
 msgstr "Browse services and book your appointment online with Priscila Arantes PA in Coimbra."
 
-#: templates/base.html:126
-#: templates/base.html:259
+#: templates/base.html:182
+#: templates/base.html:322
 msgid "Contacto"
 msgstr "Contact"
 
@@ -417,7 +417,7 @@ msgstr "Professional care, individual attention and a commitment to the wellbein
 msgid "Cuidado profissional, marcação online e atendimento personalizado em podologia, estética e enfermagem em Coimbra."
 msgstr "Professional care, online booking and personalised treatment in podiatry, beauty and nursing in Coimbra."
 
-#: templates/base.html:224
+#: templates/base.html:287
 msgid "Cuidado, bem-estar e profissionalismo em podologia."
 msgstr "Care, wellbeing and professionalism in podiatry."
 
@@ -456,12 +456,16 @@ msgstr "Date:"
 msgid "Deseja criar uma conta?"
 msgstr "Would you like to create an account?"
 
-#: templates/appointments/public_visual_schedule.html:145
+#: templates/appointments/public_visual_schedule.html:79
+msgid "Dia"
+msgstr "Day"
+
+#: templates/appointments/public_visual_schedule.html:174
 msgid "Disponibilidade"
 msgstr "Availability"
 
-#: templates/appointments/public_visual_schedule.html:183
-#: templates/appointments/public_visual_schedule.html:200
+#: templates/appointments/public_visual_schedule.html:212
+#: templates/appointments/public_visual_schedule.html:229
 msgid "Disponível"
 msgstr "Available"
 
@@ -475,7 +479,7 @@ msgstr "Available by prior arrangement"
 msgid "Em breve"
 msgstr "Coming soon"
 
-#: templates/base.html:267
+#: templates/base.html:330
 msgid "Email:"
 msgstr "Email:"
 
@@ -490,7 +494,7 @@ msgstr "Sign in"
 #: templates/accounts/login.html:48
 #: templates/accounts/passkey_devices.html:5
 #: templates/accounts/passkey_devices.html:14
-#: templates/base.html:183
+#: templates/base.html:245
 msgid "Entrar com digital"
 msgstr "Sign in with fingerprint"
 
@@ -514,11 +518,11 @@ msgstr "Pick a service, choose a date and book the best time."
 msgid "Escolha o seu horário de forma simples"
 msgstr "Choose your time slot the easy way"
 
-#: templates/appointments/public_visual_schedule.html:171
+#: templates/appointments/public_visual_schedule.html:200
 msgid "Esgotado"
 msgstr "Fully booked"
 
-#: templates/base.html:398
+#: templates/base.html:461
 msgid "Essenciais para sessão, segurança, formulários e gravação da escolha."
 msgstr "Essential for sessions, security, forms and storing your choice."
 
@@ -562,11 +566,11 @@ msgstr "This booking request will be reviewed and confirmed by the practitioner 
 msgid "Este site usa cookies necessários para funcionamento, segurança e gestão do consentimento. Cookies opcionais apenas devem ser ativados quando o utilizador aceitar a respetiva categoria."
 msgstr "This site uses necessary cookies for functionality, security and consent management. Optional cookies are only enabled once you accept the corresponding category."
 
-#: templates/base.html:344
+#: templates/base.html:407
 msgid "Este site utiliza cookies"
 msgstr "This site uses cookies"
 
-#: templates/base.html:446
+#: templates/base.html:509
 msgid "Falar pelo WhatsApp"
 msgstr "Chat on WhatsApp"
 
@@ -581,11 +585,11 @@ msgstr "Make a new booking"
 msgid "Fechar aviso"
 msgstr "Dismiss notice"
 
-#: templates/base.html:383
+#: templates/base.html:446
 msgid "Fechar preferências de cookies"
 msgstr "Close cookie preferences"
 
-#: templates/appointments/public_visual_schedule.html:88
+#: templates/appointments/public_visual_schedule.html:117
 msgid "Feed de serviços"
 msgstr "Service list"
 
@@ -605,7 +609,7 @@ msgstr "Focused on comfort and wellbeing"
 msgid "Fotos e novidades direto do Instagram."
 msgstr "Photos and updates straight from Instagram."
 
-#: templates/base.html:405
+#: templates/base.html:468
 #: templates/legal/cookie_policy.html:55
 msgid "Funcionais"
 msgstr "Functional"
@@ -614,10 +618,10 @@ msgstr "Functional"
 msgid "Galeria Avenida"
 msgstr "Galeria Avenida"
 
-#: templates/base.html:249
-#: templates/base.html:298
-#: templates/base.html:327
-#: templates/base.html:377
+#: templates/base.html:312
+#: templates/base.html:361
+#: templates/base.html:390
+#: templates/base.html:440
 #: templates/home.html:76
 msgid "Gerir cookies"
 msgstr "Manage cookies"
@@ -626,7 +630,7 @@ msgstr "Manage cookies"
 msgid "Gerir preferências de cookies"
 msgstr "Manage cookie preferences"
 
-#: templates/base.html:429
+#: templates/base.html:492
 msgid "Guardar preferências"
 msgstr "Save preferences"
 
@@ -643,7 +647,7 @@ msgstr "Save your details for future bookings."
 msgid "Horário"
 msgstr "Time"
 
-#: templates/base.html:228
+#: templates/base.html:291
 msgid "Horário de funcionamento"
 msgstr "Opening hours"
 
@@ -651,7 +655,7 @@ msgstr "Opening hours"
 msgid "Horário:"
 msgstr "Time:"
 
-#: templates/base.html:147
+#: templates/base.html:206
 msgid "Idioma"
 msgstr "Language"
 
@@ -663,13 +667,13 @@ msgstr "Enter your booking code."
 msgid "Indique o motivo do cancelamento."
 msgstr "Enter the reason for cancelling."
 
-#: templates/base.html:124
-#: templates/base.html:244
+#: templates/base.html:180
+#: templates/base.html:307
 #: templates/home.html:383
 msgid "Instagram"
 msgstr "Instagram"
 
-#: templates/base.html:239
+#: templates/base.html:302
 msgid "Início"
 msgstr "Home"
 
@@ -677,7 +681,7 @@ msgstr "Home"
 msgid "Já tenho conta"
 msgstr "I already have an account"
 
-#: templates/base.html:348
+#: templates/base.html:411
 msgid "Ler Política de Cookies"
 msgstr "Read the Cookie Policy"
 
@@ -685,7 +689,7 @@ msgstr "Read the Cookie Policy"
 msgid "Li e aceito a <a href=\"{{ privacidade }}\" target=\"_blank\" rel=\"noopener noreferrer\">Política de Privacidade</a> e a <a href=\"{{ cookies }}\" target=\"_blank\" rel=\"noopener noreferrer\">Política de Cookies</a>."
 msgstr "I have read and accept the <a href=\"{{ privacidade }}\" target=\"_blank\" rel=\"noopener noreferrer\">Privacy Policy</a> and the <a href=\"{{ cookies }}\" target=\"_blank\" rel=\"noopener noreferrer\">Cookie Policy</a>."
 
-#: templates/base.html:237
+#: templates/base.html:300
 msgid "Links rápidos"
 msgstr "Quick links"
 
@@ -697,18 +701,18 @@ msgstr "Sign in"
 msgid "Manicure"
 msgstr "Manicure"
 
-#: templates/base.html:293
+#: templates/base.html:356
 #: templates/home.html:71
 msgid "Mapa bloqueado por preferências de cookies"
 msgstr "Map blocked by your cookie preferences"
 
-#: templates/base.html:307
+#: templates/base.html:370
 #: templates/home.html:85
 msgid "Mapa com a localização do salão DIVAH - Av. Sá da Bandeira 33, Loja 108, Coimbra"
 msgstr "Map showing the DIVAH salon - Av. Sá da Bandeira 33, Unit 108, Coimbra"
 
-#: templates/appointments/public_visual_schedule.html:185
-#: templates/appointments/public_visual_schedule.html:204
+#: templates/appointments/public_visual_schedule.html:214
+#: templates/appointments/public_visual_schedule.html:233
 msgid "Marcar"
 msgstr "Book"
 
@@ -717,8 +721,8 @@ msgstr "Book"
 msgid "Marcar horário"
 msgstr "Book now"
 
-#: templates/base.html:120
-#: templates/base.html:240
+#: templates/base.html:176
+#: templates/base.html:303
 msgid "Marcação"
 msgstr "Booking"
 
@@ -744,13 +748,13 @@ msgstr "Booking received"
 msgid "Marcações em breve"
 msgstr "Bookings opening soon"
 
-#: templates/base.html:421
+#: templates/base.html:484
 #: templates/legal/cookie_policy.html:69
 msgid "Marketing"
 msgstr "Marketing"
 
-#: templates/base.html:129
-#: templates/base.html:253
+#: templates/base.html:185
+#: templates/base.html:316
 msgid "Minhas marcações"
 msgstr "My bookings"
 
@@ -758,11 +762,11 @@ msgstr "My bookings"
 msgid "Motivo do cancelamento"
 msgstr "Reason for cancelling"
 
-#: templates/base.html:171
+#: templates/base.html:230
 msgid "Mudar"
 msgstr "Change"
 
-#: templates/base.html:397
+#: templates/base.html:460
 #: templates/legal/cookie_policy.html:48
 msgid "Necessários"
 msgstr "Necessary"
@@ -776,7 +780,7 @@ msgid "Nenhum serviço ativo nesta categoria."
 msgstr "No active services in this category."
 
 #: templates/appointments/public_service_feed.html:153
-#: templates/appointments/public_visual_schedule.html:258
+#: templates/appointments/public_visual_schedule.html:287
 msgid "Nenhum serviço ativo registado"
 msgstr "No active services registered"
 
@@ -878,7 +882,7 @@ msgstr "To exercise these rights, contact <a href=\"mailto:atendimento@priarante
 msgid "Para informação sobre tratamento de dados pessoais, finalidades, conservação e direitos dos titulares, consulte a <a href=\"{{ privacidade }}\">Política de Privacidade</a>."
 msgstr "For information on the processing of personal data, purposes, retention and data subject rights, see the <a href=\"{{ privacidade }}\">Privacy Policy</a>."
 
-#: templates/base.html:295
+#: templates/base.html:358
 #: templates/home.html:73
 msgid "Para ver o mapa incorporado do Google, aceite cookies funcionais. A marcação online continua disponível mesmo sem ativar esta opção."
 msgstr "To see the embedded Google map, accept functional cookies. Online booking still works without enabling this option."
@@ -891,7 +895,7 @@ msgstr "Pedicure"
 msgid "Pedicure simples, corte de unhas dos pés, verniz gel e hidratação profunda."
 msgstr "Basic pedicure, toenail trimming, gel polish and deep hydration."
 
-#: templates/base.html:422
+#: templates/base.html:485
 msgid "Permitem medição de campanhas e integrações publicitárias, se forem configuradas."
 msgstr "Allow campaign measurement and advertising integrations, if configured."
 
@@ -899,11 +903,11 @@ msgstr "Allow campaign measurement and advertising integrations, if configured."
 msgid "Permitem o funcionamento essencial do site, incluindo sessão, segurança CSRF, envio de formulários e gravação da preferência de consentimento."
 msgstr "Enable the essential functioning of the site, including sessions, CSRF protection, form submission and storing your consent preference."
 
-#: templates/base.html:406
+#: templates/base.html:469
 msgid "Permitem recursos como o mapa incorporado de localização."
 msgstr "Enable features such as the embedded location map."
 
-#: templates/base.html:359
+#: templates/base.html:422
 msgid "Personalizar"
 msgstr "Customise"
 
@@ -911,7 +915,7 @@ msgstr "Customise"
 msgid "Pode apagar cookies diretamente nas definições do navegador. O caminho exato depende do navegador utilizado, mas normalmente está disponível nas áreas de privacidade, segurança, histórico ou dados de navegação."
 msgstr "You can delete cookies directly in your browser settings. The exact path depends on the browser, but it is usually under privacy, security, history or browsing data."
 
-#: templates/base.html:390
+#: templates/base.html:453
 msgid "Pode ativar ou desativar categorias opcionais. Os cookies necessários mantêm-se sempre ativos porque são indispensáveis para segurança, formulários e funcionamento do site."
 msgstr "You can enable or disable optional categories. Necessary cookies always stay on because they are essential for security, forms and running the site."
 
@@ -940,14 +944,14 @@ msgstr "Podiatry • Beauty • Nursing"
 msgid "Podologia, manicure, pedicure e enfermagem estão organizadas por categoria para facilitar a escolha do serviço e o agendamento online."
 msgstr "Podiatry, manicure, pedicure and nursing are organised by category to make choosing a service and booking online easier."
 
-#: templates/base.html:247
-#: templates/base.html:326
+#: templates/base.html:310
+#: templates/base.html:389
 #: templates/legal/cookie_policy.html:17
 msgid "Política de Cookies"
 msgstr "Cookie Policy"
 
-#: templates/base.html:246
-#: templates/base.html:325
+#: templates/base.html:309
+#: templates/base.html:388
 #: templates/legal/privacy_policy.html:17
 msgid "Política de Privacidade"
 msgstr "Privacy Policy"
@@ -962,11 +966,11 @@ msgstr "Browsing preferences"
 msgid "Priscila Arantes PA | Podologia, estética e enfermagem em Coimbra"
 msgstr "Priscila Arantes PA | Podiatry, beauty and nursing in Coimbra"
 
-#: templates/base.html:322
+#: templates/base.html:385
 msgid "Priscila Arantes. Todos os direitos reservados."
 msgstr "Priscila Arantes. All rights reserved."
 
-#: templates/base.html:343
+#: templates/base.html:406
 msgid "Privacidade e cookies"
 msgstr "Privacy and cookies"
 
@@ -998,12 +1002,12 @@ msgstr "Register this device"
 msgid "Registe categorias e serviços ativos para exibir o feed público."
 msgstr "Register active categories and services to show the public list."
 
-#: templates/appointments/public_visual_schedule.html:259
+#: templates/appointments/public_visual_schedule.html:288
 msgid "Registe uma categoria e pelo menos um serviço ativo para exibir horários disponíveis."
 msgstr "Register a category and at least one active service to show available times."
 
-#: templates/base.html:356
-#: templates/base.html:435
+#: templates/base.html:419
+#: templates/base.html:498
 msgid "Rejeitar opcionais"
 msgstr "Reject optional"
 
@@ -1015,8 +1019,8 @@ msgstr "Remove"
 msgid "Remover este aparelho?"
 msgstr "Remove this device?"
 
-#: templates/appointments/public_visual_schedule.html:184
-#: templates/appointments/public_visual_schedule.html:217
+#: templates/appointments/public_visual_schedule.html:213
+#: templates/appointments/public_visual_schedule.html:246
 msgid "Reservado"
 msgstr "Booked"
 
@@ -1024,7 +1028,7 @@ msgstr "Booked"
 msgid "Resumo da marcação"
 msgstr "Booking summary"
 
-#: templates/base.html:189
+#: templates/base.html:252
 msgid "Sair"
 msgstr "Log out"
 
@@ -1057,7 +1061,7 @@ msgstr "Where applicable, these third parties must process the data in accordanc
 msgid "Serviço"
 msgstr "Service"
 
-#: templates/appointments/public_visual_schedule.html:79
+#: templates/appointments/public_visual_schedule.html:102
 msgid "Serviço selecionado"
 msgstr "Selected service"
 
@@ -1065,8 +1069,8 @@ msgstr "Selected service"
 msgid "Serviço:"
 msgstr "Service:"
 
-#: templates/base.html:122
-#: templates/base.html:242
+#: templates/base.html:178
+#: templates/base.html:305
 #: templates/home.html:284
 msgid "Serviços"
 msgstr "Services"
@@ -1083,8 +1087,8 @@ msgstr "Yes"
 msgid "Sob consulta"
 msgstr "On request"
 
-#: templates/base.html:121
-#: templates/base.html:241
+#: templates/base.html:177
+#: templates/base.html:304
 msgid "Sobre"
 msgstr "About"
 
@@ -1108,7 +1112,7 @@ msgstr "Try again"
 msgid "Tentar outro código"
 msgstr "Try another code"
 
-#: templates/base.html:229
+#: templates/base.html:292
 msgid "Todos os dias: 08:00 — 20:00"
 msgstr "Every day: 8:00 am — 8:00 pm"
 
@@ -1124,7 +1128,7 @@ msgstr "Dressing changes, medication administration for older adults and vital s
 msgid "Unha em gel, manicure simples, cutícula russa e verniz gel mãos."
 msgstr "Gel nails, basic manicure, Russian cuticle work and gel polish for hands."
 
-#: templates/base.html:346
+#: templates/base.html:409
 msgid "Usamos cookies necessários para funcionamento e segurança. Com a sua autorização, também podemos ativar recursos funcionais, analíticos e de marketing. Pode aceitar, rejeitar ou personalizar as suas preferências."
 msgstr "We use necessary cookies for functionality and security. With your permission, we can also enable functional, analytics and marketing features. You can accept, reject or customise your preferences."
 
@@ -1145,11 +1149,11 @@ msgstr "View services"
 msgid "Voltar para agenda"
 msgstr "Back to the schedule"
 
-#: templates/base.html:283
+#: templates/base.html:346
 msgid "WhatsApp"
 msgstr "WhatsApp"
 
-#: templates/base.html:262
+#: templates/base.html:325
 msgid "WhatsApp:"
 msgstr "WhatsApp:"
 
@@ -1296,7 +1300,7 @@ msgid "telefone;"
 msgstr "phone number;"
 
 #: templates/accounts/customer_signup.html:16
-#: templates/base.html:194
+#: templates/base.html:257
 msgid "Área do cliente"
 msgstr "Client area"
 

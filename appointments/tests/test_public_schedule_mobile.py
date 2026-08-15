@@ -187,3 +187,143 @@ class PublicScheduleStylesheetTests(TestCase):
             sem_comentarios.count("{"),
             sem_comentarios.count("}"),
         )
+
+
+class MobileDaySelectorTests(TestCase):
+    """No telemóvel a data escolhe-se por lista, não pela faixa de dias."""
+
+    def setUp(self):
+        self.service = create_test_service(duration_minutes=60)
+        self.hoje = timezone.localdate()
+
+    def pagina(self, **params):
+        return self.client.get(reverse("appointments:public_visual_schedule"), params)
+
+    def opcoes(self, response):
+        return list(response.context["day_options"])
+
+    def test_the_selector_offers_the_coming_days(self):
+        opcoes = self.opcoes(self.pagina())
+
+        self.assertGreater(len(opcoes), 7)
+        self.assertEqual(opcoes[0], self.hoje)
+        self.assertEqual(opcoes, sorted(opcoes))
+
+    def test_past_days_are_never_offered(self):
+        for dia in self.opcoes(self.pagina()):
+            self.assertGreaterEqual(dia, self.hoje)
+
+    def test_closed_weekdays_are_left_out(self):
+        # Uma lista com dias que aparecem sempre esgotados faria a cliente
+        # pensar que não há vaga nenhuma.
+        fechado = (self.hoje.weekday() + 2) % 7
+        ensure_test_business_hour(weekday=fechado, is_active=False)
+
+        for dia in self.opcoes(self.pagina()):
+            if dia == self.hoje:
+                continue
+
+            self.assertNotEqual(dia.weekday(), fechado)
+
+    def test_the_chosen_day_is_always_in_the_list(self):
+        # Senão a lista mostraria um dia diferente do que a página apresenta.
+        fechado = (self.hoje.weekday() + 2) % 7
+        ensure_test_business_hour(weekday=fechado, is_active=False)
+
+        alvo = self.hoje + timedelta(days=1)
+        while alvo.weekday() != fechado:
+            alvo += timedelta(days=1)
+
+        opcoes = self.opcoes(self.pagina(date=alvo.strftime("%Y-%m-%d")))
+
+        self.assertIn(alvo, opcoes)
+        self.assertEqual(opcoes, sorted(opcoes))
+
+    def test_a_distant_day_is_added_to_the_list(self):
+        distante = self.hoje + timedelta(days=200)
+
+        opcoes = self.opcoes(self.pagina(date=distante.strftime("%Y-%m-%d")))
+
+        self.assertIn(distante, opcoes)
+
+    def test_the_selector_marks_the_chosen_day(self):
+        alvo = self.hoje + timedelta(days=3)
+
+        html = self.pagina(date=alvo.strftime("%Y-%m-%d")).content.decode()
+        lista = re.search(r'<select\s+id="day-select".*?</select>', html, re.S).group(0)
+
+        escolhida = re.search(r'value="([^"]+)"[^>]*selected', lista)
+
+        self.assertIsNotNone(escolhida)
+        self.assertEqual(escolhida.group(1), alvo.strftime("%Y-%m-%d"))
+
+    def test_the_selector_never_submits_its_own_date(self):
+        # Sem name, a lista é só um controlo que escreve em #date. Com name,
+        # passariam duas datas no pedido e ganhava a última.
+        html = self.pagina().content.decode()
+        lista = re.search(r'<select\s+id="day-select"[^>]*>', html, re.S).group(0)
+
+        self.assertNotIn("name=", lista)
+
+    def test_the_date_field_is_still_the_one_that_counts(self):
+        html = self.pagina().content.decode()
+
+        self.assertIn('id="date"', html)
+        self.assertIn('name="date"', html)
+
+
+class MobileAgendaVisibilityTests(TestCase):
+    """O que desaparece no telemóvel, resolvido pela cascata e não pelo texto."""
+
+    TELEMOVEL = 390
+    COMPUTADOR = 1280
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.folha = Stylesheet(CSS.read_text(encoding="utf-8"))
+
+    def setUp(self):
+        self.service = create_test_service(duration_minutes=60)
+
+    def test_browsing_aids_are_hidden_on_a_phone(self):
+        self.assertEqual(
+            self.folha.resolve("[data-agenda-desktop-only]", "display", self.TELEMOVEL),
+            "none",
+        )
+
+    def test_browsing_aids_stay_on_a_computer(self):
+        self.assertNotEqual(
+            self.folha.resolve(
+                "[data-agenda-desktop-only]", "display", self.COMPUTADOR
+            ),
+            "none",
+        )
+
+    def test_the_day_list_only_exists_on_a_phone(self):
+        self.assertEqual(
+            self.folha.resolve("[data-agenda-mobile-only]", "display", self.COMPUTADOR),
+            "none",
+        )
+        self.assertEqual(
+            self.folha.resolve("[data-agenda-mobile-only]", "display", self.TELEMOVEL),
+            "block",
+        )
+
+    def test_the_week_strip_and_the_catalog_carry_the_mark(self):
+        html = self.client.get(
+            reverse("appointments:public_visual_schedule")
+        ).content.decode()
+
+        faixa = re.search(r'<div class="app-week-strip[^>]*>', html).group(0)
+        catalogo = re.search(r'<section class="app-agenda-feed[^>]*>', html).group(0)
+
+        self.assertIn("data-agenda-desktop-only", faixa)
+        self.assertIn("data-agenda-desktop-only", catalogo)
+
+    def test_the_slot_cards_are_never_hidden(self):
+        # É o que sobra no telemóvel: esconder isto esvaziava a página.
+        for largura in [self.TELEMOVEL, self.COMPUTADOR]:
+            self.assertNotEqual(
+                self.folha.resolve(".app-slots-grid", "display", largura), "none"
+            )
