@@ -858,6 +858,20 @@ class Appointment(models.Model):
     cancellation_reason = models.TextField(blank=True)
     cancelled_at = models.DateTimeField(blank=True, null=True)
 
+    # Um encaixe é uma marcação que a profissional colocou fora do horário de
+    # funcionamento ou por cima de um bloqueio. Fica gravado, e não apenas
+    # decidido no momento em que se cria: sem isto, confirmar ou concluir a
+    # marcação mais tarde voltaria a passar pela validação do horário e falharia
+    # numa marcação que existe de forma legítima.
+    outside_schedule = models.BooleanField(
+        default=False,
+        verbose_name="Encaixe fora do horário",
+        help_text=(
+            "Marcação colocada fora do horário de funcionamento ou sobre um "
+            "bloqueio, a partir da área interna."
+        ),
+    )
+
     reminder_sent_at = models.DateTimeField(
         blank=True,
         null=True,

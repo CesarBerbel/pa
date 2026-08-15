@@ -355,7 +355,9 @@ class PublicAppointmentFlowTests(AppointmentTestSetupMixin, TestCase):
             },
         )
 
-        slots = {slot["value"]: slot["is_available"] for slot in response.context["slots"]}
+        slots = {
+            slot["value"]: slot["is_available"] for slot in response.context["slots"]
+        }
 
         self.assertEqual(response.status_code, 200)
         self.assertIn("10:00", slots)
@@ -1853,7 +1855,9 @@ class PublicVisualScheduleAjaxTests(AppointmentTestSetupMixin, TestCase):
             },
         )
 
-        slots = {slot["value"]: slot["is_available"] for slot in response.json()["slots"]}
+        slots = {
+            slot["value"]: slot["is_available"] for slot in response.json()["slots"]
+        }
 
         self.assertFalse(slots["10:00"])
         self.assertFalse(slots["10:30"])
@@ -1878,7 +1882,9 @@ class PublicVisualScheduleAjaxTests(AppointmentTestSetupMixin, TestCase):
             },
         )
 
-        slots = {slot["value"]: slot["is_available"] for slot in response.json()["slots"]}
+        slots = {
+            slot["value"]: slot["is_available"] for slot in response.json()["slots"]
+        }
 
         self.assertFalse(slots["12:00"])
         self.assertFalse(slots["12:30"])

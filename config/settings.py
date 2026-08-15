@@ -230,6 +230,11 @@ TEMPLATES = [
                 "config.context_processors.language_alternates",
                 "config.context_processors.clinical_settings",
             ],
+            "libraries": {
+                # `config` não é uma app instalada, por isso a biblioteca de
+                # tags tem de ser registada aqui à mão.
+                "assets": "config.templatetags.assets",
+            },
         },
     },
 ]

@@ -626,8 +626,24 @@ h1, h2, h3, .hero-title, .section-title {
 .app-agenda-shell {
     display: grid;
     grid-template-columns: 360px 1fr;
+    grid-template-areas:
+        "filter results"
+        "feed   results";
+    grid-template-rows: auto 1fr;
     gap: 28px;
     align-items: start;
+}
+
+.app-agenda-filter {
+    grid-area: filter;
+}
+
+.app-agenda-feed {
+    grid-area: feed;
+}
+
+.app-agenda-results {
+    grid-area: results;
 }
 
 .app-agenda-filter,
@@ -742,11 +758,15 @@ h1, h2, h3, .hero-title, .section-title {
     transition: all 0.22s ease;
 }
 
-.app-slot-card:hover {
-    background: #ffffff;
-    border-color: #d8a7b1;
-    transform: translateY(-5px);
-    box-shadow: 0 16px 36px rgba(139, 94, 102, 0.14);
+/* Num ecrã tátil o :hover fica agarrado depois do toque: o cartão levantava-se
+   e assim ficava. Só se aplica onde existe mesmo um ponteiro. */
+@media (hover: hover) {
+    .app-slot-card:hover {
+        background: #ffffff;
+        border-color: #d8a7b1;
+        transform: translateY(-5px);
+        box-shadow: 0 16px 36px rgba(139, 94, 102, 0.14);
+    }
 }
 
 .app-slot-time {
@@ -796,42 +816,6 @@ h1, h2, h3, .hero-title, .section-title {
     margin-bottom: 0;
 }
 
-@media (max-width: 992px) {
-    .app-agenda-shell {
-        grid-template-columns: 1fr;
-    }
-
-    .app-agenda-filter {
-        position: static;
-    }
-}
-
-@media (max-width: 576px) {
-    .app-agenda-filter,
-    .app-agenda-results {
-        border-radius: 24px;
-        padding: 22px;
-    }
-
-    .app-results-top {
-        align-items: flex-start;
-        flex-direction: column;
-    }
-
-    .app-slots-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-    }
-
-    .app-slot-card {
-        padding: 16px;
-        border-radius: 20px;
-    }
-
-    .app-slot-time {
-        font-size: 1.45rem;
-    }
-}
 
 /* ======================
    PREMIUM FORMS
@@ -1355,10 +1339,12 @@ form .btn {
     transition: all 0.2s ease;
 }
 
-.app-week-day:hover {
-    transform: translateY(-3px);
-    border-color: #d8a7b1;
-    color: #2b2b2b;
+@media (hover: hover) {
+    .app-week-day:hover {
+        transform: translateY(-3px);
+        border-color: #d8a7b1;
+        color: #2b2b2b;
+    }
 }
 
 .app-week-day span {
@@ -2214,13 +2200,20 @@ footer[id] {
    AJAX SCHEDULE NO FLICKER
 ====================== */
 
-.app-agenda-results {
-    min-height: 620px;
+#agenda-slots-container {
+    position: relative;
 }
 
-#agenda-slots-container {
-    min-height: 420px;
-    position: relative;
+/* Alturas mínimas só onde servem para alguma coisa. No telemóvel, reservar
+   620px para oito horários deixava um retângulo branco enorme por baixo. */
+@media (min-width: 993px) {
+    .app-agenda-results {
+        min-height: 620px;
+    }
+
+    #agenda-slots-container {
+        min-height: 420px;
+    }
 }
 
 #agenda-slots-container.is-loading::after {
@@ -3828,17 +3821,22 @@ form .btn {
     padding: 6px 14px;
 }
 
-.btn-primary:hover,
-.btn-outline-secondary:hover,
-.luxury-card:hover,
-.premium-card:hover,
-.public-slot-card:hover,
-.app-slot-card:hover,
-.service-public-card:hover,
-.dashboard-action-card:hover,
-.footer-brand-panel:hover,
-.footer-info-panel:hover {
-    transform: translateY(-2px);
+/* Levantar o elemento ao passar por cima só faz sentido com ponteiro. Num
+   ecrã tátil o :hover fica agarrado depois do toque e o cartão não volta ao
+   sítio. */
+@media (hover: hover) {
+    .btn-primary:hover,
+    .btn-outline-secondary:hover,
+    .luxury-card:hover,
+    .premium-card:hover,
+    .public-slot-card:hover,
+    .app-slot-card:hover,
+    .service-public-card:hover,
+    .dashboard-action-card:hover,
+    .footer-brand-panel:hover,
+    .footer-info-panel:hover {
+        transform: translateY(-2px);
+    }
 }
 
 /* Cards e painéis com menos volume */
@@ -4890,4 +4888,228 @@ textarea.form-control,
 .passkey-device small {
     color: var(--text-muted);
     display: block;
+}
+
+
+/* =========================================================================
+   Agenda pública em ecrãs pequenos
+
+   Este bloco fica no fim do ficheiro de propósito. Mais acima há camadas
+   que redefinem .app-slots-grid, .app-slot-card e .app-week-day sem media
+   query nenhuma; como uma media query não acrescenta especificidade, quem
+   vem depois ganha. Colocado a meio, o telemóvel voltava às duas colunas.
+   ========================================================================= */
+
+@media (max-width: 992px) {
+    /* Uma coluna, e o catálogo de serviços passa para o fim: primeiro
+       escolher, depois ver os horários, e só então explorar o resto. */
+    .app-agenda-shell {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "filter"
+            "results"
+            "feed";
+        grid-template-rows: auto;
+        gap: 20px;
+    }
+
+    .app-agenda-filter {
+        position: static;
+    }
+}
+
+@media (max-width: 576px) {
+    .app-agenda-header p {
+        font-size: 0.95rem;
+    }
+
+    .app-agenda-filter,
+    .app-agenda-results {
+        border-radius: 22px;
+        padding: 18px;
+    }
+
+    .app-agenda-filter .mb-4 {
+        margin-bottom: 1rem !important;
+    }
+
+    .app-service-summary {
+        border-radius: 18px;
+        padding: 16px;
+    }
+
+    .app-service-summary strong {
+        font-size: 1.15rem;
+    }
+
+    .app-results-top,
+    .app-agenda-results-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    /* O título e a etiqueta de estado lado a lado não cabiam: a etiqueta é
+       nowrap e empurrava a página para fora do ecrã. */
+    .app-agenda-results-header h2 {
+        font-size: 1.55rem;
+    }
+
+    .availability-status-pill {
+        font-size: 0.82rem;
+        padding: 8px 12px;
+        white-space: normal;
+    }
+
+    /* A tira de dias corre de margem a margem em vez de ficar encaixada
+       dentro do cartão, que só dava para ver dois dias e meio. */
+    .app-week-strip {
+        gap: 8px;
+        margin-inline: -18px;
+        padding-inline: 18px;
+        scroll-padding-left: 18px;
+    }
+
+    .app-week-day {
+        min-width: 72px;
+        border-radius: 16px;
+        padding: 10px 6px;
+    }
+
+    .app-week-day strong {
+        font-size: 1.35rem;
+        margin: 4px 0 2px;
+    }
+
+    .app-week-day small,
+    .app-week-day span {
+        font-size: 0.68rem;
+    }
+
+    /* Cada horário passa a ser uma linha: hora, estado e botão numa só
+       leitura. Em duas colunas o "Marcar" transbordava do cartão. */
+    .app-slots-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .app-slot-card {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        column-gap: 12px;
+        min-height: 60px;
+        padding: 12px 16px;
+        border-radius: 18px;
+    }
+
+    .app-slot-time {
+        font-size: 1.3rem;
+    }
+
+    .app-slot-status {
+        font-size: 0.82rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .app-slot-cta {
+        margin-top: 0;
+        padding: 7px 14px;
+        font-size: 0.85rem;
+        white-space: nowrap;
+    }
+
+    .app-empty-state {
+        border-radius: 20px;
+        padding: 32px 18px;
+    }
+
+    .app-empty-state h3 {
+        font-size: 1.2rem;
+    }
+
+    .app-empty-state p {
+        font-size: 0.9rem;
+    }
+
+    /* Já existe o aviso sobreposto aos horários; dois de cada vez faziam a
+       página saltar. */
+    .app-agenda-filter.is-loading::after {
+        display: none;
+    }
+}
+
+/* =========================================================================
+   Menu Configurações da área interna
+   ========================================================================= */
+
+.public-navbar .dropdown-menu {
+    background: #ffffff;
+    border: 1px solid #f1d5db;
+    border-radius: 18px;
+    box-shadow: 0 18px 44px rgba(139, 94, 102, 0.12);
+    padding: 8px;
+    margin-top: 8px;
+    min-width: 232px;
+}
+
+.public-navbar .dropdown-item {
+    border-radius: 12px;
+    color: #2b2b2b;
+    font-weight: 600;
+    padding: 10px 14px;
+}
+
+.public-navbar .dropdown-item:hover,
+.public-navbar .dropdown-item:focus {
+    background: #fff7f9;
+    color: #8b5e66;
+}
+
+.public-navbar .dropdown-divider {
+    border-top-color: #f1d5db;
+    margin: 6px 4px;
+}
+
+@media (max-width: 991px) {
+    /* Dentro do menu recolhido a lista aparece encaixada; sem a moldura e a
+       sombra fica mais claro que é uma continuação do menu e não um painel
+       solto por cima dele. */
+    .public-navbar .dropdown-menu {
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+        margin: 4px 0 8px 12px;
+        padding: 0;
+    }
+
+    .public-navbar .dropdown-item {
+        padding: 8px 14px;
+    }
+}
+
+/* O logo passou a estar dentro de um <picture>, que sem isto entra na flexbox
+   da marca como um bloco de altura própria e desalinha a imagem. */
+.public-navbar .navbar-brand picture {
+    display: flex;
+    align-items: center;
+}
+
+/* Encaixe: marcação posta fora do horário ou sobre um bloqueio. Precisa de se
+   distinguir das outras à primeira vista, senão não há como saber que aquela
+   hora não é normal. */
+.calendar-event-tag {
+    background: #fff3cd;
+    border: 1px solid #f0d68a;
+    border-radius: 999px;
+    color: #8a6d1d;
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    margin-left: 8px;
+    padding: 2px 9px;
+    text-transform: uppercase;
+    white-space: nowrap;
 }

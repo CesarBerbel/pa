@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static i18n %}
+{% load assets static i18n %}
 
 {% block title %}Agenda disponível | Marcação online | Priscila Arantes PA{% endblock %}
 {% block meta_description %}Consulte a agenda disponível da Priscila Arantes PA em Coimbra e marque online serviços de podologia, manicure, pedicure e enfermagem.{% endblock %}
@@ -82,8 +82,14 @@
                 </div>
             {% endif %}
 
-            {% if service_categories %}
-                <div class="card border-0 shadow-sm mt-4 agenda-service-feed-card">
+        </aside>
+
+        {# O catálogo fica numa área própria da grelha: no telemóvel tem de vir #}
+        {# depois dos horários, senão obriga a percorrer o acordeão inteiro #}
+        {# antes de chegar ao que a página serve para fazer. #}
+        {% if service_categories %}
+            <section class="app-agenda-feed">
+                <div class="card border-0 shadow-sm agenda-service-feed-card">
                     <div class="card-body">
                         <span class="luxury-eyebrow">{% translate "Feed de serviços" %}</span>
 
@@ -135,8 +141,8 @@
                         </div>
                     </div>
                 </div>
-            {% endif %}
-        </aside>
+            </section>
+        {% endif %}
 
         <main class="app-agenda-results">
             {% if selected_service %}
@@ -267,5 +273,5 @@
 </section>
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="{% static 'js/public_visual_schedule.js' %}?v=20260606-no-past-slots"></script>
+<script src="{% versioned_static 'js/public_visual_schedule.js' %}"></script>
 {% endblock %}

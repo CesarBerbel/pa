@@ -81,9 +81,10 @@
                 {{ business_hour.end_time|time:"H:i" }}
             </strong>
         </div>
+    {% endif %}
 
-        {% if full_day_block %}
-            <div class="internal-full-day-block-card">
+    {% if full_day_block %}
+        <div class="internal-full-day-block-card">
                 <div class="internal-full-day-block-icon">
                     <i class="bi bi-slash-circle"></i>
                 </div>
@@ -140,7 +141,10 @@
                     </a>
                 </div>
             </div>
-        {% else %}
+    {% endif %}
+
+    {# A grelha aparece mesmo com o dia bloqueado, mas aí só com os encaixes. #}
+    {% if slots %}
             <div class="internal-calendar-board">
 
                 {% for slot in slots %}
@@ -216,6 +220,9 @@
                                     <div class="calendar-event-main">
                                         <span class="calendar-event-kicker">
                                             {{ slot.appointment.reference_code }}
+                                            {% if slot.appointment.outside_schedule %}
+                                                <span class="calendar-event-tag">Encaixe</span>
+                                            {% endif %}
                                         </span>
 
                                         <h2>{{ slot.appointment.service.name }}</h2>
@@ -412,9 +419,9 @@
                     atualizar();
                 })();
             </script>
-        {% endif %}
+    {% endif %}
 
-    {% else %}
+    {% if not slots and not full_day_block %}
         <div class="app-empty-state">
             <h3>Sem horário de funcionamento</h3>
             <p>Não existe horário ativo para esta data. Registe o horário no admin antes de usar a agenda.</p>

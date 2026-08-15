@@ -23,6 +23,19 @@ from appointments.use_cases import ConfirmAppointmentUseCase, CompleteAppointmen
 from notifications.whatsapp import WhatsAppAppointmentNotificationService
 
 
+def warn_schedule_override(request, form):
+    """Avisa que a marcação ficou fora do horário normal.
+
+    Encaixar é permitido, mas passar em silêncio esconderia um engano de
+    digitação — 19:00 em vez de 09:00 seria aceite sem uma palavra.
+    """
+
+    motivo = getattr(form, "schedule_override_reason", None)
+
+    if motivo:
+        messages.warning(request, f"Encaixe fora do horário normal. {motivo}")
+
+
 class AppointmentListView(InternalAreaRequiredMixin, ListView):
     # Lists appointments with filters and ordering.
 
@@ -81,6 +94,7 @@ class AppointmentCreateView(InternalAreaRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.created_by = self.request.user
         messages.success(self.request, "Marcação criada com sucesso.")
+        warn_schedule_override(self.request, form)
         return super().form_valid(form)
 
 
@@ -167,6 +181,8 @@ class AppointmentUpdateView(InternalAreaRequiredMixin, UpdateView):
                 )
         else:
             messages.success(self.request, "Marcação atualizada com sucesso.")
+
+        warn_schedule_override(self.request, form)
 
         return response
 

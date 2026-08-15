@@ -107,6 +107,67 @@ class AvailabilityService:
         return first_start < second_end and first_end > second_start
 
     @classmethod
+    def schedule_conflict(cls, service, selected_date, start_time):
+        """Porque é que este horário está fora da agenda normal, ou None.
+
+        Separado da validação porque a área interna precisa da mesma resposta
+        sem que ela seja fatal: a profissional pode encaixar alguém fora do
+        horário, mas convém dizer-lhe que foi isso que aconteceu.
+        """
+
+        if not service or not selected_date or not start_time:
+            return None
+
+        periods = cls.get_business_periods(selected_date)
+
+        if not periods:
+            return "Não há horário de funcionamento ativo para este dia."
+
+        inicio = datetime.combine(selected_date, start_time)
+        fim = inicio + timedelta(minutes=service.duration_minutes)
+
+        # Tem de caber inteira num período: um atendimento que começasse antes
+        # do almoço e terminasse depois atravessaria a pausa.
+        cabe = any(
+            inicio >= periodo_inicio and fim <= periodo_fim
+            for periodo_inicio, periodo_fim in periods
+        )
+
+        if not cabe:
+            return "A marcação está fora do horário de funcionamento."
+
+        for block in cls.get_active_blocks_for_date(selected_date):
+            block_start = block.get_start_datetime_for_date(selected_date)
+            block_end = block.get_end_datetime_for_date(selected_date)
+
+            if cls.overlaps(inicio, fim, block_start, block_end):
+                return f"Este horário está bloqueado: {block.title}."
+
+        return None
+
+    @classmethod
+    def appointment_conflict(cls, appointment):
+        """Outra marcação ativa que se sobreponha a esta, ou None.
+
+        Compara os intervalos completos, e não só a hora de início: um serviço
+        de 60 minutos às 09:00 colide com outro às 09:30.
+        """
+
+        inicio = appointment.get_start_datetime()
+        fim = appointment.get_end_datetime()
+
+        for existing in cls.get_active_appointments_for_date(
+            appointment.date,
+            exclude_pk=appointment.pk,
+        ):
+            if cls.overlaps(
+                inicio, fim, existing.get_start_datetime(), existing.get_end_datetime()
+            ):
+                return existing
+
+        return None
+
+    @classmethod
     def validate_appointment(cls, appointment):
         if appointment.status == Appointment.STATUS_CANCELLED:
             return
@@ -125,46 +186,24 @@ class AvailabilityService:
         if not appointment.date or not appointment.start_time:
             return
 
-        periods = cls.get_business_periods(appointment.date)
-
-        if not periods:
-            raise ValidationError(
-                "Não há horário de funcionamento ativo para este dia."
+        # Num encaixe o horário e os bloqueios já foram dispensados de forma
+        # deliberada na área interna. A sobreposição com outra marcação nunca é
+        # dispensada: essa não é uma questão de política, é impossível de
+        # cumprir.
+        if not appointment.outside_schedule:
+            motivo = cls.schedule_conflict(
+                appointment.service,
+                appointment.date,
+                appointment.start_time,
             )
 
-        appointment_start = appointment.get_start_datetime()
-        appointment_end = appointment.get_end_datetime()
+            if motivo:
+                raise ValidationError(motivo)
 
-        # Tem de caber inteira num período: um atendimento que começasse antes
-        # do almoço e terminasse depois atravessaria a pausa.
-        cabe = any(
-            appointment_start >= inicio and appointment_end <= fim
-            for inicio, fim in periods
-        )
-
-        if not cabe:
-            raise ValidationError("A marcação está fora do horário de funcionamento.")
-
-        for block in cls.get_active_blocks_for_date(appointment.date):
-            block_start = block.get_start_datetime_for_date(appointment.date)
-            block_end = block.get_end_datetime_for_date(appointment.date)
-
-            if cls.overlaps(appointment_start, appointment_end, block_start, block_end):
-                raise ValidationError(f"Este horário está bloqueado: {block.title}.")
-
-        for existing in cls.get_active_appointments_for_date(
-            appointment.date,
-            exclude_pk=appointment.pk,
-        ):
-            existing_start = existing.get_start_datetime()
-            existing_end = existing.get_end_datetime()
-
-            if cls.overlaps(
-                appointment_start, appointment_end, existing_start, existing_end
-            ):
-                raise ValidationError(
-                    "Este horário entra em conflito com outra marcação existente."
-                )
+        if cls.appointment_conflict(appointment):
+            raise ValidationError(
+                "Este horário entra em conflito com outra marcação existente."
+            )
 
     @classmethod
     def get_availability_status(cls, service, selected_date, public_safe=False):
@@ -517,14 +556,92 @@ class AvailabilityService:
         return False
 
     @classmethod
-    def build_visual_slots(cls, selected_date, slot_minutes=30):
+    def _floor_to_slot(cls, value, slot_minutes):
+        return value.replace(
+            minute=value.minute - value.minute % slot_minutes,
+            second=0,
+            microsecond=0,
+        )
+
+    @classmethod
+    def _ceil_to_slot(cls, value, slot_minutes):
+        alinhado = cls._floor_to_slot(value, slot_minutes)
+
+        if alinhado == value:
+            return alinhado
+
+        return alinhado + timedelta(minutes=slot_minutes)
+
+    @classmethod
+    def _periods_covering_appointments(cls, periods, appointments, slot_minutes):
+        """Estende os períodos do dia para conterem todas as marcações.
+
+        Um encaixe fora do horário existiria sem aparecer em lado nenhum: a
+        grelha da agenda percorre os períodos de trabalho, e o que fica fora
+        deles não é desenhado. Criar uma marcação invisível é pior do que não
+        deixar criá-la.
+        """
+
+        intervalos = list(periods)
+
+        for appointment in appointments:
+            inicio = appointment.get_start_datetime()
+            fim = appointment.get_end_datetime()
+
+            if any(inicio >= p_inicio and fim <= p_fim for p_inicio, p_fim in periods):
+                continue
+
+            intervalos.append(
+                (
+                    cls._floor_to_slot(inicio, slot_minutes),
+                    cls._ceil_to_slot(fim, slot_minutes),
+                )
+            )
+
+        if not intervalos:
+            return []
+
+        # Juntar o que se toca, para não desenhar a mesma hora duas vezes
+        # quando um encaixe começa antes do horário e entra por ele dentro.
+        intervalos.sort()
+        unidos = [intervalos[0]]
+
+        for inicio, fim in intervalos[1:]:
+            ultimo_inicio, ultimo_fim = unidos[-1]
+
+            if inicio <= ultimo_fim:
+                unidos[-1] = (ultimo_inicio, max(ultimo_fim, fim))
+            else:
+                unidos.append((inicio, fim))
+
+        return unidos
+
+    @classmethod
+    def build_visual_slots(
+        cls, selected_date, slot_minutes=30, appointments_only=False
+    ):
+        """Grelha da agenda interna.
+
+        Com `appointments_only`, desenha apenas as horas que têm marcações. É o
+        que o dia inteiramente bloqueado precisa: continua a esconder a grelha
+        toda, mas sem esconder um encaixe que foi posto lá de propósito.
+        """
+
         business_hour = cls.get_business_hour(selected_date)
-        periods = cls.get_business_periods(selected_date, business_hour)
+        appointments = cls.get_active_appointments_for_date(selected_date)
+
+        periods = (
+            []
+            if appointments_only
+            else cls.get_business_periods(selected_date, business_hour)
+        )
+        periods = cls._periods_covering_appointments(
+            periods, appointments, slot_minutes
+        )
 
         if not periods:
             return business_hour, []
 
-        appointments = cls.get_active_appointments_for_date(selected_date)
         blocks = cls.get_active_blocks_for_date(selected_date)
         slots = []
 
@@ -570,19 +687,22 @@ class AvailabilityService:
                 "block_height": 70,
             }
 
-            cls._mark_block_slot(
-                slot_data,
-                blocks,
-                selected_date,
-                slot_start,
-                current_datetime,
-                end_datetime,
-                slot_minutes,
+            # A marcação vem primeiro. Antes as duas coisas nunca podiam
+            # coexistir, mas um encaixe é precisamente uma marcação por cima de
+            # um bloqueio: mostrar o bloqueio esconderia o atendimento.
+            cls._mark_appointment_slot(
+                slot_data, appointments, slot_start, slot_minutes
             )
 
-            if not slot_data["block"]:
-                cls._mark_appointment_slot(
-                    slot_data, appointments, slot_start, slot_minutes
+            if not slot_data["appointment"]:
+                cls._mark_block_slot(
+                    slot_data,
+                    blocks,
+                    selected_date,
+                    slot_start,
+                    current_datetime,
+                    end_datetime,
+                    slot_minutes,
                 )
 
             slots.append(slot_data)

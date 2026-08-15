@@ -1,6 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 
+from appointments.availability import AvailabilityService
 from appointments.customer_services import (
     find_or_create_customer,
     validate_phone_for_brazil_or_portugal,
@@ -171,6 +172,10 @@ class AppointmentForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # Preenchido em clean() quando o horário sai do funcionamento normal,
+        # para a vista o poder dizer a quem marcou.
+        self.schedule_override_reason = None
+
         # A obrigatoriedade passa a depender do modo escolhido e é verificada
         # em clean(), não pelo campo em si.
         self.fields["customer"].required = False
@@ -185,7 +190,30 @@ class AppointmentForm(forms.ModelForm):
         elif not cleaned_data.get("customer"):
             self.add_error("customer", "Selecione o cliente ou registe um novo.")
 
+        self.resolve_schedule_override(cleaned_data)
+
         return cleaned_data
+
+    def resolve_schedule_override(self, cleaned_data):
+        """Aceita o horário mesmo fora do funcionamento ou sobre um bloqueio.
+
+        Quem marca a partir daqui está com a agenda à frente e decidiu encaixar
+        a pessoa. O sistema regista que foi fora do normal em vez de recusar; o
+        que continua a ser recusado é a sobreposição com outra marcação, que
+        não é uma questão de política.
+
+        Fica em `self.instance` porque `outside_schedule` não é um campo do
+        formulário, e portanto `construct_instance` não lhe toca antes da
+        validação do modelo.
+        """
+
+        self.schedule_override_reason = AvailabilityService.schedule_conflict(
+            cleaned_data.get("service"),
+            cleaned_data.get("date"),
+            cleaned_data.get("start_time"),
+        )
+
+        self.instance.outside_schedule = bool(self.schedule_override_reason)
 
     def resolve_new_customer(self, cleaned_data):
         # Reutiliza find_or_create_customer, que devolve o cliente existente

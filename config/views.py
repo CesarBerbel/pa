@@ -1,5 +1,4 @@
 from html import escape
-from pathlib import Path
 
 from django.conf import settings
 from django.http import HttpResponse, JsonResponse
@@ -9,6 +8,8 @@ from django.templatetags.static import static
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_GET
+
+from config.templatetags.assets import asset_version, versioned_static
 
 
 @require_GET
@@ -187,8 +188,10 @@ def service_worker(request):
         {
             "cache_version": _service_worker_version(),
             "offline_url": reverse("offline"),
+            # Os URLs têm de ser exatamente os que as páginas pedem, senão o
+            # que fica guardado nunca chega a ser usado.
             "precache_urls": [
-                static("css/public.css"),
+                versioned_static("css/public.css"),
                 static("img/icon-192.png"),
                 static("img/logo.png"),
             ],
@@ -207,12 +210,7 @@ def service_worker(request):
 def _service_worker_version():
     # A versão muda quando o CSS muda, o que faz o browser descartar a cache
     # antiga em vez de servir estilos desatualizados.
-    caminho = Path(settings.BASE_DIR) / "static" / "css" / "public.css"
-
-    try:
-        return str(int(caminho.stat().st_mtime))
-    except OSError:
-        return "1"
+    return asset_version("css/public.css")
 
 
 @require_GET

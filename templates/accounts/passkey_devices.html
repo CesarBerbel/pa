@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% load static i18n %}
+{% load assets static i18n %}
 
 {% block title %}{% translate "Entrar com digital" %} | Priscila Arantes PA{% endblock %}
 {% block meta_robots %}noindex,nofollow{% endblock %}
@@ -114,5 +114,5 @@
 {% endblock %}
 
 {% block extra_scripts %}
-    <script src="{% static 'js/passkeys.js' %}"></script>
+    <script src="{% versioned_static 'js/passkeys.js' %}"></script>
 {% endblock %}

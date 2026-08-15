@@ -69,13 +69,14 @@ class VisualScheduleView(InternalAreaRequiredMixin, TemplateView):
             business_hour=business_hour,
         )
 
-        slots = []
-
-        if business_hour and not full_day_block:
-            business_hour, slots = AvailabilityService.build_visual_slots(
-                selected_date=selected_date,
-                slot_minutes=self.slot_minutes,
-            )
+        # Com o dia inteiro bloqueado a grelha continua escondida, mas os
+        # encaixes que lá foram postos de propósito têm de aparecer — senão
+        # existem sem que ninguém os veja.
+        business_hour, slots = AvailabilityService.build_visual_slots(
+            selected_date=selected_date,
+            slot_minutes=self.slot_minutes,
+            appointments_only=bool(full_day_block),
+        )
 
         context["selected_date"] = selected_date
         context["previous_date"] = selected_date - timedelta(days=1)
