@@ -65,6 +65,85 @@ sudo crontab -e
 0 3 * * * cd /opt/pa && ./scripts/backup_db.sh >> /var/log/pa-backup.log 2>&1
 ```
 
+### Emails de seguimento
+
+Os emails de cuidados posteriores — configurados em *Configurações →
+Seguimentos por serviço* — só saem se este comando correr. **Sem esta linha no
+cron, nada é enviado automaticamente** e resta o botão de envio manual em cada
+marcação.
+
+```cron
+30 9 * * * cd /opt/pa && docker compose --env-file .env.prod -f docker-compose.prod.yml exec -T web python manage.py send_service_followups >> /var/log/pa-emails.log 2>&1
+```
+
+Uma vez por dia chega. Correr duas vezes não duplica nada: cada envio fica
+registado e é consultado antes do seguinte.
+
+Para ver o que sairia, sem enviar:
+
+```bash
+docker compose --env-file .env.prod -f docker-compose.prod.yml exec -T web \
+    python manage.py send_service_followups --dry-run
+```
+
+Dois limites propositados, que valem a pena conhecer antes de estranhar um
+email que não chegou:
+
+* **Só apanha marcações posteriores à criação da regra.** Criar hoje um
+  seguimento a 15 dias não envia nada a quem fez o serviço no mês passado —
+  senão ativar a regra despejava dezenas de emails de uma vez. Para esses, use
+  o envio manual.
+* **Ignora prazos vencidos há mais de 7 dias.** Instruções "15 dias depois" que
+  chegam dois meses depois confundem mais do que ajudam. Se o cron estiver
+  parado mais do que isso, esses envios dão-se por perdidos. Para alargar:
+  `--max-age-days 30`.
+
+## Mensagens de WhatsApp pela Twilio
+
+Configuradas em *Configurações → Mensagens de WhatsApp*: uma linha por
+acontecimento e destinatário. Ao contrário dos emails de seguimento, **não
+precisam de cron** — saem no momento em que a marcação é criada, confirmada ou
+cancelada.
+
+No `.env.prod`:
+
+```env
+TWILIO_ENABLED=True
+TWILIO_ACCOUNT_SID=AC...
+TWILIO_AUTH_TOKEN=...
+TWILIO_WHATSAPP_FROM=whatsapp:+351...
+TWILIO_PROFESSIONAL_WHATSAPP=+351938594367
+```
+
+### O modelo aprovado não é opcional
+
+Tudo o que este sistema envia parte da clínica, não é resposta a uma mensagem
+do cliente. A Twilio só aceita **texto livre** nas 24 horas seguintes a uma
+mensagem do destinatário; fora disso recusa com o código **63016** e a mensagem
+não chega a ninguém.
+
+Na prática:
+
+* **Sandbox** — texto livre funciona, desde que o destinatário tenha aderido ao
+  sandbox com o código `join <palavra>`. Serve para testar.
+* **Produção** — cada mensagem precisa de um *template* aprovado na consola da
+  Twilio. Copie o **Content SID** (começa por `HX`) para a regra e preencha as
+  posições em *Variáveis do modelo*:
+
+  ```json
+  {"1": "{{ customer_name }}", "2": "{{ appointment_date }}", "3": "{{ appointment_time }}"}
+  ```
+
+A aprovação de um template pela Meta demora normalmente algumas horas. Enquanto
+não estiver aprovado, a regra fica configurada mas as mensagens falham — e o
+erro aparece em *Últimos envios*, na mesma página.
+
+### Antes de apontar a clientes reais
+
+Cada regra tem um botão **Enviar teste** na página de edição. Envia com dados
+de exemplo, não fica no histórico, e é a forma de descobrir uma credencial
+errada ou um template por aprovar sem ser através de um cliente.
+
 Vale confirmar de vez em quando que o cron está mesmo a correr:
 
 ```bash

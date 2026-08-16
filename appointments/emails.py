@@ -301,6 +301,49 @@ def send_appointment_reminder_email(
     )
 
 
+def send_service_followup_email(appointment, followup):
+    """Email de cuidados posteriores, uns dias depois do atendimento.
+
+    Ao contrário dos outros, este não tem texto de reserva: o conteúdo é a
+    razão de existir do seguimento, e enviar um email genérico em vez do manual
+    de cuidados que a profissional escreveu seria pior do que não enviar nada.
+    """
+
+    customer_email = appointment.customer.email
+
+    if not customer_email:
+        return
+
+    template = followup.email_template
+
+    if not template or not template.is_active:
+        raise ValueError("O modelo de email deste seguimento está inativo.")
+
+    link = generate_secure_link(appointment)
+
+    context = {
+        "customer_name": appointment.customer.full_name,
+        "service_name": appointment.service.name,
+        "appointment_date": appointment.date.strftime("%d/%m/%Y"),
+        "appointment_time": appointment.start_time.strftime("%H:%M"),
+        "reference_code": appointment.reference_code,
+        "magic_link": build_full_url(link),
+        "days_after": followup.days_after,
+    }
+
+    rendered_email = EmailTemplateService.render_template_object(
+        email_template=template,
+        context_data=context,
+    )
+
+    send_rendered_email(
+        subject=rendered_email["subject"],
+        body_text=rendered_email["body_text"],
+        body_html=rendered_email["body_html"],
+        recipient_list=[customer_email],
+    )
+
+
 def send_open_appointments_lookup_email(recipient_email, appointments):
     # Sends open appointment details and reference codes to the email owner.
     appointments = list(appointments)

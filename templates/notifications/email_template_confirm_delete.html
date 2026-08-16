@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Apagar modelo | Priscila Arantes PA{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-6">
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <h1 class="h5 mb-3">Apagar este modelo?</h1>
+
+                <p class="mb-1"><strong>{{ object.name }}</strong></p>
+                <p class="text-muted">{{ object.subject }}</p>
+
+                <p class="text-muted small">
+                    Se o modelo estiver a ser usado por alguma regra de envio,
+                    a operação é recusada. Nesse caso, desative-o em vez de o
+                    apagar.
+                </p>
+
+                <form method="post" class="d-flex gap-2 mt-4">
+                    {% csrf_token %}
+
+                    <button type="submit" class="btn btn-danger">Apagar</button>
+
+                    <a href="{% url 'notifications:email_template_list' %}" class="btn btn-outline-secondary">
+                        Cancelar
+                    </a>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

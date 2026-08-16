@@ -8,6 +8,8 @@ from .models import (
     EmailEventSetting,
     EmailTemplate,
     InstagramPost,
+    ServiceFollowUp,
+    WhatsAppEventSetting,
     WhatsAppMessageLog,
 )
 from .services import EmailTemplateService
@@ -209,7 +211,6 @@ class EmailEventSettingAdmin(admin.ModelAdmin):
     window_display.short_description = "Janela de envio"
 
 
-
 @admin.register(WhatsAppMessageLog)
 class WhatsAppMessageLogAdmin(admin.ModelAdmin):
     # Read-only audit screen for WhatsApp Cloud API sending attempts.
@@ -328,7 +329,7 @@ class InstagramPostAdmin(admin.ModelAdmin):
             {
                 "fields": ("embed_code",),
                 "description": (
-                    "No Instagram, abra a publicação → \"...\" → Copiar código de "
+                    'No Instagram, abra a publicação → "..." → Copiar código de '
                     "incorporação, e cole aqui o bloco inteiro."
                 ),
             },
@@ -364,3 +365,46 @@ class InstagramPostAdmin(admin.ModelAdmin):
         )
 
     post_link.short_description = "Publicação"
+
+
+@admin.register(ServiceFollowUp)
+class ServiceFollowUpAdmin(admin.ModelAdmin):
+    # A gestão do dia a dia é feita na área interna; o admin fica para
+    # inspeção e correções pontuais.
+
+    list_display = (
+        "service",
+        "email_template",
+        "days_after",
+        "is_active",
+    )
+
+    list_filter = (
+        "is_active",
+        "service",
+    )
+
+    search_fields = (
+        "service__name",
+        "email_template__name",
+    )
+
+    autocomplete_fields = ("email_template",)
+
+
+@admin.register(WhatsAppEventSetting)
+class WhatsAppEventSettingAdmin(admin.ModelAdmin):
+    # A gestão do dia a dia é na área interna; aqui fica a inspeção.
+
+    list_display = (
+        "event_type",
+        "audience",
+        "is_active",
+        "content_sid",
+    )
+
+    list_filter = (
+        "event_type",
+        "audience",
+        "is_active",
+    )

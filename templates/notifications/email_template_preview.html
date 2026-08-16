@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Pré-visualização | Priscila Arantes PA{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-9">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h4 mb-1">{{ email_template.name }}</h1>
+                <p class="text-muted mb-0">Com dados de exemplo.</p>
+            </div>
+
+            <a
+                href="{% url 'notifications:email_template_update' email_template.pk %}"
+                class="btn btn-outline-primary"
+            >
+                Editar
+            </a>
+        </div>
+
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-4">
+                <h2 class="h6 text-uppercase text-muted">Assunto</h2>
+                <p class="mb-0">{{ preview.subject }}</p>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-4">
+                <h2 class="h6 text-uppercase text-muted">Texto</h2>
+                <pre class="email-preview-text">{{ preview.body_text }}</pre>
+            </div>
+        </div>
+
+        {% if preview.body_html %}
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <h2 class="h6 text-uppercase text-muted">HTML</h2>
+
+                    {# Dentro de um iframe isolado: os estilos do modelo não #}
+                    {# podem afetar a área interna, e o sandbox impede que um #}
+                    {# script colado no modelo corra aqui dentro. #}
+                    <iframe
+                        class="email-preview-frame"
+                        title="Pré-visualização do email em HTML"
+                        sandbox=""
+                        srcdoc="{{ preview.body_html }}"
+                    ></iframe>
+                </div>
+            </div>
+        {% endif %}
+
+        <a href="{% url 'notifications:email_template_list' %}" class="btn btn-outline-secondary mt-4">
+            Voltar
+        </a>
+
+    </div>
+</div>
+{% endblock %}

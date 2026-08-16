@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Modelo de email | Priscila Arantes PA{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-9">
+
+        <h1 class="h4 mb-4">
+            {% if object %}Editar modelo{% else %}Novo modelo de email{% endif %}
+        </h1>
+
+        <div class="alert alert-info small">
+            <strong>Variáveis disponíveis.</strong>
+            Escritas entre chavetas duplas, são substituídas no momento do envio:
+            {% templatetag openvariable %} customer_name {% templatetag closevariable %},
+            {% templatetag openvariable %} service_name {% templatetag closevariable %},
+            {% templatetag openvariable %} appointment_date {% templatetag closevariable %},
+            {% templatetag openvariable %} appointment_time {% templatetag closevariable %},
+            {% templatetag openvariable %} reference_code {% templatetag closevariable %},
+            {% templatetag openvariable %} magic_link {% templatetag closevariable %}.
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+
+                        <a href="{% url 'notifications:email_template_list' %}" class="btn btn-outline-secondary">
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

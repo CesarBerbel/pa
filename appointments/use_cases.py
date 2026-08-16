@@ -11,6 +11,8 @@ from appointments.emails import (
     send_appointment_confirmation_email,
 )
 from appointments.models import Appointment, AppointmentLog
+from notifications.models import WhatsAppEventSetting
+from notifications.twilio_whatsapp import notify as notify_whatsapp
 from notifications.whatsapp import WhatsAppAppointmentNotificationService
 
 
@@ -85,6 +87,12 @@ class ConfirmAppointmentUseCase:
                     appointment,
                 )
 
+            deliver_after_commit(
+                notify_whatsapp,
+                appointment,
+                WhatsAppEventSetting.EVENT_APPOINTMENT_CONFIRMED,
+            )
+
         result_message = "Marcação confirmada com sucesso."
 
         if send_whatsapp:
@@ -126,6 +134,12 @@ class CompleteAppointmentUseCase:
                 action=AppointmentLog.ACTION_COMPLETE,
                 user=user,
                 description="Appointment completed.",
+            )
+
+            deliver_after_commit(
+                notify_whatsapp,
+                appointment,
+                WhatsAppEventSetting.EVENT_APPOINTMENT_COMPLETED,
             )
 
         return UseCaseResult(True, "Marcação concluída com sucesso.", appointment)

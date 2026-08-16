@@ -11,6 +11,8 @@ from appointments.emails import (
 )
 from appointments.audit_services import AppointmentAuditService
 from appointments.models import Appointment, AppointmentLog, Service
+from notifications.models import WhatsAppEventSetting
+from notifications.twilio_whatsapp import notify as notify_whatsapp
 
 
 @dataclass
@@ -94,6 +96,14 @@ class AppointmentService:
                         send_appointment_confirmation_email,
                         appointment,
                     )
+
+                # Depois do commit, como os emails: uma falha da Twilio não
+                # pode desfazer uma marcação que já está gravada.
+                deliver_after_commit(
+                    notify_whatsapp,
+                    appointment,
+                    WhatsAppEventSetting.EVENT_APPOINTMENT_REQUESTED,
+                )
 
             return AppointmentCreationResult(
                 success=True,

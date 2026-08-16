@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Seguimento por serviço | Priscila Arantes PA{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-7">
+
+        <h1 class="h4 mb-4">
+            {% if object %}Editar seguimento{% else %}Novo seguimento{% endif %}
+        </h1>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+
+                        <a href="{% url 'notifications:service_followup_list' %}" class="btn btn-outline-secondary">
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <p class="text-muted small mt-3">
+            Só aparecem serviços e modelos ativos. Um modelo inativo nunca
+            chegaria a ser enviado.
+        </p>
+
+    </div>
+</div>
+{% endblock %}

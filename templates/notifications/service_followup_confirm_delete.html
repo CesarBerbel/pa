@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Apagar seguimento | Priscila Arantes PA{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-6">
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <h1 class="h5 mb-3">Apagar este seguimento?</h1>
+
+                <p class="mb-1"><strong>{{ object.service.name }}</strong></p>
+                <p class="text-muted">
+                    {{ object.email_template.name }} · {{ object.get_delay_label }}
+                </p>
+
+                <p class="text-muted small">
+                    O modelo de email não é apagado; deixa apenas de ser
+                    enviado automaticamente para este serviço.
+                </p>
+
+                <form method="post" class="d-flex gap-2 mt-4">
+                    {% csrf_token %}
+
+                    <button type="submit" class="btn btn-danger">Apagar</button>
+
+                    <a href="{% url 'notifications:service_followup_list' %}" class="btn btn-outline-secondary">
+                        Cancelar
+                    </a>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Seguimentos por serviço | Priscila Arantes PA{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h4 mb-1">Seguimentos por serviço</h1>
+        <p class="text-muted mb-0">
+            Emails enviados alguns dias depois do atendimento.
+        </p>
+    </div>
+
+    <a href="{% url 'notifications:service_followup_create' %}" class="btn btn-primary">
+        Novo seguimento
+    </a>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        {% if followups %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Serviço</th>
+                            <th>Modelo de email</th>
+                            <th>Quando</th>
+                            <th>Estado</th>
+                            <th class="text-end">Ações</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for seguimento in followups %}
+                            <tr>
+                                <td>{{ seguimento.service.name }}</td>
+
+                                <td>
+                                    <a href="{% url 'notifications:email_template_preview' seguimento.email_template.pk %}">
+                                        {{ seguimento.email_template.name }}
+                                    </a>
+                                </td>
+
+                                <td>{{ seguimento.get_delay_label|capfirst }}</td>
+
+                                <td>
+                                    {% if seguimento.is_active %}
+                                        <span class="badge bg-success">Automático</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Só manual</span>
+                                    {% endif %}
+                                </td>
+
+                                <td class="text-end text-nowrap">
+                                    <a
+                                        href="{% url 'notifications:service_followup_update' seguimento.pk %}"
+                                        class="btn btn-sm btn-outline-primary"
+                                    >
+                                        Editar
+                                    </a>
+
+                                    <a
+                                        href="{% url 'notifications:service_followup_delete' seguimento.pk %}"
+                                        class="btn btn-sm btn-outline-danger"
+                                    >
+                                        Apagar
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="app-empty-state">
+                <h3>Nenhum seguimento configurado</h3>
+                <p>
+                    Exemplo: o manual de cuidados para os calos não voltarem,
+                    15 dias depois da remoção.
+                </p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="alert alert-info small mt-4">
+    <i class="bi bi-info-circle me-1"></i>
+    O envio automático só apanha marcações feitas <strong>depois</strong> de o
+    seguimento ser criado. Para as anteriores, use o botão de envio manual na
+    marcação.
+</div>
+{% endblock %}

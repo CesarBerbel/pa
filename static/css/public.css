@@ -4393,26 +4393,6 @@ textarea.form-control,
     margin-bottom: 10px;
 }
 
-.salon-modal-brand {
-    color: var(--primary-dark);
-    font-weight: 800;
-    letter-spacing: 0.04em;
-    text-decoration: none;
-    white-space: nowrap;
-}
-
-.salon-modal-brand i {
-    font-size: 0.9em;
-    margin-left: 2px;
-}
-
-.salon-modal-brand:hover,
-.salon-modal-brand:focus-visible {
-    color: var(--primary-dark);
-    text-decoration: underline;
-    text-underline-offset: 3px;
-}
-
 .salon-modal-address {
     align-items: baseline;
     color: var(--text-muted);
@@ -5135,4 +5115,28 @@ textarea.form-control,
     [data-agenda-mobile-only] {
         display: block;
     }
+}
+
+/* =========================================================================
+   Pré-visualização de modelos de email
+   ========================================================================= */
+
+.email-preview-text {
+    background: #fff7f9;
+    border: 1px solid #f1d5db;
+    border-radius: 14px;
+    color: #2b2b2b;
+    font-size: 0.9rem;
+    margin: 0;
+    padding: 18px;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.email-preview-frame {
+    background: #ffffff;
+    border: 1px solid #f1d5db;
+    border-radius: 14px;
+    height: 460px;
+    width: 100%;
 }

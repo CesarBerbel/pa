@@ -77,6 +77,7 @@ urlpatterns += i18n_patterns(
     path("", home_view, name="home"),
     path("", include("accounts.urls")),
     path("", include("appointments.urls")),
+    path("", include("notifications.urls")),
     path(
         "dashboard/",
         DashboardView.as_view(),

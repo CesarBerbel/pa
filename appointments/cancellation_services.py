@@ -3,6 +3,9 @@ from dataclasses import dataclass
 from django.contrib.auth.models import AnonymousUser
 from django.utils import timezone
 
+from notifications.models import WhatsAppEventSetting
+from notifications.twilio_whatsapp import notify as notify_whatsapp
+
 from appointments.emails import (
     deliver_after_commit,
     send_appointment_cancelled_email,
@@ -91,6 +94,12 @@ class AppointmentCancellationService:
             send_appointment_cancelled_email,
             appointment=appointment,
             cancellation_reason=cancellation_reason,
+        )
+
+        deliver_after_commit(
+            notify_whatsapp,
+            appointment,
+            WhatsAppEventSetting.EVENT_APPOINTMENT_CANCELLED,
         )
 
         return CancellationResult(

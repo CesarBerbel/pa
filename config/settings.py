@@ -578,6 +578,40 @@ WHATSAPP_REQUEST_TIMEOUT = config(
 
 
 # =============================================================================
+# Twilio (WhatsApp)
+# =============================================================================
+#
+# Alternativa ao WhatsApp Cloud API acima. As duas podem coexistir: cada envio
+# regista o fornecedor que usou, para não se confundirem no histórico.
+
+TWILIO_ENABLED = config(
+    "TWILIO_ENABLED",
+    default=False,
+    cast=bool,
+)
+
+TWILIO_ACCOUNT_SID = config("TWILIO_ACCOUNT_SID", default="").strip()
+
+TWILIO_AUTH_TOKEN = config("TWILIO_AUTH_TOKEN", default="").strip()
+
+# Número emissor, no formato que a Twilio espera: whatsapp:+14155238886. O
+# número do sandbox serve para testar; em produção é o número aprovado.
+TWILIO_WHATSAPP_FROM = config("TWILIO_WHATSAPP_FROM", default="").strip()
+
+# Para onde vão os avisos dirigidos à profissional.
+TWILIO_PROFESSIONAL_WHATSAPP = config(
+    "TWILIO_PROFESSIONAL_WHATSAPP",
+    default=SEO_WHATSAPP_NUMBER,
+).strip()
+
+TWILIO_REQUEST_TIMEOUT = config(
+    "TWILIO_REQUEST_TIMEOUT",
+    default=15,
+    cast=int,
+)
+
+
+# =============================================================================
 # Logging
 # =============================================================================
 

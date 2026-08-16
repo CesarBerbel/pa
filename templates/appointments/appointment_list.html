@@ -294,6 +294,17 @@
                                             </a>
                                         {% endif %}
 
+                                        <a
+                                            href="{% url 'notifications:appointment_followups' appointment.pk %}"
+                                            class="btn btn-outline-secondary btn-sm appointment-action-button d-inline-flex align-items-center justify-content-center"
+                                            data-bs-toggle="tooltip"
+                                            data-bs-placement="top"
+                                            data-bs-title="Mensagens e seguimentos"
+                                            aria-label="Mensagens de {{ appointment.reference_code }}"
+                                        >
+                                            <i class="bi bi-envelope-paper"></i>
+                                        </a>
+
                                         {% if appointment.status != "completed" %}
                                             <a
                                                 href="{% url 'appointments:appointment_update' appointment.pk %}"

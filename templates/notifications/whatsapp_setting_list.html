@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}Mensagens de WhatsApp | Priscila Arantes PA{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h4 mb-1">Mensagens de WhatsApp</h1>
+        <p class="text-muted mb-0">
+            Quando enviar e quem recebe, através da Twilio.
+        </p>
+    </div>
+
+    <a href="{% url 'notifications:whatsapp_setting_create' %}" class="btn btn-primary">
+        Nova mensagem
+    </a>
+</div>
+
+{% if not twilio_enabled %}
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle me-1"></i>
+        <strong>A Twilio está desligada.</strong>
+        As regras abaixo podem ser configuradas, mas nada é enviado enquanto
+        <code>TWILIO_ENABLED</code> não estiver a <code>True</code> no ficheiro
+        de ambiente do servidor.
+    </div>
+{% endif %}
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        {% if settings_list %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Quando</th>
+                            <th>Quem recebe</th>
+                            <th>Como</th>
+                            <th>Estado</th>
+                            <th class="text-end">Ações</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for regra in settings_list %}
+                            <tr>
+                                <td>{{ regra.get_event_type_display }}</td>
+
+                                <td>
+                                    {{ regra.get_audience_display }}
+                                    {% if regra.audience == "custom" %}
+                                        <br><small class="text-muted">{{ regra.custom_recipients }}</small>
+                                    {% elif regra.audience == "professional" %}
+                                        <br><small class="text-muted">{{ professional_number }}</small>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if regra.content_sid %}
+                                        <span class="badge bg-success">Modelo aprovado</span>
+                                        <br><small class="text-muted">{{ regra.content_sid }}</small>
+                                    {% elif regra.meta_template_body %}
+                                        <span class="badge bg-warning text-dark">Por submeter</span>
+                                        <br><small class="text-muted">texto pronto, falta o SID</small>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">Texto livre</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if regra.is_active and regra.content_sid %}
+                                        <span class="badge bg-success">A enviar</span>
+                                    {% elif regra.is_active %}
+                                        <span class="badge bg-warning text-dark">Só no sandbox</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Desligada</span>
+                                    {% endif %}
+                                </td>
+
+                                <td class="text-end text-nowrap">
+                                    <a
+                                        href="{% url 'notifications:whatsapp_setting_update' regra.pk %}"
+                                        class="btn btn-sm btn-outline-primary"
+                                    >
+                                        Editar
+                                    </a>
+
+                                    <a
+                                        href="{% url 'notifications:whatsapp_setting_delete' regra.pk %}"
+                                        class="btn btn-sm btn-outline-danger"
+                                    >
+                                        Apagar
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="app-empty-state">
+                <h3>Nenhuma mensagem configurada</h3>
+                <p>
+                    Exemplo: avisar a profissional quando entra um pedido de
+                    marcação, e o cliente quando a marcação é confirmada.
+                </p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="alert alert-info small">
+    <i class="bi bi-info-circle me-1"></i>
+    <strong>Texto livre só funciona no sandbox.</strong>
+    Tudo o que sai daqui parte da clínica, não é resposta a uma mensagem do
+    cliente. Fora das 24 horas seguintes a uma mensagem do destinatário, a
+    Twilio recusa texto livre com o erro 63016 — é preciso um modelo aprovado
+    (Content SID). Use o botão de teste na página de edição para confirmar
+    antes de a regra apanhar um cliente real.
+</div>
+
+{% if recent_logs %}
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <h2 class="h6 text-uppercase text-muted mb-3">Últimos envios</h2>
+
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Quando</th>
+                            <th>Marcação</th>
+                            <th>Para</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for log in recent_logs %}
+                            <tr>
+                                <td class="text-nowrap">{{ log.sent_at|date:"d/m/Y H:i" }}</td>
+                                <td>{{ log.appointment.reference_code }}</td>
+                                <td>{{ log.recipient_phone }}</td>
+
+                                <td>
+                                    {% if log.status == "success" %}
+                                        <span class="badge bg-success">Enviada</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Erro</span>
+                                        <br><small class="text-muted">{{ log.error_message }}</small>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Mensagem de WhatsApp | Priscila Arantes PA{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+
+        <h1 class="h4 mb-4">
+            {% if object %}Editar mensagem{% else %}Nova mensagem de WhatsApp{% endif %}
+        </h1>
+
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-4">
+                <h2 class="h6 text-uppercase text-muted mb-3">
+                    Do texto até à mensagem que chega
+                </h2>
+
+                <ol class="small mb-0 ps-3">
+                    <li class="mb-2">
+                        <strong>Texto para aprovação</strong> — copie o campo com
+                        as posições numeradas e cole em
+                        <em>Twilio → Content Template Builder → WhatsApp</em>.
+                        Escolha a categoria <strong>Utility</strong>: são
+                        mensagens sobre uma marcação, não publicidade.
+                    </li>
+                    <li class="mb-2">
+                        <strong>Espere pela revisão da Meta.</strong> Costuma
+                        demorar algumas horas. Enquanto não for aprovado, as
+                        mensagens falham.
+                    </li>
+                    <li>
+                        <strong>Cole o Content SID</strong> (começa por HX) no
+                        campo respetivo e ligue a regra. Só a partir daí é que
+                        as mensagens chegam mesmo aos clientes.
+                    </li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="alert alert-info small">
+            <strong>Variáveis disponíveis:</strong>
+            {% templatetag openvariable %} customer_name {% templatetag closevariable %},
+            {% templatetag openvariable %} service_name {% templatetag closevariable %},
+            {% templatetag openvariable %} appointment_date {% templatetag closevariable %},
+            {% templatetag openvariable %} appointment_time {% templatetag closevariable %},
+            {% templatetag openvariable %} reference_code {% templatetag closevariable %},
+            {% templatetag openvariable %} status {% templatetag closevariable %}.
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+
+                        <a href="{% url 'notifications:whatsapp_setting_list' %}" class="btn btn-outline-secondary">
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if object and test_form %}
+            <div class="card shadow-sm border-0 mt-4">
+                <div class="card-body p-4">
+                    <h2 class="h6 text-uppercase text-muted mb-3">Enviar teste</h2>
+
+                    <p class="text-muted small">
+                        Envia esta mensagem com dados de exemplo. Não fica no
+                        histórico e serve para apanhar uma credencial errada ou
+                        um modelo por aprovar antes de a regra apanhar um
+                        cliente real.
+                    </p>
+
+                    <form method="post" action="{% url 'notifications:whatsapp_setting_test' object.pk %}">
+                        {% csrf_token %}
+                        {{ test_form|crispy }}
+
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="bi bi-whatsapp me-1"></i>
+                            Enviar teste
+                        </button>
+                    </form>
+                </div>
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

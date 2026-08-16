@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block title %}Seguimentos da marcação | Priscila Arantes PA{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-9">
+
+        <div class="mb-4">
+            <span class="luxury-eyebrow">Mensagens</span>
+            <h1 class="h4 mt-2 mb-1">{{ appointment.customer.full_name }}</h1>
+            <p class="text-muted mb-0">
+                {{ appointment.service.name }} ·
+                {{ appointment.date|date:"d/m/Y" }} às {{ appointment.start_time|time:"H:i" }} ·
+                {{ appointment.reference_code }}
+            </p>
+        </div>
+
+        {% if not has_email %}
+            <div class="alert alert-warning">
+                Este cliente não tem email registado, por isso não é possível
+                enviar nada.
+            </div>
+        {% endif %}
+
+        <h2 class="h6 text-uppercase text-muted mb-2">Emails de seguimento</h2>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                {% if rows %}
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Email</th>
+                                    <th>Previsto para</th>
+                                    <th>Enviado</th>
+                                    <th class="text-end">Ação</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {% for row in rows %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'notifications:email_template_preview' row.followup.email_template.pk %}">
+                                                {{ row.followup.email_template.name }}
+                                            </a>
+                                            <br>
+                                            <small class="text-muted">
+                                                {{ row.followup.get_delay_label|capfirst }}
+                                                {% if not row.followup.is_active %}
+                                                    · envio automático desligado
+                                                {% endif %}
+                                            </small>
+                                        </td>
+
+                                        <td>
+                                            {{ row.due_date|date:"d/m/Y" }}
+                                            {% if not row.is_due %}
+                                                <br><small class="text-muted">ainda não chegou</small>
+                                            {% endif %}
+                                        </td>
+
+                                        <td>
+                                            {% if row.sent_at %}
+                                                <span class="badge bg-success">
+                                                    {{ row.sent_at|date:"d/m/Y H:i" }}
+                                                </span>
+                                            {% else %}
+                                                <span class="text-muted">Por enviar</span>
+                                            {% endif %}
+                                        </td>
+
+                                        <td class="text-end">
+                                            <form
+                                                method="post"
+                                                action="{% url 'notifications:appointment_followup_send' appointment.pk row.followup.pk %}"
+                                            >
+                                                {% csrf_token %}
+
+                                                <button
+                                                    type="submit"
+                                                    class="btn btn-sm btn-outline-primary"
+                                                    {% if not has_email %}disabled{% endif %}
+                                                    {% if row.sent_at %}
+                                                        onclick="return confirm('Este email já foi enviado. Enviar outra vez?');"
+                                                    {% endif %}
+                                                >
+                                                    {% if row.sent_at %}Reenviar{% else %}Enviar agora{% endif %}
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="app-empty-state">
+                        <h3>Nenhum seguimento para este serviço</h3>
+                        <p>
+                            Configure em
+                            <a href="{% url 'notifications:service_followup_list' %}">
+                                Seguimentos por serviço
+                            </a>.
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <h2 class="h6 text-uppercase text-muted mt-5 mb-2">Mensagens de WhatsApp</h2>
+
+        {% if not twilio_enabled %}
+            <div class="alert alert-warning small">
+                A Twilio está desligada nas definições do servidor, por isso
+                nada é enviado. As mensagens abaixo ficam à espera.
+            </div>
+        {% endif %}
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                {% if whatsapp_rows %}
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Mensagem</th>
+                                    <th>Para</th>
+                                    <th>Enviada</th>
+                                    <th class="text-end">Ação</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {% for row in whatsapp_rows %}
+                                    <tr>
+                                        <td>
+                                            {{ row.setting.get_event_type_display }}
+                                            <br>
+                                            <small class="text-muted">
+                                                {% if not row.setting.is_active %}
+                                                    envio automático desligado
+                                                {% else %}
+                                                    envio automático ligado
+                                                {% endif %}
+                                            </small>
+                                        </td>
+
+                                        <td>
+                                            {{ row.setting.get_audience_display }}
+                                            <br>
+                                            <small class="text-muted">
+                                                {% for numero in row.recipients %}
+                                                    {{ numero }}{% if not forloop.last %}, {% endif %}
+                                                {% empty %}
+                                                    sem número válido
+                                                {% endfor %}
+                                            </small>
+                                        </td>
+
+                                        <td>
+                                            {% if row.sent_at %}
+                                                <span class="badge bg-success">
+                                                    {{ row.sent_at|date:"d/m/Y H:i" }}
+                                                </span>
+                                            {% else %}
+                                                <span class="text-muted">Por enviar</span>
+                                            {% endif %}
+
+                                            {% if row.needs_template %}
+                                                <br>
+                                                <small class="text-muted">
+                                                    sem modelo aprovado
+                                                </small>
+                                            {% endif %}
+                                        </td>
+
+                                        <td class="text-end">
+                                            <form
+                                                method="post"
+                                                action="{% url 'notifications:appointment_whatsapp_send' appointment.pk row.setting.pk %}"
+                                            >
+                                                {% csrf_token %}
+
+                                                <button
+                                                    type="submit"
+                                                    class="btn btn-sm btn-outline-primary"
+                                                    {% if not twilio_enabled or not row.recipients %}disabled{% endif %}
+                                                    {% if row.sent_at %}
+                                                        onclick="return confirm('Esta mensagem já foi enviada. Enviar outra vez?');"
+                                                    {% endif %}
+                                                >
+                                                    <i class="bi bi-whatsapp me-1" aria-hidden="true"></i>
+                                                    {% if row.sent_at %}Reenviar{% else %}Enviar agora{% endif %}
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="app-empty-state">
+                        <h3>Nenhuma mensagem configurada</h3>
+                        <p>
+                            Configure em
+                            <a href="{% url 'notifications:whatsapp_setting_list' %}">
+                                Mensagens de WhatsApp
+                            </a>.
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <p class="text-muted small mt-3">
+            O envio manual ignora o interruptor do envio automático, mas não as
+            regras da Twilio: sem modelo aprovado, a mensagem só chega dentro
+            das 24 horas seguintes a uma mensagem do destinatário.
+        </p>
+
+        <a href="{% url 'appointments:appointment_list' %}" class="btn btn-outline-secondary mt-4">
+            Voltar às marcações
+        </a>
+
+    </div>
+</div>
+{% endblock %}
