@@ -453,3 +453,159 @@ class FollowUpAccessTests(TestCase):
         for url in self.paginas():
             with self.subTest(url=url):
                 self.assertEqual(self.client.get(url).status_code, 302)
+
+
+class DefaultEmailTemplatesTests(TestCase):
+    """Modelos criados pela migração e ligados às regras de envio."""
+
+    def catalogo(self):
+        from notifications.default_email_templates import DEFAULT_EMAIL_TEMPLATES
+
+        return DEFAULT_EMAIL_TEMPLATES
+
+    def test_the_main_templates_exist(self):
+        for entrada in self.catalogo():
+            with self.subTest(chave=entrada["key"]):
+                self.assertTrue(
+                    EmailTemplate.objects.filter(key=entrada["key"]).exists()
+                )
+
+    def test_every_rule_points_at_a_template(self):
+        from notifications.models import EmailEventSetting
+
+        for regra in EmailEventSetting.objects.all():
+            with self.subTest(regra=regra.event_type):
+                self.assertIsNotNone(regra.email_template)
+
+    def test_they_are_active(self):
+        # O email já estava a sair com o texto de reserva; deixá-los
+        # desligados trocaria um email simples por email nenhum.
+        for entrada in self.catalogo():
+            with self.subTest(chave=entrada["key"]):
+                self.assertTrue(EmailTemplate.objects.get(key=entrada["key"]).is_active)
+
+    def test_the_variables_are_ones_the_system_provides(self):
+        import re
+
+        from notifications.services import EmailTemplateService
+
+        conhecidas = set(EmailTemplateService.get_sample_context())
+
+        for modelo in EmailTemplate.objects.all():
+            texto = f"{modelo.subject} {modelo.body_text} {modelo.body_html}"
+
+            for nome in re.findall(r"\{\{\s*(\w+)\s*\}\}", texto):
+                with self.subTest(modelo=modelo.key, variavel=nome):
+                    self.assertIn(nome, conhecidas)
+
+    def test_they_render_without_leaving_placeholders(self):
+        from notifications.services import EmailTemplateService
+
+        for modelo in EmailTemplate.objects.all():
+            resultado = EmailTemplateService.render_template_object(
+                email_template=modelo,
+                context_data=EmailTemplateService.get_sample_context(),
+            )
+
+            with self.subTest(modelo=modelo.key):
+                self.assertNotIn("{{", resultado["subject"])
+                self.assertNotIn("{{", resultado["body_text"])
+                self.assertNotIn("{{", resultado["body_html"])
+                self.assertIn("Maria Silva", resultado["body_text"])
+
+    def test_every_template_has_a_text_version(self):
+        # Nem todos os clientes de email mostram HTML.
+        for modelo in EmailTemplate.objects.all():
+            with self.subTest(modelo=modelo.key):
+                self.assertTrue(modelo.body_text.strip())
+
+
+class ConfirmationEmailUsesTheTemplateTests(TestCase):
+    """O email de confirmação passa a sair pelo modelo, não pelo texto fixo."""
+
+    def setUp(self):
+        self.user = get_user_model().objects.create_superuser(
+            email="admin@example.com",
+            password="StrongPassword123",
+            full_name="Admin User",
+        )
+
+        self.customer = Customer.objects.create(
+            full_name="Maria Silva",
+            email="maria@example.com",
+            phone="+351910000000",
+        )
+
+        self.service = create_test_service(duration_minutes=60)
+
+        self.date = timezone.localdate() + timedelta(days=7)
+        while self.date.weekday() != 0:
+            self.date += timedelta(days=1)
+
+        ensure_test_business_hour(
+            weekday=self.date.weekday(),
+            start_time=time(9, 0),
+            end_time=time(18, 0),
+        )
+
+    def marcacao(self, status=Appointment.STATUS_SCHEDULED):
+        return Appointment.objects.create(
+            customer=self.customer,
+            service=self.service,
+            date=self.date,
+            start_time=time(10, 0),
+            status=status,
+            created_by=self.user,
+        )
+
+    def test_the_request_email_goes_out(self):
+        from appointments.emails import send_appointment_confirmation_email
+
+        send_appointment_confirmation_email(self.marcacao())
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].subject, "Recebemos o seu pedido de marcação")
+
+    def test_the_confirmation_email_goes_out(self):
+        from appointments.emails import send_appointment_confirmation_email
+
+        send_appointment_confirmation_email(
+            self.marcacao(status=Appointment.STATUS_CONFIRMED)
+        )
+
+        self.assertEqual(mail.outbox[0].subject, "A sua marcação está confirmada")
+
+    def test_it_carries_an_html_alternative(self):
+        from appointments.emails import send_appointment_confirmation_email
+
+        send_appointment_confirmation_email(self.marcacao())
+
+        alternativas = mail.outbox[0].alternatives
+
+        self.assertEqual(len(alternativas), 1)
+        self.assertEqual(alternativas[0][1], "text/html")
+        self.assertIn("Maria Silva", alternativas[0][0])
+
+    def test_the_customer_details_are_filled_in(self):
+        from appointments.emails import send_appointment_confirmation_email
+
+        send_appointment_confirmation_email(self.marcacao())
+
+        corpo = mail.outbox[0].body
+
+        self.assertIn("Maria Silva", corpo)
+        self.assertIn(self.service.name, corpo)
+        self.assertIn(self.date.strftime("%d/%m/%Y"), corpo)
+        self.assertNotIn("{{", corpo)
+
+    def test_deactivating_the_template_falls_back_instead_of_going_silent(self):
+        # Um modelo desligado não pode calar o email de confirmação: o cliente
+        # ficaria sem saber que a marcação existe.
+        from appointments.emails import send_appointment_confirmation_email
+
+        EmailTemplate.objects.filter(key="appointment_created").update(is_active=False)
+
+        send_appointment_confirmation_email(self.marcacao())
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("Maria Silva", mail.outbox[0].body)
