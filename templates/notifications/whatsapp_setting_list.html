@@ -143,11 +143,21 @@
                                 <td>{{ log.recipient_phone }}</td>
 
                                 <td>
-                                    {% if log.status == "success" %}
-                                        <span class="badge bg-success">Enviada</span>
-                                    {% else %}
-                                        <span class="badge bg-danger">Erro</span>
+                                    {% if log.status != "success" %}
+                                        <span class="badge bg-danger">Recusada</span>
                                         <br><small class="text-muted">{{ log.error_message }}</small>
+                                    {% elif log.delivery_failed %}
+                                        {# Aceite pela Twilio mas não entregue: #}
+                                        {# é aqui que se vê o que antes ficava #}
+                                        {# invisível. #}
+                                        <span class="badge bg-danger">{{ log.get_delivery_label }}</span>
+                                        {% if log.delivery_error_code %}
+                                            <br><small class="text-muted">erro {{ log.delivery_error_code }}</small>
+                                        {% endif %}
+                                    {% elif log.delivery_status %}
+                                        <span class="badge bg-success">{{ log.get_delivery_label }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Aceite, sem confirmação</span>
                                     {% endif %}
                                 </td>
                             </tr>

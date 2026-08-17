@@ -28,6 +28,7 @@ from django.db import IntegrityError
 from django.template import Context, Template
 
 from notifications.models import WhatsAppEventSetting, WhatsAppMessageLog
+from notifications.twilio_callbacks import status_callback_url
 
 logger = logging.getLogger(__name__)
 
@@ -120,6 +121,13 @@ def build_payload(setting, context, recipient):
         "From": normalize_whatsapp_address(settings.TWILIO_WHATSAPP_FROM),
         "To": recipient,
     }
+
+    # Sem isto a Twilio nunca nos diz se a mensagem chegou, e o sistema fica a
+    # afirmar "enviada" para uma mensagem que falhou na entrega.
+    callback = status_callback_url()
+
+    if callback:
+        payload["StatusCallback"] = callback
 
     if setting.content_sid.strip():
         payload["ContentSid"] = setting.content_sid.strip()
@@ -300,7 +308,7 @@ def send_for_setting(appointment, setting, force=False):
 
     return TwilioSendResult(
         success=True,
-        message=f"{len(registos)} mensagem(ns) de WhatsApp enviada(s).",
+        message=f"{len(registos)} mensagem(ns) aceite(s) pela Twilio.",
         logs=registos,
     )
 
@@ -369,7 +377,8 @@ def send_test(setting, recipient):
 
     return TwilioSendResult(
         True,
-        f"Mensagem de teste enviada para {destino} (sid {resposta.get('sid', '—')}).",
+        f"Teste aceite pela Twilio para {destino} "
+        f"(sid {resposta.get('sid', '—')}). A entrega é confirmada depois.",
     )
 
 
@@ -425,5 +434,5 @@ def notify(appointment, event_type):
         return TwilioSendResult(True, "Nada por enviar.", skipped=True, logs=registos)
 
     return TwilioSendResult(
-        True, f"{len(registos)} mensagem(ns) de WhatsApp enviada(s).", logs=registos
+        True, f"{len(registos)} mensagem(ns) aceite(s) pela Twilio.", logs=registos
     )

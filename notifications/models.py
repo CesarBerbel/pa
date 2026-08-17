@@ -472,7 +472,39 @@ class WhatsAppMessageLog(models.Model):
         blank=True,
     )
 
+    # `status` diz se a Twilio **aceitou** a mensagem. Não diz se ela chegou:
+    # a entrega acontece depois, e falha em silêncio se ninguém a for buscar.
+    # Estes três campos são preenchidos pelo webhook de estado da Twilio.
+    delivery_status = models.CharField(
+        max_length=20,
+        blank=True,
+        help_text="Estado final devolvido pela Twilio: delivered, undelivered, failed.",
+    )
+
+    delivery_error_code = models.CharField(max_length=20, blank=True)
+
+    delivery_updated_at = models.DateTimeField(blank=True, null=True)
+
     sent_at = models.DateTimeField(auto_now_add=True)
+
+    DELIVERY_LABELS = {
+        "queued": "Em fila",
+        "sending": "A enviar",
+        "sent": "Enviada",
+        "delivered": "Entregue",
+        "read": "Lida",
+        "undelivered": "Não entregue",
+        "failed": "Falhou",
+    }
+
+    def get_delivery_label(self):
+        if not self.delivery_status:
+            return "Aceite pela Twilio"
+
+        return self.DELIVERY_LABELS.get(self.delivery_status, self.delivery_status)
+
+    def delivery_failed(self):
+        return self.delivery_status in {"undelivered", "failed"}
 
     class Meta:
         ordering = ["-sent_at"]

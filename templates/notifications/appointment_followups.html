@@ -161,10 +161,25 @@
                                         </td>
 
                                         <td>
-                                            {% if row.sent_at %}
-                                                <span class="badge bg-success">
+                                            {% if row.last_log %}
+                                                {% if row.last_log.delivery_failed %}
+                                                    <span class="badge bg-danger">
+                                                        {{ row.last_log.get_delivery_label }}
+                                                    </span>
+                                                {% elif row.last_log.delivery_status %}
+                                                    <span class="badge bg-success">
+                                                        {{ row.last_log.get_delivery_label }}
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Aceite</span>
+                                                {% endif %}
+                                                <br>
+                                                <small class="text-muted">
                                                     {{ row.sent_at|date:"d/m/Y H:i" }}
-                                                </span>
+                                                    {% if row.last_log.delivery_error_code %}
+                                                        · erro {{ row.last_log.delivery_error_code }}
+                                                    {% endif %}
+                                                </small>
                                             {% else %}
                                                 <span class="text-muted">Por enviar</span>
                                             {% endif %}

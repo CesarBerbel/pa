@@ -1,6 +1,9 @@
 from django.conf import settings as django_settings
 from django.contrib import messages
+from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.generic import (
@@ -29,6 +32,7 @@ from .models import (
     WhatsAppMessageLog,
 )
 from .services import EmailTemplateService
+from .twilio_callbacks import record_status, signature_is_valid
 from .twilio_whatsapp import resolve_recipients, send_manual, send_test, sent_logs
 
 
@@ -213,6 +217,7 @@ class AppointmentFollowUpView(InternalAreaRequiredMixin, TemplateView):
                 {
                     "setting": setting,
                     "recipients": resolve_recipients(setting, appointment),
+                    "last_log": ultimo,
                     "sent_at": ultimo.sent_at if ultimo else None,
                     "needs_template": not setting.content_sid.strip(),
                 }
@@ -333,3 +338,26 @@ class AppointmentWhatsAppSendView(InternalAreaRequiredMixin, View):
             messages.error(request, f"{setting}: {resultado.message}")
 
         return redirect("notifications:appointment_followups", pk=pk)
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class TwilioStatusWebhookView(View):
+    """Recebe da Twilio o estado final de cada mensagem.
+
+    Sem autenticação de sessão — quem chama é a Twilio, não um browser — mas
+    com verificação de assinatura: o endereço é público e sem ela qualquer
+    pessoa podia marcar mensagens como entregues.
+    """
+
+    def post(self, request):
+        if not signature_is_valid(request):
+            return HttpResponseForbidden("Assinatura inválida.")
+
+        record_status(
+            message_sid=request.POST.get("MessageSid", ""),
+            message_status=request.POST.get("MessageStatus", ""),
+            error_code=request.POST.get("ErrorCode", ""),
+        )
+
+        # A Twilio só quer saber que recebemos; o corpo é ignorado.
+        return HttpResponse(status=204)

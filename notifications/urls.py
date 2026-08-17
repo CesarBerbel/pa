@@ -13,6 +13,7 @@ from .views import (
     ServiceFollowUpDeleteView,
     ServiceFollowUpListView,
     ServiceFollowUpUpdateView,
+    TwilioStatusWebhookView,
     WhatsAppSettingCreateView,
     WhatsAppSettingDeleteView,
     WhatsAppSettingListView,
@@ -67,6 +68,11 @@ urlpatterns = [
         "emails/seguimentos/<int:pk>/apagar/",
         ServiceFollowUpDeleteView.as_view(),
         name="service_followup_delete",
+    ),
+    path(
+        "webhooks/twilio/estado/",
+        TwilioStatusWebhookView.as_view(),
+        name="twilio_status",
     ),
     path(
         "mensagens/whatsapp/",

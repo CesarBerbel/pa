@@ -13,7 +13,9 @@ from appointments.cancellation_services import AppointmentCancellationService
 from appointments.models import Appointment, Customer
 from appointments.tests.factories import create_test_service, ensure_test_business_hour
 from appointments.use_cases import ConfirmAppointmentUseCase
-from notifications import twilio_whatsapp
+from django.conf import settings
+
+from notifications import twilio_callbacks, twilio_whatsapp
 from notifications.models import WhatsAppEventSetting, WhatsAppMessageLog
 
 TWILIO_LIGADA = {
@@ -877,3 +879,206 @@ class ManualWhatsAppSendTests(TwilioBase):
         self.client.post(self.url())
 
         self.assertEqual(self.enviados, [])
+
+
+@override_settings(**TWILIO_LIGADA, SITE_URL="https://priarantes.com")
+class DeliveryStatusTests(TwilioBase):
+    """ "Aceite pela Twilio" não é o mesmo que "chegou ao telemóvel".
+
+    A resposta ao envio só diz que a Twilio recebeu a mensagem. A entrega
+    acontece depois e pode falhar; sem o webhook de estado, isso ficava
+    invisível e o sistema mostrava "enviada" para sempre.
+    """
+
+    def setUp(self):
+        super().setUp()
+
+        self.appointment = self.marcacao()
+        self.setting = self.regra("appointment_confirmed", "customer")
+
+        self.enviados = []
+
+        self.patcher = patch.object(
+            twilio_whatsapp,
+            "post_message",
+            side_effect=lambda p: self.enviados.append(p) or {"sid": "SMabc"},
+        )
+        self.patcher.start()
+        self.addCleanup(self.patcher.stop)
+
+    def enviar(self):
+        self.client.post(
+            reverse(
+                "notifications:appointment_whatsapp_send",
+                args=[self.appointment.pk, self.setting.pk],
+            )
+        )
+
+        return WhatsAppMessageLog.objects.get(whatsapp_message_id="SMabc")
+
+    def test_the_callback_url_is_sent_to_twilio(self):
+        self.enviar()
+
+        self.assertIn("StatusCallback", self.enviados[0])
+        self.assertTrue(
+            self.enviados[0]["StatusCallback"].startswith("https://priarantes.com")
+        )
+
+    @override_settings(SITE_URL="http://localhost:8000")
+    def test_no_callback_is_requested_from_an_unreachable_address(self):
+        # A Twilio não alcança localhost; pedir-lhe que tente só enche os
+        # registos dela de erros.
+        self.enviar()
+
+        self.assertNotIn("StatusCallback", self.enviados[0])
+
+    def test_before_the_callback_the_state_is_only_accepted(self):
+        registo = self.enviar()
+
+        self.assertEqual(registo.status, WhatsAppMessageLog.STATUS_SUCCESS)
+        self.assertEqual(registo.delivery_status, "")
+        self.assertEqual(registo.get_delivery_label(), "Aceite pela Twilio")
+
+    def test_a_delivery_confirmation_is_recorded(self):
+        registo = self.enviar()
+
+        twilio_callbacks.record_status("SMabc", "delivered")
+        registo.refresh_from_db()
+
+        self.assertEqual(registo.get_delivery_label(), "Entregue")
+        self.assertFalse(registo.delivery_failed())
+        self.assertIsNotNone(registo.delivery_updated_at)
+
+    def test_a_delivery_failure_is_recorded_with_its_code(self):
+        # O caso que motivou isto: a Twilio aceita, e a mensagem nunca chega.
+        registo = self.enviar()
+
+        twilio_callbacks.record_status("SMabc", "undelivered", error_code="63016")
+        registo.refresh_from_db()
+
+        self.assertTrue(registo.delivery_failed())
+        self.assertEqual(registo.delivery_error_code, "63016")
+        self.assertEqual(registo.get_delivery_label(), "Não entregue")
+
+    def test_an_unknown_sid_is_ignored_without_breaking(self):
+        # A conta Twilio pode ser partilhada com outro ambiente.
+        self.assertIsNone(twilio_callbacks.record_status("SMdesconhecido", "delivered"))
+
+    def test_an_empty_sid_is_ignored(self):
+        self.assertIsNone(twilio_callbacks.record_status("", "delivered"))
+
+    def test_the_failure_shows_up_on_the_appointment_page(self):
+        self.enviar()
+        twilio_callbacks.record_status("SMabc", "failed", error_code="63003")
+
+        resposta = self.client.get(
+            reverse("notifications:appointment_followups", args=[self.appointment.pk])
+        )
+
+        self.assertContains(resposta, "Falhou")
+        self.assertContains(resposta, "63003")
+
+
+# `testserver` é o único host que o runner de testes aceita sem mexer em
+# ALLOWED_HOSTS, e a assinatura da Twilio cobre o URL completo.
+@override_settings(**TWILIO_LIGADA, SITE_URL="https://testserver")
+class TwilioWebhookTests(TwilioBase):
+    """O endereço é público: só a Twilio o pode usar."""
+
+    HOST = "https://testserver"
+
+    def setUp(self):
+        super().setUp()
+
+        self.url = reverse("notifications:twilio_status")
+        self.registo = WhatsAppMessageLog.objects.create(
+            appointment=self.marcacao(),
+            provider=WhatsAppMessageLog.PROVIDER_TWILIO,
+            event_type="appointment_confirmed",
+            status=WhatsAppMessageLog.STATUS_SUCCESS,
+            template_name="texto-livre",
+            recipient_phone="whatsapp:+351910000000",
+            whatsapp_message_id="SMxyz",
+        )
+
+    def assinar(self, url, dados):
+        import base64
+        import hmac
+        from hashlib import sha1
+
+        corpo = "".join(f"{k}{dados[k]}" for k in sorted(dados))
+
+        return base64.b64encode(
+            hmac.new(
+                settings.TWILIO_AUTH_TOKEN.encode(),
+                (url + corpo).encode(),
+                sha1,
+            ).digest()
+        ).decode()
+
+    def test_a_signed_request_updates_the_record(self):
+        dados = {"MessageSid": "SMxyz", "MessageStatus": "delivered"}
+        url = f"{self.HOST}{self.url}"
+
+        resposta = self.client.post(
+            self.url,
+            data=dados,
+            HTTP_X_TWILIO_SIGNATURE=self.assinar(url, dados),
+            secure=True,
+        )
+
+        self.registo.refresh_from_db()
+
+        self.assertEqual(resposta.status_code, 204)
+        self.assertEqual(self.registo.delivery_status, "delivered")
+
+    def test_an_unsigned_request_is_refused(self):
+        # Sem isto, qualquer pessoa podia marcar mensagens como entregues.
+        resposta = self.client.post(
+            self.url, data={"MessageSid": "SMxyz", "MessageStatus": "delivered"}
+        )
+
+        self.registo.refresh_from_db()
+
+        self.assertEqual(resposta.status_code, 403)
+        self.assertEqual(self.registo.delivery_status, "")
+
+    def test_a_wrongly_signed_request_is_refused(self):
+        resposta = self.client.post(
+            self.url,
+            data={"MessageSid": "SMxyz", "MessageStatus": "delivered"},
+            HTTP_X_TWILIO_SIGNATURE="assinatura-inventada",
+            secure=True,
+        )
+
+        self.assertEqual(resposta.status_code, 403)
+
+    def test_tampering_with_the_body_invalidates_the_signature(self):
+        dados = {"MessageSid": "SMxyz", "MessageStatus": "delivered"}
+        url = f"{self.HOST}{self.url}"
+        assinatura = self.assinar(url, dados)
+
+        resposta = self.client.post(
+            self.url,
+            data={"MessageSid": "SMxyz", "MessageStatus": "failed"},
+            HTTP_X_TWILIO_SIGNATURE=assinatura,
+            secure=True,
+        )
+
+        self.assertEqual(resposta.status_code, 403)
+
+    def test_the_webhook_does_not_require_a_login(self):
+        # Quem chama é a Twilio, não um browser com sessão.
+        self.client.logout()
+
+        dados = {"MessageSid": "SMxyz", "MessageStatus": "read"}
+        url = f"{self.HOST}{self.url}"
+
+        resposta = self.client.post(
+            self.url,
+            data=dados,
+            HTTP_X_TWILIO_SIGNATURE=self.assinar(url, dados),
+            secure=True,
+        )
+
+        self.assertEqual(resposta.status_code, 204)
