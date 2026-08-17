@@ -786,6 +786,52 @@ class ScheduleBlock(models.Model):
         # Returns block end using its own date
         return self.get_end_datetime_for_date(self.date)
 
+    def conflicting_appointments(self):
+        """Marcações que este bloqueio taparia.
+
+        Os encaixes ficam de fora de propósito. Um encaixe é uma marcação que
+        alguém colocou por cima de um bloqueio, sabendo o que estava a fazer;
+        se contasse aqui, o bloqueio deixaria de poder ser editado depois — nem
+        para lhe corrigir o título.
+        """
+
+        from appointments.availability import AvailabilityService
+
+        if not self.is_active or not self.date:
+            return []
+
+        if not self.is_full_day and not (self.start_time and self.end_time):
+            return []
+
+        candidatas = (
+            Appointment.objects.filter(date__gte=self.date)
+            .exclude(status=Appointment.STATUS_CANCELLED)
+            .exclude(outside_schedule=True)
+            .select_related("customer", "service")
+            .order_by("date", "start_time")
+        )
+
+        if self.is_recurring:
+            if self.recurrence_end_date:
+                candidatas = candidatas.filter(date__lte=self.recurrence_end_date)
+        else:
+            candidatas = candidatas.filter(date=self.date)
+
+        # Percorre as marcações e não as datas: um bloqueio recorrente sem fim
+        # definido cobre um número indeterminado de dias, mas o número de
+        # marcações é sempre finito.
+        return [
+            marcacao
+            for marcacao in candidatas
+            if self.applies_to_date(marcacao.date)
+            and AvailabilityService.overlaps(
+                marcacao.get_start_datetime(),
+                marcacao.get_end_datetime(),
+                self.get_start_datetime_for_date(marcacao.date),
+                self.get_end_datetime_for_date(marcacao.date),
+            )
+        ]
+
     def clean(self):
         # Validate schedule block consistency
         if self.is_recurring and not self.recurring_weekdays:
@@ -793,18 +839,46 @@ class ScheduleBlock(models.Model):
                 "Indique pelo menos um dia da semana para o bloqueio recorrente."
             )
 
-        if self.is_full_day:
+        if not self.is_full_day:
+            if not self.start_time or not self.end_time:
+                raise ValidationError(
+                    "Indique o horário inicial e final ou marque como dia inteiro."
+                )
+
+            if self.end_time <= self.start_time:
+                raise ValidationError(
+                    "O horário final do bloqueio deve ser maior que o horário inicial."
+                )
+
+        self.validate_no_appointments_in_the_way()
+
+    def validate_no_appointments_in_the_way(self):
+        """Recusa o bloqueio quando já há alguém marcado no período.
+
+        Deixar criar tornaria a marcação invisível na agenda pública e deixaria
+        a cliente à porta num dia que o sistema diz estar fechado. Quem bloqueia
+        precisa de saber que há alguém marcado, para desmarcar primeiro.
+        """
+
+        conflitos = self.conflicting_appointments()
+
+        if not conflitos:
             return
 
-        if not self.start_time or not self.end_time:
-            raise ValidationError(
-                "Indique o horário inicial e final ou marque como dia inteiro."
-            )
+        detalhes = ", ".join(
+            f"{marcacao.customer.full_name} "
+            f"({marcacao.date.strftime('%d/%m')} às "
+            f"{marcacao.start_time.strftime('%H:%M')})"
+            for marcacao in conflitos[:3]
+        )
 
-        if self.end_time <= self.start_time:
-            raise ValidationError(
-                "O horário final do bloqueio deve ser maior que o horário inicial."
-            )
+        if len(conflitos) > 3:
+            detalhes = f"{detalhes} e mais {len(conflitos) - 3}"
+
+        raise ValidationError(
+            f"Já existem marcações neste período: {detalhes}. "
+            "Cancele ou mude essas marcações antes de bloquear."
+        )
 
 
 class Appointment(models.Model):
