@@ -187,7 +187,18 @@
                                             {% if row.needs_template %}
                                                 <br>
                                                 <small class="text-muted">
-                                                    sem modelo aprovado
+                                                    {% if row.setting.provider == "baileys" %}
+                                                        sem texto escrito
+                                                    {% else %}
+                                                        sem modelo aprovado
+                                                    {% endif %}
+                                                </small>
+                                            {% endif %}
+
+                                            {% if row.blocked_reason %}
+                                                <br>
+                                                <small class="text-danger">
+                                                    {{ row.blocked_reason }}
                                                 </small>
                                             {% endif %}
                                         </td>
@@ -202,7 +213,7 @@
                                                 <button
                                                     type="submit"
                                                     class="btn btn-sm btn-outline-primary"
-                                                    {% if not twilio_enabled or not row.recipients %}disabled{% endif %}
+                                                    {% if row.blocked_reason or not row.recipients %}disabled{% endif %}
                                                     {% if row.sent_at %}
                                                         onclick="return confirm('Esta mensagem já foi enviada. Enviar outra vez?');"
                                                     {% endif %}
@@ -223,7 +234,7 @@
                         <p>
                             Configure em
                             <a href="{% url 'notifications:whatsapp_setting_list' %}">
-                                Mensagens de WhatsApp
+                                WhatsApp
                             </a>.
                         </p>
                     </div>
@@ -233,8 +244,11 @@
 
         <p class="text-muted small mt-3">
             O envio manual ignora o interruptor do envio automático, mas não as
-            regras da Twilio: sem modelo aprovado, a mensagem só chega dentro
-            das 24 horas seguintes a uma mensagem do destinatário.
+            regras de quem transporta a mensagem. Pela Twilio, sem modelo
+            aprovado ela só chega dentro das 24 horas seguintes a uma mensagem
+            do destinatário; pelo Baileys, só chega com a
+            <a href="{% url 'notifications:whatsapp_connection' %}">ligação</a>
+            de pé.
         </p>
 
         <a href="{% url 'appointments:appointment_list' %}" class="btn btn-outline-secondary mt-4">

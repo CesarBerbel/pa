@@ -1,0 +1,91 @@
+"""Peças partilhadas pelos fornecedores de WhatsApp.
+
+A Twilio e o Baileys diferem no transporte — uma é uma API REST com modelos
+aprovados, o outro é uma sessão emparelhada — mas concordam no resto: o mesmo
+texto, as mesmas variáveis, os mesmos números. Este módulo guarda essa parte
+comum, para uma correção no formato de um número não ter de ser feita duas
+vezes.
+"""
+
+from __future__ import annotations
+
+import re
+from dataclasses import dataclass, field
+
+from django.template import Context, Template
+
+
+@dataclass
+class SendResult:
+    """Resultado de um envio, seja qual for o fornecedor.
+
+    `skipped` distingue "não havia nada para enviar" de "enviou-se": as duas
+    situações são sucesso, mas só uma delas põe mensagens no telemóvel de
+    alguém.
+    """
+
+    success: bool
+    message: str
+    skipped: bool = False
+    logs: list = field(default_factory=list)
+
+
+def to_e164(phone):
+    """Reduz um número ao formato internacional: +351912345678.
+
+    Aceita o que vier do formulário — espaços, parênteses, o prefixo
+    `whatsapp:` — e devolve string vazia quando não sobra um número
+    aproveitável, para quem chama poder registar a falha em vez de enviar para
+    lado nenhum.
+    """
+
+    bruto = (phone or "").strip()
+
+    if bruto.startswith("whatsapp:"):
+        bruto = bruto[len("whatsapp:") :]
+
+    digitos = re.sub(r"[^\d+]", "", bruto)
+
+    if not digitos:
+        return ""
+
+    if not digitos.startswith("+"):
+        digitos = f"+{digitos}"
+
+    # Nove dígitos é o número nacional mais curto que faz sentido; abaixo
+    # disso é lixo ou um campo meio preenchido.
+    if len(digitos) < 9:
+        return ""
+
+    return digitos
+
+
+def render_text(texto, context):
+    if not texto:
+        return ""
+
+    return Template(texto).render(Context(context))
+
+
+def build_context(appointment):
+    return {
+        "customer_name": appointment.customer.full_name,
+        "customer_phone": appointment.customer.phone,
+        "service_name": appointment.service.name,
+        "appointment_date": appointment.date.strftime("%d/%m/%Y"),
+        "appointment_time": appointment.start_time.strftime("%H:%M"),
+        "reference_code": appointment.reference_code,
+        "status": appointment.get_status_display(),
+    }
+
+
+def get_sample_context():
+    return {
+        "customer_name": "Maria Silva",
+        "customer_phone": "+351910000000",
+        "service_name": "Remoção de calos",
+        "appointment_date": "18/08/2026",
+        "appointment_time": "10:30",
+        "reference_code": "AGD-EXEMPLO",
+        "status": "Confirmada",
+    }

@@ -17,30 +17,30 @@ from __future__ import annotations
 import base64
 import json
 import logging
-import re
-from dataclasses import dataclass, field
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 from django.conf import settings
 from django.db import IntegrityError
-from django.template import Context, Template
 
 from notifications.models import WhatsAppEventSetting, WhatsAppMessageLog
 from notifications.twilio_callbacks import status_callback_url
+from notifications.whatsapp_common import (
+    SendResult,
+    build_context,
+    get_sample_context,
+    render_text,
+    to_e164,
+)
 
 logger = logging.getLogger(__name__)
 
 API_ROOT = "https://api.twilio.com/2010-04-01"
 
-
-@dataclass
-class TwilioSendResult:
-    success: bool
-    message: str
-    skipped: bool = False
-    logs: list = field(default_factory=list)
+# O nome antigo, de quando a Twilio era o único caminho. Mantido para não
+# obrigar quem chama a mudar por causa de uma mudança de nome.
+TwilioSendResult = SendResult
 
 
 def normalize_whatsapp_address(phone):
@@ -50,23 +50,9 @@ def normalize_whatsapp_address(phone):
     poder registar a falha em vez de enviar para lado nenhum.
     """
 
-    bruto = (phone or "").strip()
+    numero = to_e164(phone)
 
-    if bruto.startswith("whatsapp:"):
-        bruto = bruto[len("whatsapp:") :]
-
-    digitos = re.sub(r"[^\d+]", "", bruto)
-
-    if not digitos:
-        return ""
-
-    if not digitos.startswith("+"):
-        digitos = f"+{digitos}"
-
-    if len(digitos) < 9:
-        return ""
-
-    return f"whatsapp:{digitos}"
+    return f"whatsapp:{numero}" if numero else ""
 
 
 def validate_settings():
@@ -80,25 +66,6 @@ def validate_settings():
         return "TWILIO_WHATSAPP_FROM não é um número válido."
 
     return ""
-
-
-def render_text(texto, context):
-    if not texto:
-        return ""
-
-    return Template(texto).render(Context(context))
-
-
-def build_context(appointment):
-    return {
-        "customer_name": appointment.customer.full_name,
-        "customer_phone": appointment.customer.phone,
-        "service_name": appointment.service.name,
-        "appointment_date": appointment.date.strftime("%d/%m/%Y"),
-        "appointment_time": appointment.start_time.strftime("%H:%M"),
-        "reference_code": appointment.reference_code,
-        "status": appointment.get_status_display(),
-    }
 
 
 def resolve_recipients(setting, appointment):
@@ -336,18 +303,6 @@ def send_manual(appointment, setting):
         return TwilioSendResult(False, format_error(erro))
 
 
-def get_sample_context():
-    return {
-        "customer_name": "Maria Silva",
-        "customer_phone": "+351910000000",
-        "service_name": "Remoção de calos",
-        "appointment_date": "18/08/2026",
-        "appointment_time": "10:30",
-        "reference_code": "AGD-EXEMPLO",
-        "status": "Confirmada",
-    }
-
-
 def send_test(setting, recipient):
     """Envio de teste, com dados de exemplo.
 
@@ -379,60 +334,4 @@ def send_test(setting, recipient):
         True,
         f"Teste aceite pela Twilio para {destino} "
         f"(sid {resposta.get('sid', '—')}). A entrega é confirmada depois.",
-    )
-
-
-def notify(appointment, event_type):
-    """Dispara todas as regras ativas para este acontecimento.
-
-    Chamado a partir dos serviços de marcação. Nunca levanta exceção: uma falha
-    da Twilio não pode desfazer uma marcação que já foi gravada.
-    """
-
-    if not settings.TWILIO_ENABLED:
-        return TwilioSendResult(True, "Twilio desativada nas definições.", skipped=True)
-
-    erro_config = validate_settings()
-
-    if erro_config:
-        logger.warning("Twilio mal configurada: %s", erro_config)
-        return TwilioSendResult(False, erro_config)
-
-    regras = WhatsAppEventSetting.objects.filter(
-        event_type=event_type,
-        is_active=True,
-    )
-
-    if not regras:
-        return TwilioSendResult(
-            True, "Nenhuma regra ativa para este acontecimento.", skipped=True
-        )
-
-    mensagens = []
-    registos = []
-    houve_falha = False
-
-    for regra in regras:
-        try:
-            resultado = send_for_setting(appointment, regra)
-        except Exception as erro:
-            logger.exception("Erro inesperado a enviar %s", regra)
-            houve_falha = True
-            mensagens.append(f"{regra}: {erro}")
-            continue
-
-        registos.extend(resultado.logs)
-
-        if not resultado.success:
-            houve_falha = True
-            mensagens.append(resultado.message)
-
-    if houve_falha:
-        return TwilioSendResult(False, "; ".join(mensagens), logs=registos)
-
-    if not registos:
-        return TwilioSendResult(True, "Nada por enviar.", skipped=True, logs=registos)
-
-    return TwilioSendResult(
-        True, f"{len(registos)} mensagem(ns) aceite(s) pela Twilio.", logs=registos
     )

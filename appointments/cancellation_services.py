@@ -4,7 +4,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.utils import timezone
 
 from notifications.models import WhatsAppEventSetting
-from notifications.twilio_whatsapp import notify as notify_whatsapp
+from notifications.whatsapp_dispatch import notify as notify_whatsapp
 
 from appointments.emails import (
     deliver_after_commit,

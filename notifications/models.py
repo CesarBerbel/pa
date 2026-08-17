@@ -272,10 +272,36 @@ class WhatsAppEventSetting(models.Model):
         (AUDIENCE_CUSTOM, "Outros números"),
     )
 
+    PROVIDER_TWILIO = "twilio"
+    PROVIDER_BAILEYS = "baileys"
+
+    PROVIDER_CHOICES = (
+        (PROVIDER_TWILIO, "Twilio"),
+        (PROVIDER_BAILEYS, "Baileys (número da clínica)"),
+    )
+
     event_type = models.CharField(
         max_length=50,
         choices=EVENT_CHOICES,
         verbose_name="Acontecimento",
+    )
+
+    # A escolha é por regra, e não global, porque os dois caminhos têm feitios
+    # diferentes: a Twilio custa dinheiro e exige modelos aprovados, mas é um
+    # serviço contratado; o Baileys é o número da clínica ligado como um
+    # dispositivo, sem custo nem aprovações e sem garantia nenhuma. Um aviso
+    # interno à profissional e uma confirmação a um cliente não têm por que
+    # sair pelo mesmo sítio.
+    provider = models.CharField(
+        max_length=20,
+        choices=PROVIDER_CHOICES,
+        default=PROVIDER_TWILIO,
+        verbose_name="Enviar por",
+        help_text=(
+            "Twilio: precisa de modelo aprovado, mas é um serviço contratado. "
+            "Baileys: texto livre pelo número da clínica, sem custo, mas "
+            "depende da ligação por QR code estar de pé."
+        ),
     )
 
     audience = models.CharField(
@@ -359,7 +385,21 @@ class WhatsAppEventSetting(models.Model):
                 {"custom_recipients": "Indique pelo menos um número."}
             )
 
-        if not self.body_template.strip() and not self.content_sid.strip():
+        if self.provider == self.PROVIDER_BAILEYS:
+            # O Baileys não conhece modelos aprovados. Um Content SID preenchido
+            # aqui não seria usado, e a regra parecia configurada sem ter texto
+            # nenhum para enviar.
+            if not self.body_template.strip():
+                raise ValidationError(
+                    {
+                        "body_template": (
+                            "O Baileys envia texto livre. Preencha a mensagem — "
+                            "o modelo aprovado da Twilio não se aplica aqui."
+                        )
+                    }
+                )
+
+        elif not self.body_template.strip() and not self.content_sid.strip():
             raise ValidationError(
                 "Preencha a mensagem ou indique um modelo aprovado; sem um dos "
                 "dois não há nada para enviar."
@@ -380,8 +420,25 @@ class WhatsAppEventSetting(models.Model):
 
     def get_template_label(self):
         # Identifica no histórico se a mensagem saiu por modelo aprovado ou
-        # como texto livre.
+        # como texto livre. Pelo Baileys é sempre texto livre, mesmo que a
+        # regra tenha um Content SID guardado de quando saía pela Twilio.
+        if self.provider == self.PROVIDER_BAILEYS:
+            return "texto-livre"
+
         return self.content_sid.strip() or "texto-livre"
+
+    def is_ready_to_send(self):
+        """Se esta regra tem o que precisa para a mensagem chegar mesmo.
+
+        Uma regra ligada mas incompleta é o pior dos casos: parece que está a
+        funcionar e não está. Pela Twilio falta o modelo aprovado; pelo
+        Baileys falta o texto.
+        """
+
+        if self.provider == self.PROVIDER_BAILEYS:
+            return bool(self.body_template.strip())
+
+        return bool(self.content_sid.strip())
 
 
 class WhatsAppMessageLog(models.Model):
@@ -401,10 +458,12 @@ class WhatsAppMessageLog(models.Model):
 
     PROVIDER_CLOUD_API = "cloud_api"
     PROVIDER_TWILIO = "twilio"
+    PROVIDER_BAILEYS = "baileys"
 
     PROVIDER_CHOICES = (
         (PROVIDER_CLOUD_API, "WhatsApp Cloud API"),
         (PROVIDER_TWILIO, "Twilio"),
+        (PROVIDER_BAILEYS, "Baileys"),
     )
 
     provider = models.CharField(
@@ -499,6 +558,12 @@ class WhatsAppMessageLog(models.Model):
 
     def get_delivery_label(self):
         if not self.delivery_status:
+            # O Baileys entrega a mensagem ao WhatsApp na própria chamada; não
+            # há webhook de estado a chegar depois, como na Twilio, por isso
+            # não faz sentido prometer uma confirmação que nunca vem.
+            if self.provider == self.PROVIDER_BAILEYS:
+                return "Entregue ao WhatsApp"
+
             return "Aceite pela Twilio"
 
         return self.DELIVERY_LABELS.get(self.delivery_status, self.delivery_status)
@@ -524,8 +589,7 @@ class WhatsAppMessageLog(models.Model):
 
     def __str__(self):
         return (
-            f"{self.appointment.reference_code} - "
-            f"{self.template_name} - {self.status}"
+            f"{self.appointment.reference_code} - {self.template_name} - {self.status}"
         )
 
 

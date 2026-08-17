@@ -219,6 +219,7 @@ class WhatsAppMessageLogAdmin(admin.ModelAdmin):
         "sent_at",
         "appointment",
         "event_type",
+        "provider",
         "status",
         "template_name",
         "recipient_phone",
@@ -227,6 +228,7 @@ class WhatsAppMessageLogAdmin(admin.ModelAdmin):
 
     list_filter = (
         "status",
+        "provider",
         "event_type",
         "template_name",
         "sent_at",
@@ -399,6 +401,7 @@ class WhatsAppEventSettingAdmin(admin.ModelAdmin):
     list_display = (
         "event_type",
         "audience",
+        "provider",
         "is_active",
         "content_sid",
     )
@@ -406,5 +409,6 @@ class WhatsAppEventSettingAdmin(admin.ModelAdmin):
     list_filter = (
         "event_type",
         "audience",
+        "provider",
         "is_active",
     )

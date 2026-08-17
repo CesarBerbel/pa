@@ -14,11 +14,16 @@ from .views import (
     ServiceFollowUpListView,
     ServiceFollowUpUpdateView,
     TwilioStatusWebhookView,
+    WhatsAppConnectionLogoutView,
+    WhatsAppConnectionRestartView,
+    WhatsAppConnectionStatusView,
+    WhatsAppConnectionView,
     WhatsAppSettingCreateView,
     WhatsAppSettingDeleteView,
     WhatsAppSettingListView,
     WhatsAppSettingTestView,
     WhatsAppSettingUpdateView,
+    WhatsAppUseBaileysForAllView,
 )
 
 app_name = "notifications"
@@ -98,6 +103,31 @@ urlpatterns = [
         "mensagens/whatsapp/<int:pk>/testar/",
         WhatsAppSettingTestView.as_view(),
         name="whatsapp_setting_test",
+    ),
+    path(
+        "mensagens/whatsapp/ligacao/",
+        WhatsAppConnectionView.as_view(),
+        name="whatsapp_connection",
+    ),
+    path(
+        "mensagens/whatsapp/ligacao/estado/",
+        WhatsAppConnectionStatusView.as_view(),
+        name="whatsapp_connection_status",
+    ),
+    path(
+        "mensagens/whatsapp/ligacao/terminar/",
+        WhatsAppConnectionLogoutView.as_view(),
+        name="whatsapp_connection_logout",
+    ),
+    path(
+        "mensagens/whatsapp/ligacao/reiniciar/",
+        WhatsAppConnectionRestartView.as_view(),
+        name="whatsapp_connection_restart",
+    ),
+    path(
+        "mensagens/whatsapp/usar-baileys/",
+        WhatsAppUseBaileysForAllView.as_view(),
+        name="whatsapp_use_baileys_for_all",
     ),
     path(
         "marcacoes/<int:pk>/seguimentos/",

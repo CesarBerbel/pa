@@ -22,6 +22,18 @@ cd /opt/pocket && git pull && docker compose -f docker-compose.prod.yml up -d --
 
 No caso do PA, `--env-file .env.prod` aponta explicitamente para o arquivo de variáveis de ambiente de produção (diferente do `.env` local de desenvolvimento).
 
+## WhatsApp pelo Baileys
+
+O compose do PA inclui o serviço `baileys`, que mantém a ligação ao WhatsApp e
+sobe com o mesmo comando acima. Da primeira vez é preciso acrescentar variáveis
+ao `.env.prod` e emparelhar o número lendo um QR code no site.
+
+Os passos, o que fazer quando a ligação cai e os riscos de usar uma via não
+oficial estão em [baileys_whatsapp.md](baileys_whatsapp.md).
+
+A sessão emparelhada fica no volume `pa_baileys_auth` e **sobrevive a deploys**:
+um `up -d --build` não obriga a ler o QR code outra vez.
+
 ---
 
 # Cópias de segurança da base de dados

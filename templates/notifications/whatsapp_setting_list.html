@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Mensagens de WhatsApp | Priscila Arantes PA{% endblock %}
+{% block title %}WhatsApp | Priscila Arantes PA{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h1 class="h4 mb-1">Mensagens de WhatsApp</h1>
+        <h1 class="h4 mb-1">WhatsApp</h1>
         <p class="text-muted mb-0">
-            Quando enviar e quem recebe, através da Twilio.
+            Quando enviar, quem recebe e por que caminho sai.
         </p>
     </div>
 
@@ -16,25 +16,28 @@
     </a>
 </div>
 
-{% if not twilio_enabled %}
+{% include "notifications/_whatsapp_tabs.html" %}
+
+{% if not twilio_enabled and not baileys_enabled %}
     <div class="alert alert-warning">
         <i class="bi bi-exclamation-triangle me-1"></i>
-        <strong>A Twilio está desligada.</strong>
-        As regras abaixo podem ser configuradas, mas nada é enviado enquanto
-        <code>TWILIO_ENABLED</code> não estiver a <code>True</code> no ficheiro
-        de ambiente do servidor.
+        <strong>Não há nenhum caminho de envio ligado.</strong>
+        As regras abaixo podem ser configuradas, mas nada sai enquanto
+        <code>TWILIO_ENABLED</code> ou <code>BAILEYS_ENABLED</code> não
+        estiverem a <code>True</code> no ficheiro de ambiente do servidor.
     </div>
 {% endif %}
 
 <div class="card shadow-sm border-0 mb-4">
     <div class="card-body">
-        {% if settings_list %}
+        {% if rows %}
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead>
                         <tr>
                             <th>Quando</th>
                             <th>Quem recebe</th>
+                            <th>Enviar por</th>
                             <th>Como</th>
                             <th>Estado</th>
                             <th class="text-end">Ações</th>
@@ -42,7 +45,8 @@
                     </thead>
 
                     <tbody>
-                        {% for regra in settings_list %}
+                        {% for linha in rows %}
+                            {% with regra=linha.setting %}
                             <tr>
                                 <td>{{ regra.get_event_type_display }}</td>
 
@@ -56,7 +60,28 @@
                                 </td>
 
                                 <td>
-                                    {% if regra.content_sid %}
+                                    {% if regra.provider == "baileys" %}
+                                        <span class="badge bg-success-subtle text-success-emphasis">
+                                            <i class="bi bi-whatsapp me-1"></i>Baileys
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-primary-subtle text-primary-emphasis">
+                                            <i class="bi bi-cloud me-1"></i>Twilio
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if regra.provider == "baileys" %}
+                                        {# Pelo Baileys não há modelos: o que #}
+                                        {# conta é haver texto escrito. #}
+                                        {% if regra.body_template %}
+                                            <span class="badge bg-success">Texto pronto</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Sem texto</span>
+                                            <br><small class="text-muted">preencha a mensagem</small>
+                                        {% endif %}
+                                    {% elif regra.content_sid %}
                                         <span class="badge bg-success">Modelo aprovado</span>
                                         <br><small class="text-muted">{{ regra.content_sid }}</small>
                                     {% elif regra.meta_template_body %}
@@ -68,12 +93,20 @@
                                 </td>
 
                                 <td>
-                                    {% if regra.is_active and regra.content_sid %}
-                                        <span class="badge bg-success">A enviar</span>
-                                    {% elif regra.is_active %}
-                                        <span class="badge bg-warning text-dark">Só no sandbox</span>
-                                    {% else %}
+                                    {% if not regra.is_active %}
                                         <span class="badge bg-secondary">Desligada</span>
+                                    {% elif linha.blocked_reason %}
+                                        {# Ligada, mas o caminho que escolheu #}
+                                        {# não está de pé. Dizer "A enviar" #}
+                                        {# aqui seria mentira. #}
+                                        <span class="badge bg-danger">Bloqueada</span>
+                                        <br><small class="text-muted">{{ linha.blocked_reason }}</small>
+                                    {% elif regra.is_ready_to_send %}
+                                        <span class="badge bg-success">A enviar</span>
+                                    {% elif regra.provider == "baileys" %}
+                                        <span class="badge bg-danger">Sem texto</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">Só no sandbox</span>
                                     {% endif %}
                                 </td>
 
@@ -93,6 +126,7 @@
                                     </a>
                                 </td>
                             </tr>
+                            {% endwith %}
                         {% endfor %}
                     </tbody>
                 </table>
@@ -109,14 +143,55 @@
     </div>
 </div>
 
-<div class="alert alert-info small">
-    <i class="bi bi-info-circle me-1"></i>
-    <strong>Texto livre só funciona no sandbox.</strong>
-    Tudo o que sai daqui parte da clínica, não é resposta a uma mensagem do
-    cliente. Fora das 24 horas seguintes a uma mensagem do destinatário, a
-    Twilio recusa texto livre com o erro 63016 — é preciso um modelo aprovado
-    (Content SID). Use o botão de teste na página de edição para confirmar
-    antes de a regra apanhar um cliente real.
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <h2 class="h6 text-uppercase text-muted mb-3">Os dois caminhos</h2>
+
+        <div class="row g-3 small">
+            <div class="col-md-6">
+                <div class="border rounded p-3 h-100">
+                    <h3 class="h6 mb-2">
+                        <i class="bi bi-whatsapp text-success me-1"></i>
+                        Baileys
+                    </h3>
+
+                    <p class="text-muted mb-2">
+                        O número da clínica ligado como um dispositivo, à
+                        maneira do WhatsApp Web. Texto livre sempre, sem
+                        modelos para aprovar e sem custo por mensagem.
+                    </p>
+
+                    <p class="text-muted mb-0">
+                        Em troca não há garantia de serviço: depende da
+                        <a href="{% url 'notifications:whatsapp_connection' %}">ligação</a>
+                        estar de pé, e um uso abusivo pode dar um bloqueio ao
+                        número.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="border rounded p-3 h-100">
+                    <h3 class="h6 mb-2">
+                        <i class="bi bi-cloud text-primary me-1"></i>
+                        Twilio
+                    </h3>
+
+                    <p class="text-muted mb-2">
+                        Serviço contratado, com entrega confirmada por webhook.
+                        Custa por mensagem.
+                    </p>
+
+                    <p class="text-muted mb-0">
+                        Tudo o que sai daqui parte da clínica, não é resposta a
+                        um cliente. Fora das 24 horas seguintes a uma mensagem
+                        do destinatário, a Twilio recusa texto livre com o erro
+                        63016 — é preciso um modelo aprovado (Content SID).
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 {% if recent_logs %}
@@ -130,6 +205,7 @@
                         <tr>
                             <th>Quando</th>
                             <th>Marcação</th>
+                            <th>Por</th>
                             <th>Para</th>
                             <th>Estado</th>
                         </tr>
@@ -140,6 +216,7 @@
                             <tr>
                                 <td class="text-nowrap">{{ log.sent_at|date:"d/m/Y H:i" }}</td>
                                 <td>{{ log.appointment.reference_code }}</td>
+                                <td><small class="text-muted">{{ log.get_provider_display }}</small></td>
                                 <td>{{ log.recipient_phone }}</td>
 
                                 <td>
@@ -147,9 +224,8 @@
                                         <span class="badge bg-danger">Recusada</span>
                                         <br><small class="text-muted">{{ log.error_message }}</small>
                                     {% elif log.delivery_failed %}
-                                        {# Aceite pela Twilio mas não entregue: #}
-                                        {# é aqui que se vê o que antes ficava #}
-                                        {# invisível. #}
+                                        {# Aceite mas não entregue: é aqui que #}
+                                        {# se vê o que antes ficava invisível. #}
                                         <span class="badge bg-danger">{{ log.get_delivery_label }}</span>
                                         {% if log.delivery_error_code %}
                                             <br><small class="text-muted">erro {{ log.delivery_error_code }}</small>
@@ -157,7 +233,7 @@
                                     {% elif log.delivery_status %}
                                         <span class="badge bg-success">{{ log.get_delivery_label }}</span>
                                     {% else %}
-                                        <span class="badge bg-secondary">Aceite, sem confirmação</span>
+                                        <span class="badge bg-secondary">{{ log.get_delivery_label }}</span>
                                     {% endif %}
                                 </td>
                             </tr>

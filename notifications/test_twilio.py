@@ -15,7 +15,7 @@ from appointments.tests.factories import create_test_service, ensure_test_busine
 from appointments.use_cases import ConfirmAppointmentUseCase
 from django.conf import settings
 
-from notifications import twilio_callbacks, twilio_whatsapp
+from notifications import twilio_callbacks, twilio_whatsapp, whatsapp_dispatch
 from notifications.models import WhatsAppEventSetting, WhatsAppMessageLog
 
 TWILIO_LIGADA = {
@@ -213,7 +213,7 @@ class SendingTests(TwilioBase):
         self.regra("appointment_requested", "customer")
         self.regra("appointment_requested", "professional")
 
-        twilio_whatsapp.notify(self.marcacao(), "appointment_requested")
+        whatsapp_dispatch.notify(self.marcacao(), "appointment_requested")
 
         destinos = sorted(p["To"] for p in self.enviados)
 
@@ -226,7 +226,7 @@ class SendingTests(TwilioBase):
         self.regra("appointment_requested", "professional")
 
         marcacao = self.marcacao()
-        twilio_whatsapp.notify(marcacao, "appointment_requested")
+        whatsapp_dispatch.notify(marcacao, "appointment_requested")
 
         self.assertEqual(
             WhatsAppMessageLog.objects.filter(
@@ -239,14 +239,14 @@ class SendingTests(TwilioBase):
     def test_an_inactive_rule_is_skipped(self):
         self.regra("appointment_requested", "customer", is_active=False)
 
-        twilio_whatsapp.notify(self.marcacao(), "appointment_requested")
+        whatsapp_dispatch.notify(self.marcacao(), "appointment_requested")
 
         self.assertEqual(self.enviados, [])
 
     def test_another_event_is_not_triggered(self):
         self.regra("appointment_confirmed", "customer")
 
-        twilio_whatsapp.notify(self.marcacao(), "appointment_requested")
+        whatsapp_dispatch.notify(self.marcacao(), "appointment_requested")
 
         self.assertEqual(self.enviados, [])
 
@@ -254,15 +254,15 @@ class SendingTests(TwilioBase):
         self.regra("appointment_requested", "customer")
         marcacao = self.marcacao()
 
-        twilio_whatsapp.notify(marcacao, "appointment_requested")
-        twilio_whatsapp.notify(marcacao, "appointment_requested")
+        whatsapp_dispatch.notify(marcacao, "appointment_requested")
+        whatsapp_dispatch.notify(marcacao, "appointment_requested")
 
         self.assertEqual(len(self.enviados), 1)
 
     def test_the_send_is_recorded_with_the_provider(self):
         self.regra("appointment_requested", "customer")
 
-        twilio_whatsapp.notify(self.marcacao(), "appointment_requested")
+        whatsapp_dispatch.notify(self.marcacao(), "appointment_requested")
 
         registo = WhatsAppMessageLog.objects.get()
 
@@ -273,7 +273,7 @@ class SendingTests(TwilioBase):
     def test_nothing_is_sent_while_twilio_is_off(self):
         self.regra("appointment_requested", "customer")
 
-        resultado = twilio_whatsapp.notify(self.marcacao(), "appointment_requested")
+        resultado = whatsapp_dispatch.notify(self.marcacao(), "appointment_requested")
 
         self.assertEqual(self.enviados, [])
         self.assertTrue(resultado.skipped)
@@ -282,7 +282,7 @@ class SendingTests(TwilioBase):
     def test_missing_credentials_are_reported_not_swallowed(self):
         self.regra("appointment_requested", "customer")
 
-        resultado = twilio_whatsapp.notify(self.marcacao(), "appointment_requested")
+        resultado = whatsapp_dispatch.notify(self.marcacao(), "appointment_requested")
 
         self.assertFalse(resultado.success)
         self.assertIn("TWILIO_ACCOUNT_SID", resultado.message)
@@ -302,7 +302,7 @@ class FailureTests(TwilioBase):
         with patch.object(
             twilio_whatsapp, "post_message", side_effect=RuntimeError("rede em baixo")
         ):
-            resultado = twilio_whatsapp.notify(marcacao, "appointment_requested")
+            resultado = whatsapp_dispatch.notify(marcacao, "appointment_requested")
 
         self.assertFalse(resultado.success)
         self.assertTrue(
@@ -319,12 +319,12 @@ class FailureTests(TwilioBase):
         with patch.object(
             twilio_whatsapp, "post_message", side_effect=RuntimeError("rede em baixo")
         ):
-            twilio_whatsapp.notify(marcacao, "appointment_requested")
+            whatsapp_dispatch.notify(marcacao, "appointment_requested")
 
         with patch.object(
             twilio_whatsapp, "post_message", return_value={"sid": "SM9"}
         ) as segundo:
-            twilio_whatsapp.notify(marcacao, "appointment_requested")
+            whatsapp_dispatch.notify(marcacao, "appointment_requested")
 
         self.assertEqual(segundo.call_count, 1)
 
@@ -422,17 +422,25 @@ class EventWiringTests(TwilioBase):
 
 
 class WhatsAppSettingScreenTests(TwilioBase):
-    @override_settings(TWILIO_ENABLED=False)
-    def test_the_list_warns_when_twilio_is_off(self):
+    @override_settings(TWILIO_ENABLED=False, BAILEYS_ENABLED=False)
+    def test_the_list_warns_when_no_provider_is_on(self):
         resposta = self.client.get(reverse("notifications:whatsapp_setting_list"))
 
-        self.assertContains(resposta, "A Twilio está desligada")
+        self.assertContains(resposta, "Não há nenhum caminho de envio ligado")
 
     @override_settings(**TWILIO_LIGADA)
     def test_the_list_does_not_warn_when_twilio_is_on(self):
         resposta = self.client.get(reverse("notifications:whatsapp_setting_list"))
 
-        self.assertNotContains(resposta, "A Twilio está desligada")
+        self.assertNotContains(resposta, "Não há nenhum caminho de envio ligado")
+
+    @override_settings(TWILIO_ENABLED=False, BAILEYS_ENABLED=True)
+    def test_the_list_does_not_warn_when_only_baileys_is_on(self):
+        # Basta um caminho de pé. As regras que apontam para o outro aparecem
+        # marcadas como bloqueadas, linha a linha.
+        resposta = self.client.get(reverse("notifications:whatsapp_setting_list"))
+
+        self.assertNotContains(resposta, "Não há nenhum caminho de envio ligado")
 
     def test_a_rule_can_be_created(self):
         WhatsAppEventSetting.objects.all().delete()
@@ -443,6 +451,7 @@ class WhatsAppSettingScreenTests(TwilioBase):
                 "event_type": "appointment_requested",
                 "audience": "professional",
                 "custom_recipients": "",
+                "provider": "twilio",
                 "body_template": "Novo pedido de {{ customer_name }}.",
                 "content_sid": "",
                 "content_variables": "",
@@ -715,6 +724,7 @@ class MetaRuleValidationTests(TwilioBase):
                 "event_type": "appointment_completed",
                 "audience": "professional",
                 "custom_recipients": "",
+                "provider": "twilio",
                 "body_template": "Olá.",
                 "meta_template_body": meta_body,
                 "content_sid": "",
@@ -835,7 +845,7 @@ class ManualWhatsAppSendTests(TwilioBase):
     def test_a_manual_send_stops_the_automatic_one(self):
         self.client.post(self.url())
 
-        twilio_whatsapp.notify(self.appointment, "appointment_confirmed")
+        whatsapp_dispatch.notify(self.appointment, "appointment_confirmed")
 
         self.assertEqual(len(self.enviados), 1)
 

@@ -13,6 +13,28 @@ services:
       timeout: 5s
       retries: 5
 
+  # Ponte para o WhatsApp pelo Baileys. Fica só na rede interna do Docker: não
+  # tem porta publicada, porque quem precisa dele é o Django e mais ninguém.
+  baileys:
+    build: ./baileys
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      AUTH_DIR: /data/auth
+      BAILEYS_API_TOKEN: ${BAILEYS_API_TOKEN}
+      BAILEYS_DEVICE_NAME: ${BAILEYS_DEVICE_NAME:-Priscila Arantes PA}
+      LOG_LEVEL: ${BAILEYS_LOG_LEVEL:-info}
+    volumes:
+      # A sessão emparelhada vive aqui. Sem este volume, cada `up --build`
+      # obrigaria a ler o QR code outra vez.
+      - pa_baileys_auth:/data/auth
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:3000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
   web:
     build: .
     command: >
@@ -26,6 +48,12 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      # `service_started` e não `service_healthy`: o Baileys só fica saudável
+      # depois de falar com o WhatsApp, e o site não tem de esperar por isso
+      # para servir páginas.
+      baileys:
+        condition: service_started
 
 volumes:
   pa_pgdata:
+  pa_baileys_auth:

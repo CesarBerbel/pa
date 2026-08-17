@@ -101,6 +101,7 @@ class WhatsAppEventSettingForm(forms.ModelForm):
             "event_type",
             "audience",
             "custom_recipients",
+            "provider",
             "body_template",
             "meta_template_body",
             "content_sid",

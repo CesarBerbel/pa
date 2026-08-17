@@ -303,8 +303,7 @@ AUTH_USER_MODEL = "accounts.User"
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": (
-            "django.contrib.auth.password_validation."
-            "UserAttributeSimilarityValidator"
+            "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
         ),
     },
     {
@@ -566,7 +565,7 @@ WHATSAPP_TEMPLATE_LANGUAGE_CODE = config(
 WHATSAPP_TEMPLATE_BODY_PARAMETERS = env_list(
     "WHATSAPP_TEMPLATE_BODY_PARAMETERS",
     default=(
-        "customer_name,service_name,appointment_date," "appointment_time,reference_code"
+        "customer_name,service_name,appointment_date,appointment_time,reference_code"
     ),
 )
 
@@ -607,6 +606,47 @@ TWILIO_PROFESSIONAL_WHATSAPP = config(
 TWILIO_REQUEST_TIMEOUT = config(
     "TWILIO_REQUEST_TIMEOUT",
     default=15,
+    cast=int,
+)
+
+
+# =============================================================================
+# Baileys (WhatsApp)
+# =============================================================================
+#
+# O Baileys liga-se ao WhatsApp como um dispositivo emparelhado, tal como o
+# WhatsApp Web: não há modelos para aprovar nem janela de 24 horas, mas também
+# não há garantia de serviço — é o número da clínica que está a enviar.
+#
+# Corre num container à parte (ver `baileys/`), porque é uma biblioteca Node.
+# O Django só fala com ele por HTTP, pela rede interna do Docker.
+
+BAILEYS_ENABLED = config(
+    "BAILEYS_ENABLED",
+    default=False,
+    cast=bool,
+)
+
+BAILEYS_API_URL = config(
+    "BAILEYS_API_URL",
+    default="http://baileys:3000",
+).strip()
+
+# O mesmo valor tem de estar no serviço Node. Sem ele, qualquer container da
+# rede interna podia enviar mensagens em nome da clínica.
+BAILEYS_API_TOKEN = config("BAILEYS_API_TOKEN", default="").strip()
+
+# Para onde vão os avisos dirigidos à profissional. Por omissão segue o mesmo
+# número que a Twilio usa, para não haver dois sítios a dizer coisas
+# diferentes sobre o mesmo destinatário.
+BAILEYS_PROFESSIONAL_WHATSAPP = config(
+    "BAILEYS_PROFESSIONAL_WHATSAPP",
+    default=TWILIO_PROFESSIONAL_WHATSAPP,
+).strip()
+
+BAILEYS_REQUEST_TIMEOUT = config(
+    "BAILEYS_REQUEST_TIMEOUT",
+    default=20,
     cast=int,
 )
 

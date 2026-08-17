@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}Ligação do WhatsApp | Priscila Arantes PA{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h4 mb-1">WhatsApp</h1>
+        <p class="text-muted mb-0">
+            Ligar o número da clínica e acompanhar o estado da ligação.
+        </p>
+    </div>
+</div>
+
+{% include "notifications/_whatsapp_tabs.html" %}
+
+{% if not baileys_enabled %}
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle me-1"></i>
+        <strong>O Baileys está desligado.</strong>
+        Ponha <code>BAILEYS_ENABLED=True</code> no ficheiro de ambiente do
+        servidor e suba o serviço. Enquanto isso não acontecer, não há QR code
+        para ler.
+    </div>
+{% endif %}
+
+<div class="row g-4">
+    <div class="col-12 col-lg-7">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body p-4 text-center" id="wa-panel">
+
+                <div class="mb-3">
+                    <span class="badge fs-6" id="wa-badge">A carregar…</span>
+                </div>
+
+                {# O QR code, quando há um à espera de leitura. A imagem é #}
+                {# substituída pelo JavaScript a cada atualização: o WhatsApp #}
+                {# roda o código a cada 20 segundos e um código velho no ecrã #}
+                {# faz a leitura falhar sem explicação nenhuma. #}
+                <div id="wa-qr-box" class="d-none">
+                    <img
+                        id="wa-qr"
+                        alt="QR code para ligar o WhatsApp"
+                        class="img-fluid border rounded p-2 bg-white"
+                        style="max-width: 320px;"
+                    >
+
+                    <ol class="text-start small text-muted mt-3 mb-0 mx-auto" style="max-width: 380px;">
+                        <li>Abra o WhatsApp no telemóvel da clínica.</li>
+                        <li>
+                            Toque em <strong>Definições</strong> →
+                            <strong>Dispositivos ligados</strong> →
+                            <strong>Ligar dispositivo</strong>.
+                        </li>
+                        <li>Aponte a câmara a este código.</li>
+                    </ol>
+                </div>
+
+                <div id="wa-connected" class="d-none">
+                    <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+
+                    <p class="h5 mt-3 mb-1" id="wa-number">—</p>
+                    <p class="text-muted small mb-0" id="wa-since"></p>
+                </div>
+
+                <div id="wa-waiting" class="d-none">
+                    <div class="spinner-border text-secondary" role="status">
+                        <span class="visually-hidden">A ligar…</span>
+                    </div>
+
+                    <p class="text-muted small mt-3 mb-0" id="wa-waiting-text">
+                        A abrir a ligação ao WhatsApp.
+                    </p>
+                </div>
+
+                <div id="wa-error" class="alert alert-danger text-start small d-none mb-0 mt-3"></div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-5">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-4">
+                <h2 class="h6 text-uppercase text-muted mb-3">Ações</h2>
+
+                <form method="post" action="{% url 'notifications:whatsapp_connection_restart' %}" class="mb-2">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-secondary w-100">
+                        <i class="bi bi-arrow-clockwise me-1"></i>
+                        Reabrir a ligação
+                    </button>
+                </form>
+
+                <p class="text-muted small">
+                    Fecha e volta a abrir a ligação sem perder o
+                    emparelhamento. Serve quando o estado ficou preso.
+                </p>
+
+                <form
+                    method="post"
+                    action="{% url 'notifications:whatsapp_connection_logout' %}"
+                    onsubmit="return confirm('Terminar a sessão? Vai ser preciso ler um QR code novo para voltar a enviar mensagens.');"
+                    class="mb-2"
+                >
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger w-100">
+                        <i class="bi bi-box-arrow-right me-1"></i>
+                        Terminar sessão
+                    </button>
+                </form>
+
+                <p class="text-muted small mb-0">
+                    Apaga o emparelhamento deste servidor. Use para ligar outro
+                    número — a partir daí nada sai pelo Baileys até alguém ler
+                    o QR code novo.
+                </p>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <h2 class="h6 text-uppercase text-muted mb-3">Regras a usar o Baileys</h2>
+
+                <p class="mb-3">
+                    <span class="display-6">{{ baileys_rules }}</span>
+                    <span class="text-muted">de {{ total_rules }}</span>
+                </p>
+
+                {% if baileys_rules < total_rules %}
+                    <form method="post" action="{% url 'notifications:whatsapp_use_baileys_for_all' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary w-100">
+                            Passar todas para o Baileys
+                        </button>
+                    </form>
+
+                    <p class="text-muted small mt-2 mb-0">
+                        As restantes continuam a sair pela Twilio. Cada regra
+                        pode ser mudada à parte no separador
+                        <a href="{% url 'notifications:whatsapp_setting_list' %}">Mensagens</a>.
+                    </p>
+                {% else %}
+                    <p class="text-muted small mb-0">
+                        Todas as mensagens saem pelo Baileys.
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-info small mt-4">
+    <i class="bi bi-info-circle me-1"></i>
+    <strong>A ligação é uma sessão, não uma palavra-passe.</strong>
+    Fica guardada no servidor e sobrevive a reinícios e a novos deploys. Cai
+    quando alguém a remove em <em>Dispositivos ligados</em> no telemóvel, ou se
+    o número passar muito tempo sem uso. É por isso que este ecrã existe: para
+    se ver que caiu antes de ser um cliente a reparar.
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+    // O estado muda sozinho — o QR roda a cada 20 segundos, a ligação pode
+    // cair — por isso o ecrã pergunta em vez de esperar que alguém recarregue.
+    const URL_ESTADO = "{% url 'notifications:whatsapp_connection_status' %}";
+
+    const badge = document.getElementById("wa-badge");
+    const caixaQr = document.getElementById("wa-qr-box");
+    const imagemQr = document.getElementById("wa-qr");
+    const ligado = document.getElementById("wa-connected");
+    const numero = document.getElementById("wa-number");
+    const desde = document.getElementById("wa-since");
+    const aEsperar = document.getElementById("wa-waiting");
+    const textoEspera = document.getElementById("wa-waiting-text");
+    const erro = document.getElementById("wa-error");
+
+    const CORES = {
+        connected: "bg-success",
+        waiting_qr: "bg-warning text-dark",
+        connecting: "bg-secondary",
+        starting: "bg-secondary",
+        disconnected: "bg-danger",
+        logged_out: "bg-danger",
+        unreachable: "bg-danger",
+        misconfigured: "bg-danger",
+        disabled: "bg-secondary",
+    };
+
+    function mostrar(elemento, visivel) {
+        elemento.classList.toggle("d-none", !visivel);
+    }
+
+    function desenhar(dados) {
+        badge.className = "badge fs-6 " + (CORES[dados.state] || "bg-secondary");
+        badge.textContent = dados.label || dados.state;
+
+        const temQr = dados.state === "waiting_qr" && dados.qr;
+
+        mostrar(caixaQr, temQr);
+        mostrar(ligado, dados.state === "connected");
+        mostrar(aEsperar, !temQr && dados.state !== "connected");
+
+        if (temQr) {
+            imagemQr.src = dados.qr;
+        }
+
+        if (dados.state === "connected") {
+            // O `id` vem como 351912345678:12@s.whatsapp.net; para quem está a
+            // olhar só interessa o número.
+            const bruto = (dados.me && dados.me.id) || "";
+            numero.textContent = "+" + bruto.split(":")[0].split("@")[0];
+
+            desde.textContent = dados.connected_at
+                ? "Ligado desde " + new Date(dados.connected_at).toLocaleString("pt-PT")
+                : "";
+        }
+
+        if (dados.state !== "connected" && !temQr) {
+            textoEspera.textContent =
+                dados.state === "disabled"
+                    ? "O Baileys está desligado nas definições do servidor."
+                    : "A abrir a ligação ao WhatsApp.";
+        }
+
+        // Um erro antigo continuar no ecrã depois de a ligação recuperar
+        // seria pior do que não o mostrar de todo.
+        const mostrarErro = Boolean(dados.last_error) && dados.state !== "connected";
+
+        mostrar(erro, mostrarErro);
+
+        if (mostrarErro) {
+            erro.textContent = dados.last_error;
+        }
+    }
+
+    async function consultar() {
+        try {
+            const resposta = await fetch(URL_ESTADO, {
+                headers: { "X-Requested-With": "XMLHttpRequest" },
+            });
+
+            if (!resposta.ok) {
+                throw new Error("HTTP " + resposta.status);
+            }
+
+            desenhar(await resposta.json());
+        } catch (falha) {
+            badge.className = "badge fs-6 bg-danger";
+            badge.textContent = "Sem resposta do servidor";
+        }
+    }
+
+    consultar();
+
+    // Três segundos: o QR só dura vinte, e um intervalo maior faria a pessoa
+    // apontar a câmara a um código já expirado.
+    setInterval(consultar, 3000);
+})();
+</script>
+{% endblock %}

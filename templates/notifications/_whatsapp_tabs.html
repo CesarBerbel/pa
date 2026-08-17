@@ -1,0 +1,25 @@
+{# Abas partilhadas pelos dois ecrãs de WhatsApp. São páginas separadas, e não #}
+{# separadores de JavaScript, para cada uma ter endereço próprio: a da ligação #}
+{# é a que se manda a alguém quando é preciso ler o QR code outra vez. #}
+
+<ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+        <a
+            class="nav-link {% if active_tab == 'messages' %}active{% endif %}"
+            href="{% url 'notifications:whatsapp_setting_list' %}"
+        >
+            <i class="bi bi-chat-left-text me-1" aria-hidden="true"></i>
+            Mensagens
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a
+            class="nav-link {% if active_tab == 'connection' %}active{% endif %}"
+            href="{% url 'notifications:whatsapp_connection' %}"
+        >
+            <i class="bi bi-qr-code me-1" aria-hidden="true"></i>
+            Ligação
+        </a>
+    </li>
+</ul>

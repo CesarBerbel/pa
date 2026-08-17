@@ -1,6 +1,6 @@
 from django.conf import settings as django_settings
 from django.contrib import messages
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -31,9 +31,16 @@ from .models import (
     WhatsAppEventSetting,
     WhatsAppMessageLog,
 )
+from . import baileys_whatsapp
 from .services import EmailTemplateService
 from .twilio_callbacks import record_status, signature_is_valid
-from .twilio_whatsapp import resolve_recipients, send_manual, send_test, sent_logs
+from .whatsapp_dispatch import (
+    provider_error,
+    resolve_recipients,
+    send_manual,
+    send_test,
+    sent_logs,
+)
 
 
 class EmailTemplateListView(InternalAreaRequiredMixin, ListView):
@@ -196,7 +203,9 @@ class AppointmentFollowUpView(InternalAreaRequiredMixin, TemplateView):
         context["rows"] = linhas
         context["has_email"] = bool(appointment.customer.email)
         context["whatsapp_rows"] = self.get_whatsapp_rows(appointment)
-        context["twilio_enabled"] = django_settings.TWILIO_ENABLED
+        context["twilio_enabled"] = (
+            django_settings.TWILIO_ENABLED or django_settings.BAILEYS_ENABLED
+        )
 
         return context
 
@@ -219,7 +228,10 @@ class AppointmentFollowUpView(InternalAreaRequiredMixin, TemplateView):
                     "recipients": resolve_recipients(setting, appointment),
                     "last_log": ultimo,
                     "sent_at": ultimo.sent_at if ultimo else None,
-                    "needs_template": not setting.content_sid.strip(),
+                    # O que falta depende do caminho: pela Twilio é o modelo
+                    # aprovado, pelo Baileys é o texto.
+                    "needs_template": not setting.is_ready_to_send(),
+                    "blocked_reason": provider_error(setting),
                 }
             )
 
@@ -246,6 +258,8 @@ class AppointmentFollowUpSendView(InternalAreaRequiredMixin, View):
 
 
 class WhatsAppSettingListView(InternalAreaRequiredMixin, ListView):
+    """Aba das mensagens: quando enviar, a quem, e por que caminho."""
+
     model = WhatsAppEventSetting
     template_name = "notifications/whatsapp_setting_list.html"
     context_object_name = "settings_list"
@@ -253,14 +267,162 @@ class WhatsAppSettingListView(InternalAreaRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        context["active_tab"] = "messages"
         context["twilio_enabled"] = django_settings.TWILIO_ENABLED
+        context["baileys_enabled"] = django_settings.BAILEYS_ENABLED
         context["twilio_from"] = django_settings.TWILIO_WHATSAPP_FROM
         context["professional_number"] = django_settings.TWILIO_PROFESSIONAL_WHATSAPP
+
+        # Uma regra pode estar ligada e mesmo assim não enviar, porque o
+        # fornecedor dela está desligado no servidor. Sem isto explicado na
+        # tabela, o ecrã diz "A enviar" para uma mensagem que não sai.
+        context["rows"] = [
+            {"setting": regra, "blocked_reason": provider_error(regra)}
+            for regra in context["settings_list"]
+        ]
+
         context["recent_logs"] = WhatsAppMessageLog.objects.filter(
-            provider=WhatsAppMessageLog.PROVIDER_TWILIO
+            provider__in=[
+                WhatsAppMessageLog.PROVIDER_TWILIO,
+                WhatsAppMessageLog.PROVIDER_BAILEYS,
+            ]
         ).select_related("appointment")[:15]
 
         return context
+
+
+class WhatsAppConnectionView(InternalAreaRequiredMixin, TemplateView):
+    """Aba da ligação: o QR code e o estado do número da clínica.
+
+    O emparelhamento é uma sessão, não uma credencial que se cole num ficheiro
+    de ambiente. Por isso precisa de um ecrã: alguém tem de ler um código com
+    o telemóvel, e alguém tem de poder ver se a ligação ainda está de pé.
+    """
+
+    template_name = "notifications/whatsapp_connection.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context["active_tab"] = "connection"
+        context["baileys_enabled"] = django_settings.BAILEYS_ENABLED
+        context["baileys_url"] = django_settings.BAILEYS_API_URL
+
+        # O estado inicial vem do servidor para o ecrã não abrir vazio; a
+        # partir daí é o JavaScript que o vai refrescando.
+        context["status"] = baileys_whatsapp.get_status()
+
+        context["baileys_rules"] = WhatsAppEventSetting.objects.filter(
+            provider=WhatsAppEventSetting.PROVIDER_BAILEYS
+        ).count()
+
+        context["total_rules"] = WhatsAppEventSetting.objects.count()
+
+        return context
+
+
+class WhatsAppConnectionStatusView(InternalAreaRequiredMixin, View):
+    """Estado da ligação em JSON, para o ecrã se ir atualizando sozinho.
+
+    O QR code muda a cada 20 segundos e a ligação pode cair a qualquer
+    momento. Obrigar a recarregar a página para ver isso tornaria o
+    emparelhamento uma questão de sorte.
+    """
+
+    def get(self, request):
+        estado = baileys_whatsapp.get_status()
+
+        return JsonResponse(
+            {
+                "state": estado.get("state", "unknown"),
+                "qr": estado.get("qr", ""),
+                "me": estado.get("me"),
+                "last_error": estado.get("lastError", ""),
+                "connected_at": estado.get("connectedAt"),
+                "label": WHATSAPP_STATE_LABELS.get(
+                    estado.get("state", ""), estado.get("state", "desconhecido")
+                ),
+            }
+        )
+
+
+WHATSAPP_STATE_LABELS = {
+    "disabled": "Desligado nas definições",
+    "misconfigured": "Mal configurado",
+    "unreachable": "Serviço inacessível",
+    "starting": "A arrancar",
+    "connecting": "A ligar",
+    "waiting_qr": "À espera da leitura do QR code",
+    "connected": "Ligado",
+    "disconnected": "Desligado",
+    "logged_out": "Sessão terminada no telemóvel",
+}
+
+
+class WhatsAppConnectionLogoutView(InternalAreaRequiredMixin, View):
+    """Termina a sessão para se poder ligar outro número."""
+
+    def post(self, request):
+        try:
+            baileys_whatsapp.logout()
+            messages.success(
+                request,
+                "Sessão terminada. Leia o QR code novo para voltar a ligar.",
+            )
+        except baileys_whatsapp.BaileysError as erro:
+            messages.error(request, str(erro))
+
+        return redirect("notifications:whatsapp_connection")
+
+
+class WhatsAppConnectionRestartView(InternalAreaRequiredMixin, View):
+    """Reabre a ligação sem perder o emparelhamento."""
+
+    def post(self, request):
+        try:
+            baileys_whatsapp.restart()
+            messages.success(request, "A reabrir a ligação.")
+        except baileys_whatsapp.BaileysError as erro:
+            messages.error(request, str(erro))
+
+        return redirect("notifications:whatsapp_connection")
+
+
+class WhatsAppUseBaileysForAllView(InternalAreaRequiredMixin, View):
+    """Passa todas as regras para o Baileys de uma vez.
+
+    Quem acabou de ligar o número quer usá-lo; abrir seis regras uma a uma
+    para mudar a mesma caixa é trabalho sem conteúdo.
+    """
+
+    def post(self, request):
+        alteradas = WhatsAppEventSetting.objects.exclude(
+            provider=WhatsAppEventSetting.PROVIDER_BAILEYS
+        ).update(provider=WhatsAppEventSetting.PROVIDER_BAILEYS)
+
+        # O Baileys envia texto livre. Uma regra que só tinha Content SID fica
+        # sem nada para dizer, e é melhor avisar já do que descobrir no envio.
+        sem_texto = [
+            str(regra)
+            for regra in WhatsAppEventSetting.objects.filter(
+                provider=WhatsAppEventSetting.PROVIDER_BAILEYS
+            )
+            if not regra.body_template.strip()
+        ]
+
+        if alteradas:
+            messages.success(request, f"{alteradas} regra(s) passaram para o Baileys.")
+        else:
+            messages.info(request, "Todas as regras já estavam no Baileys.")
+
+        if sem_texto:
+            messages.warning(
+                request,
+                "Sem texto preenchido, e por isso sem nada para enviar: "
+                + "; ".join(sem_texto),
+            )
+
+        return redirect("notifications:whatsapp_setting_list")
 
 
 class WhatsAppSettingCreateView(InternalAreaRequiredMixin, CreateView):

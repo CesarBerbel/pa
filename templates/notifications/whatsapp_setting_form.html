@@ -11,10 +11,38 @@
             {% if object %}Editar mensagem{% else %}Nova mensagem de WhatsApp{% endif %}
         </h1>
 
-        <div class="card shadow-sm border-0 mb-4">
+        {# Os dois caminhos pedem coisas diferentes: um pede um texto, o outro #}
+        {# pede um modelo aprovado. Mostrar as duas instruções ao mesmo tempo #}
+        {# faria metade delas ser ruído em qualquer dos casos, por isso o #}
+        {# painel segue o campo "Enviar por". #}
+        <div class="card shadow-sm border-0 mb-4" id="guia-baileys">
             <div class="card-body p-4">
                 <h2 class="h6 text-uppercase text-muted mb-3">
-                    Do texto até à mensagem que chega
+                    <i class="bi bi-whatsapp text-success me-1"></i>
+                    Pelo Baileys
+                </h2>
+
+                <p class="small mb-2">
+                    Escreva a mensagem no campo <strong>Mensagem</strong>, com
+                    as variáveis abaixo. Não há modelos para aprovar nem espera
+                    pela Meta: o que escrever é o que sai.
+                </p>
+
+                <p class="small text-muted mb-0">
+                    Os campos de modelo aprovado — texto para aprovação,
+                    Content SID, variáveis — pertencem à Twilio e são ignorados
+                    aqui. A mensagem só chega com a
+                    <a href="{% url 'notifications:whatsapp_connection' %}">ligação</a>
+                    de pé.
+                </p>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 mb-4" id="guia-twilio">
+            <div class="card-body p-4">
+                <h2 class="h6 text-uppercase text-muted mb-3">
+                    <i class="bi bi-cloud text-primary me-1"></i>
+                    Pela Twilio: do texto até à mensagem que chega
                 </h2>
 
                 <ol class="small mb-0 ps-3">
@@ -93,4 +121,46 @@
 
     </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+    const escolha = document.getElementById("id_provider");
+
+    if (!escolha) {
+        return;
+    }
+
+    const guias = {
+        baileys: document.getElementById("guia-baileys"),
+        twilio: document.getElementById("guia-twilio"),
+    };
+
+    // Os campos do modelo aprovado não fazem nada quando a regra sai pelo
+    // Baileys. Deixá-los à vista convidava a preenchê-los à espera de um
+    // efeito que não existe.
+    const camposTwilio = ["meta_template_body", "content_sid", "content_variables"]
+        .map((nome) => document.getElementById("id_" + nome))
+        .filter(Boolean)
+        .map((campo) => campo.closest(".mb-3") || campo.parentElement);
+
+    function aplicar() {
+        const valor = escolha.value;
+
+        Object.entries(guias).forEach(([nome, elemento]) => {
+            if (elemento) {
+                elemento.classList.toggle("d-none", nome !== valor);
+            }
+        });
+
+        camposTwilio.forEach((campo) => {
+            campo.classList.toggle("d-none", valor === "baileys");
+        });
+    }
+
+    escolha.addEventListener("change", aplicar);
+    aplicar();
+})();
+</script>
 {% endblock %}

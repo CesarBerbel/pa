@@ -12,7 +12,7 @@ from appointments.emails import (
 )
 from appointments.models import Appointment, AppointmentLog
 from notifications.models import WhatsAppEventSetting
-from notifications.twilio_whatsapp import notify as notify_whatsapp
+from notifications.whatsapp_dispatch import notify as notify_whatsapp
 from notifications.whatsapp import WhatsAppAppointmentNotificationService
 
 

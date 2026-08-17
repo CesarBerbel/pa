@@ -99,6 +99,14 @@ yarn-debug.log*
 yarn-error.log*
 .vs
 
+# ----------------------
+# Baileys
+# ----------------------
+# A sessão emparelhada do WhatsApp. São credenciais: quem as tiver fica com o
+# número da clínica no dispositivo dele.
+baileys/auth/
+baileys/data/
+
 *.zip
 
 chatgpt/
