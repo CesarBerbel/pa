@@ -1,9 +1,13 @@
 import json
+import logging
 import re
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
+
+logger = logging.getLogger(__name__)
 
 
 class EmailTemplate(models.Model):
@@ -638,3 +642,81 @@ class InstagramPost(models.Model):
 
     def __str__(self):
         return self.permalink or f"Publicação #{self.pk}"
+
+
+class MessagingSetting(models.Model):
+    """Interruptor geral de mensagens para clientes.
+
+    Há alturas em que a clínica não quer que saia nada: férias, uma migração de
+    número, um problema com o fornecedor, ou simplesmente o receio de que uma
+    regra mal configurada comece a escrever a toda a gente. Sem um sítio único
+    para desligar, a única saída era ir a cada regra de WhatsApp e a cada
+    acontecimento de email e desligá-los um a um — demorado, fácil de esquecer
+    metade, e pior ainda de repor depois.
+
+    Está acima de tudo o resto: com isto desligado não sai email nem WhatsApp,
+    nem automático, nem manual, nem de teste. Um interruptor que às vezes deixa
+    passar mensagens não serve para o que é preciso, que é ter a certeza.
+
+    Existe uma linha só, com pk fixo. É uma definição da clínica, não uma lista.
+    """
+
+    SINGLETON_PK = 1
+
+    is_enabled = models.BooleanField(
+        default=True,
+        verbose_name="Enviar mensagens",
+        help_text=(
+            "Quando desligado, o site não envia emails nem mensagens de "
+            "WhatsApp. As marcações continuam a funcionar normalmente."
+        ),
+    )
+
+    # Quem desligou e quando. Uma mensagem que não chegou costuma ser
+    # descoberta dias depois, por alguém que não esteve presente na decisão.
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="messaging_setting_changes",
+        verbose_name="Alterado por",
+    )
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Envio de mensagens"
+        verbose_name_plural = "Envio de mensagens"
+
+    def __str__(self):
+        return "Mensagens ligadas" if self.is_enabled else "Mensagens desligadas"
+
+    def save(self, *args, **kwargs):
+        # Uma segunda linha faria com que o interruptor visível na página não
+        # fosse necessariamente o que os envios consultam.
+        self.pk = self.SINGLETON_PK
+
+        return super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        definicao, _criada = cls.objects.get_or_create(pk=cls.SINGLETON_PK)
+
+        return definicao
+
+    @classmethod
+    def messaging_enabled(cls):
+        """Se as mensagens para clientes podem sair agora.
+
+        Em caso de erro a ler a definição responde que sim. A alternativa era
+        uma falha de base de dados calar as confirmações e os lembretes sem
+        ninguém dar por isso, o que é pior do que uma mensagem a mais.
+        """
+
+        try:
+            return cls.load().is_enabled
+        except Exception:
+            logger.exception("Não foi possível ler o interruptor de mensagens.")
+
+            return True

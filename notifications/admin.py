@@ -8,6 +8,7 @@ from .models import (
     EmailEventSetting,
     EmailTemplate,
     InstagramPost,
+    MessagingSetting,
     ServiceFollowUp,
     WhatsAppEventSetting,
     WhatsAppMessageLog,
@@ -412,3 +413,20 @@ class WhatsAppEventSettingAdmin(admin.ModelAdmin):
         "provider",
         "is_active",
     )
+
+
+@admin.register(MessagingSetting)
+class MessagingSettingAdmin(admin.ModelAdmin):
+    # O sítio para mexer nisto é a área interna, em Configurações. Aqui fica
+    # visível para inspeção e para o caso de a área interna estar inacessível.
+
+    list_display = ("__str__", "is_enabled", "updated_by", "updated_at")
+
+    readonly_fields = ("updated_by", "updated_at")
+
+    def has_add_permission(self, request):
+        # Só existe uma linha, criada na primeira leitura.
+        return not MessagingSetting.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False

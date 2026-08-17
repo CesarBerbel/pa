@@ -21,12 +21,15 @@ from appointments.models import Appointment
 from .followup_services import followups_for, last_sent_at, send_followup
 from .forms import (
     EmailTemplateForm,
+    MessagingSettingForm,
     ServiceFollowUpForm,
     WhatsAppEventSettingForm,
     WhatsAppTestForm,
 )
 from .models import (
+    EmailEventSetting,
     EmailTemplate,
+    MessagingSetting,
     ServiceFollowUp,
     WhatsAppEventSetting,
     WhatsAppMessageLog,
@@ -523,3 +526,49 @@ class TwilioStatusWebhookView(View):
 
         # A Twilio só quer saber que recebemos; o corpo é ignorado.
         return HttpResponse(status=204)
+
+
+class MessagingSettingView(InternalAreaRequiredMixin, UpdateView):
+    """Interruptor geral: liga e desliga o envio de emails e de WhatsApp."""
+
+    model = MessagingSetting
+    form_class = MessagingSettingForm
+    template_name = "notifications/messaging_setting_form.html"
+    success_url = reverse_lazy("notifications:messaging_setting")
+
+    def get_object(self, queryset=None):
+        return MessagingSetting.load()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Quantas regras deixam de disparar enquanto isto estiver desligado. É
+        # o que torna a decisão concreta para quem está a olhar para o ecrã.
+        context["regras_whatsapp_ativas"] = WhatsAppEventSetting.objects.filter(
+            is_active=True
+        ).count()
+
+        context["eventos_email_ativos"] = EmailEventSetting.objects.filter(
+            is_active=True
+        ).count()
+
+        return context
+
+    def form_valid(self, form):
+        form.instance.updated_by = self.request.user
+
+        resposta = super().form_valid(form)
+
+        if form.instance.is_enabled:
+            messages.success(
+                self.request,
+                "Envio de mensagens ligado. Emails e WhatsApp voltam a sair.",
+            )
+        else:
+            messages.warning(
+                self.request,
+                "Envio de mensagens desligado. Não sai nenhum email nem "
+                "mensagem de WhatsApp até voltar a ligar.",
+            )
+
+        return resposta

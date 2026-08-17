@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Envio de mensagens | Priscila Arantes PA{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h1 class="h4 mb-1">Envio de mensagens</h1>
+    <p class="text-muted mb-0">
+        Ligar ou desligar de uma vez todos os emails e mensagens de WhatsApp.
+    </p>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                {% if object.is_enabled %}
+                    <div class="alert alert-success d-flex align-items-start gap-2">
+                        <i class="bi bi-send-check fs-5" aria-hidden="true"></i>
+                        <div>
+                            <strong>As mensagens estão a sair normalmente.</strong>
+                            <div class="small">
+                                Cada regra continua a decidir o que envia e a quem.
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="alert alert-danger d-flex align-items-start gap-2">
+                        <i class="bi bi-send-slash fs-5" aria-hidden="true"></i>
+                        <div>
+                            <strong>Não está a sair nenhuma mensagem.</strong>
+                            <div class="small">
+                                Nem emails, nem WhatsApp, nem envios manuais ou de
+                                teste. As marcações continuam a funcionar.
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <div class="form-check form-switch fs-5 mb-2">
+                        {{ form.is_enabled }}
+                        <label class="form-check-label" for="{{ form.is_enabled.id_for_label }}">
+                            {{ form.is_enabled.label }}
+                        </label>
+                    </div>
+
+                    <p class="text-muted small">
+                        {{ form.is_enabled.help_text }}
+                    </p>
+
+                    <button type="submit" class="btn btn-primary">
+                        Guardar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body">
+                <h2 class="h6 text-uppercase text-muted mb-3">O que isto trava</h2>
+
+                <ul class="list-unstyled mb-0 small">
+                    <li class="mb-2">
+                        <i class="bi bi-envelope me-1" aria-hidden="true"></i>
+                        <strong>{{ eventos_email_ativos }}</strong>
+                        acontecimento(s) de email ativo(s)
+                    </li>
+                    <li class="mb-3">
+                        <i class="bi bi-whatsapp me-1" aria-hidden="true"></i>
+                        <strong>{{ regras_whatsapp_ativas }}</strong>
+                        regra(s) de WhatsApp ativa(s)
+                    </li>
+                </ul>
+
+                <p class="text-muted small mb-0">
+                    Enquanto estiver desligado, estas regras ficam como estão —
+                    não é preciso mexer em nenhuma, nem repô-las depois. Voltam a
+                    disparar assim que o envio for ligado outra vez.
+                </p>
+            </div>
+        </div>
+
+        {% if object.updated_by or object.updated_at %}
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h2 class="h6 text-uppercase text-muted mb-2">Última alteração</h2>
+
+                    <p class="mb-0 small">
+                        {{ object.updated_at|date:"d/m/Y H:i" }}
+                        {% if object.updated_by %}
+                            por {{ object.updated_by.full_name|default:object.updated_by.email }}
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

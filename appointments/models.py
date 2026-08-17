@@ -1010,12 +1010,28 @@ class Appointment(models.Model):
 
         AvailabilityService.validate_appointment(self)
 
+    # Campos de que a validação de disponibilidade depende. Uma gravação que
+    # não lhes toque não precisa de repetir a validação, e não a deve repetir:
+    # confirmar ou concluir uma marcação que já existe voltaria a medi-la contra
+    # o horário de funcionamento de hoje, que pode ter mudado desde que ela foi
+    # criada. O resultado era um erro 500 ao concluir uma marcação legítima e já
+    # realizada, por causa de uma regra que só faz sentido ao agendar.
+    SCHEDULING_FIELDS = frozenset(
+        {"service", "service_id", "date", "start_time", "outside_schedule"}
+    )
+
     def save(self, *args, **kwargs):
         # Auto-generate reference code before validation and saving
         if not self.reference_code:
             self.reference_code = self.generate_reference_code()
 
-        self.full_clean()
+        update_fields = kwargs.get("update_fields")
+
+        # update_fields a None é uma gravação completa (incluindo a criação):
+        # aí a validação corre sempre.
+        if update_fields is None or self.SCHEDULING_FIELDS & set(update_fields):
+            self.full_clean()
+
         return super().save(*args, **kwargs)
 
 

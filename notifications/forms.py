@@ -6,7 +6,12 @@ from django.template import Template, TemplateSyntaxError
 
 from appointments.models import Service
 
-from .models import EmailTemplate, ServiceFollowUp, WhatsAppEventSetting
+from .models import (
+    EmailTemplate,
+    MessagingSetting,
+    ServiceFollowUp,
+    WhatsAppEventSetting,
+)
 
 
 class EmailTemplateForm(forms.ModelForm):
@@ -186,3 +191,17 @@ class WhatsAppTestForm(forms.Form):
         max_length=30,
         help_text="Com indicativo, por exemplo +351912345678.",
     )
+
+
+class MessagingSettingForm(forms.ModelForm):
+    class Meta:
+        model = MessagingSetting
+        fields = ["is_enabled"]
+        labels = {
+            "is_enabled": "Enviar mensagens",
+        }
+        widgets = {
+            "is_enabled": forms.CheckboxInput(
+                attrs={"class": "form-check-input", "role": "switch"}
+            ),
+        }

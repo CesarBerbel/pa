@@ -13,7 +13,7 @@ from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.core.management.base import BaseCommand, CommandError
 
-from notifications.models import EmailEventSetting, EmailTemplate
+from notifications.models import EmailEventSetting, EmailTemplate, MessagingSetting
 
 
 class Command(BaseCommand):
@@ -101,6 +101,17 @@ class Command(BaseCommand):
         self.stdout.write(f"\n  Modelos guardados: {EmailTemplate.objects.count()}")
 
     def enviar(self, destinatario):
+        # Este comando monta o email à mão, sem passar pelo send_rendered_email,
+        # por isso o interruptor tem de ser lido aqui também. Falhar em vez de
+        # avisar seria pior: quem corre isto para diagnosticar o SMTP ficaria a
+        # pensar que o problema era o servidor de correio.
+        if not MessagingSetting.messaging_enabled():
+            raise CommandError(
+                "O envio de mensagens está desligado nas configurações do "
+                "site. Ligue-o em Configurações → Envio de mensagens antes de "
+                "testar o email."
+            )
+
         self.stdout.write(
             self.style.MIGRATE_HEADING(f"\nA enviar para {destinatario}...")
         )

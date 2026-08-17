@@ -11,7 +11,7 @@ from urllib.request import Request, urlopen
 from django.conf import settings
 from django.db import IntegrityError
 
-from notifications.models import WhatsAppMessageLog
+from notifications.models import MessagingSetting, WhatsAppMessageLog
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +39,16 @@ class WhatsAppAppointmentNotificationService:
     @staticmethod
     def send_confirmation(appointment) -> WhatsAppSendResult:
         template_name = settings.WHATSAPP_TEMPLATE_NAME
+
+        if not MessagingSetting.messaging_enabled():
+            return WhatsAppSendResult(
+                success=True,
+                skipped=True,
+                message=(
+                    "O envio de mensagens está desligado nas configurações. "
+                    "Nada foi enviado."
+                ),
+            )
 
         if not settings.WHATSAPP_CLOUD_API_ENABLED:
             return WhatsAppSendResult(

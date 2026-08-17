@@ -16,10 +16,26 @@ import logging
 from django.conf import settings
 
 from notifications import baileys_whatsapp, twilio_whatsapp
-from notifications.models import WhatsAppEventSetting
+from notifications.models import MessagingSetting, WhatsAppEventSetting
 from notifications.whatsapp_common import SendResult
 
 logger = logging.getLogger(__name__)
+
+MESSAGING_OFF = (
+    "O envio de mensagens está desligado nas configurações. "
+    "Nada foi enviado."
+)
+
+
+def messaging_off_result():
+    """Resposta única para quando o interruptor geral está desligado.
+
+    É sucesso e não falha: não enviar foi o que se pediu. Vai como `skipped`
+    para os ecrãs poderem dizer que não saiu nada, em vez de darem a entender
+    que a mensagem seguiu.
+    """
+
+    return SendResult(True, MESSAGING_OFF, skipped=True)
 
 PROVIDERS = {
     WhatsAppEventSetting.PROVIDER_TWILIO: twilio_whatsapp,
@@ -67,11 +83,19 @@ def sent_logs(appointment, setting):
 def send_manual(appointment, setting):
     """Dispara esta regra agora, para esta marcação."""
 
+    if not MessagingSetting.messaging_enabled():
+        return messaging_off_result()
+
     return provider_module(setting).send_manual(appointment, setting)
 
 
 def send_test(setting, recipient):
     """Envio de teste com dados de exemplo, pelo fornecedor da regra."""
+
+    # O teste também é uma mensagem que chega ao telemóvel de alguém, e por
+    # isso está sujeito ao interruptor como os outros envios.
+    if not MessagingSetting.messaging_enabled():
+        return messaging_off_result()
 
     return provider_module(setting).send_test(setting, recipient)
 
@@ -82,6 +106,9 @@ def notify(appointment, event_type):
     Nunca levanta exceção: uma falha de envio não pode desfazer uma marcação
     que já foi gravada.
     """
+
+    if not MessagingSetting.messaging_enabled():
+        return messaging_off_result()
 
     regras = WhatsAppEventSetting.objects.filter(
         event_type=event_type,

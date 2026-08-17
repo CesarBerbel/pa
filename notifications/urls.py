@@ -9,6 +9,7 @@ from .views import (
     EmailTemplateListView,
     EmailTemplatePreviewView,
     EmailTemplateUpdateView,
+    MessagingSettingView,
     ServiceFollowUpCreateView,
     ServiceFollowUpDeleteView,
     ServiceFollowUpListView,
@@ -29,6 +30,11 @@ from .views import (
 app_name = "notifications"
 
 urlpatterns = [
+    path(
+        "mensagens/envio/",
+        MessagingSettingView.as_view(),
+        name="messaging_setting",
+    ),
     path(
         "emails/modelos/",
         EmailTemplateListView.as_view(),

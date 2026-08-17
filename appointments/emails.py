@@ -7,7 +7,7 @@ from django.db import transaction
 from django.urls import reverse
 from django.utils.html import escape
 
-from notifications.models import EmailEventSetting
+from notifications.models import EmailEventSetting, MessagingSetting
 from notifications.services import EmailEventSettingService, EmailTemplateService
 
 logger = logging.getLogger(__name__)
@@ -56,6 +56,17 @@ def build_full_url(path):
 
 def send_rendered_email(subject, body_text, body_html, recipient_list):
     # Sends text email with optional HTML alternative.
+    #
+    # Todos os emails do site passam por aqui, e é por isso que o interruptor
+    # geral é lido neste ponto e não em cada função de envio: um email novo
+    # escrito daqui a uns meses fica coberto sem ninguém se lembrar disso.
+    if not MessagingSetting.messaging_enabled():
+        logger.info(
+            "Envio de mensagens desligado: email %r não foi enviado.", subject
+        )
+
+        return
+
     email = EmailMultiAlternatives(
         subject=subject,
         body=body_text,
