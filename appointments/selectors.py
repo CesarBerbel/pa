@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from django.db import models
+from django.utils import timezone
 
 from appointments.availability import AvailabilityService
 from appointments.models import Appointment
@@ -17,6 +18,7 @@ class AppointmentFilters:
     date_to: str = ""
     reminder: str = ""
     ordering: str = "date_asc"
+    show_all: bool = False
 
     @classmethod
     def from_querydict(cls, querydict):
@@ -28,7 +30,46 @@ class AppointmentFilters:
             date_to=querydict.get("date_to", "").strip(),
             reminder=querydict.get("reminder", "").strip(),
             ordering=querydict.get("ordering", "date_asc").strip() or "date_asc",
+            show_all=querydict.get("all", "").strip() == "1",
         )
+
+    @property
+    def limits_to_upcoming(self):
+        """Se a lista deve ficar só pelo que ainda está para vir.
+
+        O ecrã de marcações é uma ferramenta de trabalho: o que interessa de
+        manhã é o que aí vem, não o arquivo. Mas basta um pedido explícito para
+        o limite sair da frente — procurar por um código ou escolher um
+        intervalo de datas é dizer que se quer olhar para outra coisa, e
+        devolver "nada encontrado" sobre uma marcação que existe seria pior do
+        que mostrar histórico a mais.
+        """
+
+        if self.show_all:
+            return False
+
+        # Pedir as canceladas é pedir para as ver, e a maior parte delas está
+        # no passado — quem cancela costuma fazê-lo sobre um dia que entretanto
+        # chega e passa. Manter aqui o limite do futuro esvaziava o filtro e
+        # dava a entender que não havia nenhuma.
+        if self.status == Appointment.STATUS_CANCELLED:
+            return False
+
+        return not (self.q or self.date_from or self.date_to)
+
+    @property
+    def hides_cancelled(self):
+        """As canceladas ficam de fora até alguém as pedir.
+
+        Pedir é filtrar pelo estado, procurar por texto, ou carregar em ver
+        tudo. Uma marcação cancelada continua a existir e tem de poder ser
+        encontrada quando é ela que se procura.
+        """
+
+        if self.show_all:
+            return False
+
+        return not (self.q or self.status)
 
     def as_template_context(self):
         return {
@@ -39,6 +80,9 @@ class AppointmentFilters:
             "date_to": self.date_to,
             "reminder": self.reminder,
             "ordering": self.ordering,
+            "show_all": self.show_all,
+            "limits_to_upcoming": self.limits_to_upcoming,
+            "hides_cancelled": self.hides_cancelled,
         }
 
 
@@ -63,6 +107,15 @@ class AppointmentSelectors:
             "service",
             "created_by",
         )
+
+        if filters.limits_to_upcoming:
+            # Pela data do dia e não pela hora: uma marcação das 09:00 tem de
+            # continuar à vista às 11:00, que é quando se vai lá confirmar ou
+            # concluir o que já passou hoje.
+            queryset = queryset.filter(date__gte=timezone.localdate())
+
+        if filters.hides_cancelled:
+            queryset = queryset.exclude(status=Appointment.STATUS_CANCELLED)
 
         if filters.q:
             queryset = queryset.filter(

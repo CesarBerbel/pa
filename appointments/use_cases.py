@@ -71,14 +71,22 @@ class ConfirmAppointmentUseCase:
                     appointment,
                 )
 
+            anterior = AppointmentAuditService.snapshot(appointment)
+
             appointment.status = Appointment.STATUS_CONFIRMED
             appointment.save(update_fields=["status", "updated_at"])
+
+            alteracoes = AppointmentAuditService.diff(
+                anterior, AppointmentAuditService.snapshot(appointment)
+            )
 
             AppointmentAuditService.log(
                 appointment=appointment,
                 action=AppointmentLog.ACTION_CONFIRM,
                 user=user,
-                description="Appointment confirmed.",
+                description="Marcação confirmada.",
+                source=AppointmentLog.SOURCE_INTERNAL,
+                changes=alteracoes,
             )
 
             if send_email:
@@ -126,14 +134,22 @@ class CompleteAppointmentUseCase:
             )
 
         with transaction.atomic():
+            anterior = AppointmentAuditService.snapshot(appointment)
+
             appointment.status = Appointment.STATUS_COMPLETED
             appointment.save(update_fields=["status", "updated_at"])
+
+            alteracoes = AppointmentAuditService.diff(
+                anterior, AppointmentAuditService.snapshot(appointment)
+            )
 
             AppointmentAuditService.log(
                 appointment=appointment,
                 action=AppointmentLog.ACTION_COMPLETE,
                 user=user,
-                description="Appointment completed.",
+                description="Atendimento concluído.",
+                source=AppointmentLog.SOURCE_INTERNAL,
+                changes=alteracoes,
             )
 
             deliver_after_commit(

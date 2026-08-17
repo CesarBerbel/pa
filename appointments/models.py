@@ -932,6 +932,28 @@ class Appointment(models.Model):
     cancellation_reason = models.TextField(blank=True)
     cancelled_at = models.DateTimeField(blank=True, null=True)
 
+    # De onde veio a marcação. Não dá para deduzir do `created_by`: uma
+    # marcação feita no site é gravada em nome do primeiro administrador, e
+    # ficava indistinguível de uma que a profissional tenha marcado à mão.
+    ORIGIN_PUBLIC = "public"
+    ORIGIN_INTERNAL = "internal"
+    ORIGIN_UNKNOWN = "unknown"
+
+    ORIGIN_CHOICES = (
+        (ORIGIN_PUBLIC, "Site"),
+        (ORIGIN_INTERNAL, "Área interna"),
+        # As marcações anteriores a este registo. Deixar "Site" ou "Área
+        # interna" seria inventar: numa auditoria, não saber tem de se ver.
+        (ORIGIN_UNKNOWN, "Desconhecida"),
+    )
+
+    origin = models.CharField(
+        max_length=20,
+        choices=ORIGIN_CHOICES,
+        default=ORIGIN_INTERNAL,
+        verbose_name="Origem",
+    )
+
     # Um encaixe é uma marcação que a profissional colocou fora do horário de
     # funcionamento ou por cima de um bloqueio. Fica gravado, e não apenas
     # decidido no momento em que se cria: sem isto, confirmar ou concluir a
@@ -1035,6 +1057,20 @@ class Appointment(models.Model):
         return super().save(*args, **kwargs)
 
 
+# Nomes dos campos como aparecem no ecrã de auditoria. Sem isto, quem consulta
+# o registo via "start_time" em vez de "Hora".
+FIELD_LABELS = {
+    "customer": "Cliente",
+    "service": "Serviço",
+    "date": "Data",
+    "start_time": "Hora",
+    "status": "Estado",
+    "notes": "Observações",
+    "cancellation_reason": "Motivo do cancelamento",
+    "outside_schedule": "Encaixe fora do horário",
+}
+
+
 class AppointmentLog(models.Model):
     # Stores audit trail for appointment changes.
 
@@ -1071,7 +1107,40 @@ class AppointmentLog(models.Model):
         related_name="appointment_logs",
     )
 
+    # De onde partiu esta ação em concreto, que nem sempre é a origem da
+    # marcação: uma marcação feita no site pode ser cancelada pela equipa, e
+    # uma marcada pela equipa pode ser cancelada pela cliente com o código.
+    SOURCE_PUBLIC = "public"
+    SOURCE_INTERNAL = "internal"
+    SOURCE_SYSTEM = "system"
+    SOURCE_UNKNOWN = "unknown"
+
+    SOURCE_CHOICES = (
+        (SOURCE_PUBLIC, "Site"),
+        (SOURCE_INTERNAL, "Área interna"),
+        # Tarefas agendadas e rotinas que correm sem ninguém à frente.
+        (SOURCE_SYSTEM, "Automático"),
+        (SOURCE_UNKNOWN, "Desconhecida"),
+    )
+
+    source = models.CharField(
+        max_length=20,
+        choices=SOURCE_CHOICES,
+        default=SOURCE_INTERNAL,
+        verbose_name="Origem",
+    )
+
     description = models.TextField(blank=True)
+
+    # O que mudou, campo a campo: {"start_time": {"de": "10:00", "para": "11:00"}}.
+    # Guardado como dados e não embutido no texto da descrição, para a página
+    # de auditoria poder mostrar cada alteração à parte e para se poder
+    # procurar por campo.
+    changes = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name="Alterações",
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -1080,6 +1149,24 @@ class AppointmentLog(models.Model):
 
     def __str__(self):
         return f"{self.appointment.reference_code} - {self.action}"
+
+    @property
+    def changed_fields(self):
+        """As alterações prontas a listar, com os nomes que se veem no ecrã."""
+
+        if not isinstance(self.changes, dict):
+            return []
+
+        return [
+            {
+                "field": campo,
+                "label": FIELD_LABELS.get(campo, campo),
+                "from": valores.get("de", ""),
+                "to": valores.get("para", ""),
+            }
+            for campo, valores in self.changes.items()
+            if isinstance(valores, dict)
+        ]
 
 
 class AppointmentReminderLog(models.Model):

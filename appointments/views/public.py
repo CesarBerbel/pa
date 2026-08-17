@@ -14,7 +14,13 @@ from appointments.forms import (
     PublicAppointmentLookupForm,
     PublicCancelForm,
 )
-from appointments.models import Appointment, BusinessHour, Service, ServiceCategory
+from appointments.models import (
+    Appointment,
+    AppointmentLog,
+    BusinessHour,
+    Service,
+    ServiceCategory,
+)
 from appointments.customer_services import find_or_create_customer
 from appointments.lookup_services import PublicAppointmentLookupService
 from appointments.appointment_services import AppointmentService
@@ -175,6 +181,7 @@ class PublicAppointmentCreateView(PublicBookingAvailabilityMixin, FormView):
                 notes=notes,
                 status=Appointment.STATUS_SCHEDULED,
                 send_email=True,
+                origin=Appointment.ORIGIN_PUBLIC,
             )
 
             if not result.success:
@@ -278,6 +285,7 @@ class PublicCancelAppointmentView(FormView):
             appointment=appointment,
             user=self.request.user,
             cancellation_reason=form.cleaned_data["cancellation_reason"],
+            source=AppointmentLog.SOURCE_PUBLIC,
         )
 
         if not result.success:
@@ -361,6 +369,7 @@ class PublicCancelAppointmentByCodeView(TemplateView):
             appointment=appointment,
             user=request.user,
             cancellation_reason=cancellation_reason,
+            source=AppointmentLog.SOURCE_PUBLIC,
         )
 
         if not cancellation_reason:
@@ -380,6 +389,54 @@ class PublicCancelAppointmentByCodeView(TemplateView):
             "appointments:public_cancel_success_with_code",
             reference_code=appointment.reference_code,
         )
+
+
+class PublicAppointmentByCodeView(FormView):
+    """A marcação aberta direto pelo código, sem ninguém ter de o escrever.
+
+    É para onde aponta o link que segue nas mensagens de WhatsApp. Não usa o
+    link assinado dos emails de propósito: esse leva o `updated_at` no token e
+    deixa de funcionar assim que a marcação muda — bastava a profissional
+    confirmar o pedido para o link que a cliente tinha recebido morrer. Uma
+    mensagem de WhatsApp fica na conversa e é reaberta dias depois, muitas
+    vezes já com a marcação alterada, e o link tem de continuar a servir.
+
+    O código é a credencial, como já é para cancelar em `/cancelar/<código>/`.
+    Mostrar a marcação é menos do que isso permite fazer.
+    """
+
+    template_name = "appointments/public_appointment_lookup.html"
+    form_class = PublicAppointmentLookupForm
+
+    def get_appointment(self):
+        reference_code = self.kwargs.get("reference_code", "").strip().upper()
+
+        return (
+            Appointment.objects.filter(reference_code=reference_code)
+            .select_related("customer", "service")
+            .first()
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        appointment = self.get_appointment()
+
+        if appointment:
+            context["appointment"] = appointment
+            context["form"] = PublicAppointmentLookupForm(
+                initial={"reference_code": appointment.reference_code}
+            )
+        else:
+            # Sem marcação fica a página de consulta normal, com o aviso. Um
+            # código antigo ou mal copiado leva a pessoa a poder tentar outro,
+            # em vez de bater num 404 sem saída.
+            messages.error(
+                self.request,
+                "Não encontramos nenhuma marcação com este código.",
+            )
+
+        return context
 
 
 class PublicAppointmentLookupView(FormView):

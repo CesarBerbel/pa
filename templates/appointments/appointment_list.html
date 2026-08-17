@@ -44,6 +44,12 @@
     <div class="card-body">
         <form method="get" class="row g-3 align-items-end">
 
+            {% if filters.show_all %}
+                {# Sem isto, filtrar por serviço depois de pedir "ver todas" #}
+                {# devolvia a lista ao intervalo por omissão. #}
+                <input type="hidden" name="all" value="1">
+            {% endif %}
+
             <div class="col-12 col-lg-3">
                 <label for="q" class="form-label">Pesquisar</label>
                 <input
@@ -179,10 +185,37 @@
 
 <div class="card shadow-sm border-0">
     <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
             <span class="appointment-table-summary">
                 {{ appointments|length }} marcação(ões) encontrada(s)
+
+                {% if filters.limits_to_upcoming or filters.hides_cancelled %}
+                    {# Um filtro que age sem se ver leva a pessoa a pensar que #}
+                    {# a marcação desapareceu. Fica dito o que está de fora. #}
+                    <span class="text-muted">
+                        —
+                        {% if filters.limits_to_upcoming and filters.hides_cancelled %}
+                            a partir de hoje, sem as canceladas
+                        {% elif filters.limits_to_upcoming %}
+                            a partir de hoje
+                        {% else %}
+                            sem as canceladas
+                        {% endif %}
+                    </span>
+                {% endif %}
             </span>
+
+            {% if filters.limits_to_upcoming or filters.hides_cancelled %}
+                <a href="?all=1{% if filters.ordering %}&ordering={{ filters.ordering }}{% endif %}"
+                   class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-clock-history me-1" aria-hidden="true"></i>
+                    Ver todas, incluindo passadas e canceladas
+                </a>
+            {% elif filters.show_all %}
+                <a href="{% url 'appointments:appointment_list' %}" class="btn btn-sm btn-outline-secondary">
+                    Voltar às próximas marcações
+                </a>
+            {% endif %}
         </div>
 
         {% if appointments %}
@@ -196,6 +229,7 @@
                             <th>Cliente</th>
                             <th>Serviço</th>
                             <th>Status</th>
+                            <th>Origem</th>
                             <th class="text-end">Ações</th>
                         </tr>
                     </thead>
@@ -233,6 +267,22 @@
                                     {% else %}
                                         <span class="badge bg-secondary">
                                             {{ appointment.get_status_display }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if appointment.origin == "public" %}
+                                        <span class="badge bg-light text-dark border" title="Marcada pela cliente no site">
+                                            <i class="bi bi-globe me-1" aria-hidden="true"></i>Site
+                                        </span>
+                                    {% elif appointment.origin == "internal" %}
+                                        <span class="badge bg-light text-dark border" title="Marcada na área interna">
+                                            <i class="bi bi-person-badge me-1" aria-hidden="true"></i>Interna
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-light text-muted border" title="Anterior ao registo de origem">
+                                            —
                                         </span>
                                     {% endif %}
                                 </td>

@@ -12,7 +12,9 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
+from django.conf import settings
 from django.template import Context, Template
+from django.urls import reverse
 
 
 @dataclass
@@ -67,6 +69,21 @@ def render_text(texto, context):
     return Template(texto).render(Context(context))
 
 
+def appointment_link(reference_code):
+    """Endereço público onde a marcação se abre, pronto a clicar.
+
+    Absoluto e não relativo: uma mensagem de WhatsApp não tem página de onde
+    partir, e um `/consultar/...` sozinho não é clicável em lado nenhum.
+    """
+
+    caminho = reverse(
+        "appointments:public_appointment_by_code",
+        kwargs={"reference_code": reference_code},
+    )
+
+    return f"{settings.SITE_URL}{caminho}"
+
+
 def build_context(appointment):
     return {
         "customer_name": appointment.customer.full_name,
@@ -76,6 +93,7 @@ def build_context(appointment):
         "appointment_time": appointment.start_time.strftime("%H:%M"),
         "reference_code": appointment.reference_code,
         "status": appointment.get_status_display(),
+        "appointment_link": appointment_link(appointment.reference_code),
     }
 
 
@@ -88,4 +106,5 @@ def get_sample_context():
         "appointment_time": "10:30",
         "reference_code": "AGD-EXEMPLO",
         "status": "Confirmada",
+        "appointment_link": appointment_link("AGD-EXEMPLO"),
     }

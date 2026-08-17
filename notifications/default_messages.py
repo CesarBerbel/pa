@@ -48,12 +48,13 @@ DEFAULT_MESSAGES = [
             "Olá {{ customer_name }}, recebemos o seu pedido de marcação para "
             "{{ service_name }}, no dia {{ appointment_date }} às "
             "{{ appointment_time }}. A referência é {{ reference_code }}. "
-            "Entraremos em contacto assim que estiver confirmado."
+            "Pode acompanhar aqui: {{ appointment_link }} — entraremos em "
+            "contacto assim que estiver confirmado."
         ),
         "meta_template_body": (
             "Olá {{1}}, recebemos o seu pedido de marcação para {{2}}, no dia "
-            "{{3}} às {{4}}. A referência é {{5}}. Entraremos em contacto "
-            "assim que estiver confirmado."
+            "{{3}} às {{4}}. A referência é {{5}}. Pode acompanhar aqui: "
+            "{{6}} — entraremos em contacto assim que estiver confirmado."
         ),
         "content_variables": {
             "1": "{{ customer_name }}",
@@ -61,6 +62,7 @@ DEFAULT_MESSAGES = [
             "3": "{{ appointment_date }}",
             "4": "{{ appointment_time }}",
             "5": "{{ reference_code }}",
+            "6": "{{ appointment_link }}",
         },
     },
     {
@@ -70,12 +72,13 @@ DEFAULT_MESSAGES = [
             "Olá {{ customer_name }}, a sua marcação de {{ service_name }} "
             "está confirmada para {{ appointment_date }} às "
             "{{ appointment_time }}. Referência {{ reference_code }}. "
-            "Se precisar de alterar, responda a esta mensagem."
+            "Veja os detalhes aqui: {{ appointment_link }} — se precisar de "
+            "alterar, responda a esta mensagem."
         ),
         "meta_template_body": (
             "Olá {{1}}, a sua marcação de {{2}} está confirmada para {{3}} às "
-            "{{4}}. Referência {{5}}. Se precisar de alterar, responda a esta "
-            "mensagem."
+            "{{4}}. Referência {{5}}. Veja os detalhes aqui: {{6}} — se "
+            "precisar de alterar, responda a esta mensagem."
         ),
         "content_variables": {
             "1": "{{ customer_name }}",
@@ -83,6 +86,7 @@ DEFAULT_MESSAGES = [
             "3": "{{ appointment_date }}",
             "4": "{{ appointment_time }}",
             "5": "{{ reference_code }}",
+            "6": "{{ appointment_link }}",
         },
     },
     {

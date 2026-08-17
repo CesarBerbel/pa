@@ -19,13 +19,19 @@ const express = require('express')
 const pino = require('pino')
 const qrcode = require('qrcode')
 
+// O pacote `@whiskeysockets/baileys` passou a publicar-se como `baileys`. A
+// série 6, que ficou marcada como `legacy` no npm, cifra as mensagens contra a
+// identidade antiga (o número de telefone) mesmo quando o WhatsApp já resolveu
+// o destinatário por LID. Quem recebia via só "Aguardando mensagem", porque o
+// telemóvel não conseguia abrir o que lhe chegava. A série 7 trata as duas
+// identidades e é por isso que estamos nela.
 const {
   default: makeWASocket,
   DisconnectReason,
   fetchLatestBaileysVersion,
   makeCacheableSignalKeyStore,
   useMultiFileAuthState,
-} = require('@whiskeysockets/baileys')
+} = require('baileys')
 
 const PORT = parseInt(process.env.PORT || '3000', 10)
 const AUTH_DIR = process.env.AUTH_DIR || '/data/auth'
@@ -385,7 +391,11 @@ app.post('/send', requireToken, async (req, res) => {
   try {
     // Enviar para um número sem WhatsApp não dá erro nenhum: a mensagem é
     // aceite e desaparece. Confirmar antes é a única forma de o saber.
-    const [encontrado] = await sock.onWhatsApp(jid)
+    //
+    // O onWhatsApp devolve undefined quando a consulta não chega a ter
+    // resposta, e não uma lista vazia. Sem o `|| []`, isso rebentava aqui com
+    // um erro de iteração em vez de dizer o que se passou.
+    const [encontrado] = (await sock.onWhatsApp(jid)) || []
 
     if (!encontrado || !encontrado.exists) {
       return res.status(404).json({

@@ -74,7 +74,13 @@
             {% templatetag openvariable %} appointment_date {% templatetag closevariable %},
             {% templatetag openvariable %} appointment_time {% templatetag closevariable %},
             {% templatetag openvariable %} reference_code {% templatetag closevariable %},
-            {% templatetag openvariable %} status {% templatetag closevariable %}.
+            {% templatetag openvariable %} status {% templatetag closevariable %},
+            {% templatetag openvariable %} appointment_link {% templatetag closevariable %}.
+            <div class="mt-2">
+                O <code>appointment_link</code> é o endereço onde a cliente abre
+                a marcação sem escrever o código. Continua a funcionar depois de
+                a marcação ser confirmada ou alterada.
+            </div>
         </div>
 
         <div class="card shadow-sm border-0">

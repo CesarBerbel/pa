@@ -26,8 +26,12 @@ class AppointmentCancellationService:
     # Centralizes all appointment cancellation business rules.
 
     @staticmethod
-    def cancel(appointment, user=None, cancellation_reason=""):
+    def cancel(appointment, user=None, cancellation_reason="", source=None):
         # Cancel an appointment only when business rules allow it.
+        #
+        # `source` diz se o cancelamento partiu do site ou da área interna. Sem
+        # isso, um cancelamento feito pela cliente com o código ficava
+        # registado como se tivesse sido a equipa a desmarcar.
         if not appointment:
             return CancellationResult(
                 success=False,
@@ -71,6 +75,8 @@ class AppointmentCancellationService:
                 appointment=appointment,
             )
 
+        anterior = AppointmentAuditService.snapshot(appointment)
+
         appointment.status = Appointment.STATUS_CANCELLED
         appointment.cancellation_reason = cancellation_reason
         appointment.cancelled_at = timezone.now()
@@ -87,7 +93,11 @@ class AppointmentCancellationService:
             appointment=appointment,
             action=AppointmentLog.ACTION_CANCEL,
             user=user,
-            description=f"Appointment cancelled. Reason: {cancellation_reason}",
+            description=f"Marcação cancelada. Motivo: {cancellation_reason}",
+            source=source,
+            changes=AppointmentAuditService.diff(
+                anterior, AppointmentAuditService.snapshot(appointment)
+            ),
         )
 
         deliver_after_commit(

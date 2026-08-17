@@ -140,6 +140,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
                         <ul class="dropdown-menu" aria-labelledby="internalSettingsMenu">
                             <li>
+                                <a class="dropdown-item" href="{% url 'appointments:appointment_audit' %}">
+                                    Auditoria
+                                </a>
+                            </li>
+                            <li>
                                 <a class="dropdown-item" href="{% url 'appointments:reminder_diagnostics' %}">
                                     Diagnóstico
                                 </a>

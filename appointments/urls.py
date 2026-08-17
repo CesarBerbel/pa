@@ -4,6 +4,7 @@ from .views import (
     AppointmentCancelView,
     ClinicalNoteUpdateView,
     AppointmentCreateView,
+    AppointmentAuditView,
     AppointmentListView,
     AppointmentUpdateView,
     BusinessHourUpdateView,
@@ -26,6 +27,7 @@ from .views import (
     PublicAvailableSlotsView,
     PublicCancelAppointmentView,
     PublicCancelSuccessView,
+    PublicAppointmentByCodeView,
     PublicCancelAppointmentByCodeView,
     PublicAppointmentLookupView,
     ScheduleDiagnosticsView,
@@ -48,6 +50,11 @@ from .views.diagnostics import ReminderDiagnosticsView
 app_name = "appointments"
 
 urlpatterns = [
+    path(
+        "marcacoes/auditoria/",
+        AppointmentAuditView.as_view(),
+        name="appointment_audit",
+    ),
     path("agenda/", DailyAgendaView.as_view(), name="daily_agenda"),
     path(
         "agenda-publica/",
@@ -151,6 +158,11 @@ urlpatterns = [
         "consultar/",
         PublicAppointmentLookupView.as_view(),
         name="public_appointment_lookup",
+    ),
+    path(
+        "consultar/<str:reference_code>/",
+        PublicAppointmentByCodeView.as_view(),
+        name="public_appointment_by_code",
     ),
     path("cancelar/", PublicCancelAppointmentView.as_view(), name="public_cancel"),
     path(

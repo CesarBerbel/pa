@@ -10,6 +10,7 @@ from .appointments import (
     AppointmentCompleteView,
     AppointmentConfirmView,
     AppointmentCreateView,
+    AppointmentAuditView,
     AppointmentListView,
     AppointmentUpdateView,
     CustomerAppointmentDetailView,
@@ -25,6 +26,7 @@ from .customers import (
 from .diagnostics import ScheduleDiagnosticsView
 from .public import (
     PublicAppointmentCreateView,
+    PublicAppointmentByCodeView,
     PublicAppointmentLookupView,
     PublicAppointmentMagicView,
     PublicAppointmentSuccessView,
@@ -63,6 +65,7 @@ __all__ = [
     "AppointmentCompleteView",
     "AppointmentConfirmView",
     "AppointmentCreateView",
+    "AppointmentAuditView",
     "AppointmentListView",
     "AppointmentUpdateView",
     "CustomerAppointmentDetailView",
@@ -74,6 +77,7 @@ __all__ = [
     "CustomerUpdateView",
     "ScheduleDiagnosticsView",
     "PublicAppointmentCreateView",
+    "PublicAppointmentByCodeView",
     "PublicAppointmentLookupView",
     "PublicAppointmentMagicView",
     "PublicAppointmentSuccessView",

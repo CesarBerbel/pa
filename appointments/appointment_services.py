@@ -56,8 +56,13 @@ class AppointmentService:
         status=Appointment.STATUS_SCHEDULED,
         notes="",
         send_email=True,
+        origin=Appointment.ORIGIN_INTERNAL,
     ):
         # Create an appointment safely using transaction and row-level locking.
+        #
+        # `origin` vem de quem chama e não é deduzido do `created_by`: uma
+        # marcação feita no site é gravada em nome do primeiro administrador, o
+        # que a tornaria indistinguível de uma marcada pela equipa.
         if not created_by:
             created_by = AppointmentService.get_system_user()
 
@@ -82,13 +87,15 @@ class AppointmentService:
                     status=status,
                     notes=notes or "",
                     created_by=created_by,
+                    origin=origin,
                 )
 
                 AppointmentAuditService.log(
                     appointment=appointment,
                     action=AppointmentLog.ACTION_CREATE,
                     user=created_by,
-                    description="Appointment created.",
+                    description="Marcação criada.",
+                    changes=AppointmentAuditService.creation_changes(appointment),
                 )
 
                 if send_email:
@@ -160,6 +167,7 @@ class AppointmentService:
                 status=Appointment.STATUS_SCHEDULED,
                 notes=notes,
                 send_email=send_email,
+                origin=Appointment.ORIGIN_PUBLIC,
             )
 
         except (Service.DoesNotExist, ValueError, ValidationError) as error:

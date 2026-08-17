@@ -1,5 +1,7 @@
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth import get_user_model
+from django.db.models import Q
 from appointments.mixins import (
     ClinicalAccessRequiredMixin,
     InternalAreaRequiredMixin,
@@ -93,9 +95,26 @@ class AppointmentCreateView(InternalAreaRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.created_by = self.request.user
+        form.instance.origin = Appointment.ORIGIN_INTERNAL
+
+        response = super().form_valid(form)
+
+        # Sem isto, uma marcação criada aqui não deixava rasto nenhum: a
+        # auditoria começava na primeira alteração, como se a marcação tivesse
+        # aparecido sozinha.
+        AppointmentAuditService.log(
+            appointment=self.object,
+            action=AppointmentLog.ACTION_CREATE,
+            user=self.request.user,
+            description="Marcação criada na área interna.",
+            source=AppointmentLog.SOURCE_INTERNAL,
+            changes=AppointmentAuditService.creation_changes(self.object),
+        )
+
         messages.success(self.request, "Marcação criada com sucesso.")
         warn_schedule_override(self.request, form)
-        return super().form_valid(form)
+
+        return response
 
 
 class AppointmentUpdateView(InternalAreaRequiredMixin, UpdateView):
@@ -127,6 +146,15 @@ class AppointmentUpdateView(InternalAreaRequiredMixin, UpdateView):
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
+        # O retrato tem de ser tirado da base de dados e antes de gravar: o
+        # `self.object` já traz os valores novos do formulário, e comparar com
+        # ele daria sempre "nada mudou".
+        anterior = AppointmentAuditService.snapshot(
+            Appointment.objects.select_related("customer", "service").get(
+                pk=self.object.pk
+            )
+        )
+
         previous_status = Appointment.objects.values_list(
             "status",
             flat=True,
@@ -134,11 +162,20 @@ class AppointmentUpdateView(InternalAreaRequiredMixin, UpdateView):
 
         response = super().form_valid(form)
 
+        self.object.refresh_from_db()
+
+        alteracoes = AppointmentAuditService.diff(
+            anterior,
+            AppointmentAuditService.snapshot(self.object),
+        )
+
         AppointmentAuditService.log(
             appointment=self.object,
             action=AppointmentLog.ACTION_UPDATE,
             user=self.request.user,
-            description="Appointment updated.",
+            description="Marcação alterada na área interna.",
+            source=AppointmentLog.SOURCE_INTERNAL,
+            changes=alteracoes,
         )
 
         was_confirmed_now = (
@@ -151,7 +188,8 @@ class AppointmentUpdateView(InternalAreaRequiredMixin, UpdateView):
                 appointment=self.object,
                 action=AppointmentLog.ACTION_CONFIRM,
                 user=self.request.user,
-                description="Appointment confirmed by status update.",
+                description="Marcação confirmada ao alterar o estado.",
+                source=AppointmentLog.SOURCE_INTERNAL,
             )
 
             whatsapp_result = WhatsAppAppointmentNotificationService.send_confirmation(
@@ -371,3 +409,77 @@ class ClinicalNoteUpdateView(ClinicalAccessRequiredMixin, UpdateView):
             "appointments:clinical_note",
             kwargs={"pk": self.object.appointment_id},
         )
+
+
+class AppointmentAuditView(InternalAreaRequiredMixin, ListView):
+    """Histórico do que se passou com as marcações.
+
+    Uma linha por ação, com quem a fez, quando, de onde partiu e o que mudou.
+    Serve para responder depois do facto — quem desmarcou esta cliente, a que
+    horas estava antes de ser mudada — e por isso é só de leitura: um registo
+    que se pode editar não prova nada.
+    """
+
+    model = AppointmentLog
+    template_name = "appointments/appointment_audit.html"
+    context_object_name = "logs"
+    paginate_by = 50
+
+    def get_queryset(self):
+        registos = (
+            AppointmentLog.objects.select_related(
+                "appointment",
+                "appointment__customer",
+                "appointment__service",
+                "performed_by",
+            )
+            .all()
+            .order_by("-created_at")
+        )
+
+        acao = self.request.GET.get("action", "").strip()
+        origem = self.request.GET.get("source", "").strip()
+        pesquisa = self.request.GET.get("q", "").strip()
+        utilizador = self.request.GET.get("user", "").strip()
+
+        if acao:
+            registos = registos.filter(action=acao)
+
+        if origem:
+            registos = registos.filter(source=origem)
+
+        if utilizador:
+            registos = registos.filter(performed_by_id=utilizador)
+
+        if pesquisa:
+            registos = registos.filter(
+                Q(appointment__reference_code__icontains=pesquisa)
+                | Q(appointment__customer__full_name__icontains=pesquisa)
+                | Q(description__icontains=pesquisa)
+            )
+
+        return registos
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context["action_choices"] = AppointmentLog.ACTION_CHOICES
+        context["source_choices"] = AppointmentLog.SOURCE_CHOICES
+
+        # Só quem realmente aparece no registo. A lista completa de
+        # utilizadores encheria o filtro com gente que nunca lá está.
+        context["users"] = (
+            get_user_model()
+            .objects.filter(appointment_logs__isnull=False)
+            .distinct()
+            .order_by("full_name")
+        )
+
+        context["filters"] = {
+            "action": self.request.GET.get("action", ""),
+            "source": self.request.GET.get("source", ""),
+            "user": self.request.GET.get("user", ""),
+            "q": self.request.GET.get("q", ""),
+        }
+
+        return context

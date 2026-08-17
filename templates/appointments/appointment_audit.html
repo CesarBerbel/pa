@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}Auditoria | Priscila Arantes PA{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h1 class="h4 mb-1">Auditoria</h1>
+    <p class="text-muted mb-0">
+        Tudo o que se passou com as marcações: quem, quando, de onde e o que mudou.
+    </p>
+</div>
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label for="q" class="form-label">Procurar</label>
+                <input
+                    type="text"
+                    class="form-control"
+                    id="q"
+                    name="q"
+                    value="{{ filters.q }}"
+                    placeholder="Código ou nome da cliente"
+                >
+            </div>
+
+            <div class="col-md-2">
+                <label for="action" class="form-label">Ação</label>
+                <select class="form-select" id="action" name="action">
+                    <option value="">Todas</option>
+                    {% for value, label in action_choices %}
+                        <option value="{{ value }}" {% if filters.action == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label for="source" class="form-label">Origem</label>
+                <select class="form-select" id="source" name="source">
+                    <option value="">Todas</option>
+                    {% for value, label in source_choices %}
+                        <option value="{{ value }}" {% if filters.source == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label for="user" class="form-label">Utilizador</label>
+                <select class="form-select" id="user" name="user">
+                    <option value="">Todos</option>
+                    {% for pessoa in users %}
+                        <option value="{{ pessoa.pk }}" {% if filters.user == pessoa.pk|stringformat:"s" %}selected{% endif %}>
+                            {{ pessoa.full_name|default:pessoa.email }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1">Filtrar</button>
+                <a href="{% url 'appointments:appointment_audit' %}" class="btn btn-outline-secondary">
+                    Limpar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        {% if logs %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Quando</th>
+                            <th>Marcação</th>
+                            <th>Ação</th>
+                            <th>Origem</th>
+                            <th>Quem</th>
+                            <th>O que mudou</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for log in logs %}
+                            <tr>
+                                <td class="text-nowrap">
+                                    {{ log.created_at|date:"d/m/Y" }}
+                                    <div class="text-muted small">
+                                        {{ log.created_at|date:"H:i" }}
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <span class="badge bg-dark">
+                                        {{ log.appointment.reference_code }}
+                                    </span>
+                                    <div class="small text-muted">
+                                        {{ log.appointment.customer.full_name }}
+                                    </div>
+                                </td>
+
+                                <td>
+                                    {% if log.action == "create" %}
+                                        <span class="badge bg-primary">Criada</span>
+                                    {% elif log.action == "update" %}
+                                        <span class="badge bg-warning text-dark">Alterada</span>
+                                    {% elif log.action == "cancel" %}
+                                        <span class="badge bg-danger">Cancelada</span>
+                                    {% elif log.action == "confirm" %}
+                                        <span class="badge bg-info text-dark">Confirmada</span>
+                                    {% elif log.action == "complete" %}
+                                        <span class="badge bg-success">Concluída</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ log.get_action_display }}</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if log.source == "public" %}
+                                        <span class="badge bg-light text-dark border">
+                                            <i class="bi bi-globe me-1" aria-hidden="true"></i>Site
+                                        </span>
+                                    {% elif log.source == "internal" %}
+                                        <span class="badge bg-light text-dark border">
+                                            <i class="bi bi-person-badge me-1" aria-hidden="true"></i>Área interna
+                                        </span>
+                                    {% elif log.source == "system" %}
+                                        <span class="badge bg-light text-dark border">
+                                            <i class="bi bi-robot me-1" aria-hidden="true"></i>Automático
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-light text-muted border">Desconhecida</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if log.performed_by %}
+                                        {{ log.performed_by.full_name|default:log.performed_by.email }}
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% with alteracoes=log.changed_fields %}
+                                        {% if alteracoes %}
+                                            <ul class="list-unstyled mb-0 small">
+                                                {% for alteracao in alteracoes %}
+                                                    <li>
+                                                        <strong>{{ alteracao.label }}:</strong>
+                                                        {% if alteracao.from %}
+                                                            <span class="text-muted text-decoration-line-through">
+                                                                {{ alteracao.from }}
+                                                            </span>
+                                                            <i class="bi bi-arrow-right mx-1" aria-hidden="true"></i>
+                                                        {% endif %}
+                                                        {{ alteracao.to }}
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% else %}
+                                            <span class="text-muted small">{{ log.description }}</span>
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if is_paginated %}
+                <nav class="mt-4">
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{{ request.GET.urlencode }}&page={{ page_obj.previous_page_number }}">
+                                    Anterior
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        <li class="page-item disabled">
+                            <span class="page-link">
+                                {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{{ request.GET.urlencode }}&page={{ page_obj.next_page_number }}">
+                                    Seguinte
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <p class="text-muted mb-0">
+                Não há registos que correspondam a esta pesquisa.
+            </p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
