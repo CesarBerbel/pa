@@ -196,7 +196,6 @@
                             <th>Cliente</th>
                             <th>Serviço</th>
                             <th>Status</th>
-                            <th>Lembretes</th>
                             <th class="text-end">Ações</th>
                         </tr>
                     </thead>
@@ -235,46 +234,6 @@
                                         <span class="badge bg-secondary">
                                             {{ appointment.get_status_display }}
                                         </span>
-                                    {% endif %}
-                                </td>
-
-                                <td>
-                                    {% if appointment.status == "cancelled" or appointment.status == "completed" %}
-                                        <span class="badge bg-light text-muted border">
-                                            Não aplicável
-                                        </span>
-                                    {% else %}
-                                        <div class="d-flex flex-column gap-1">
-                                            {% if appointment.reminder_24h_sent_at %}
-                                                <span
-                                                    class="badge bg-success"
-                                                    data-bs-toggle="tooltip"
-                                                    data-bs-placement="top"
-                                                    data-bs-title="Enviado em {{ appointment.reminder_24h_sent_at|date:'d/m/Y H:i' }}"
-                                                >
-                                                    24h enviado
-                                                </span>
-                                            {% else %}
-                                                <span class="badge bg-secondary">
-                                                    24h pendente
-                                                </span>
-                                            {% endif %}
-
-                                            {% if appointment.reminder_2h_sent_at %}
-                                                <span
-                                                    class="badge bg-success"
-                                                    data-bs-toggle="tooltip"
-                                                    data-bs-placement="top"
-                                                    data-bs-title="Enviado em {{ appointment.reminder_2h_sent_at|date:'d/m/Y H:i' }}"
-                                                >
-                                                    2h enviado
-                                                </span>
-                                            {% else %}
-                                                <span class="badge bg-secondary">
-                                                    2h pendente
-                                                </span>
-                                            {% endif %}
-                                        </div>
                                     {% endif %}
                                 </td>
 

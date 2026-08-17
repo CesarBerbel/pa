@@ -66,6 +66,31 @@ let sock = null
 let starting = false
 let reconnectTimer = null
 
+// Um socket fechado continua a emitir durante algum tempo. Sem esta marca, o
+// `creds.update` de uma ligação já morta voltava a gravar em disco as
+// credenciais revogadas que o resetAuth tinha acabado de apagar, e a ligação
+// seguinte arrancava outra vez com elas.
+let geracao = 0
+
+/** Fecha um socket e cala-o, para não interferir com o que vier a seguir. */
+function descartarSocket(anterior) {
+  if (!anterior) {
+    return
+  }
+
+  try {
+    anterior.ev.removeAllListeners()
+  } catch (erro) {
+    logger.warn({ erro: erro.message }, 'Falha a remover listeners')
+  }
+
+  try {
+    anterior.end(undefined)
+  } catch (erro) {
+    logger.warn({ erro: erro.message }, 'Falha a fechar a ligação anterior')
+  }
+}
+
 function setStatus(patch) {
   Object.assign(status, patch, { updatedAt: new Date().toISOString() })
 }
@@ -75,6 +100,15 @@ function clearReconnect() {
     clearTimeout(reconnectTimer)
     reconnectTimer = null
   }
+}
+
+// Fechos seguidos sem nada pelo meio. Serve para ir afastando as tentativas:
+// insistir de segundo a segundo não recupera a ligação e arrisca que o
+// WhatsApp bloqueie o número por excesso de tentativas.
+let falhasSeguidas = 0
+
+function atrasoComRecuo(base) {
+  return Math.min(base * 2 ** Math.min(falhasSeguidas, 5), 60000)
 }
 
 function scheduleReconnect(delayMs = 5000) {
@@ -104,6 +138,14 @@ async function start() {
 
   starting = true
 
+  // Tudo o que este arranque criar fica marcado com este número. Se entretanto
+  // arrancar outra ligação, os eventos desta deixam de ter efeito.
+  geracao += 1
+  const minhaGeracao = geracao
+
+  descartarSocket(sock)
+  sock = null
+
   try {
     fs.mkdirSync(AUTH_DIR, { recursive: true })
 
@@ -129,9 +171,19 @@ async function start() {
       syncFullHistory: false,
     })
 
-    sock.ev.on('creds.update', saveCreds)
+    sock.ev.on('creds.update', async () => {
+      if (minhaGeracao !== geracao) {
+        return
+      }
+
+      await saveCreds()
+    })
 
     sock.ev.on('connection.update', async (update) => {
+      if (minhaGeracao !== geracao) {
+        return
+      }
+
       const { connection, lastDisconnect, qr } = update
 
       if (qr) {
@@ -146,6 +198,9 @@ async function start() {
             qrExpiresAt: new Date(Date.now() + 20000).toISOString(),
           })
 
+          // Chegou um QR: a ligação ao WhatsApp está boa, só falta alguém ler.
+          falhasSeguidas = 0
+
           logger.info('QR code novo à espera de leitura')
         } catch (erro) {
           logger.error({ erro: erro.message }, 'Falha a gerar o QR code')
@@ -154,6 +209,8 @@ async function start() {
 
       if (connection === 'open') {
         clearReconnect()
+
+        falhasSeguidas = 0
 
         setStatus({
           state: STATE_CONNECTED,
@@ -188,32 +245,59 @@ async function start() {
 
         starting = false
 
+        // Calar esta ligação antes de mexer no disco: um `creds.update`
+        // atrasado gravaria de novo o que o resetAuth está prestes a apagar.
+        geracao += 1
+        descartarSocket(sock)
+        sock = null
+
         if (terminada) {
           await resetAuth()
         }
 
+        falhasSeguidas += 1
+
         // Mesmo depois de terminada: apagadas as credenciais, o arranque
         // seguinte gera o QR novo sem ninguém ter de carregar em nada.
-        scheduleReconnect(terminada ? 1000 : 5000)
+        scheduleReconnect(atrasoComRecuo(terminada ? 1000 : 5000))
 
         return
       }
     })
   } finally {
-    // No caminho de 'close' já foi posto a false antes do reagendamento.
-    if (status.state !== STATE_DISCONNECTED && status.state !== STATE_LOGGED_OUT) {
-      starting = false
-    }
+    // O arranque acaba quando o socket está criado; ligar-se ao WhatsApp pode
+    // demorar o tempo que a pessoa levar a ler o QR e não é esperado aqui.
+    starting = false
   }
 }
 
-/** Apaga as credenciais gravadas, para o próximo arranque pedir um QR novo. */
+/**
+ * Apaga as credenciais gravadas, para o próximo arranque pedir um QR novo.
+ *
+ * Apaga o *conteúdo* de AUTH_DIR e não o próprio AUTH_DIR: em produção é o
+ * ponto de montagem de um volume do Docker, e o rmdir de um mountpoint dá
+ * sempre EBUSY. Pior, o rmSync recursivo aborta nesse erro sem ter apagado
+ * ficheiro nenhum — as credenciais revogadas sobreviviam e o serviço ficava
+ * a tentar ligar-se com elas, em ciclo, sem nunca chegar a mostrar um QR.
+ */
 async function resetAuth() {
+  let apagados = 0
+
   try {
-    fs.rmSync(AUTH_DIR, { recursive: true, force: true })
     fs.mkdirSync(AUTH_DIR, { recursive: true })
 
-    logger.info('Credenciais apagadas')
+    for (const nome of fs.readdirSync(AUTH_DIR)) {
+      try {
+        fs.rmSync(path.join(AUTH_DIR, nome), { recursive: true, force: true })
+        apagados += 1
+      } catch (erro) {
+        // Um ficheiro preso não pode impedir os outros de desaparecerem: o que
+        // sobrar de uma sessão revogada só serve para a bloquear outra vez.
+        logger.error({ erro: erro.message, nome }, 'Falha a apagar credencial')
+      }
+    }
+
+    logger.info({ apagados }, 'Credenciais apagadas')
   } catch (erro) {
     logger.error({ erro: erro.message }, 'Falha a apagar as credenciais')
   }
@@ -336,8 +420,11 @@ app.post('/logout', requireToken, async (req, res) => {
     logger.warn({ erro: erro.message }, 'Logout devolveu erro')
   }
 
+  geracao += 1
+  descartarSocket(sock)
   sock = null
   starting = false
+  falhasSeguidas = 0
 
   await resetAuth()
 
@@ -358,16 +445,11 @@ app.post('/logout', requireToken, async (req, res) => {
 app.post('/restart', requireToken, async (req, res) => {
   clearReconnect()
 
-  try {
-    if (sock) {
-      sock.end(undefined)
-    }
-  } catch (erro) {
-    logger.warn({ erro: erro.message }, 'Falha a fechar a ligação anterior')
-  }
-
+  geracao += 1
+  descartarSocket(sock)
   sock = null
   starting = false
+  falhasSeguidas = 0
 
   setStatus({ state: STATE_STARTING, qr: '', qrExpiresAt: null, lastError: '' })
 
