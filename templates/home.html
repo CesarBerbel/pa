@@ -296,33 +296,33 @@
         </p>
     </div>
 
-    {% if service_categories %}
+    {% if service_cards %}
         <div class="row g-4">
-            {% for category in service_categories %}
+            {% for card in service_cards %}
                 <div class="col-12 col-md-6 col-xl-3">
                     <div class="luxury-card h-100">
                         <div class="d-flex justify-content-between align-items-start">
                             <div class="luxury-icon">{{ forloop.counter|stringformat:"02d" }}</div>
 
-                            {% if category.is_coming_soon %}
+                            {% if card.is_coming_soon %}
                                 <span class="coming-soon-badge">{% translate "Em breve" %}</span>
                             {% endif %}
                         </div>
 
-                        <h3>{{ category.display_name }}</h3>
+                        <h3>{{ card.display_name }}</h3>
 
                         <p>
-                            {{ category.display_description }}
+                            {{ card.display_description }}
                         </p>
 
                         <ul class="list-unstyled text-muted small mb-4 service-teaser-list">
-                            {% for service in category.services.all|slice:":4" %}
+                            {% for service in card.services|slice:":4" %}
                                 <li class="mb-2">
                                     <span class="service-teaser-name">
                                         • {{ service.display_name }}
                                     </span>
 
-                                    {% if category.show_prices %}
+                                    {% if card.show_prices %}
                                         <span class="service-teaser-price">
                                             {{ service.price|floatformat:"-2" }} €
                                         </span>
@@ -331,7 +331,7 @@
                             {% endfor %}
                         </ul>
 
-                        {% if category.is_coming_soon %}
+                        {% if card.is_coming_soon %}
                             <span class="text-muted small">
                                 <i class="bi bi-hourglass-split me-1"></i>
                                 {% translate "Marcações em breve" %}
@@ -347,7 +347,7 @@
         </div>
     {% else %}
         <div class="row g-4">
-            <div class="col-12 col-md-3">
+            <div class="col-12 col-md-6 col-xl-3">
                 <div class="luxury-card h-100">
                     <div class="luxury-icon">01</div>
                     <h3>{% translate "Podologia" %}</h3>
@@ -355,23 +355,23 @@
                 </div>
             </div>
 
-            <div class="col-12 col-md-3">
+            <div class="col-12 col-md-6 col-xl-3">
                 <div class="luxury-card h-100">
                     <div class="luxury-icon">02</div>
-                    <h3>{% translate "Manicure" %}</h3>
-                    <p>{% translate "Unha em gel, manicure simples, cutícula russa e verniz gel mãos." %}</p>
+                    <h3>{% translate "Manicure e Pedicure" %}</h3>
+                    <p>{% translate "Unha em gel, manicure simples, cutícula russa, pedicure e hidratação profunda." %}</p>
                 </div>
             </div>
 
-            <div class="col-12 col-md-3">
+            <div class="col-12 col-md-6 col-xl-3">
                 <div class="luxury-card h-100">
                     <div class="luxury-icon">03</div>
-                    <h3>{% translate "Pedicure" %}</h3>
-                    <p>{% translate "Pedicure simples, corte de unhas dos pés, verniz gel e hidratação profunda." %}</p>
+                    <h3>{% translate "Laserterapia" %}</h3>
+                    <p>{% translate "Tratamento com laser para onicomicose e outras alterações das unhas." %}</p>
                 </div>
             </div>
 
-            <div class="col-12 col-md-3">
+            <div class="col-12 col-md-6 col-xl-3">
                 <div class="luxury-card h-100">
                     <div class="luxury-icon">04</div>
                     <h3>{% translate "Enfermagem" %}</h3>

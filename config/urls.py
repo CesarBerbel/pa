@@ -7,6 +7,7 @@ from django.shortcuts import redirect, render
 from django.urls import include, path
 
 from accounts.views import DashboardView
+from appointments.homepage import build_home_service_cards
 from appointments.models import Service, ServiceCategory
 from config.seo import build_home_structured_data
 from config.views import (
@@ -46,7 +47,7 @@ def home_view(request):
         "home.html",
         {
             "home_hero_layout": settings.HOME_HERO_LAYOUT,
-            "service_categories": service_categories,
+            "service_cards": build_home_service_cards(service_categories),
             "home_structured_data": build_home_structured_data(service_categories),
             "instagram_posts": InstagramPost.objects.filter(is_active=True),
         },
