@@ -295,12 +295,11 @@ class AppointmentUseCaseCriticalTests(CriticalArchitectureTestMixin, TestCase):
 
 
 class AppointmentSelectorsCriticalTests(CriticalArchitectureTestMixin, TestCase):
-    def test_list_appointments_filters_by_status_service_search_and_reminders(self):
+    def test_list_appointments_filters_by_status_service_and_search(self):
         appointment = self.create_appointment(
             customer=self.customer,
             service=self.service,
             status=Appointment.STATUS_CONFIRMED,
-            reminder_24h_sent_at=timezone.now(),
         )
         self.create_appointment(
             customer=self.second_customer,
@@ -313,7 +312,6 @@ class AppointmentSelectorsCriticalTests(CriticalArchitectureTestMixin, TestCase)
             q="Maria",
             status=Appointment.STATUS_CONFIRMED,
             service=str(self.service.pk),
-            reminder="24h_sent",
         )
 
         results = list(AppointmentSelectors.list_appointments(filters))

@@ -112,8 +112,6 @@ class AppointmentAdmin(admin.ModelAdmin):
         "date",
         "start_time",
         "status",
-        "reminder_24h_sent_at",
-        "reminder_2h_sent_at",
         "cancelled_at",
     )
 
@@ -122,8 +120,6 @@ class AppointmentAdmin(admin.ModelAdmin):
         "date",
         "service__category",
         "service",
-        "reminder_24h_sent_at",
-        "reminder_2h_sent_at",
         "cancelled_at",
     )
 
@@ -162,12 +158,17 @@ class AppointmentAdmin(admin.ModelAdmin):
             },
         ),
         (
-            "Lembretes",
+            "Lembretes (histórico)",
             {
                 "fields": (
                     "reminder_24h_sent_at",
                     "reminder_2h_sent_at",
-                )
+                ),
+                "description": (
+                    "O envio de lembretes por email foi descontinuado. "
+                    "Estas datas são o registo dos que chegaram a sair."
+                ),
+                "classes": ("collapse",),
             },
         ),
         (

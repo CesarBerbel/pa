@@ -70,7 +70,6 @@ class EmailTemplateService:
             # links tal como a cliente os vai receber.
             "magic_link": f"{settings.SITE_URL}/m/exemplo-token/",
             "cancellation_link": f"{settings.SITE_URL}/cancelar/AGD-EXEMPLO/",
-            "reminder_label": "1 dia antes",
             "intro": "A sua marcação foi confirmada.",
         }
 
@@ -88,16 +87,4 @@ class EmailEventSettingService:
                 is_active=True,
             )
             .first()
-        )
-
-    @staticmethod
-    def get_active_reminder_settings():
-        # Returns all active reminder settings configured in admin.
-        return (
-            EmailEventSetting.objects.select_related("email_template")
-            .filter(
-                event_type=EmailEventSetting.EVENT_APPOINTMENT_REMINDER,
-                is_active=True,
-            )
-            .order_by("lead_time_unit", "lead_time_value", "id")
         )

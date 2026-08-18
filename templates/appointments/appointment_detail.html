@@ -1,0 +1,365 @@
+{% extends "base.html" %}
+
+{% block title %}Marcação {{ appointment.reference_code }} | Priscila Arantes PA{% endblock %}
+{% block meta_robots %}noindex,nofollow{% endblock %}
+
+{% block content %}
+
+<style>
+    .appointment-panel {
+        border-radius: 18px;
+        background: #ffffff;
+        border: 1px solid rgba(108, 89, 98, 0.12);
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.06);
+        padding: 24px;
+    }
+
+    .appointment-panel + .appointment-panel {
+        margin-top: 20px;
+    }
+
+    .appointment-panel h2 {
+        font-size: 14px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #6c5962;
+        margin: 0 0 16px;
+    }
+
+    .appointment-field-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 18px;
+    }
+
+    .appointment-field span.appointment-field-label {
+        display: block;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #9a8a91;
+        margin-bottom: 4px;
+    }
+
+    .appointment-field strong,
+    .appointment-field p {
+        display: block;
+        font-size: 15px;
+        font-weight: 600;
+        color: #3f3138;
+        margin: 0;
+        word-break: break-word;
+    }
+
+    .appointment-field p {
+        font-weight: 400;
+        white-space: pre-line;
+    }
+
+    .appointment-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .appointment-actions form {
+        margin: 0;
+    }
+
+    .appointment-whatsapp-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #128c7e;
+        text-decoration: none;
+    }
+
+    .appointment-whatsapp-link:hover,
+    .appointment-whatsapp-link:focus-visible {
+        color: #0d6b60;
+        text-decoration: underline;
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div>
+        <h1 class="h4 mb-1">{{ appointment.customer.full_name }}</h1>
+        <span class="text-muted">{{ appointment.service.name }}</span>
+    </div>
+
+    {# Volta com os filtros com que a lista foi deixada. Sem isto, abrir uma #}
+    {# marcação encontrada numa pesquisa devolvia a lista ao estado inicial. #}
+    <a
+        href="{% url 'appointments:appointment_list' %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}"
+        class="btn btn-outline-secondary"
+    >
+        <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
+        Voltar às marcações
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-12 col-lg-8">
+
+        <section class="appointment-panel">
+            <h2>Marcação</h2>
+
+            <div class="appointment-field-grid">
+                <div class="appointment-field">
+                    <span class="appointment-field-label">Código</span>
+                    <strong>
+                        <span class="badge bg-dark">{{ appointment.reference_code }}</span>
+                    </strong>
+                </div>
+
+                <div class="appointment-field">
+                    <span class="appointment-field-label">Status</span>
+                    <strong>
+                        {% if appointment.status == "cancelled" %}
+                            <span class="badge bg-danger">{{ appointment.get_status_display }}</span>
+                        {% elif appointment.status == "completed" %}
+                            <span class="badge bg-success">{{ appointment.get_status_display }}</span>
+                        {% elif appointment.status == "confirmed" %}
+                            <span class="badge bg-primary">{{ appointment.get_status_display }}</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ appointment.get_status_display }}</span>
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div class="appointment-field">
+                    <span class="appointment-field-label">Data</span>
+                    <strong>{{ appointment.date|date:"l, j \d\e F \d\e Y" }}</strong>
+                </div>
+
+                <div class="appointment-field">
+                    <span class="appointment-field-label">Horário</span>
+                    <strong>
+                        {{ appointment.start_time|time:"H:i" }}
+                        &ndash;
+                        {{ appointment.get_end_datetime|time:"H:i" }}
+                    </strong>
+                </div>
+
+                <div class="appointment-field">
+                    <span class="appointment-field-label">Serviço</span>
+                    <strong>{{ appointment.service.name }}</strong>
+                </div>
+
+                <div class="appointment-field">
+                    <span class="appointment-field-label">Duração</span>
+                    <strong>{{ appointment.service.duration_minutes }} min</strong>
+                </div>
+
+                <div class="appointment-field">
+                    <span class="appointment-field-label">Preço</span>
+                    <strong>{{ appointment.service.price }} &euro;</strong>
+                </div>
+
+                <div class="appointment-field">
+                    <span class="appointment-field-label">Origem</span>
+                    <strong>
+                        {% if appointment.origin == "public" %}
+                            <span class="badge bg-light text-dark border">
+                                <i class="bi bi-globe me-1" aria-hidden="true"></i>Site
+                            </span>
+                        {% elif appointment.origin == "internal" %}
+                            <span class="badge bg-light text-dark border">
+                                <i class="bi bi-person-badge me-1" aria-hidden="true"></i>Área interna
+                            </span>
+                        {% else %}
+                            <span class="badge bg-light text-muted border">Desconhecida</span>
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div class="appointment-field">
+                    <span class="appointment-field-label">Encaixe fora do horário</span>
+                    <strong>
+                        {% if appointment.outside_schedule %}
+                            <span class="badge bg-warning text-dark">Sim</span>
+                        {% else %}
+                            Não
+                        {% endif %}
+                    </strong>
+                </div>
+            </div>
+
+            {% if appointment.notes %}
+                <div class="appointment-field mt-4">
+                    <span class="appointment-field-label">Observações</span>
+                    <p>{{ appointment.notes }}</p>
+                </div>
+            {% endif %}
+        </section>
+
+        <section class="appointment-panel">
+            <h2>Cliente</h2>
+
+            <div class="appointment-field-grid">
+                <div class="appointment-field">
+                    <span class="appointment-field-label">Nome</span>
+                    <strong>{{ appointment.customer.full_name }}</strong>
+                </div>
+
+                <div class="appointment-field">
+                    <span class="appointment-field-label">Telefone</span>
+                    <strong>
+                        {% if appointment.customer.whatsapp_url %}
+                            <a
+                                href="{{ appointment.customer.whatsapp_url }}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="appointment-whatsapp-link"
+                            >
+                                <i class="bi bi-whatsapp" aria-hidden="true"></i>
+                                {{ appointment.customer.phone }}
+                            </a>
+                        {% elif appointment.customer.phone %}
+                            {# Um número que não dá dígitos nenhuns não abre #}
+                            {# conversa. Fica à vista à mesma, sem prometer. #}
+                            {{ appointment.customer.phone }}
+                        {% else %}
+                            &mdash;
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div class="appointment-field">
+                    <span class="appointment-field-label">Email</span>
+                    <strong>
+                        {% if appointment.customer.email %}
+                            <a href="mailto:{{ appointment.customer.email }}">{{ appointment.customer.email }}</a>
+                        {% else %}
+                            &mdash;
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div class="appointment-field">
+                    <span class="appointment-field-label">Tipo</span>
+                    <strong>
+                        {% if appointment.customer.is_guest %}Convidada{% else %}Registada{% endif %}
+                    </strong>
+                </div>
+            </div>
+        </section>
+
+        {% if appointment.status == "cancelled" %}
+            <section class="appointment-panel">
+                <h2>Cancelamento</h2>
+
+                <div class="appointment-field-grid">
+                    <div class="appointment-field">
+                        <span class="appointment-field-label">Cancelada em</span>
+                        <strong>
+                            {% if appointment.cancelled_at %}
+                                {{ appointment.cancelled_at|date:"d/m/Y H:i" }}
+                            {% else %}
+                                &mdash;
+                            {% endif %}
+                        </strong>
+                    </div>
+                </div>
+
+                <div class="appointment-field mt-4">
+                    <span class="appointment-field-label">Motivo</span>
+                    <p>{{ appointment.cancellation_reason|default:"—" }}</p>
+                </div>
+            </section>
+        {% endif %}
+
+    </div>
+
+    <div class="col-12 col-lg-4">
+
+        <section class="appointment-panel">
+            <h2>Ações</h2>
+
+            <div class="appointment-actions">
+                {% if appointment.status != "completed" %}
+                    <a
+                        href="{% url 'appointments:appointment_update' appointment.pk %}"
+                        class="btn btn-outline-primary"
+                    >
+                        <i class="bi bi-pencil me-1" aria-hidden="true"></i>
+                        Editar
+                    </a>
+                {% endif %}
+
+                {% if appointment.status == "scheduled" %}
+                    <form method="post" action="{% url 'appointments:appointment_confirm' appointment.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-lg me-1" aria-hidden="true"></i>
+                            Confirmar
+                        </button>
+                    </form>
+                {% endif %}
+
+                {% if appointment.status == "confirmed" %}
+                    <form method="post" action="{% url 'appointments:appointment_complete' appointment.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-dark">
+                            <i class="bi bi-check2-circle me-1" aria-hidden="true"></i>
+                            Concluir
+                        </button>
+                    </form>
+                {% endif %}
+
+                {% if user.has_clinical_access %}
+                    <a
+                        href="{% url 'appointments:clinical_note' appointment.pk %}"
+                        class="btn {% if appointment.clinical_note %}btn-outline-success{% else %}btn-outline-secondary{% endif %}"
+                    >
+                        <i class="bi bi-clipboard2-pulse me-1" aria-hidden="true"></i>
+                        Nota de evolução
+                    </a>
+                {% endif %}
+
+                <a
+                    href="{% url 'notifications:appointment_followups' appointment.pk %}"
+                    class="btn btn-outline-secondary"
+                >
+                    <i class="bi bi-envelope-paper me-1" aria-hidden="true"></i>
+                    Mensagens e seguimentos
+                </a>
+
+                {% if appointment.status != "cancelled" and appointment.status != "completed" %}
+                    <a
+                        href="{% url 'appointments:appointment_cancel' appointment.pk %}"
+                        class="btn btn-outline-danger"
+                    >
+                        <i class="bi bi-trash me-1" aria-hidden="true"></i>
+                        Cancelar marcação
+                    </a>
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="appointment-panel">
+            <h2>Registo</h2>
+
+            <div class="appointment-field-grid">
+                <div class="appointment-field">
+                    <span class="appointment-field-label">Criada por</span>
+                    <strong>{{ appointment.created_by.full_name|default:appointment.created_by.email }}</strong>
+                </div>
+
+                <div class="appointment-field">
+                    <span class="appointment-field-label">Criada em</span>
+                    <strong>{{ appointment.created_at|date:"d/m/Y H:i" }}</strong>
+                </div>
+
+                <div class="appointment-field">
+                    <span class="appointment-field-label">Última alteração</span>
+                    <strong>{{ appointment.updated_at|date:"d/m/Y H:i" }}</strong>
+                </div>
+            </div>
+        </section>
+
+    </div>
+</div>
+
+{% endblock %}

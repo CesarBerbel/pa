@@ -10,7 +10,14 @@ from appointments.mixins import (
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
-from django.views.generic import CreateView, ListView, TemplateView, UpdateView, View
+from django.views.generic import (
+    CreateView,
+    DetailView,
+    ListView,
+    TemplateView,
+    UpdateView,
+    View,
+)
 
 from appointments.audit_services import AppointmentAuditService
 from appointments.cancellation_services import AppointmentCancellationService
@@ -38,6 +45,24 @@ def warn_schedule_override(request, form):
         messages.warning(request, f"Encaixe fora do horário normal. {motivo}")
 
 
+def group_appointments_by_day(appointments):
+    """Junta as marcações em blocos de um dia, pela ordem em que já vinham.
+
+    O agrupamento não reordena nada: um dicionário por ordem de inserção segue
+    a ordenação que a lista trouxe. Ordenar os dias por data aqui desfazia a
+    escolha de quem pediu a lista por cliente ou por serviço.
+    """
+
+    dias = {}
+
+    for appointment in appointments:
+        dias.setdefault(appointment.date, []).append(appointment)
+
+    return [
+        {"date": data, "appointments": marcacoes} for data, marcacoes in dias.items()
+    ]
+
+
 class AppointmentListView(InternalAreaRequiredMixin, ListView):
     # Lists appointments with filters and ordering.
 
@@ -61,7 +86,35 @@ class AppointmentListView(InternalAreaRequiredMixin, ListView):
 
         context["filters"] = self.get_filters().as_template_context()
 
+        # Os cartões são mostrados por dia. O agrupamento fica aqui e não no
+        # template porque `regroup` só junta linhas seguidas, e bastava uma
+        # ordenação que não fosse por data para o mesmo dia aparecer partido
+        # em vários blocos.
+        context["appointment_days"] = group_appointments_by_day(context["appointments"])
+
+        context["today"] = timezone.localdate()
+
         return context
+
+
+class AppointmentDetailView(InternalAreaRequiredMixin, DetailView):
+    """Tudo o que se sabe de uma marcação, e as ações que agem sobre ela.
+
+    A lista passou a ser de cartões sem botões. Sem um ecrã que reúna os dados
+    todos, confirmar ou cancelar era carregar num ícone ao lado de uma linha,
+    sem se ver a quem pertencia.
+    """
+
+    model = Appointment
+    template_name = "appointments/appointment_detail.html"
+    context_object_name = "appointment"
+
+    def get_queryset(self):
+        return Appointment.objects.select_related(
+            "customer",
+            "service",
+            "created_by",
+        )
 
 
 class AppointmentCreateView(InternalAreaRequiredMixin, CreateView):

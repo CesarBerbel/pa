@@ -139,14 +139,11 @@ class EmailEventSettingAdmin(admin.ModelAdmin):
         "event_type",
         "is_active",
         "email_template",
-        "lead_time_display",
-        "window_display",
     )
 
     list_filter = (
         "event_type",
         "is_active",
-        "lead_time_unit",
     )
 
     search_fields = (
@@ -173,18 +170,6 @@ class EmailEventSettingAdmin(admin.ModelAdmin):
             },
         ),
         (
-            "Configuração de aviso antes da marcação",
-            {
-                "fields": (
-                    "lead_time_value",
-                    "lead_time_unit",
-                    "window_before_minutes",
-                    "window_after_minutes",
-                ),
-                "description": "Use estes campos apenas quando a ação for 'Lembrete antes da marcação'.",
-            },
-        ),
-        (
             "Controle",
             {
                 "fields": (
@@ -194,22 +179,6 @@ class EmailEventSettingAdmin(admin.ModelAdmin):
             },
         ),
     )
-
-    def lead_time_display(self, obj):
-        if obj.event_type != EmailEventSetting.EVENT_APPOINTMENT_REMINDER:
-            return "-"
-
-        return obj.get_lead_time_label()
-
-    lead_time_display.short_description = "Aviso"
-
-    def window_display(self, obj):
-        if obj.event_type != EmailEventSetting.EVENT_APPOINTMENT_REMINDER:
-            return "-"
-
-        return f"-{obj.window_before_minutes} min / +{obj.window_after_minutes} min"
-
-    window_display.short_description = "Janela de envio"
 
 
 @admin.register(WhatsAppMessageLog)

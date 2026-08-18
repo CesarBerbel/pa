@@ -16,7 +16,6 @@ class AppointmentFilters:
     service: str = ""
     date_from: str = ""
     date_to: str = ""
-    reminder: str = ""
     ordering: str = "date_asc"
     show_all: bool = False
 
@@ -28,7 +27,6 @@ class AppointmentFilters:
             service=querydict.get("service", "").strip(),
             date_from=querydict.get("date_from", "").strip(),
             date_to=querydict.get("date_to", "").strip(),
-            reminder=querydict.get("reminder", "").strip(),
             ordering=querydict.get("ordering", "date_asc").strip() or "date_asc",
             show_all=querydict.get("all", "").strip() == "1",
         )
@@ -78,7 +76,6 @@ class AppointmentFilters:
             "service": self.service,
             "date_from": self.date_from,
             "date_to": self.date_to,
-            "reminder": self.reminder,
             "ordering": self.ordering,
             "show_all": self.show_all,
             "limits_to_upcoming": self.limits_to_upcoming,
@@ -137,23 +134,6 @@ class AppointmentSelectors:
 
         if filters.date_to:
             queryset = queryset.filter(date__lte=filters.date_to)
-
-        if filters.reminder == "24h_sent":
-            queryset = queryset.filter(reminder_24h_sent_at__isnull=False)
-        elif filters.reminder == "24h_pending":
-            queryset = queryset.filter(
-                reminder_24h_sent_at__isnull=True,
-            ).exclude(
-                status__in=[Appointment.STATUS_CANCELLED, Appointment.STATUS_COMPLETED]
-            )
-        elif filters.reminder == "2h_sent":
-            queryset = queryset.filter(reminder_2h_sent_at__isnull=False)
-        elif filters.reminder == "2h_pending":
-            queryset = queryset.filter(
-                reminder_2h_sent_at__isnull=True,
-            ).exclude(
-                status__in=[Appointment.STATUS_CANCELLED, Appointment.STATUS_COMPLETED]
-            )
 
         return queryset.order_by(
             *cls.allowed_orderings.get(
