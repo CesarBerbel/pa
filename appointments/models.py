@@ -1,4 +1,5 @@
 import random
+import re
 import string
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -208,6 +209,22 @@ class Customer(models.Model):
 
     def __str__(self):
         return self.full_name
+
+    @property
+    def whatsapp_url(self):
+        """Ligação direta para a conversa de WhatsApp desta cliente.
+
+        O wa.me só aceita o número em dígitos. O `+` com que o telefone é
+        guardado leva a uma página de erro em vez da conversa, e o número
+        continua a parecer certo a quem carregou.
+        """
+
+        digitos = re.sub(r"\D", "", self.phone or "")
+
+        if not digitos:
+            return ""
+
+        return f"https://wa.me/{digitos}"
 
 
 class PatientRecord(models.Model):

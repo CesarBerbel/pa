@@ -5,6 +5,7 @@ from .views import (
     ClinicalNoteUpdateView,
     AppointmentCreateView,
     AppointmentAuditView,
+    AppointmentDetailView,
     AppointmentListView,
     AppointmentUpdateView,
     BusinessHourUpdateView,
@@ -45,8 +46,6 @@ from .views import (
     CustomerDeleteView,
 )
 
-from .views.diagnostics import ReminderDiagnosticsView
-
 app_name = "appointments"
 
 urlpatterns = [
@@ -71,11 +70,6 @@ urlpatterns = [
         "diagnostico/horarios/",
         ScheduleDiagnosticsView.as_view(),
         name="schedule_diagnostics",
-    ),
-    path(
-        "diagnostico/lembretes/",
-        ReminderDiagnosticsView.as_view(),
-        name="reminder_diagnostics",
     ),
     path(
         "horas-trabalhadas/",
@@ -182,6 +176,11 @@ urlpatterns = [
     ),
     path("marcacoes/", AppointmentListView.as_view(), name="appointment_list"),
     path("marcacoes/nova/", AppointmentCreateView.as_view(), name="appointment_create"),
+    path(
+        "marcacoes/<int:pk>/",
+        AppointmentDetailView.as_view(),
+        name="appointment_detail",
+    ),
     path(
         "marcacoes/<int:pk>/editar/",
         AppointmentUpdateView.as_view(),

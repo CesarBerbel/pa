@@ -25,7 +25,6 @@ class InternalNavigationTests(ResetLanguageMixin, TestCase):
     ]
 
     CONFIGURACOES = [
-        ("appointments:reminder_diagnostics", "Diagnóstico"),
         ("appointments:business_hour_list", "Horas trabalhadas"),
         ("appointments:schedule_block_list", "Bloqueios"),
         ("appointments:service_list", "Serviços"),

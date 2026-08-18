@@ -53,13 +53,11 @@ class EmailEventSetting(models.Model):
     EVENT_APPOINTMENT_CREATED = "appointment_created"
     EVENT_APPOINTMENT_CONFIRMED = "appointment_confirmed"
     EVENT_APPOINTMENT_CANCELLED = "appointment_cancelled"
-    EVENT_APPOINTMENT_REMINDER = "appointment_reminder"
 
     EVENT_CHOICES = (
         (EVENT_APPOINTMENT_CREATED, "Pedido de marcação criado"),
         (EVENT_APPOINTMENT_CONFIRMED, "Marcação confirmada"),
         (EVENT_APPOINTMENT_CANCELLED, "Marcação cancelada"),
-        (EVENT_APPOINTMENT_REMINDER, "Lembrete antes da marcação"),
     )
 
     LEAD_TIME_UNIT_HOURS = "hours"
@@ -121,57 +119,16 @@ class EmailEventSetting(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ["event_type", "lead_time_unit", "lead_time_value", "name"]
+        ordering = ["event_type", "name"]
         constraints = [
             models.UniqueConstraint(
                 fields=["event_type"],
-                condition=~Q(event_type="appointment_reminder"),
-                name="unique_single_email_setting_per_non_reminder_event",
-            ),
-            models.UniqueConstraint(
-                fields=["event_type", "lead_time_value", "lead_time_unit"],
-                condition=Q(event_type="appointment_reminder"),
-                name="unique_email_reminder_setting_per_lead_time",
+                name="unique_single_email_setting_per_event",
             ),
         ]
 
     def __str__(self):
-        if self.event_type == self.EVENT_APPOINTMENT_REMINDER:
-            return f"{self.name} - {self.get_lead_time_label()}"
-
         return self.name
-
-    def clean(self):
-        if self.event_type != self.EVENT_APPOINTMENT_REMINDER:
-            return
-
-        if self.lead_time_value < 1:
-            raise ValidationError(
-                "O aviso deve ser configurado com pelo menos 1 hora ou 1 dia antes."
-            )
-
-        if self.window_before_minutes < 1 or self.window_after_minutes < 1:
-            raise ValidationError(
-                "A janela de envio deve ter pelo menos 1 minuto antes e depois."
-            )
-
-    def get_lead_time_label(self):
-        if self.lead_time_unit == self.LEAD_TIME_UNIT_DAYS:
-            if self.lead_time_value == 1:
-                return "1 dia antes"
-
-            return f"{self.lead_time_value} dias antes"
-
-        if self.lead_time_value == 1:
-            return "1 hora antes"
-
-        return f"{self.lead_time_value} horas antes"
-
-    def get_log_key(self):
-        if self.event_type != self.EVENT_APPOINTMENT_REMINDER:
-            return self.event_type
-
-        return f"reminder_{self.lead_time_value}_{self.lead_time_unit}"
 
 
 class ServiceFollowUp(models.Model):

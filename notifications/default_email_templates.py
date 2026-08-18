@@ -146,34 +146,6 @@ DEFAULT_EMAIL_TEMPLATES = [
         ),
     },
     {
-        "key": "appointment_reminder",
-        "name": "Lembrete de marcação",
-        "event_type": "appointment_reminder",
-        "subject": "Lembrete: a sua marcação {{ reminder_label }}",
-        "body_text": (
-            "Olá {{ customer_name }},\n\n"
-            "Este é um lembrete da sua marcação {{ reminder_label }}.\n\n"
-            "Serviço: {{ service_name }}\n"
-            "Data: {{ appointment_date }}\n"
-            "Horário: {{ appointment_time }}\n"
-            "Código: {{ reference_code }}\n\n"
-            "Ver os detalhes:\n{{ magic_link }}\n\n"
-            "Se precisar de cancelar:\n{{ cancellation_link }}\n\n"
-            f"{RODAPE_TEXTO}"
-        ),
-        "body_html": _html(
-            titulo="Lembrete da sua marcação",
-            saudacao="Olá {{ customer_name }},",
-            corpo="Passamos por aqui para lembrar a sua marcação {{ reminder_label }}.",
-            acao=("Ver a minha marcação", "{{ magic_link }}"),
-            aviso=(
-                "Se já não puder comparecer, "
-                '<a href="{{ cancellation_link }}" style="color:#8b5e66;">'
-                "avise-nos por aqui</a> para libertarmos o horário."
-            ),
-        ),
-    },
-    {
         "key": "appointment_cancelled",
         "name": "Marcação cancelada",
         "event_type": "appointment_cancelled",
