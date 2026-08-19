@@ -52,12 +52,30 @@ class EmailEventSetting(models.Model):
 
     EVENT_APPOINTMENT_CREATED = "appointment_created"
     EVENT_APPOINTMENT_CONFIRMED = "appointment_confirmed"
+    # A confirmação de uma marcação combinada ao telefone não pode ser dita
+    # como a de um pedido feito no site: uma responde a um pedido que a cliente
+    # fez, a outra anuncia uma marcação que ela ainda não viu escrita.
+    EVENT_APPOINTMENT_CONFIRMED_INTERNAL = "appointment_confirmed_internal"
     EVENT_APPOINTMENT_CANCELLED = "appointment_cancelled"
+    EVENT_APPOINTMENT_COMPLETED = "appointment_completed"
 
     EVENT_CHOICES = (
         (EVENT_APPOINTMENT_CREATED, "Pedido de marcação criado"),
-        (EVENT_APPOINTMENT_CONFIRMED, "Marcação confirmada"),
+        (EVENT_APPOINTMENT_CONFIRMED, "Marcação confirmada (pedida no site)"),
+        (
+            EVENT_APPOINTMENT_CONFIRMED_INTERNAL,
+            "Marcação confirmada (criada na área interna)",
+        ),
         (EVENT_APPOINTMENT_CANCELLED, "Marcação cancelada"),
+        (EVENT_APPOINTMENT_COMPLETED, "Atendimento concluído"),
+    )
+
+    AUDIENCE_CUSTOMER = "customer"
+    AUDIENCE_PROFESSIONAL = "professional"
+
+    AUDIENCE_CHOICES = (
+        (AUDIENCE_CUSTOMER, "Cliente"),
+        (AUDIENCE_PROFESSIONAL, "Profissional"),
     )
 
     LEAD_TIME_UNIT_HOURS = "hours"
@@ -77,6 +95,16 @@ class EmailEventSetting(models.Model):
         max_length=50,
         choices=EVENT_CHOICES,
         help_text="Ação do sistema que poderá enviar email.",
+    )
+
+    # O mesmo acontecimento diz coisas diferentes de cada lado: à cliente
+    # confirma-se a marcação, à profissional avisa-se que há um pedido à espera
+    # de resposta. Uma linha por par, para cada uma se ligar e desligar à parte.
+    audience = models.CharField(
+        max_length=20,
+        choices=AUDIENCE_CHOICES,
+        default=AUDIENCE_CUSTOMER,
+        verbose_name="Destinatário",
     )
 
     email_template = models.ForeignKey(
@@ -122,8 +150,8 @@ class EmailEventSetting(models.Model):
         ordering = ["event_type", "name"]
         constraints = [
             models.UniqueConstraint(
-                fields=["event_type"],
-                name="unique_single_email_setting_per_event",
+                fields=["event_type", "audience"],
+                name="unique_email_setting_per_event_and_audience",
             ),
         ]
 
@@ -132,12 +160,32 @@ class EmailEventSetting(models.Model):
 
 
 class ServiceFollowUp(models.Model):
-    """Email de seguimento, enviado uns dias depois do atendimento.
+    """Mensagem ligada a um serviço, e o momento em que sai.
 
-    Serve para os cuidados que vêm a seguir: um manual para os calos não
-    voltarem, enviado 15 dias depois da remoção. Cada serviço pode ter mais do
-    que um, em prazos diferentes.
+    Três momentos, porque um serviço tem coisas para dizer em alturas
+    diferentes: o que se diz ao terminar o atendimento, o manual de cuidados
+    que só faz sentido uns dias depois, e o texto que se guarda para mandar à
+    mão quando for preciso. Cada serviço pode ter vários de cada.
     """
+
+    TRIGGER_COMPLETION = "completion"
+    TRIGGER_DELAYED = "delayed"
+    TRIGGER_MANUAL = "manual"
+
+    TRIGGER_CHOICES = (
+        (TRIGGER_COMPLETION, "No fim do atendimento"),
+        (TRIGGER_DELAYED, "Alguns dias depois"),
+        (TRIGGER_MANUAL, "Só quando for enviada à mão"),
+    )
+
+    trigger = models.CharField(
+        max_length=20,
+        choices=TRIGGER_CHOICES,
+        # Os seguimentos que já existiam são todos deste tipo, e é por isso que
+        # é este o valor por omissão: a migração não muda o que já estava feito.
+        default=TRIGGER_DELAYED,
+        verbose_name="Quando enviar",
+    )
 
     service = models.ForeignKey(
         "appointments.Service",
@@ -157,7 +205,10 @@ class ServiceFollowUp(models.Model):
     days_after = models.PositiveIntegerField(
         default=15,
         verbose_name="Dias depois do atendimento",
-        help_text="Zero envia no próprio dia do atendimento.",
+        help_text=(
+            "Só conta para 'Alguns dias depois'. Zero envia no próprio dia "
+            "do atendimento."
+        ),
     )
 
     is_active = models.BooleanField(
@@ -170,20 +221,36 @@ class ServiceFollowUp(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ["service__name", "days_after"]
-        verbose_name = "Seguimento por serviço"
-        verbose_name_plural = "Seguimentos por serviço"
+        ordering = ["service__name", "trigger", "days_after"]
+        verbose_name = "Mensagem por serviço"
+        verbose_name_plural = "Mensagens por serviço"
         constraints = [
             models.UniqueConstraint(
-                fields=["service", "email_template", "days_after"],
-                name="unique_followup_per_service_template_delay",
+                fields=["service", "email_template", "trigger", "days_after"],
+                name="unique_service_message_per_template_and_moment",
             ),
         ]
 
     def __str__(self):
         return f"{self.service} · {self.get_delay_label()}"
 
+    @property
+    def is_automatic(self):
+        """Se o sistema o envia sozinho, ou se espera por alguém.
+
+        As mensagens manuais existem para estar à mão no ecrã da marcação; não
+        entram no comando diário nem saem ao concluir um atendimento.
+        """
+
+        return self.trigger != self.TRIGGER_MANUAL
+
     def get_delay_label(self):
+        if self.trigger == self.TRIGGER_MANUAL:
+            return "envio manual"
+
+        if self.trigger == self.TRIGGER_COMPLETION:
+            return "no fim do atendimento"
+
         if self.days_after == 0:
             return "no próprio dia"
 
@@ -213,12 +280,17 @@ class WhatsAppEventSetting(models.Model):
 
     EVENT_APPOINTMENT_REQUESTED = "appointment_requested"
     EVENT_APPOINTMENT_CONFIRMED = "appointment_confirmed"
+    EVENT_APPOINTMENT_CONFIRMED_INTERNAL = "appointment_confirmed_internal"
     EVENT_APPOINTMENT_CANCELLED = "appointment_cancelled"
     EVENT_APPOINTMENT_COMPLETED = "appointment_completed"
 
     EVENT_CHOICES = (
         (EVENT_APPOINTMENT_REQUESTED, "Pedido de marcação recebido"),
-        (EVENT_APPOINTMENT_CONFIRMED, "Marcação confirmada"),
+        (EVENT_APPOINTMENT_CONFIRMED, "Marcação confirmada (pedida no site)"),
+        (
+            EVENT_APPOINTMENT_CONFIRMED_INTERNAL,
+            "Marcação confirmada (criada na área interna)",
+        ),
         (EVENT_APPOINTMENT_CANCELLED, "Marcação cancelada"),
         (EVENT_APPOINTMENT_COMPLETED, "Atendimento concluído"),
     )
@@ -407,12 +479,17 @@ class WhatsAppMessageLog(models.Model):
 
     EVENT_APPOINTMENT_REQUESTED = "appointment_requested"
     EVENT_APPOINTMENT_CONFIRMED = "appointment_confirmed"
+    EVENT_APPOINTMENT_CONFIRMED_INTERNAL = "appointment_confirmed_internal"
     EVENT_APPOINTMENT_CANCELLED = "appointment_cancelled"
     EVENT_APPOINTMENT_COMPLETED = "appointment_completed"
 
     EVENT_CHOICES = (
         (EVENT_APPOINTMENT_REQUESTED, "Pedido de marcação recebido"),
-        (EVENT_APPOINTMENT_CONFIRMED, "Marcação confirmada"),
+        (EVENT_APPOINTMENT_CONFIRMED, "Marcação confirmada (pedida no site)"),
+        (
+            EVENT_APPOINTMENT_CONFIRMED_INTERNAL,
+            "Marcação confirmada (criada na área interna)",
+        ),
         (EVENT_APPOINTMENT_CANCELLED, "Marcação cancelada"),
         (EVENT_APPOINTMENT_COMPLETED, "Atendimento concluído"),
     )

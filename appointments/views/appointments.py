@@ -8,6 +8,7 @@ from appointments.mixins import (
     LoginRequiredMixin,
 )
 from django.shortcuts import get_object_or_404, redirect
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.generic import (
@@ -28,7 +29,11 @@ from appointments.forms import (
 )
 from appointments.models import Appointment, AppointmentLog, ClinicalNote, Service
 from appointments.selectors import AppointmentFilters, AppointmentSelectors
-from appointments.use_cases import ConfirmAppointmentUseCase, CompleteAppointmentUseCase
+from appointments.use_cases import (
+    CompleteAppointmentUseCase,
+    ConfirmAppointmentUseCase,
+    deliver_confirmation_message,
+)
 from notifications.whatsapp import WhatsAppAppointmentNotificationService
 
 
@@ -144,6 +149,13 @@ class AppointmentCreateView(InternalAreaRequiredMixin, CreateView):
         else:
             initial["start_time"] = current_datetime.strftime("%H:%M")
 
+        # Uma marcação criada aqui já foi combinada com a cliente — ao telefone,
+        # no WhatsApp ou ao balcão. Nascia como "Agendada" e obrigava a
+        # confirmá-la logo a seguir, num ecrã diferente, para dizer o que já se
+        # sabia. O campo continua à mão: uma visita passada, registada depois de
+        # acontecer, entra como concluída.
+        initial["status"] = Appointment.STATUS_CONFIRMED
+
         return initial
 
     def form_valid(self, form):
@@ -164,10 +176,32 @@ class AppointmentCreateView(InternalAreaRequiredMixin, CreateView):
             changes=AppointmentAuditService.creation_changes(self.object),
         )
 
-        messages.success(self.request, "Marcação criada com sucesso.")
+        messages.success(self.request, self.creation_message(form))
         warn_schedule_override(self.request, form)
 
         return response
+
+    def creation_message(self, form):
+        """O que dizer depois de gravar, conforme a escolha feita na janela.
+
+        Dizer só "criada com sucesso" deixava por saber se a cliente foi
+        avisada. Quem marca ao telefone precisa de o saber antes de desligar.
+        """
+
+        if not form.cleaned_data.get("send_confirmation"):
+            return "Marcação criada. Não foi enviada mensagem à cliente."
+
+        deliver_confirmation_message(self.object)
+
+        if self.object.customer.email:
+            return "Marcação criada e confirmação enviada à cliente."
+
+        # Sem email, sobra o WhatsApp — e esse depende das regras de envio
+        # estarem ligadas. Prometer o que não se sabe seria pior do que isto.
+        return (
+            "Marcação criada. A cliente não tem email registado; "
+            "a confirmação segue apenas por WhatsApp, se estiver ativo."
+        )
 
 
 class AppointmentUpdateView(InternalAreaRequiredMixin, UpdateView):
@@ -343,6 +377,37 @@ class AppointmentCancelView(InternalAreaRequiredMixin, UpdateView):
         return self.form_invalid(form)
 
 
+def back_to(request, fallback="appointments:appointment_list"):
+    """Para onde voltar depois de agir sobre uma marcação.
+
+    Confirmar a partir do painel devolvia a lista de marcações, o que obrigava
+    a voltar atrás para confirmar a seguinte. O destino vem do formulário, mas
+    é validado: um `next` que aponte para fora do site é um redirecionamento
+    aberto, e esses servem para levar quem clica a uma página que imita esta.
+    """
+
+    destino = request.POST.get("next", "")
+
+    if destino and url_has_allowed_host_and_scheme(
+        destino,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return destino
+
+    return reverse(fallback)
+
+
+def wants_to_notify(request):
+    """Se a janela de confirmação respondeu que sim.
+
+    Ausente é não. Sem JavaScript o campo vai vazio, e nesse caso a marcação
+    muda de estado à mesma — o que se perde é o aviso, nunca o contrário.
+    """
+
+    return request.POST.get("send_message") == "1"
+
+
 class AppointmentConfirmView(InternalAreaRequiredMixin, View):
     # Confirms an appointment without deleting it.
 
@@ -352,6 +417,7 @@ class AppointmentConfirmView(InternalAreaRequiredMixin, View):
         result = ConfirmAppointmentUseCase.execute(
             appointment=appointment,
             user=request.user,
+            send_message=wants_to_notify(request),
         )
 
         if result.success:
@@ -359,7 +425,7 @@ class AppointmentConfirmView(InternalAreaRequiredMixin, View):
         else:
             messages.error(request, result.message)
 
-        return redirect("appointments:appointment_list")
+        return redirect(back_to(request))
 
 
 class AppointmentCompleteView(InternalAreaRequiredMixin, View):
@@ -371,6 +437,7 @@ class AppointmentCompleteView(InternalAreaRequiredMixin, View):
         result = CompleteAppointmentUseCase.execute(
             appointment=appointment,
             user=request.user,
+            send_message=wants_to_notify(request),
         )
 
         if result.success:

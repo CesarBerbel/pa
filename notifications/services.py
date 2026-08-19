@@ -70,7 +70,13 @@ class EmailTemplateService:
             # links tal como a cliente os vai receber.
             "magic_link": f"{settings.SITE_URL}/m/exemplo-token/",
             "cancellation_link": f"{settings.SITE_URL}/cancelar/AGD-EXEMPLO/",
+            "booking_link": f"{settings.SITE_URL}/agenda-publica/",
             "intro": "A sua marcação foi confirmada.",
+            # Usadas pelos avisos internos e pelos modelos por serviço. Estão
+            # aqui para a pré-visualização não sair com buracos.
+            "customer_phone": "+351910000000",
+            "internal_link": f"{settings.SITE_URL}/marcacoes/1/",
+            "days_after": 15,
         }
 
 
@@ -78,12 +84,18 @@ class EmailEventSettingService:
     # Handles email event settings lookup.
 
     @staticmethod
-    def get_active_setting(event_type):
-        # Returns the active setting for non-reminder email events.
+    def get_active_setting(event_type, audience=EmailEventSetting.AUDIENCE_CUSTOMER):
+        """A regra ativa para este acontecimento e este destinatário.
+
+        O destinatário tem valor por omissão porque a esmagadora maioria dos
+        emails é para a cliente; os avisos internos pedem-no à mão.
+        """
+
         return (
             EmailEventSetting.objects.select_related("email_template")
             .filter(
                 event_type=event_type,
+                audience=audience,
                 is_active=True,
             )
             .first()

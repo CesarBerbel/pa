@@ -1,6 +1,7 @@
 from datetime import timedelta
 from decimal import Decimal
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core import mail
 from django.test import Client, TestCase, override_settings
@@ -22,6 +23,22 @@ from appointments.models import (
     DEFAULT_FROM_EMAIL="test@example.com",
 )
 class AppointmentCancellationFlowTests(TestCase):
+    def email_para(self, destinatario):
+        """O email enviado a este destinatário, e só um.
+
+        Um cancelamento passou a produzir dois: o da cliente e o aviso interno.
+        Procurar pelo destinatário é mais legível do que contar por índice, e
+        falha com uma mensagem que se percebe se algum deixar de sair.
+        """
+
+        encontrados = [enviado for enviado in mail.outbox if destinatario in enviado.to]
+
+        self.assertEqual(
+            len(encontrados), 1, f"emails para {destinatario}: {len(encontrados)}"
+        )
+
+        return encontrados[0]
+
     # Tests the full appointment cancellation flow with required cancellation reason.
 
     def setUp(self):
@@ -127,10 +144,17 @@ class AppointmentCancellationFlowTests(TestCase):
             ).exists()
         )
 
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertIn("Marcação cancelada", mail.outbox[0].subject)
-        self.assertIn(reason, mail.outbox[0].body)
-        self.assertIn(self.appointment.reference_code, mail.outbox[0].body)
+        # Dois emails: um à cliente e o aviso interno de que o horário vagou.
+        para_cliente = self.email_para(self.appointment.customer.email)
+
+        self.assertIn("Marcação cancelada", para_cliente.subject)
+        self.assertIn(reason, para_cliente.body)
+        self.assertIn(self.appointment.reference_code, para_cliente.body)
+
+        interno = self.email_para(settings.PROFESSIONAL_EMAIL)
+
+        self.assertIn(self.appointment.customer.full_name, interno.subject)
+        self.assertIn(reason, interno.body)
 
     def test_internal_cancel_get_renders_form_without_instance_error(self):
         # Ensure the internal cancellation page opens correctly with regular Form.
@@ -176,8 +200,7 @@ class AppointmentCancellationFlowTests(TestCase):
         self.assertEqual(self.appointment.status, Appointment.STATUS_CANCELLED)
         self.assertEqual(self.appointment.cancellation_reason, reason)
         self.assertIsNotNone(self.appointment.cancelled_at)
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertIn(reason, mail.outbox[0].body)
+        self.assertIn(reason, self.email_para(self.appointment.customer.email).body)
 
     def test_internal_cancel_post_rejects_short_reason(self):
         # Ensure staff cannot cancel with an invalid short reason.
@@ -254,8 +277,11 @@ class AppointmentCancellationFlowTests(TestCase):
         self.assertEqual(self.appointment.cancellation_reason, reason)
         self.assertIsNotNone(self.appointment.cancelled_at)
 
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertIn(reason, mail.outbox[0].body)
+        self.assertIn(reason, self.email_para(self.appointment.customer.email).body)
+
+        # O cancelamento vem do site, muitas vezes fora de horas: o aviso
+        # interno é o que faz o horário voltar a ser oferecido a alguém.
+        self.assertIn(reason, self.email_para(settings.PROFESSIONAL_EMAIL).body)
 
     def test_public_cancel_by_direct_code_url_saves_reason_and_sends_email(self):
         # Ensure direct cancellation URL also requires and saves cancellation reason.
@@ -285,5 +311,8 @@ class AppointmentCancellationFlowTests(TestCase):
         self.assertEqual(self.appointment.cancellation_reason, reason)
         self.assertIsNotNone(self.appointment.cancelled_at)
 
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertIn(reason, mail.outbox[0].body)
+        self.assertIn(reason, self.email_para(self.appointment.customer.email).body)
+
+        # O cancelamento vem do site, muitas vezes fora de horas: o aviso
+        # interno é o que faz o horário voltar a ser oferecido a alguém.
+        self.assertIn(reason, self.email_para(settings.PROFESSIONAL_EMAIL).body)

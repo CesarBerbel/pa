@@ -80,6 +80,59 @@ class BrandImageTests(TestCase):
                 self.assertLess(kb, 200, f"{nome} tem {kb} KB")
 
 
+class PublicImageTests(TestCase):
+    """As imagens geradas por `scripts/optimize_public_images.py`.
+
+    Os originais têm entre 380 KB e 1,4 MB e vivem em `assets/`, fora de
+    `static/`. O que estes testes protegem é o limite: a página inicial já
+    chegou a pedir 2,7 MB de PNG, e basta alguém voltar a apontar um template
+    para um original para o problema regressar sem dar por isso.
+    """
+
+    # (ficheiro, KB no máximo)
+    PUBLICAS = [
+        ("hero-photo.webp", 150),
+        ("logo.webp", 60),
+        ("logo-transparent.webp", 120),
+    ]
+
+    # Nenhum ficheiro servido a partir de `static/img/` deve passar disto. O
+    # maior legítimo é o cartão social, com 220 KB.
+    TETO_KB = 250
+
+    def test_public_images_exist_and_stay_small(self):
+        for nome, teto in self.PUBLICAS:
+            with self.subTest(imagem=nome):
+                ficheiro = IMG / nome
+
+                self.assertTrue(ficheiro.exists(), f"falta {nome}")
+                self.assertEqual(Image.open(ficheiro).format, "WEBP")
+
+                kb = ficheiro.stat().st_size // 1024
+                self.assertLessEqual(kb, teto, f"{nome} tem {kb} KB")
+
+    def test_social_card_is_readable_by_link_previews(self):
+        # Os robôs do WhatsApp e do Facebook esperam PNG ou JPEG e ignoram
+        # imagens grandes de mais — a anterior tinha 912 KB e não aparecia.
+        cartao = IMG / "logo-og.png"
+        imagem = Image.open(cartao)
+
+        self.assertEqual(imagem.format, "PNG")
+        self.assertEqual(imagem.size, (1200, 630))
+        self.assertLess(cartao.stat().st_size, 600 * 1024)
+
+        self.assertTrue(settings.SEO_DEFAULT_IMAGE_PATH.endswith("logo-og.png"))
+
+    def test_no_source_image_is_served(self):
+        # `static/` é o que vai para produção. Um original deixado aqui é
+        # descarregado por quem visita o site, mesmo que nenhuma página o use.
+        for ficheiro in IMG.iterdir():
+            with self.subTest(imagem=ficheiro.name):
+                kb = ficheiro.stat().st_size // 1024
+
+                self.assertLessEqual(kb, self.TETO_KB, f"{ficheiro.name} tem {kb} KB")
+
+
 class NavbarLogoTests(ResetLanguageMixin, TestCase):
     def setUp(self):
         super().setUp()

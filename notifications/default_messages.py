@@ -16,7 +16,13 @@ recebe que variável do sistema.
 Os textos seguem as regras que mais rejeições causam na revisão da Meta:
 nenhuma posição no início ou no fim do corpo, nunca duas seguidas, e numeração
 contínua a partir de 1.
+
+A morada aparece escrita por extenso nas confirmações, em vez de sair de uma
+variável: é a mensagem que a cliente vai reler à porta do prédio, e um modelo
+aprovado pela Meta não muda todos os dias.
 """
+
+MORADA = "Galeria Avenida, Av. Sá da Bandeira 33, Loja 108, Coimbra"
 
 # (evento, destinatário, texto de envio, texto para a Meta, variáveis)
 DEFAULT_MESSAGES = [
@@ -24,21 +30,24 @@ DEFAULT_MESSAGES = [
         "event_type": "appointment_requested",
         "audience": "professional",
         "body_template": (
-            "Novo pedido de marcação: {{ customer_name }} pediu "
+            "Novo pedido de marcação pelo site: {{ customer_name }} pediu "
             "{{ service_name }} para {{ appointment_date }} às "
-            "{{ appointment_time }}. Referência {{ reference_code }}. "
-            "Confirme na agenda interna."
+            "{{ appointment_time }}. Contacto da cliente: "
+            "{{ customer_phone }}. Referência {{ reference_code }} — falta "
+            "confirmar na agenda interna."
         ),
         "meta_template_body": (
-            "Novo pedido de marcação: {{1}} pediu {{2}} para {{3}} às {{4}}. "
-            "Referência {{5}}. Confirme na agenda interna."
+            "Novo pedido de marcação pelo site: {{1}} pediu {{2}} para {{3}} "
+            "às {{4}}. Contacto da cliente: {{5}}. Referência {{6}} — falta "
+            "confirmar na agenda interna."
         ),
         "content_variables": {
             "1": "{{ customer_name }}",
             "2": "{{ service_name }}",
             "3": "{{ appointment_date }}",
             "4": "{{ appointment_time }}",
-            "5": "{{ reference_code }}",
+            "5": "{{ customer_phone }}",
+            "6": "{{ reference_code }}",
         },
     },
     {
@@ -47,14 +56,16 @@ DEFAULT_MESSAGES = [
         "body_template": (
             "Olá {{ customer_name }}, recebemos o seu pedido de marcação para "
             "{{ service_name }}, no dia {{ appointment_date }} às "
-            "{{ appointment_time }}. A referência é {{ reference_code }}. "
-            "Pode acompanhar aqui: {{ appointment_link }} — entraremos em "
-            "contacto assim que estiver confirmado."
+            "{{ appointment_time }}. Falta ainda confirmarmos a agenda — "
+            "assim que estiver tratado, avisamos por aqui. A referência é "
+            "{{ reference_code }} e pode acompanhar a marcação em "
+            "{{ appointment_link }}, onde também a pode cancelar."
         ),
         "meta_template_body": (
             "Olá {{1}}, recebemos o seu pedido de marcação para {{2}}, no dia "
-            "{{3}} às {{4}}. A referência é {{5}}. Pode acompanhar aqui: "
-            "{{6}} — entraremos em contacto assim que estiver confirmado."
+            "{{3}} às {{4}}. Falta ainda confirmarmos a agenda — assim que "
+            "estiver tratado, avisamos por aqui. A referência é {{5}} e pode "
+            "acompanhar a marcação em {{6}}, onde também a pode cancelar."
         ),
         "content_variables": {
             "1": "{{ customer_name }}",
@@ -69,16 +80,50 @@ DEFAULT_MESSAGES = [
         "event_type": "appointment_confirmed",
         "audience": "customer",
         "body_template": (
-            "Olá {{ customer_name }}, a sua marcação de {{ service_name }} "
-            "está confirmada para {{ appointment_date }} às "
-            "{{ appointment_time }}. Referência {{ reference_code }}. "
-            "Veja os detalhes aqui: {{ appointment_link }} — se precisar de "
-            "alterar, responda a esta mensagem."
+            "Olá {{ customer_name }}, o seu pedido está confirmado: "
+            "{{ service_name }}, no dia {{ appointment_date }} às "
+            "{{ appointment_time }}. Esperamos por si na " + MORADA + ". "
+            "Guarde a referência {{ reference_code }}; em "
+            "{{ appointment_link }} pode consultar ou cancelar a marcação. Se "
+            "não puder vir, avise-nos com antecedência — assim o horário fica "
+            "livre para outra pessoa."
         ),
         "meta_template_body": (
-            "Olá {{1}}, a sua marcação de {{2}} está confirmada para {{3}} às "
-            "{{4}}. Referência {{5}}. Veja os detalhes aqui: {{6}} — se "
-            "precisar de alterar, responda a esta mensagem."
+            "Olá {{1}}, o seu pedido está confirmado: {{2}}, no dia {{3}} às "
+            "{{4}}. Esperamos por si na " + MORADA + ". Guarde a referência "
+            "{{5}}; em {{6}} pode consultar ou cancelar a marcação. Se não "
+            "puder vir, avise-nos com antecedência — assim o horário fica "
+            "livre para outra pessoa."
+        ),
+        "content_variables": {
+            "1": "{{ customer_name }}",
+            "2": "{{ service_name }}",
+            "3": "{{ appointment_date }}",
+            "4": "{{ appointment_time }}",
+            "5": "{{ reference_code }}",
+            "6": "{{ appointment_link }}",
+        },
+    },
+    {
+        # A marcação combinada ao telefone ou ao balcão não responde a pedido
+        # nenhum: para a cliente, esta mensagem é a primeira vez que vê a data
+        # escrita. Por isso não diz "confirmado" — regista o que foi combinado.
+        "event_type": "appointment_confirmed_internal",
+        "audience": "customer",
+        "body_template": (
+            "Olá {{ customer_name }}, fica registada a sua marcação de "
+            "{{ service_name }} para {{ appointment_date }} às "
+            "{{ appointment_time }}, como combinámos. Esperamos por si na "
+            + MORADA
+            + ". Guarde a referência {{ reference_code }}; em "
+            "{{ appointment_link }} pode consultar ou cancelar a marcação, se "
+            "precisar."
+        ),
+        "meta_template_body": (
+            "Olá {{1}}, fica registada a sua marcação de {{2}} para {{3}} às "
+            "{{4}}, como combinámos. Esperamos por si na " + MORADA + ". Guarde "
+            "a referência {{5}}; em {{6}} pode consultar ou cancelar a "
+            "marcação, se precisar."
         ),
         "content_variables": {
             "1": "{{ customer_name }}",
@@ -93,15 +138,18 @@ DEFAULT_MESSAGES = [
         "event_type": "appointment_cancelled",
         "audience": "customer",
         "body_template": (
-            "Olá {{ customer_name }}, a sua marcação de {{ service_name }} "
-            "de {{ appointment_date }} às {{ appointment_time }} foi "
-            "cancelada. Referência {{ reference_code }}. Se quiser remarcar, "
-            "responda a esta mensagem."
+            "Olá {{ customer_name }}, a sua marcação de {{ service_name }}, "
+            "de {{ appointment_date }} às {{ appointment_time }}, foi "
+            "cancelada e o horário ficou livre. A referência era "
+            "{{ reference_code }}. Quando quiser remarcar, escolha um horário "
+            "em {{ booking_link }} ou responda a esta mensagem — teremos todo "
+            "o gosto em recebê-la."
         ),
         "meta_template_body": (
-            "Olá {{1}}, a sua marcação de {{2}} de {{3}} às {{4}} foi "
-            "cancelada. Referência {{5}}. Se quiser remarcar, responda a esta "
-            "mensagem."
+            "Olá {{1}}, a sua marcação de {{2}}, de {{3}} às {{4}}, foi "
+            "cancelada e o horário ficou livre. A referência era {{5}}. "
+            "Quando quiser remarcar, escolha um horário em {{6}} ou responda "
+            "a esta mensagem — teremos todo o gosto em recebê-la."
         ),
         "content_variables": {
             "1": "{{ customer_name }}",
@@ -109,47 +157,53 @@ DEFAULT_MESSAGES = [
             "3": "{{ appointment_date }}",
             "4": "{{ appointment_time }}",
             "5": "{{ reference_code }}",
+            "6": "{{ booking_link }}",
         },
     },
     {
         "event_type": "appointment_cancelled",
         "audience": "professional",
         "body_template": (
-            "Marcação cancelada: {{ customer_name }}, {{ service_name }}, "
-            "{{ appointment_date }} às {{ appointment_time }}. Referência "
-            "{{ reference_code }}. O horário voltou a ficar livre."
+            "Marcação cancelada: {{ customer_name }} — {{ service_name }}, "
+            "{{ appointment_date }} às {{ appointment_time }}. Contacto da "
+            "cliente: {{ customer_phone }}. Referência {{ reference_code }}. "
+            "O horário voltou a ficar livre na agenda."
         ),
         "meta_template_body": (
-            "Marcação cancelada: {{1}}, {{2}}, {{3}} às {{4}}. Referência "
-            "{{5}}. O horário voltou a ficar livre."
+            "Marcação cancelada: {{1}} — {{2}}, {{3}} às {{4}}. Contacto da "
+            "cliente: {{5}}. Referência {{6}}. O horário voltou a ficar livre "
+            "na agenda."
         ),
         "content_variables": {
             "1": "{{ customer_name }}",
             "2": "{{ service_name }}",
             "3": "{{ appointment_date }}",
             "4": "{{ appointment_time }}",
-            "5": "{{ reference_code }}",
+            "5": "{{ customer_phone }}",
+            "6": "{{ reference_code }}",
         },
     },
     {
         "event_type": "appointment_completed",
         "audience": "customer",
         "body_template": (
-            "Olá {{ customer_name }}, obrigada pela sua visita. Esperamos que "
-            "tenha corrido tudo bem com o seu {{ service_name }} de "
-            "{{ appointment_date }}. Se tiver alguma dúvida sobre os cuidados "
-            "a ter, responda a esta mensagem e teremos todo o gosto em ajudar."
+            "Olá {{ customer_name }}, obrigada pela sua visita. Se lhe surgir "
+            "alguma dúvida sobre os cuidados a ter depois do serviço de "
+            "{{ service_name }}, responda a esta mensagem — respondemos com "
+            "todo o gosto. Quando for altura de voltar, pode escolher horário "
+            "em {{ booking_link }}, quando lhe for mais conveniente."
         ),
         "meta_template_body": (
-            "Olá {{1}}, obrigada pela sua visita. Esperamos que tenha corrido "
-            "tudo bem com o seu {{2}} de {{3}}. Se tiver alguma dúvida sobre "
-            "os cuidados a ter, responda a esta mensagem e teremos todo o "
-            "gosto em ajudar."
+            "Olá {{1}}, obrigada pela sua visita. Se lhe surgir alguma dúvida "
+            "sobre os cuidados a ter depois do serviço de {{2}}, responda a "
+            "esta mensagem — respondemos com todo o gosto. Quando for altura de "
+            "voltar, pode escolher horário em {{3}}, quando lhe for mais "
+            "conveniente."
         ),
         "content_variables": {
             "1": "{{ customer_name }}",
             "2": "{{ service_name }}",
-            "3": "{{ appointment_date }}",
+            "3": "{{ booking_link }}",
         },
     },
 ]

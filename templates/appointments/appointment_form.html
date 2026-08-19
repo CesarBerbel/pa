@@ -24,7 +24,19 @@
                     {% endif %}
                 </h1>
 
-                <form method="post" novalidate id="appointment-form">
+                <form
+                    method="post"
+                    novalidate
+                    id="appointment-form"
+                    {% if not object %}
+                        data-ask-send-message
+                        data-send-field="send_confirmation"
+                        data-choice-title="Avisar a cliente desta marcação?"
+                        data-choice-text="A marcação é gravada na mesma. O que esta escolha decide é se sai já a mensagem de confirmação — por email, e por WhatsApp se o envio estiver ligado."
+                        data-choice-yes="Criar e enviar confirmação"
+                        data-choice-no="Criar sem avisar"
+                    {% endif %}
+                >
                     {% csrf_token %}
 
                     {{ form.non_field_errors }}
@@ -55,9 +67,19 @@
                     {{ form.notes|as_crispy_field }}
 
                     <div class="d-flex gap-2 mt-3">
-                        <button type="submit" class="btn btn-primary">
-                            Guardar
-                        </button>
+                        {% if object %}
+                            <button type="submit" class="btn btn-primary">
+                                Guardar
+                            </button>
+                        {% else %}
+                            {# Numa marcação nova, gravar passa primeiro pela #}
+                            {# pergunta sobre avisar a cliente.               #}
+                            {{ form.send_confirmation }}
+
+                            <button type="submit" class="btn btn-primary">
+                                Guardar
+                            </button>
+                        {% endif %}
 
                         <a href="{% url 'appointments:appointment_list' %}" class="btn btn-outline-secondary">
                             Cancelar
@@ -101,4 +123,8 @@
 
     </div>
 </div>
+
+{% if not object %}
+    {% include "appointments/_send_message_choice.html" %}
+{% endif %}
 {% endblock %}

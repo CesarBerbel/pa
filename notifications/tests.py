@@ -548,7 +548,10 @@ class ConfirmationEmailUsesTheTemplateTests(TestCase):
             end_time=time(18, 0),
         )
 
-    def marcacao(self, status=Appointment.STATUS_SCHEDULED):
+    def marcacao(self, status=Appointment.STATUS_SCHEDULED, origem=None):
+        # A origem é explícita porque a confirmação depende dela: um pedido
+        # feito no site e uma marcação combinada ao balcão têm textos
+        # diferentes. Sem a dizer, o valor por omissão do modelo decidia por si.
         return Appointment.objects.create(
             customer=self.customer,
             service=self.service,
@@ -556,6 +559,7 @@ class ConfirmationEmailUsesTheTemplateTests(TestCase):
             start_time=time(10, 0),
             status=status,
             created_by=self.user,
+            origin=origem or Appointment.ORIGIN_PUBLIC,
         )
 
     def test_the_request_email_goes_out(self):
@@ -573,7 +577,23 @@ class ConfirmationEmailUsesTheTemplateTests(TestCase):
             self.marcacao(status=Appointment.STATUS_CONFIRMED)
         )
 
-        self.assertEqual(mail.outbox[0].subject, "A sua marcação está confirmada")
+        self.assertIn("A sua marcação está confirmada", mail.outbox[0].subject)
+
+    def test_an_appointment_arranged_at_the_clinic_is_told_apart(self):
+        # A cliente não pediu nada: este email é a primeira vez que vê a data
+        # escrita. Chamar-lhe "confirmação do seu pedido" seria responder a um
+        # pedido que não existiu.
+        from appointments.emails import send_appointment_confirmation_email
+
+        send_appointment_confirmation_email(
+            self.marcacao(
+                status=Appointment.STATUS_CONFIRMED,
+                origem=Appointment.ORIGIN_INTERNAL,
+            )
+        )
+
+        self.assertIn("ficou registada", mail.outbox[0].subject)
+        self.assertIn("combinámos", mail.outbox[0].body)
 
     def test_it_carries_an_html_alternative(self):
         from appointments.emails import send_appointment_confirmation_email

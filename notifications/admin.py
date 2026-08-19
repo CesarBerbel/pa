@@ -346,12 +346,14 @@ class ServiceFollowUpAdmin(admin.ModelAdmin):
 
     list_display = (
         "service",
+        "trigger",
         "email_template",
         "days_after",
         "is_active",
     )
 
     list_filter = (
+        "trigger",
         "is_active",
         "service",
     )

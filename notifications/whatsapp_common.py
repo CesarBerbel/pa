@@ -84,6 +84,16 @@ def appointment_link(reference_code):
     return f"{settings.SITE_URL}{caminho}"
 
 
+def booking_link():
+    """Página onde se escolhe um horário novo.
+
+    A mensagem de cancelamento precisa dela: apontar para a marcação que
+    acabou de cair não serve de nada a quem quer remarcar.
+    """
+
+    return f"{settings.SITE_URL}{reverse('appointments:public_visual_schedule')}"
+
+
 def build_context(appointment):
     return {
         "customer_name": appointment.customer.full_name,
@@ -94,6 +104,11 @@ def build_context(appointment):
         "reference_code": appointment.reference_code,
         "status": appointment.get_status_display(),
         "appointment_link": appointment_link(appointment.reference_code),
+        "booking_link": booking_link(),
+        # Fica disponível para quem escreva um texto à medida. As mensagens de
+        # fábrica não a usam: um modelo aprovado pela Meta não aceita uma
+        # variável vazia, e a maior parte dos cancelamentos não traz motivo.
+        "cancellation_reason": appointment.cancellation_reason,
     }
 
 
@@ -107,4 +122,6 @@ def get_sample_context():
         "reference_code": "AGD-EXEMPLO",
         "status": "Confirmada",
         "appointment_link": appointment_link("AGD-EXEMPLO"),
+        "booking_link": booking_link(),
+        "cancellation_reason": "A cliente informou que não poderá comparecer.",
     }

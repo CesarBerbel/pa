@@ -289,8 +289,19 @@
                 {% endif %}
 
                 {% if appointment.status == "scheduled" %}
-                    <form method="post" action="{% url 'appointments:appointment_confirm' appointment.pk %}">
+                    <form
+                        method="post"
+                        action="{% url 'appointments:appointment_confirm' appointment.pk %}"
+                        data-ask-send-message
+                        data-send-field="send_message"
+                        data-choice-title="Avisar a cliente da confirmação?"
+                        data-choice-text="A marcação fica confirmada de qualquer forma. O que esta escolha decide é se sai já a mensagem de confirmação, por email e por WhatsApp."
+                        data-choice-yes="Confirmar e avisar"
+                        data-choice-no="Confirmar sem avisar"
+                    >
                         {% csrf_token %}
+                        <input type="hidden" name="send_message" value="">
+
                         <button type="submit" class="btn btn-success">
                             <i class="bi bi-check-lg me-1" aria-hidden="true"></i>
                             Confirmar
@@ -299,8 +310,19 @@
                 {% endif %}
 
                 {% if appointment.status == "confirmed" %}
-                    <form method="post" action="{% url 'appointments:appointment_complete' appointment.pk %}">
+                    <form
+                        method="post"
+                        action="{% url 'appointments:appointment_complete' appointment.pk %}"
+                        data-ask-send-message
+                        data-send-field="send_message"
+                        data-choice-title="Enviar a mensagem de fim de atendimento?"
+                        data-choice-text="O atendimento fica concluído de qualquer forma. Se este serviço tiver mensagens próprias para o fim do atendimento, são essas que saem; se não tiver, sai o agradecimento comum."
+                        data-choice-yes="Concluir e enviar"
+                        data-choice-no="Concluir sem enviar"
+                    >
                         {% csrf_token %}
+                        <input type="hidden" name="send_message" value="">
+
                         <button type="submit" class="btn btn-dark">
                             <i class="bi bi-check2-circle me-1" aria-hidden="true"></i>
                             Concluir
@@ -362,4 +384,5 @@
     </div>
 </div>
 
+{% include "appointments/_send_message_choice.html" %}
 {% endblock %}

@@ -26,8 +26,10 @@ from pathlib import Path
 from PIL import Image, ImageChops
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-ORIGEM = BASE_DIR / "static" / "img" / "icone.png"
-CONJUNTO = BASE_DIR / "static" / "img" / "logo_transparent.png"
+# Os originais vivem em `assets/`, fora de `static/`: são ficheiros de
+# trabalho com centenas de KB e não têm de ser servidos a ninguém.
+ORIGEM = BASE_DIR / "assets" / "img" / "icone.png"
+CONJUNTO = BASE_DIR / "assets" / "img" / "logo-transparent.png"
 DESTINO = BASE_DIR / "static" / "img"
 
 FUNDO = (255, 247, 249, 255)  # --bg-soft
