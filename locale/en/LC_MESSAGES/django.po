@@ -8,6 +8,10 @@ msgstr ""
 "Language: en\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+#: templates/legal/complaints_book.html:26
+msgid "1. Livro de Reclamações Eletrónico"
+msgstr "1. Electronic Complaints Book"
+
 #: templates/legal/cookie_policy.html:25
 msgid "1. O que são cookies?"
 msgstr "1. What are cookies?"
@@ -40,9 +44,17 @@ msgstr "2. How we use cookies"
 msgid "2. Dados pessoais recolhidos"
 msgstr "2. Personal data collected"
 
+#: templates/legal/complaints_book.html:44
+msgid "2. Livro de Reclamações em formato físico"
+msgstr "2. Complaints Book in paper format"
+
 #: templates/legal/cookie_policy.html:35
 msgid "3. Categorias de cookies"
 msgstr "3. Cookie categories"
+
+#: templates/legal/complaints_book.html:52
+msgid "3. Contacto direto antes de reclamar"
+msgstr "3. Getting in touch before complaining"
 
 #: templates/legal/privacy_policy.html:50
 msgid "3. Finalidades do tratamento"
@@ -56,6 +68,10 @@ msgstr "4. Cookies and technologies currently planned"
 msgid "4. Fundamentos legais"
 msgstr "4. Legal bases"
 
+#: templates/legal/complaints_book.html:60
+msgid "4. Prazos de resposta"
+msgstr "4. Response deadlines"
+
 #: templates/legal/cookie_policy.html:95
 msgid "5. Como gerir o consentimento"
 msgstr "5. Managing your consent"
@@ -64,6 +80,10 @@ msgstr "5. Managing your consent"
 msgid "5. Conservação dos dados"
 msgstr "5. Data retention"
 
+#: templates/legal/complaints_book.html:68
+msgid "5. Entidades competentes"
+msgstr "5. Competent authorities"
+
 #: templates/legal/cookie_policy.html:104
 msgid "6. Como apagar cookies no navegador"
 msgstr "6. Deleting cookies in your browser"
@@ -71,6 +91,10 @@ msgstr "6. Deleting cookies in your browser"
 #: templates/legal/privacy_policy.html:87
 msgid "6. Partilha de dados com terceiros"
 msgstr "6. Sharing data with third parties"
+
+#: templates/legal/complaints_book.html:79
+msgid "6. Proteção de dados"
+msgstr "6. Data protection"
 
 #: templates/legal/cookie_policy.html:109
 msgid "7. Consequências da rejeição"
@@ -112,6 +136,10 @@ msgstr "<strong>performance of a contract or pre-contractual steps</strong>, in 
 msgid "<strong>interesse legítimo</strong>, para segurança do site, prevenção de fraude, gestão administrativa e defesa de direitos;"
 msgstr "<strong>legitimate interest</strong>, for site security, fraud prevention, administrative management and defence of legal claims;"
 
+#: templates/legal/complaints_book.html:54
+msgid "A apresentação de uma reclamação não depende de contacto prévio: o cliente pode recorrer ao livro sempre que entender. Ainda assim, muitas situações resolvem-se mais depressa por contacto direto."
+msgstr "Filing a complaint requires no prior contact: the book is available whenever the client wishes to use it. Even so, many situations are settled faster through direct contact."
+
 #: templates/legal/privacy_policy.html:27
 msgid "A entidade responsável pelo tratamento dos dados pessoais recolhidos através deste site é <strong>Priscila Arantes PA</strong>, com sede em <strong>R. Vale de São Miguel, Lote 5, 3020-113 Coimbra, Portugal</strong>."
 msgstr "The controller of the personal data collected through this site is <strong>Priscila Arantes PA</strong>, with registered address at <strong>R. Vale de São Miguel, Lote 5, 3020-113 Coimbra, Portugal</strong>."
@@ -128,6 +156,10 @@ msgstr "The aim is to provide welcoming, responsible care that respects the need
 msgid "A rejeição de cookies opcionais não impede a utilização principal do site nem a marcação de horários. No entanto, alguns recursos externos, como o mapa incorporado, podem ficar desativados até que seja dado consentimento funcional."
 msgstr "Refusing optional cookies does not prevent normal use of the site or online booking. Some external features, such as the embedded map, stay disabled until functional consent is given."
 
+#: templates/legal/complaints_book.html:65
+msgid "A resposta é enviada para o contacto indicado na reclamação. Recomenda-se por isso o preenchimento cuidado do email ou da morada."
+msgstr "The reply goes to the contact details given in the complaint, so the email address or postal address should be filled in carefully."
+
 #: templates/accounts/passkey_devices.html:19
 msgid "A sua digital nunca sai do aparelho. Este site guarda apenas uma chave pública, que serve para verificar assinaturas e não permite entrar em mais lado nenhum."
 msgstr "Your fingerprint never leaves your device. This site only stores a public key, which is used to verify signatures and cannot be used to sign in anywhere else."
@@ -143,6 +175,10 @@ msgstr "Open menu"
 #: templates/home.html:96
 msgid "Abrir no Google Maps"
 msgstr "Open in Google Maps"
+
+#: templates/legal/complaints_book.html:37
+msgid "Abrir o Livro de Reclamações Eletrónico"
+msgstr "Open the Electronic Complaints Book"
 
 #: templates/base.html:416
 #: templates/base.html:495
@@ -211,6 +247,14 @@ msgstr "When you enter the site you can accept all cookies, reject optional ones
 #: templates/accounts/passkey_devices.html:74
 msgid "Aparelhos registados"
 msgstr "Registered devices"
+
+#: templates/legal/complaints_book.html:62
+msgid "Após a apresentação de uma reclamação, o prestador de serviços dispõe de 15 dias úteis para responder ao cliente, informando das medidas adotadas ou dos motivos pelos quais a pretensão não pode ser satisfeita."
+msgstr "Once a complaint is filed, the service provider has 15 working days to reply to the client, stating the measures taken or the reasons why the request cannot be met."
+
+#: templates/legal/complaints_book.html:70
+msgid "As reclamações submetidas são encaminhadas para a entidade reguladora do setor. Tratando-se de serviços de saúde, a entidade competente é a Entidade Reguladora da Saúde (ERS)."
+msgstr "Complaints filed are forwarded to the sector regulator. For healthcare services, the competent authority is the Portuguese Health Regulatory Authority (ERS)."
 
 #: templates/home.html:295
 msgid "As áreas principais são categorias. Dentro de cada uma, escolha o serviço específico para marcar."
@@ -456,6 +500,10 @@ msgstr "Would you like to create an account?"
 msgid "Dia"
 msgstr "Day"
 
+#: templates/legal/complaints_book.html:17
+msgid "Direitos do consumidor"
+msgstr "Consumer rights"
+
 #: templates/appointments/public_visual_schedule.html:174
 msgid "Disponibilidade"
 msgstr "Availability"
@@ -473,11 +521,19 @@ msgstr "Available by prior arrangement"
 msgid "Dúvidas"
 msgstr "Questions"
 
+#: templates/legal/complaints_book.html:41
+msgid "Em alternativa, aceda diretamente a <a href=\"%(link)s\" target=\"_blank\" rel=\"noopener noreferrer\">%(link)s</a>."
+msgstr "Alternatively, go straight to <a href=\"%(link)s\" target=\"_blank\" rel=\"noopener noreferrer\">%(link)s</a>."
+
 #: templates/appointments/public_service_feed.html:67
 #: templates/appointments/public_service_feed.html:104
 #: templates/home.html:308
 msgid "Em breve"
 msgstr "Coming soon"
+
+#: templates/legal/complaints_book.html:73
+msgid "Em matéria de consumo, o cliente pode ainda recorrer à resolução alternativa de litígios, junto do centro de arbitragem de conflitos de consumo territorialmente competente para Coimbra."
+msgstr "In consumer matters, the client may also turn to alternative dispute resolution, through the consumer arbitration centre with territorial jurisdiction over Coimbra."
 
 #: templates/base.html:330
 msgid "Email:"
@@ -561,6 +617,10 @@ msgstr "This time slot is available for booking again."
 #: templates/appointments/public_appointment_form.html:110
 msgid "Este pedido de horário será analisado e confirmado pela profissional antes de ficar definitivo."
 msgstr "This booking request will be reviewed and confirmed by the practitioner before it becomes final."
+
+#: templates/legal/complaints_book.html:82
+msgid "Este site não recolhe nem guarda reclamações: a submissão é feita no portal oficial ou no livro em formato físico. Os dados tratados no âmbito do atendimento estão descritos na <a href=\"%(privacidade)s\">Política de Privacidade</a>."
+msgstr "This site neither collects nor stores complaints: they are filed on the official portal or in the paper book. The data processed as part of the service is described in the <a href=\"%(privacidade)s\">Privacy Policy</a>."
 
 #: templates/legal/cookie_policy.html:32
 msgid "Este site usa cookies necessários para funcionamento, segurança e gestão do consentimento. Cookies opcionais apenas devem ser ativados quando o utilizador aceitar a respetiva categoria."
@@ -667,6 +727,10 @@ msgstr "Enter your booking code."
 msgid "Indique o motivo do cancelamento."
 msgstr "Enter the reason for cancelling."
 
+#: templates/legal/complaints_book.html:76
+msgid "Informação sobre resolução alternativa de litígios de consumo está disponível no Portal do Consumidor, em consumidor.gov.pt."
+msgstr "Information on alternative consumer dispute resolution is available on the Portuguese consumer portal, at consumidor.gov.pt."
+
 #: templates/base.html:180
 #: templates/base.html:307
 #: templates/home.html:388
@@ -692,6 +756,12 @@ msgstr "I have read and accept the <a href=\"{{ privacidade }}\" target=\"_blank
 #: templates/base.html:300
 msgid "Links rápidos"
 msgstr "Quick links"
+
+#: templates/base.html:331
+#: templates/base.html:411
+#: templates/legal/complaints_book.html:18
+msgid "Livro de Reclamações"
+msgstr "Complaints Book"
 
 #: templates/accounts/login.html:5
 msgid "Login"
@@ -814,6 +884,10 @@ msgstr "Don't cancel"
 msgid "Não é possível mostrar horários sem ligação: a agenda muda ao longo do dia e mostrar dados guardados poderia levá-la a escolher um horário que já não existe."
 msgstr "Times cannot be shown without a connection: the schedule changes through the day, and showing stored data could lead you to pick a slot that no longer exists."
 
+#: templates/legal/complaints_book.html:28
+msgid "O Livro de Reclamações Eletrónico é o meio oficial para apresentar uma reclamação por escrito, sem se deslocar ao local de atendimento. A reclamação é submetida diretamente no portal do Estado e encaminhada automaticamente para a entidade reguladora competente."
+msgstr "The Electronic Complaints Book is the official channel for filing a written complaint without travelling to the premises. The complaint is submitted directly on the government portal and forwarded automatically to the competent regulator."
+
 #: templates/legal/privacy_policy.html:134
 msgid "O acesso ao registo clínico está limitado a quem dele necessita para a prestação dos cuidados. Quem desempenhe apenas funções administrativas, como a marcação de consultas, não tem acesso à informação clínica. Todas as alterações ao registo ficam documentadas, com identificação de quem as fez e quando."
 msgstr "Access to the clinical record is limited to those who need it in order to provide care. Anyone performing only administrative duties, such as scheduling appointments, has no access to clinical information. Every change to the record is documented, identifying who made it and when."
@@ -833,6 +907,14 @@ msgstr "That code does not exist or is incorrect."
 #: templates/appointments/public_appointment_success.html:20
 msgid "O horário fica reservado, mas ainda será analisado e confirmado pela profissional. Entraremos em contacto caso seja necessário algum ajuste."
 msgstr "The slot is held for you, but still needs to be reviewed and confirmed by the practitioner. We will get in touch if anything needs adjusting."
+
+#: templates/legal/complaints_book.html:46
+msgid "O livro em formato físico está disponível no local de atendimento, na <strong>Galeria Avenida — Av. Sá da Bandeira, n.º 33, Loja 108, 3000-351 Coimbra</strong>, e é entregue de imediato a quem o solicitar."
+msgstr "The paper book is kept at the premises, at <strong>Galeria Avenida — Av. Sá da Bandeira, n.º 33, Loja 108, 3000-351 Coimbra</strong>, and is handed over immediately to anyone who asks for it."
+
+#: templates/legal/complaints_book.html:49
+msgid "O preenchimento é feito pelo próprio cliente. O duplicado da reclamação fica na posse do cliente e o original é remetido à entidade competente."
+msgstr "The client fills it in personally. The duplicate copy stays with the client and the original is sent to the competent authority."
 
 #: templates/legal/privacy_policy.html:138
 msgid "O registo clínico é conservado durante <strong>{{ anos }} ano(s)</strong> após o último contacto, findos os quais é eliminado de forma segura ou anonimizado, salvo se existir fundamento legal ou clínico para a sua conservação por período superior."
@@ -985,6 +1067,10 @@ msgstr "Data protection"
 #: templates/home.html:415
 msgid "Próximo"
 msgstr "Next"
+
+#: templates/legal/complaints_book.html:20
+msgid "Qualquer cliente pode apresentar uma reclamação, sugestão ou elogio sobre o atendimento prestado. Esta página explica as vias disponíveis, os prazos de resposta e as entidades competentes."
+msgstr "Any client may submit a complaint, suggestion or compliment about the service provided. This page explains the available channels, the response deadlines and the competent authorities."
 
 #: templates/accounts/passkey_devices.html:82
 msgid "Registado em"
@@ -1308,6 +1394,10 @@ msgstr "Client area"
 #: templates/legal/privacy_policy.html:21
 msgid "Última atualização: 10 de junho de 2026"
 msgstr "Last updated: 10 June 2026"
+
+#: templates/legal/complaints_book.html:22
+msgid "Última atualização: 19 de agosto de 2026"
+msgstr "Last updated: 19 August 2026"
 
 #: templates/accounts/passkey_devices.html:85
 msgid "última utilização"

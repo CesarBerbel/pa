@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static i18n %}
+{% load assets static i18n %}
 
 {% block title %}{% translate "Priscila Arantes PA | Podologia, estética e enfermagem em Coimbra" %}{% endblock %}
 {% block meta_description %}{% translate "Atendimento profissional em podologia, manicure, pedicure e enfermagem em Coimbra. Consulte os serviços disponíveis e marque o seu horário online." %}{% endblock %}
@@ -121,14 +121,16 @@
     <section
         id="inicio"
         class="luxury-hero-photo mb-5"
-        style="--hero-bg: url('{% static 'img/image.png' %}');"
+        style="--hero-bg: url('{% versioned_static 'img/hero-photo.webp' %}');"
     >
         <div class="luxury-hero-photo-inner">
             <div class="luxury-hero-photo-content">
                 <img
-                    src="{% static 'img/logo_transparent.png' %}"
+                    src="{% versioned_static 'img/logo-transparent.webp' %}"
                     alt="Priscila Arantes PA"
                     class="luxury-logo luxury-logo-transparent mb-4"
+                    width="1120"
+                    height="373"
                 >
 
                 <span class="luxury-eyebrow">{% translate "Podologia • Estética • Enfermagem" %}</span>
@@ -185,9 +187,11 @@
             <div class="col-12 col-lg-6 text-center">
                 <div class="luxury-logo-card">
                     <img
-                        src="{% static 'img/logo.png' %}"
+                        src="{% versioned_static 'img/logo.webp' %}"
                         alt="Priscila Arantes PA"
                         class="luxury-logo"
+                        width="1120"
+                        height="373"
                     >
                 </div>
             </div>

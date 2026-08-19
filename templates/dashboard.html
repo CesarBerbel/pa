@@ -106,45 +106,97 @@
     </div>
 </div>
 
+{# Os atalhos e as pendências partilham a primeira linha: o que está por    #}
+{# confirmar é a única coisa deste ecrã que pede uma ação, e pedia-a no fim  #}
+{# da página. A partir de 992px ficam lado a lado; abaixo disso empilham,    #}
+{# com as pendências primeiro é que não — os atalhos são a navegação.        #}
 <div class="row g-4 mb-4">
-    <div class="col-12 col-md-3">
-        <a href="{% url 'appointments:visual_schedule' %}" class="dashboard-action-card">
-            <span>Agenda</span>
-            <strong>Agenda visual</strong>
-            <small>Horários livres, ocupados e bloqueios.</small>
-        </a>
+    <div class="col-12 col-lg-7">
+        <div class="row g-4">
+            <div class="col-12 col-sm-4">
+                <a href="{% url 'appointments:visual_schedule' %}" class="dashboard-action-card">
+                    <span>Agenda</span>
+                    <strong>Agenda visual</strong>
+                    <small>Horários livres, ocupados e bloqueios.</small>
+                </a>
+            </div>
+
+            <div class="col-12 col-sm-4">
+                <a href="{% url 'appointments:appointment_list' %}" class="dashboard-action-card">
+                    <span>Marcações</span>
+                    <strong>Gerir marcações</strong>
+                    <small>Confirmar, concluir, editar ou cancelar.</small>
+                </a>
+            </div>
+
+            <div class="col-12 col-sm-4">
+                <a href="{% url 'appointments:customer_list' %}" class="dashboard-action-card">
+                    <span>Clientes</span>
+                    <strong>Base de clientes</strong>
+                    <small>Consultar contactos e histórico.</small>
+                </a>
+            </div>
+
+        </div>
     </div>
 
-    <div class="col-12 col-md-3">
-        <a href="{% url 'appointments:appointment_list' %}" class="dashboard-action-card">
-            <span>Marcações</span>
-            <strong>Gerir marcações</strong>
-            <small>Confirmar, concluir, editar ou cancelar.</small>
-        </a>
-    </div>
+    <div class="col-12 col-lg-5">
+        <div class="dashboard-panel h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <span class="luxury-eyebrow">Pendências</span>
+                    <h2 class="h5 mb-0">Aguardando confirmação</h2>
+                </div>
 
-    <div class="col-12 col-md-3">
-        <a href="{% url 'appointments:customer_list' %}" class="dashboard-action-card">
-            <span>Clientes</span>
-            <strong>Base de clientes</strong>
-            <small>Consultar contactos e histórico.</small>
-        </a>
-    </div>
+                <a href="{% url 'appointments:appointment_list' %}?status=scheduled" class="btn btn-sm btn-outline-primary">
+                    Ver todas
+                </a>
+            </div>
 
-    <div class="col-12 col-md-3">
-        <a href="{% url 'appointments:service_list' %}" class="dashboard-action-card">
-            <span>Serviços</span>
-            <strong>Catálogo</strong>
-            <small>Duração, preço e estado ativo.</small>
-        </a>
-    </div>
+            {% if pending_confirmations %}
+                {% for appointment in pending_confirmations %}
+                    <div class="dashboard-list-item">
+                        <div>
+                            <a href="{% url 'appointments:appointment_detail' appointment.pk %}">
+                                <strong>{{ appointment.date|date:"d/m/Y" }} {{ appointment.start_time|time:"H:i" }}</strong>
+                            </a>
+                            <small>{{ appointment.customer.full_name }} · {{ appointment.service.name }}</small>
+                        </div>
 
-    <div class="col-12 col-md-3">
-        <a href="{% url 'appointments:business_hour_list' %}" class="dashboard-action-card">
-            <span>Horários</span>
-            <strong>Horas trabalhadas</strong>
-            <small>Dias, hora inicial, hora final e estado.</small>
-        </a>
+                        {# A confirmação passa pela mesma janela do ecrã de     #}
+                        {# detalhe: confirmar e avisar a cliente são decisões   #}
+                        {# separadas em qualquer sítio de onde se confirme.     #}
+                        <form
+                            method="post"
+                            action="{% url 'appointments:appointment_confirm' appointment.pk %}"
+                            data-ask-send-message
+                            data-send-field="send_message"
+                            data-choice-title="Avisar {{ appointment.customer.full_name }} da confirmação?"
+                            data-choice-text="A marcação fica confirmada de qualquer forma. O que esta escolha decide é se sai já a mensagem de confirmação, por email e por WhatsApp."
+                            data-choice-yes="Confirmar e avisar"
+                            data-choice-no="Confirmar sem avisar"
+                        >
+                            {% csrf_token %}
+                            <input type="hidden" name="send_message" value="">
+                            <input type="hidden" name="next" value="{% url 'dashboard' %}">
+
+                            <button type="submit" class="btn btn-sm btn-success">
+                                Confirmar
+                            </button>
+                        </form>
+                    </div>
+                {% endfor %}
+
+                {% if pending_confirmations_total > pending_confirmations|length %}
+                    <p class="text-muted small mb-0 mt-2">
+                        Mostradas {{ pending_confirmations|length }} de
+                        {{ pending_confirmations_total }} marcações por confirmar.
+                    </p>
+                {% endif %}
+            {% else %}
+                <p class="text-muted mb-0">Nenhuma marcação por confirmar.</p>
+            {% endif %}
+        </div>
     </div>
 </div>
 
@@ -275,7 +327,7 @@
 </div>
 
 <div class="row g-4 mb-4">
-    <div class="col-12 col-lg-7">
+    <div class="col-12">
         <div class="dashboard-panel h-100">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
@@ -307,37 +359,6 @@
         </div>
     </div>
 
-    <div class="col-12 col-lg-5">
-        <div class="dashboard-panel h-100">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                    <span class="luxury-eyebrow">Pendências</span>
-                    <h2 class="h5 mb-0">Aguardando confirmação</h2>
-                </div>
-
-                <a href="{% url 'appointments:appointment_list' %}" class="btn btn-sm btn-outline-primary">
-                    Ver todas
-                </a>
-            </div>
-
-            {% if pending_confirmations %}
-                {% for appointment in pending_confirmations %}
-                    <div class="dashboard-list-item">
-                        <div>
-                            <strong>{{ appointment.date|date:"d/m/Y" }} {{ appointment.start_time|time:"H:i" }}</strong>
-                            <small>{{ appointment.customer.full_name }} · {{ appointment.service.name }}</small>
-                        </div>
-
-                        <span class="badge bg-warning text-dark">
-                            Pendente
-                        </span>
-                    </div>
-                {% endfor %}
-            {% else %}
-                <p class="text-muted mb-0">Nenhuma marcação pendente.</p>
-            {% endif %}
-        </div>
-    </div>
 </div>
 
 <div class="row g-4 mb-4">
@@ -446,4 +467,6 @@
 </div>
 
 </section>
+
+{% include "appointments/_send_message_choice.html" %}
 {% endblock %}

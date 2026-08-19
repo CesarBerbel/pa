@@ -139,6 +139,15 @@ class AppointmentForm(forms.ModelForm):
         help_text="Opcional. Sem email, o cliente não recebe confirmação nem lembretes.",
     )
 
+    # Preenchido pela janela que aparece ao gravar uma marcação nova. Fica num
+    # campo escondido, e não numa caixa no meio do formulário, porque a pergunta
+    # só faz sentido no momento de gravar: até lá ainda não há marcação nenhuma
+    # para confirmar.
+    send_confirmation = forms.BooleanField(
+        required=False,
+        widget=forms.HiddenInput,
+    )
+
     # Campos declarados entram depois dos do modelo, o que deixaria a escolha
     # do tipo de cliente no fim do formulário. A ordem é fixada aqui.
     field_order = [
@@ -180,6 +189,12 @@ class AppointmentForm(forms.ModelForm):
         # em clean(), não pelo campo em si.
         self.fields["customer"].required = False
         self.fields["customer"].label = "Cliente já registado"
+
+        # A pergunta é sobre a mensagem que anuncia a marcação, por isso só se
+        # põe quando a marcação está a nascer. A editar, quem quiser avisar a
+        # cliente tem o ecrã de detalhe.
+        if self.instance.pk:
+            del self.fields["send_confirmation"]
 
     def clean(self):
         cleaned_data = super().clean()

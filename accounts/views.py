@@ -82,6 +82,10 @@ class CustomerSignupView(CreateView):
 class DashboardView(InternalAreaRequiredMixin, TemplateView):
     template_name = "dashboard.html"
 
+    # O painel é para agir, não para arquivar: passando disto, o caminho é a
+    # lista de marcações, que filtra e pagina.
+    pending_confirmations_shown = 8
+
     def get_percentage(self, part, total):
         if not total:
             return 0
@@ -153,6 +157,23 @@ class DashboardView(InternalAreaRequiredMixin, TemplateView):
             "reminders_24h_today": 0,
             "reminders_2h_today": 0,
         }
+
+        por_confirmar = (
+            Appointment.objects.filter(
+                status=Appointment.STATUS_SCHEDULED,
+                # A partir de hoje: uma marcação cujo dia já passou não se
+                # confirma, cancela-se. Mostrá-la aqui punha ao lado do botão
+                # de confirmar uma coisa que já não se confirma.
+                date__gte=today,
+            )
+            .select_related("customer", "service")
+            .order_by("date", "start_time")
+        )
+
+        context["pending_confirmations_total"] = por_confirmar.count()
+        context["pending_confirmations"] = por_confirmar[
+            : self.pending_confirmations_shown
+        ]
 
         return context
 

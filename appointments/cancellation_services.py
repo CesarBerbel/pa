@@ -3,10 +3,11 @@ from dataclasses import dataclass
 from django.contrib.auth.models import AnonymousUser
 from django.utils import timezone
 
-from notifications.models import WhatsAppEventSetting
+from notifications.models import EmailEventSetting, WhatsAppEventSetting
 from notifications.whatsapp_dispatch import notify as notify_whatsapp
 
 from appointments.emails import (
+    send_professional_notification_email,
     deliver_after_commit,
     send_appointment_cancelled_email,
 )
@@ -110,6 +111,15 @@ class AppointmentCancellationService:
             notify_whatsapp,
             appointment,
             WhatsAppEventSetting.EVENT_APPOINTMENT_CANCELLED,
+        )
+
+        # Um horário que vaga é um horário que se pode voltar a oferecer. O
+        # aviso vale sobretudo quando o cancelamento vem do site, fora de horas.
+        deliver_after_commit(
+            send_professional_notification_email,
+            appointment,
+            EmailEventSetting.EVENT_APPOINTMENT_CANCELLED,
+            "appointment_cancelled_professional",
         )
 
         return CancellationResult(

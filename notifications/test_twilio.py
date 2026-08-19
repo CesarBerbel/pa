@@ -385,6 +385,8 @@ class EventWiringTests(TwilioBase):
     def test_confirming_notifies_the_customer(self):
         self.regra("appointment_confirmed", "customer")
         marcacao = self.marcacao()
+        marcacao.origin = Appointment.ORIGIN_PUBLIC
+        marcacao.save(update_fields=["origin"])
 
         with self.captureOnCommitCallbacks(execute=True):
             ConfirmAppointmentUseCase.execute(
@@ -393,6 +395,46 @@ class EventWiringTests(TwilioBase):
 
         self.assertEqual(len(self.chamadas), 1)
         self.assertEqual(self.chamadas[0]["To"], "whatsapp:+351910000000")
+
+    def test_an_appointment_arranged_at_the_clinic_uses_the_other_text(self):
+        # As duas regras ligadas ao mesmo tempo: quem escolhe é a origem da
+        # marcação, e não a ordem por que foram configuradas.
+        self.regra(
+            "appointment_confirmed",
+            "customer",
+            body_template="Resposta ao pedido feito no site.",
+        )
+        self.regra(
+            "appointment_confirmed_internal",
+            "customer",
+            body_template="Registo do que ficou combinado ao balcão.",
+        )
+
+        marcacao = self.marcacao()
+        marcacao.origin = Appointment.ORIGIN_INTERNAL
+        marcacao.save(update_fields=["origin"])
+
+        with self.captureOnCommitCallbacks(execute=True):
+            ConfirmAppointmentUseCase.execute(
+                appointment=marcacao, user=self.user, send_whatsapp=False
+            )
+
+        self.assertEqual(len(self.chamadas), 1)
+        self.assertIn("ficou combinado", self.chamadas[0]["Body"])
+
+    def test_confirming_in_silence_sends_nothing(self):
+        # A janela do ecrã de detalhe pergunta antes de avisar a cliente.
+        self.regra("appointment_confirmed", "customer")
+        self.regra("appointment_confirmed_internal", "customer")
+
+        with self.captureOnCommitCallbacks(execute=True):
+            ConfirmAppointmentUseCase.execute(
+                appointment=self.marcacao(),
+                user=self.user,
+                send_message=False,
+            )
+
+        self.assertEqual(self.chamadas, [])
 
     def test_confirming_does_not_notify_the_professional_unless_configured(self):
         # O pedido era explícito: ao confirmar, só o cliente.

@@ -36,9 +36,12 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        seguimentos = ServiceFollowUp.objects.filter(is_active=True).select_related(
-            "service", "email_template"
-        )
+        # As do fim do atendimento e as manuais não passam por aqui: saem
+        # quando a marcação é concluída, ou quando alguém as manda à mão.
+        seguimentos = ServiceFollowUp.objects.filter(
+            is_active=True,
+            trigger=ServiceFollowUp.TRIGGER_DELAYED,
+        ).select_related("service", "email_template")
 
         if not seguimentos:
             self.stdout.write(self.style.WARNING("Nenhum seguimento ativo."))

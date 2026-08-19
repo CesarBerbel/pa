@@ -1,9 +1,11 @@
 import logging
+import threading
+from concurrent.futures import ThreadPoolExecutor
 
 from django.conf import settings
 from django.core import signing
 from django.core.mail import EmailMultiAlternatives
-from django.db import transaction
+from django.db import connections, transaction
 from django.urls import reverse
 from django.utils.html import escape
 
@@ -13,22 +15,76 @@ from notifications.services import EmailEventSettingService, EmailTemplateServic
 logger = logging.getLogger(__name__)
 
 
-def deliver_after_commit(send_function, *args, **kwargs):
-    # Transactional emails must never decide whether a business operation
-    # survives. Delivery runs only after the surrounding transaction commits,
-    # and a mail failure is logged instead of raised, so an unreachable SMTP
-    # server can no longer roll back or break a booking.
-    # Outside a transaction, on_commit() runs the callback immediately.
-    def deliver():
-        try:
-            send_function(*args, **kwargs)
-        except Exception:
-            logger.exception(
-                "Failed to send email through %s.",
-                getattr(send_function, "__name__", repr(send_function)),
-            )
+_entregadores = None
+_entregadores_lock = threading.Lock()
 
-    transaction.on_commit(deliver)
+
+def _obter_entregadores():
+    """Pool de threads das entregas, criado à primeira que houver.
+
+    Não é criado no arranque porque a maior parte dos processos que importam
+    este módulo — migrações, comandos de gestão, shell — nunca envia nada.
+
+    As threads do pool não são daemon: um comando de gestão que termine com
+    entregas a meio espera por elas antes de o processo fechar.
+    """
+
+    global _entregadores
+
+    if _entregadores is None:
+        with _entregadores_lock:
+            if _entregadores is None:
+                _entregadores = ThreadPoolExecutor(
+                    max_workers=settings.NOTIFICATIONS_MAX_WORKERS,
+                    thread_name_prefix="entrega",
+                )
+
+    return _entregadores
+
+
+def _entregar(send_function, args, kwargs):
+    try:
+        send_function(*args, **kwargs)
+    except Exception:
+        logger.exception(
+            "Failed to send email through %s.",
+            getattr(send_function, "__name__", repr(send_function)),
+        )
+
+
+def _entregar_em_thread(send_function, args, kwargs):
+    try:
+        _entregar(send_function, args, kwargs)
+    finally:
+        # Cada thread abre a sua própria ligação à base de dados. Sem isto,
+        # com CONN_MAX_AGE ligado, ficava uma ligação aberta por cada entrega.
+        connections.close_all()
+
+
+def deliver_after_commit(send_function, *args, **kwargs):
+    """Envia depois de a transação fechar, e fora do caminho do pedido.
+
+    Duas garantias diferentes, pela mesma ordem de sempre:
+
+    1. **Depois do commit.** Um email ou um WhatsApp nunca decide se uma
+       marcação sobrevive. Uma falha do envio é registada, não levantada, para
+       um servidor de SMTP inacessível não desfazer uma marcação já gravada.
+       Fora de uma transação, `on_commit()` corre o callback de imediato.
+
+    2. **Fora do pedido.** O envio passa para uma thread do pool, e quem marcou
+       recebe a resposta sem esperar pelo SMTP nem pelo WhatsApp. Com
+       `NOTIFICATIONS_IN_BACKGROUND` desligado — como acontece nos testes — o
+       envio volta a ser imediato e no mesmo sítio.
+    """
+
+    def agendar():
+        if not settings.NOTIFICATIONS_IN_BACKGROUND:
+            _entregar(send_function, args, kwargs)
+            return
+
+        _obter_entregadores().submit(_entregar_em_thread, send_function, args, kwargs)
+
+    transaction.on_commit(agendar)
 
 
 def generate_secure_link(appointment):
@@ -46,6 +102,38 @@ def generate_secure_link(appointment):
     )
 
 
+def internal_link(appointment):
+    """Ecrã interno desta marcação, em endereço absoluto.
+
+    Quem recebe um aviso interno vai agir sobre a marcação, não sobre o email:
+    sem esta ligação, o passo seguinte é procurá-la na lista à mão.
+    """
+
+    return build_full_url(
+        reverse("appointments:appointment_detail", kwargs={"pk": appointment.pk})
+    )
+
+
+def booking_link():
+    """Página pública onde se escolhe um horário novo."""
+
+    return build_full_url(reverse("appointments:public_visual_schedule"))
+
+
+def build_appointment_context(appointment):
+    """As variáveis que qualquer email sobre uma marcação tem à disposição."""
+
+    return {
+        "customer_name": appointment.customer.full_name,
+        "customer_phone": appointment.customer.phone,
+        "service_name": appointment.service.name,
+        "appointment_date": appointment.date.strftime("%d/%m/%Y"),
+        "appointment_time": appointment.start_time.strftime("%H:%M"),
+        "reference_code": appointment.reference_code,
+        "booking_link": booking_link(),
+    }
+
+
 def build_full_url(path):
     # Builds an absolute URL for emails using the canonical domain.
     # SITE_URL sempre existe (tem default em settings.py) e já vem sem barra
@@ -61,9 +149,7 @@ def send_rendered_email(subject, body_text, body_html, recipient_list):
     # geral é lido neste ponto e não em cada função de envio: um email novo
     # escrito daqui a uns meses fica coberto sem ninguém se lembrar disso.
     if not MessagingSetting.messaging_enabled():
-        logger.info(
-            "Envio de mensagens desligado: email %r não foi enviado.", subject
-        )
+        logger.info("Envio de mensagens desligado: email %r não foi enviado.", subject)
 
         return
 
@@ -139,10 +225,18 @@ def send_appointment_confirmation_email(appointment):
     is_confirmed = appointment.status == appointment.STATUS_CONFIRMED
 
     if is_confirmed:
-        event_type = EmailEventSetting.EVENT_APPOINTMENT_CONFIRMED
-        template_key = "appointment_confirmed"
-        fallback_subject = "Confirmação da sua marcação"
-        intro = "A sua marcação foi confirmada."
+        # Uma marcação combinada ao balcão não responde a pedido nenhum: para
+        # a cliente, este email é a primeira vez que vê a data escrita.
+        if appointment.origin == appointment.ORIGIN_INTERNAL:
+            event_type = EmailEventSetting.EVENT_APPOINTMENT_CONFIRMED_INTERNAL
+            template_key = "appointment_confirmed_internal"
+            fallback_subject = "A sua marcação ficou registada"
+            intro = "Fica registada a marcação que combinámos."
+        else:
+            event_type = EmailEventSetting.EVENT_APPOINTMENT_CONFIRMED
+            template_key = "appointment_confirmed"
+            fallback_subject = "Confirmação da sua marcação"
+            intro = "A sua marcação foi confirmada."
     else:
         event_type = EmailEventSetting.EVENT_APPOINTMENT_CREATED
         template_key = "appointment_created"
@@ -154,16 +248,14 @@ def send_appointment_confirmation_email(appointment):
     if not event_setting:
         return
 
-    context = {
-        "customer_name": appointment.customer.full_name,
-        "service_name": appointment.service.name,
-        "cancellation_link": cancel_url,
-        "appointment_date": appointment.date.strftime("%d/%m/%Y"),
-        "appointment_time": appointment.start_time.strftime("%H:%M"),
-        "reference_code": appointment.reference_code,
-        "magic_link": full_url,
-        "intro": intro,
-    }
+    context = build_appointment_context(appointment)
+    context.update(
+        {
+            "cancellation_link": cancel_url,
+            "magic_link": full_url,
+            "intro": intro,
+        }
+    )
 
     fallback_body = (
         f"Olá {context['customer_name']},\n\n"
@@ -248,6 +340,111 @@ def send_appointment_cancelled_email(appointment, cancellation_reason=""):
     )
 
 
+def send_appointment_completed_email(appointment):
+    """Agradecimento no fim do atendimento.
+
+    Não sai sozinho: quem conclui a marcação é que decide se a cliente recebe
+    alguma coisa. Aqui é só o texto e a entrega.
+    """
+
+    customer_email = appointment.customer.email
+
+    if not customer_email:
+        return
+
+    event_setting = EmailEventSettingService.get_active_setting(
+        EmailEventSetting.EVENT_APPOINTMENT_COMPLETED,
+    )
+
+    if not event_setting:
+        return
+
+    context = build_appointment_context(appointment)
+
+    fallback_body = (
+        f"Olá {context['customer_name']},\n\n"
+        "Obrigada pela sua visita. Se lhe surgir alguma dúvida sobre os "
+        "cuidados a ter nos próximos dias, responda a este email.\n\n"
+        f"Serviço: {context['service_name']}\n"
+        f"Data: {context['appointment_date']}\n"
+        f"Código: {context['reference_code']}\n\n"
+        "Com os melhores cumprimentos,\n"
+        "Priscila Arantes — Enfermeira e Podóloga"
+    )
+
+    rendered_email = render_email_for_event(
+        event_type=EmailEventSetting.EVENT_APPOINTMENT_COMPLETED,
+        template_key="appointment_completed",
+        context=context,
+        fallback_subject="Obrigada pela sua visita",
+        fallback_body=fallback_body,
+        email_template=event_setting.email_template,
+    )
+
+    send_rendered_email(
+        subject=rendered_email["subject"],
+        body_text=rendered_email["body_text"],
+        body_html=rendered_email["body_html"],
+        recipient_list=[customer_email],
+    )
+
+
+def send_professional_notification_email(appointment, event_type, template_key):
+    """Aviso interno: um pedido à espera de resposta, um horário que vagou.
+
+    Vai para `PROFESSIONAL_EMAIL` e não para a cliente, e por isso leva o
+    contacto dela e a ligação para o ecrã interno — quem o lê vai agir sobre a
+    marcação, não responder ao email.
+    """
+
+    destinatario = settings.PROFESSIONAL_EMAIL
+
+    if not destinatario:
+        return
+
+    event_setting = EmailEventSettingService.get_active_setting(
+        event_type,
+        audience=EmailEventSetting.AUDIENCE_PROFESSIONAL,
+    )
+
+    if not event_setting:
+        return
+
+    context = build_appointment_context(appointment)
+    context.update(
+        {
+            "internal_link": internal_link(appointment),
+            "cancellation_reason": appointment.cancellation_reason,
+        }
+    )
+
+    fallback_body = (
+        f"Cliente: {context['customer_name']}\n"
+        f"Contacto: {context['customer_phone']}\n"
+        f"Serviço: {context['service_name']}\n"
+        f"Data: {context['appointment_date']}\n"
+        f"Horário: {context['appointment_time']}\n"
+        f"Código: {context['reference_code']}\n\n"
+        f"Ver na agenda interna:\n{context['internal_link']}"
+    )
+
+    rendered_email = render_email_for_event(
+        event_type=event_type,
+        template_key=template_key,
+        context=context,
+        fallback_subject=f"Marcação: {context['customer_name']}",
+        fallback_body=fallback_body,
+        email_template=event_setting.email_template,
+    )
+
+    send_rendered_email(
+        subject=rendered_email["subject"],
+        body_text=rendered_email["body_text"],
+        body_html=rendered_email["body_html"],
+        recipient_list=[destinatario],
+    )
+
+
 def send_service_followup_email(appointment, followup):
     """Email de cuidados posteriores, uns dias depois do atendimento.
 
@@ -268,15 +465,13 @@ def send_service_followup_email(appointment, followup):
 
     link = generate_secure_link(appointment)
 
-    context = {
-        "customer_name": appointment.customer.full_name,
-        "service_name": appointment.service.name,
-        "appointment_date": appointment.date.strftime("%d/%m/%Y"),
-        "appointment_time": appointment.start_time.strftime("%H:%M"),
-        "reference_code": appointment.reference_code,
-        "magic_link": build_full_url(link),
-        "days_after": followup.days_after,
-    }
+    context = build_appointment_context(appointment)
+    context.update(
+        {
+            "magic_link": build_full_url(link),
+            "days_after": followup.days_after,
+        }
+    )
 
     rendered_email = EmailTemplateService.render_template_object(
         email_template=template,

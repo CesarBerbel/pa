@@ -11,6 +11,7 @@ from appointments.homepage import build_home_service_cards
 from appointments.models import Service, ServiceCategory
 from config.seo import build_home_structured_data
 from config.views import (
+    complaints_book,
     cookie_policy,
     manifest_webmanifest,
     offline,
@@ -74,6 +75,7 @@ urlpatterns = [
 urlpatterns += i18n_patterns(
     path("politica-de-privacidade/", privacy_policy, name="privacy_policy"),
     path("politica-de-cookies/", cookie_policy, name="cookie_policy"),
+    path("livro-de-reclamacoes/", complaints_book, name="complaints_book"),
     path("offline/", offline, name="offline"),
     path("", home_view, name="home"),
     path("", include("accounts.urls")),

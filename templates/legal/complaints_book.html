@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}Livro de Reclamações | Priscila Arantes PA{% endblock %}
+{% block meta_description %}Livro de Reclamações da Priscila Arantes PA: aceda ao Livro de Reclamações Eletrónico, saiba como apresentar uma reclamação e que prazos e entidades se aplicam.{% endblock %}
+{% block meta_keywords %}livro de reclamações, livro de reclamações eletrónico, reclamação, direitos do consumidor, Priscila Arantes PA{% endblock %}
+{% block og_title %}Livro de Reclamações | Priscila Arantes PA{% endblock %}
+{% block og_description %}Aceda ao Livro de Reclamações Eletrónico e saiba como apresentar uma reclamação, sugestão ou elogio.{% endblock %}
+{% block twitter_title %}Livro de Reclamações | Priscila Arantes PA{% endblock %}
+{% block twitter_description %}Formato eletrónico e formato físico, prazos de resposta e entidades competentes.{% endblock %}
+
+{% block content %}
+<section class="legal-page">
+    <div class="legal-hero">
+        <span class="luxury-eyebrow">{% translate "Direitos do consumidor" %}</span>
+        <h1>{% translate "Livro de Reclamações" %}</h1>
+        <p>
+            {% translate "Qualquer cliente pode apresentar uma reclamação, sugestão ou elogio sobre o atendimento prestado. Esta página explica as vias disponíveis, os prazos de resposta e as entidades competentes." %}
+        </p>
+        <small>{% translate "Última atualização: 19 de agosto de 2026" %}</small>
+    </div>
+
+    <div class="legal-content-card">
+        <h2>{% translate "1. Livro de Reclamações Eletrónico" %}</h2>
+        <p>
+            {% translate "O Livro de Reclamações Eletrónico é o meio oficial para apresentar uma reclamação por escrito, sem se deslocar ao local de atendimento. A reclamação é submetida diretamente no portal do Estado e encaminhada automaticamente para a entidade reguladora competente." %}
+        </p>
+
+        <a
+            href="{{ complaints_book_url }}"
+            class="btn btn-primary"
+            target="_blank"
+            rel="noopener noreferrer"
+        >
+            {% translate "Abrir o Livro de Reclamações Eletrónico" %}
+        </a>
+
+        <p>
+            {% blocktranslate with link=complaints_book_url %}Em alternativa, aceda diretamente a <a href="{{ link }}" target="_blank" rel="noopener noreferrer">{{ link }}</a>.{% endblocktranslate %}
+        </p>
+
+        <h2>{% translate "2. Livro de Reclamações em formato físico" %}</h2>
+        <p>
+            {% blocktranslate %}O livro em formato físico está disponível no local de atendimento, na <strong>Galeria Avenida — Av. Sá da Bandeira, n.º 33, Loja 108, 3000-351 Coimbra</strong>, e é entregue de imediato a quem o solicitar.{% endblocktranslate %}
+        </p>
+        <p>
+            {% translate "O preenchimento é feito pelo próprio cliente. O duplicado da reclamação fica na posse do cliente e o original é remetido à entidade competente." %}
+        </p>
+
+        <h2>{% translate "3. Contacto direto antes de reclamar" %}</h2>
+        <p>
+            {% translate "A apresentação de uma reclamação não depende de contacto prévio: o cliente pode recorrer ao livro sempre que entender. Ainda assim, muitas situações resolvem-se mais depressa por contacto direto." %}
+        </p>
+        <p>
+            {% blocktranslate with link=SEO_WHATSAPP_LINK numero=SEO_WHATSAPP_DISPLAY %}Contactos: WhatsApp <a href="{{ link }}" target="_blank" rel="noopener noreferrer"><strong>{{ numero }}</strong></a> e email <a href="mailto:atendimento@priarantes.com">atendimento@priarantes.com</a>.{% endblocktranslate %}
+        </p>
+
+        <h2>{% translate "4. Prazos de resposta" %}</h2>
+        <p>
+            {% translate "Após a apresentação de uma reclamação, o prestador de serviços dispõe de 15 dias úteis para responder ao cliente, informando das medidas adotadas ou dos motivos pelos quais a pretensão não pode ser satisfeita." %}
+        </p>
+        <p>
+            {% translate "A resposta é enviada para o contacto indicado na reclamação. Recomenda-se por isso o preenchimento cuidado do email ou da morada." %}
+        </p>
+
+        <h2>{% translate "5. Entidades competentes" %}</h2>
+        <p>
+            {% translate "As reclamações submetidas são encaminhadas para a entidade reguladora do setor. Tratando-se de serviços de saúde, a entidade competente é a Entidade Reguladora da Saúde (ERS)." %}
+        </p>
+        <p>
+            {% translate "Em matéria de consumo, o cliente pode ainda recorrer à resolução alternativa de litígios, junto do centro de arbitragem de conflitos de consumo territorialmente competente para Coimbra." %}
+        </p>
+        <p>
+            {% translate "Informação sobre resolução alternativa de litígios de consumo está disponível no Portal do Consumidor, em consumidor.gov.pt." %}
+        </p>
+
+        <h2>{% translate "6. Proteção de dados" %}</h2>
+        <p>
+            {% url 'privacy_policy' as url_privacidade %}
+            {% blocktranslate with privacidade=url_privacidade %}Este site não recolhe nem guarda reclamações: a submissão é feita no portal oficial ou no livro em formato físico. Os dados tratados no âmbito do atendimento estão descritos na <a href="{{ privacidade }}">Política de Privacidade</a>.{% endblocktranslate %}
+        </p>
+    </div>
+</section>
+{% endblock %}

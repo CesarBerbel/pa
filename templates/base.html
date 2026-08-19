@@ -166,7 +166,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             </li>
                             <li>
                                 <a class="dropdown-item" href="{% url 'notifications:service_followup_list' %}">
-                                    Seguimentos por serviço
+                                    Mensagens por serviço
                                 </a>
                             </li>
                             <li>
@@ -301,7 +301,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <div class="footer-grid">
 
                 <div class="footer-brand-panel">
-                    <img src="{% static 'img/logo.png' %}" alt="Priscila Arantes PA">
+                    <img
+                        src="{% versioned_static 'img/logo.webp' %}"
+                        alt="Priscila Arantes PA"
+                        width="1120"
+                        height="373"
+                    >
 
                     <p>
                         {% translate "Cuidado, bem-estar e profissionalismo em podologia." %}
@@ -328,6 +333,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             {% endif %}
                             <a href="{% url 'privacy_policy' %}">{% translate "Política de Privacidade" %}</a>
                             <a href="{% url 'cookie_policy' %}">{% translate "Política de Cookies" %}</a>
+                            <a href="{% url 'complaints_book' %}">{% translate "Livro de Reclamações" %}</a>
                             <button type="button" class="footer-cookie-link" data-cookie-action="open-preferences">
                                 {% translate "Gerir cookies" %}
                             </button>
@@ -407,6 +413,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <div class="footer-legal-links">
                     <a href="{% url 'privacy_policy' %}">{% translate "Política de Privacidade" %}</a>
                     <a href="{% url 'cookie_policy' %}">{% translate "Política de Cookies" %}</a>
+                    <a href="{% url 'complaints_book' %}">{% translate "Livro de Reclamações" %}</a>
                     <button type="button" data-cookie-action="open-preferences">{% translate "Gerir cookies" %}</button>
                 </div>
             </div>

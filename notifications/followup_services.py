@@ -29,7 +29,11 @@ class FollowUpResult:
 
 
 def followups_for(appointment):
-    """Seguimentos configurados para o serviço desta marcação."""
+    """Mensagens configuradas para o serviço desta marcação.
+
+    Todas, incluindo as manuais: é esta lista que o ecrã da marcação mostra a
+    quem quer mandar alguma coisa à mão.
+    """
 
     if not appointment.service_id:
         return ServiceFollowUp.objects.none()
@@ -37,6 +41,19 @@ def followups_for(appointment):
     return ServiceFollowUp.objects.filter(
         service_id=appointment.service_id
     ).select_related("email_template", "service")
+
+
+def completion_messages_for(appointment):
+    """As mensagens que este serviço manda no fim do atendimento.
+
+    Só as ativas: uma mensagem desligada é uma decisão de quem gere a clínica,
+    e concluir um atendimento não a deve contornar.
+    """
+
+    return followups_for(appointment).filter(
+        trigger=ServiceFollowUp.TRIGGER_COMPLETION,
+        is_active=True,
+    )
 
 
 def was_sent(appointment, followup):
@@ -66,6 +83,8 @@ def eligible_appointments(followup, today=None, max_delay_days=DEFAULT_MAX_DELAY
 
     Três limites, cada um a evitar um erro concreto:
 
+    * mensagens que não são de prazo ficam de fora, porque não têm prazo
+      nenhum a cumprir;
     * marcações canceladas ficam de fora — o atendimento não aconteceu;
     * marcações anteriores à criação da regra ficam de fora, senão ativar um
       seguimento hoje despejava o email em cima de toda a gente que fez o
@@ -75,6 +94,11 @@ def eligible_appointments(followup, today=None, max_delay_days=DEFAULT_MAX_DELAY
     """
 
     today = today or timezone.localdate()
+
+    # Só as de prazo têm prazo. As do fim do atendimento saem quando a marcação
+    # é concluída, e as manuais só saem quando alguém carregar no botão.
+    if followup.trigger != ServiceFollowUp.TRIGGER_DELAYED:
+        return Appointment.objects.none()
 
     fim = today - timedelta(days=followup.days_after)
     inicio = fim - timedelta(days=max_delay_days)

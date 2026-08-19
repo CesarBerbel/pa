@@ -141,7 +141,7 @@ class ServiceFollowUpCreateView(InternalAreaRequiredMixin, CreateView):
     success_url = reverse_lazy("notifications:service_followup_list")
 
     def form_valid(self, form):
-        messages.success(self.request, "Seguimento criado.")
+        messages.success(self.request, "Mensagem criada.")
         return super().form_valid(form)
 
 
@@ -152,7 +152,7 @@ class ServiceFollowUpUpdateView(InternalAreaRequiredMixin, UpdateView):
     success_url = reverse_lazy("notifications:service_followup_list")
 
     def form_valid(self, form):
-        messages.success(self.request, "Seguimento atualizado.")
+        messages.success(self.request, "Mensagem atualizada.")
         return super().form_valid(form)
 
 
@@ -162,7 +162,7 @@ class ServiceFollowUpDeleteView(InternalAreaRequiredMixin, DeleteView):
     success_url = reverse_lazy("notifications:service_followup_list")
 
     def post(self, request, *args, **kwargs):
-        messages.success(request, "Seguimento removido.")
+        messages.success(request, "Mensagem removida.")
         return super().post(request, *args, **kwargs)
 
 

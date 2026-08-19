@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 
 from decouple import config
@@ -65,9 +66,12 @@ SEO_DEFAULT_KEYWORDS = config(
     ),
 )
 
+# Cartão 1200x630 gerado por scripts/optimize_public_images.py. Continua em PNG
+# porque quem o lê são os robôs de pré-visualização do WhatsApp e do Facebook,
+# e não o browser.
 SEO_DEFAULT_IMAGE_PATH = config(
     "SEO_DEFAULT_IMAGE_PATH",
-    default="/static/img/logo.png",
+    default="/static/img/logo-og.png",
 )
 
 SEO_LOCALE = config("SEO_LOCALE", default="pt_PT")
@@ -96,6 +100,19 @@ SEO_BUSINESS_AREA_SERVED = config("SEO_BUSINESS_AREA_SERVED", default="Coimbra")
 SEO_BUSINESS_OPENS_AT = config("SEO_BUSINESS_OPENS_AT", default="08:00")
 
 SEO_BUSINESS_CLOSES_AT = config("SEO_BUSINESS_CLOSES_AT", default="20:00")
+
+# =============================================================================
+# Livro de Reclamações
+# =============================================================================
+# O Decreto-Lei n.º 74/2017 obriga os estabelecimentos a divulgar o Livro de
+# Reclamações Eletrónico. A reclamação é submetida no portal oficial, não aqui:
+# este site só encaminha para lá.
+
+COMPLAINTS_BOOK_URL = config(
+    "COMPLAINTS_BOOK_URL",
+    default="https://www.livroreclamacoes.pt/inicio",
+).strip()
+
 
 # =============================================================================
 # Public homepage
@@ -525,6 +542,50 @@ SERVER_EMAIL = config(
 )
 
 EMAIL_TIMEOUT = config("EMAIL_TIMEOUT", default=30, cast=int)
+
+# Para onde seguem os avisos internos — pedido novo por confirmar, cancelamento.
+# Por omissão é o mesmo endereço que o site publica, que é o que a profissional
+# lê todos os dias.
+PROFESSIONAL_EMAIL = config("PROFESSIONAL_EMAIL", default=SEO_BUSINESS_EMAIL)
+
+
+# =============================================================================
+# Entrega de notificações
+# =============================================================================
+# Emails e mensagens de WhatsApp saem depois de a marcação estar gravada, mas
+# saíam dentro do mesmo pedido: quem marcava ficava à espera do SMTP e do
+# WhatsApp antes de ver a página de sucesso. Com EMAIL_TIMEOUT a 30s e o
+# WhatsApp a 15-20s, um fornecedor lento segurava um worker do gunicorn quase
+# um minuto — e três marcações assim parariam o site inteiro.
+#
+# Agora a entrega passa para um punhado de threads e o pedido devolve logo. Não
+# substitui uma fila (Celery): se o processo morrer com entregas a meio, elas
+# perdem-se. Substitui, sim, o pior caso — o site parar por causa de um SMTP
+# que não responde.
+
+# Em testes tem de ser imediato: quase 400 testes verificam o que foi enviado
+# na linha a seguir à chamada, e numa thread isso passaria a corrida.
+RUNNING_TESTS = "test" in sys.argv or "pytest" in sys.modules
+
+# O `and not RUNNING_TESTS` no fim é deliberado: nem um .env que ligue isto
+# consegue pôr os testes a enviar em segundo plano. Quem precisa do contrário
+# num teste concreto usa override_settings.
+NOTIFICATIONS_IN_BACKGROUND = (
+    config(
+        "NOTIFICATIONS_IN_BACKGROUND",
+        default=True,
+        cast=bool,
+    )
+    and not RUNNING_TESTS
+)
+
+# Poucas e fixas de propósito: o que se quer é tirar a espera do pedido, não
+# abrir uma thread por marcação.
+NOTIFICATIONS_MAX_WORKERS = config(
+    "NOTIFICATIONS_MAX_WORKERS",
+    default=4,
+    cast=int,
+)
 
 
 # =============================================================================

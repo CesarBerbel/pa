@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from contextlib import contextmanager
+from contextvars import ContextVar
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -20,6 +22,22 @@ class AvailableSlot:
         return {"value": self.value, "label": self.label}
 
 
+@dataclass
+class _Lote:
+    """O que já foi lido da base dentro de um `AvailabilityService.batch()`."""
+
+    business_hours: dict[int, BusinessHour] | None = None
+    active_blocks: list[ScheduleBlock] | None = None
+    blocks_by_date: dict = field(default_factory=dict)
+    appointments_by_date: dict = field(default_factory=dict)
+
+
+# ContextVar e não uma variável de módulo: cada pedido corre na sua própria
+# cópia, e um lote aberto num pedido nunca é visto por outro que corra ao mesmo
+# tempo no mesmo processo.
+_lote_ativo: ContextVar[_Lote | None] = ContextVar("availability_batch", default=None)
+
+
 class AvailabilityService:
     """Centralizes schedule availability and conflict rules.
 
@@ -30,11 +48,47 @@ class AvailabilityService:
     slot_minutes = 30
 
     @classmethod
+    @contextmanager
+    def batch(cls):
+        """Lê horário, bloqueios e marcações uma vez só, para o bloco inteiro.
+
+        Quem desenha uma agenda percorre dias: a faixa da agenda pública pede o
+        estado de sete de cada vez, e cada dia repetia as mesmas consultas ao
+        horário de funcionamento e aos bloqueios ativos — 45 consultas para
+        desenhar uma página.
+
+        **Só para leitura.** Dentro do bloco, o horário e os bloqueios ficam
+        congelados no que foram no início; validar uma marcação aqui dentro
+        arriscava aceitá-la contra dados que entretanto mudaram. Validação e
+        gravação ficam de fora, e por isso continuam a ler tudo de fresco.
+        """
+
+        token = _lote_ativo.set(_Lote())
+
+        try:
+            yield
+        finally:
+            _lote_ativo.reset(token)
+
+    @classmethod
     def get_business_hour(cls, selected_date):
-        return BusinessHour.objects.filter(
-            weekday=selected_date.weekday(),
-            is_active=True,
-        ).first()
+        lote = _lote_ativo.get()
+
+        if lote is None:
+            return BusinessHour.objects.filter(
+                weekday=selected_date.weekday(),
+                is_active=True,
+            ).first()
+
+        if lote.business_hours is None:
+            # São sete linhas no total: vale mais trazê-las todas do que voltar
+            # à base por cada dia desenhado.
+            lote.business_hours = {
+                hora.weekday: hora
+                for hora in BusinessHour.objects.filter(is_active=True)
+            }
+
+        return lote.business_hours.get(selected_date.weekday())
 
     @classmethod
     def get_business_periods(cls, selected_date, business_hour=None):
@@ -71,13 +125,64 @@ class AvailabilityService:
 
     @classmethod
     def get_active_blocks_for_date(cls, selected_date):
-        return [
-            block
-            for block in ScheduleBlock.objects.filter(is_active=True).order_by(
-                "start_time"
-            )
-            if block.applies_to_date(selected_date)
-        ]
+        # A consulta não depende da data — `applies_to_date` é que decide, já em
+        # Python. Dentro de um lote, os bloqueios ativos são lidos uma vez e
+        # filtrados tantas vezes quantas as datas pedidas.
+        lote = _lote_ativo.get()
+
+        if lote is None:
+            ativos = ScheduleBlock.objects.filter(is_active=True).order_by("start_time")
+        else:
+            if selected_date in lote.blocks_by_date:
+                return lote.blocks_by_date[selected_date]
+
+            if lote.active_blocks is None:
+                lote.active_blocks = list(
+                    ScheduleBlock.objects.filter(is_active=True).order_by("start_time")
+                )
+
+            ativos = lote.active_blocks
+
+        do_dia = [block for block in ativos if block.applies_to_date(selected_date)]
+
+        if lote is not None:
+            lote.blocks_by_date[selected_date] = do_dia
+
+        return do_dia
+
+    @classmethod
+    def preload_appointments(cls, dates):
+        """Traz as marcações de vários dias numa consulta só.
+
+        A faixa da agenda pública mostra sete dias ao mesmo tempo. Sem isto,
+        são sete consultas iguais em tudo menos na data. Fora de um lote não
+        faz nada: sem onde guardar, adiantar a leitura não pouparia consulta
+        nenhuma.
+        """
+
+        lote = _lote_ativo.get()
+
+        if lote is None:
+            return
+
+        em_falta = {data for data in dates if data not in lote.appointments_by_date}
+
+        if not em_falta:
+            return
+
+        por_data = {data: [] for data in em_falta}
+
+        marcacoes = (
+            Appointment.objects.filter(date__in=em_falta)
+            .exclude(status=Appointment.STATUS_CANCELLED)
+            .select_related("customer", "service")
+            .order_by("start_time")
+        )
+
+        for marcacao in marcacoes:
+            por_data[marcacao.date].append(marcacao)
+
+        lote.appointments_by_date.update(por_data)
 
     @classmethod
     def get_active_appointments_for_date(cls, selected_date, exclude_pk=None):
@@ -98,9 +203,22 @@ class AvailabilityService:
         )
 
         if exclude_pk:
-            appointments = appointments.exclude(pk=exclude_pk)
+            # Um pedido com exclusão é sempre sobre uma marcação concreta, e
+            # nunca se repete dentro do mesmo desenho: não vale a pena guardar.
+            return appointments.exclude(pk=exclude_pk)
 
-        return appointments
+        lote = _lote_ativo.get()
+
+        if lote is None:
+            return appointments
+
+        if selected_date not in lote.appointments_by_date:
+            # Avaliar aqui deixa o queryset com o resultado em memória: quem o
+            # receber outra vez percorre-o sem voltar à base.
+            len(appointments)
+            lote.appointments_by_date[selected_date] = appointments
+
+        return lote.appointments_by_date[selected_date]
 
     @staticmethod
     def overlaps(first_start, first_end, second_start, second_end):

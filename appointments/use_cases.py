@@ -8,6 +8,7 @@ from django.db import transaction
 from appointments.audit_services import AppointmentAuditService
 from appointments.emails import (
     deliver_after_commit,
+    send_appointment_completed_email,
     send_appointment_confirmation_email,
 )
 from appointments.models import Appointment, AppointmentLog
@@ -23,9 +24,81 @@ class UseCaseResult:
     appointment: Appointment | None = None
 
 
+def confirmation_event_for(appointment):
+    """Qual dos dois textos de confirmação se aplica a esta marcação.
+
+    Um pedido feito no site recebe uma resposta ao pedido; uma marcação
+    combinada ao telefone recebe o registo do que ficou combinado. São coisas
+    diferentes e por isso são dois acontecimentos, cada um com o seu texto e o
+    seu interruptor.
+    """
+
+    if appointment.origin == Appointment.ORIGIN_INTERNAL:
+        return WhatsAppEventSetting.EVENT_APPOINTMENT_CONFIRMED_INTERNAL
+
+    return WhatsAppEventSetting.EVENT_APPOINTMENT_CONFIRMED
+
+
+def deliver_confirmation_message(appointment, *, send_email=True):
+    """Manda à cliente a confirmação da marcação: email e WhatsApp.
+
+    Existe à parte do caso de uso porque a confirmação deixou de vir sempre do
+    mesmo sítio: uma marcação criada na área interna já nasce confirmada, e a
+    mensagem que a cliente recebe tem de ser exatamente a mesma que receberia
+    se alguém carregasse depois no botão de confirmar.
+    """
+
+    if send_email:
+        deliver_after_commit(
+            send_appointment_confirmation_email,
+            appointment,
+        )
+
+    deliver_after_commit(
+        notify_whatsapp,
+        appointment,
+        confirmation_event_for(appointment),
+    )
+
+
+def deliver_completion_message(appointment):
+    """O que a cliente recebe no fim do atendimento.
+
+    Um serviço pode ter mensagens próprias para este momento — as instruções
+    de cuidados de uma remoção de calos não são as de uma manicure. Quando
+    existem, são essas que saem; quando não existem, sai o agradecimento
+    comum. O WhatsApp segue nos dois casos: é curto e não substitui o email.
+    """
+
+    from notifications.followup_services import completion_messages_for, send_followup
+
+    proprias = list(completion_messages_for(appointment))
+
+    if proprias:
+        for mensagem in proprias:
+            deliver_after_commit(send_followup, appointment, mensagem)
+    else:
+        deliver_after_commit(send_appointment_completed_email, appointment)
+
+    deliver_after_commit(
+        notify_whatsapp,
+        appointment,
+        WhatsAppEventSetting.EVENT_APPOINTMENT_COMPLETED,
+    )
+
+
 class ConfirmAppointmentUseCase:
     @staticmethod
-    def execute(*, appointment, user, send_email=True, send_whatsapp=True):
+    def execute(
+        *, appointment, user, send_email=True, send_whatsapp=True, send_message=True
+    ):
+        """Confirma a marcação e, se assim for pedido, avisa a cliente.
+
+        `send_message` responde à pergunta feita no ecrã: com ela em falso, a
+        marcação é confirmada em silêncio. Os outros dois continuam a existir
+        para escolher canais dentro de um envio que já foi decidido.
+        """
+
         if appointment.status == Appointment.STATUS_CANCELLED:
             return UseCaseResult(
                 False, "Marcações canceladas não podem ser confirmadas.", appointment
@@ -89,16 +162,14 @@ class ConfirmAppointmentUseCase:
                 changes=alteracoes,
             )
 
-            if send_email:
-                deliver_after_commit(
-                    send_appointment_confirmation_email,
-                    appointment,
-                )
+            if send_message:
+                deliver_confirmation_message(appointment, send_email=send_email)
 
-            deliver_after_commit(
-                notify_whatsapp,
+        if not send_message:
+            return UseCaseResult(
+                True,
+                "Marcação confirmada. Não foi enviada mensagem à cliente.",
                 appointment,
-                WhatsAppEventSetting.EVENT_APPOINTMENT_CONFIRMED,
             )
 
         result_message = "Marcação confirmada com sucesso."
@@ -127,7 +198,7 @@ class ConfirmAppointmentUseCase:
 
 class CompleteAppointmentUseCase:
     @staticmethod
-    def execute(*, appointment, user):
+    def execute(*, appointment, user, send_message=True):
         if appointment.status != Appointment.STATUS_CONFIRMED:
             return UseCaseResult(
                 False, "Só é possível concluir marcações confirmadas.", appointment
@@ -152,10 +223,14 @@ class CompleteAppointmentUseCase:
                 changes=alteracoes,
             )
 
-            deliver_after_commit(
-                notify_whatsapp,
+            if send_message:
+                deliver_completion_message(appointment)
+
+        if not send_message:
+            return UseCaseResult(
+                True,
+                "Marcação concluída. Não foi enviada mensagem à cliente.",
                 appointment,
-                WhatsAppEventSetting.EVENT_APPOINTMENT_COMPLETED,
             )
 
         return UseCaseResult(True, "Marcação concluída com sucesso.", appointment)

@@ -72,6 +72,12 @@ def sitemap_xml(request):
             "changefreq": "monthly",
             "priority": "0.4",
         },
+        {
+            "loc": f"{site_url}{reverse('complaints_book')}",
+            "lastmod": today,
+            "changefreq": "yearly",
+            "priority": "0.3",
+        },
     ]
 
     url_entries = []
@@ -115,6 +121,21 @@ def cookie_policy(request):
     """Render the public cookie policy page."""
 
     return render(request, "legal/cookie_policy.html")
+
+
+@require_GET
+def complaints_book(request):
+    """Render the public complaints book page.
+
+    A reclamação em si é feita no portal oficial; esta página só explica as
+    vias disponíveis e encaminha para lá.
+    """
+
+    return render(
+        request,
+        "legal/complaints_book.html",
+        {"complaints_book_url": settings.COMPLAINTS_BOOK_URL},
+    )
 
 
 @require_GET
@@ -193,7 +214,9 @@ def service_worker(request):
             "precache_urls": [
                 versioned_static("css/public.css"),
                 static("img/icon-192.png"),
-                static("img/logo.png"),
+                # O logótipo compacto: é o que a barra mostra no telemóvel,
+                # que é onde a página offline aparece.
+                static("img/logo-mark.png"),
             ],
         },
     )

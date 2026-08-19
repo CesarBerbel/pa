@@ -6,12 +6,13 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 
 from appointments.emails import (
+    send_professional_notification_email,
     deliver_after_commit,
     send_appointment_confirmation_email,
 )
 from appointments.audit_services import AppointmentAuditService
 from appointments.models import Appointment, AppointmentLog, Service
-from notifications.models import WhatsAppEventSetting
+from notifications.models import EmailEventSetting, WhatsAppEventSetting
 from notifications.whatsapp_dispatch import notify as notify_whatsapp
 
 
@@ -111,6 +112,17 @@ class AppointmentService:
                     appointment,
                     WhatsAppEventSetting.EVENT_APPOINTMENT_REQUESTED,
                 )
+
+                # O aviso interno não depende do WhatsApp estar de pé: um
+                # pedido por confirmar que passa despercebido é um horário
+                # perdido, e o email fica lá até alguém o ler.
+                if origin == Appointment.ORIGIN_PUBLIC:
+                    deliver_after_commit(
+                        send_professional_notification_email,
+                        appointment,
+                        EmailEventSetting.EVENT_APPOINTMENT_CREATED,
+                        "appointment_created_professional",
+                    )
 
             return AppointmentCreationResult(
                 success=True,

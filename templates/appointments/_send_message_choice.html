@@ -1,0 +1,108 @@
+{# Janela partilhada por tudo o que, antes de gravar, pergunta se a cliente     #}
+{# deve ser avisada. Cada formulário traz o seu texto nos data-atributos e diz  #}
+{# em que campo escondido a resposta é guardada.                                #}
+<div
+    class="modal fade"
+    id="sendMessageChoiceModal"
+    tabindex="-1"
+    aria-labelledby="sendMessageChoiceTitle"
+    aria-hidden="true"
+>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body p-4">
+                <h2 class="h5 mb-3" id="sendMessageChoiceTitle" data-choice-title>
+                    Avisar a cliente?
+                </h2>
+
+                <p class="text-muted mb-4" data-choice-text></p>
+
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-primary" data-send-choice="1">
+                        Sim, enviar
+                    </button>
+
+                    <button type="button" class="btn btn-outline-secondary" data-send-choice="0">
+                        Não enviar
+                    </button>
+
+                    <button type="button" class="btn btn-link" data-bs-dismiss="modal">
+                        Voltar atrás
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // O `bootstrap` global só existe depois dos <script> do base.html, que vêm
+    // abaixo deste bloco de conteúdo.
+    document.addEventListener("DOMContentLoaded", function () {
+        var janela = document.getElementById("sendMessageChoiceModal");
+        var formularios = document.querySelectorAll("form[data-ask-send-message]");
+
+        if (!janela || !formularios.length) {
+            return;
+        }
+
+        var escolha = bootstrap.Modal.getOrCreateInstance(janela);
+        var titulo = janela.querySelector("[data-choice-title]");
+        var texto = janela.querySelector("[data-choice-text]");
+        var botoes = janela.querySelectorAll("[data-send-choice]");
+        var pendente = null;
+
+        Array.prototype.forEach.call(formularios, function (form) {
+            // Intercetar a submissão, em vez de tirar o botão de submit, deixa
+            // o formulário continuar a funcionar sem JavaScript: nesse caso
+            // grava sem avisar a cliente, que é o lado seguro de falhar.
+            form.addEventListener("submit", function (evento) {
+                evento.preventDefault();
+
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+
+                pendente = form;
+
+                titulo.textContent = form.dataset.choiceTitle || "Avisar a cliente?";
+                texto.textContent = form.dataset.choiceText || "";
+
+                Array.prototype.forEach.call(botoes, function (botao) {
+                    botao.disabled = false;
+
+                    if (botao.dataset.sendChoice === "1") {
+                        botao.textContent = form.dataset.choiceYes || "Sim, enviar";
+                    } else {
+                        botao.textContent = form.dataset.choiceNo || "Não enviar";
+                    }
+                });
+
+                escolha.show();
+            });
+        });
+
+        Array.prototype.forEach.call(botoes, function (botao) {
+            botao.addEventListener("click", function () {
+                if (!pendente) {
+                    return;
+                }
+
+                var campo = pendente.querySelector(
+                    "[name='" + pendente.dataset.sendField + "']"
+                );
+
+                if (campo) {
+                    campo.value = botao.dataset.sendChoice;
+                }
+
+                Array.prototype.forEach.call(botoes, function (outro) {
+                    outro.disabled = true;
+                });
+
+                pendente.submit();
+            });
+        });
+    });
+</script>

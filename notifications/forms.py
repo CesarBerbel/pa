@@ -80,6 +80,7 @@ class ServiceFollowUpForm(forms.ModelForm):
         model = ServiceFollowUp
         fields = [
             "service",
+            "trigger",
             "email_template",
             "days_after",
             "is_active",
@@ -97,6 +98,20 @@ class ServiceFollowUpForm(forms.ModelForm):
         self.fields["email_template"].queryset = EmailTemplate.objects.filter(
             is_active=True
         )
+
+        # O prazo só conta num dos três momentos. Dizê-lo aqui evita a
+        # pergunta seguinte: "e se eu puser 15 dias numa mensagem manual?"
+        self.fields["days_after"].label = "Dias depois (só para 'Alguns dias depois')"
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        # Um prazo guardado numa mensagem que não é de prazo fica lá a sugerir
+        # um envio que nunca acontece. Zero é o valor honesto.
+        if cleaned_data.get("trigger") != ServiceFollowUp.TRIGGER_DELAYED:
+            cleaned_data["days_after"] = 0
+
+        return cleaned_data
 
 
 class WhatsAppEventSettingForm(forms.ModelForm):

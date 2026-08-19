@@ -231,12 +231,13 @@ class PublicAvailableSlotsView(PublicBookingAvailabilityMixin, View):
         except ValueError:
             return JsonResponse({"slots": []})
 
-        slots = self.get_public_slot_grid(service, selected_date)
-        availability_status = AvailabilityService.get_availability_status(
-            service,
-            selected_date,
-            public_safe=True,
-        )
+        with AvailabilityService.batch():
+            slots = self.get_public_slot_grid(service, selected_date)
+            availability_status = AvailabilityService.get_availability_status(
+                service,
+                selected_date,
+                public_safe=True,
+            )
 
         return JsonResponse(
             {"slots": slots, "availability_status": availability_status}
@@ -549,10 +550,16 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
         if selected_date > today + timedelta(days=self.days_in_strip - 1):
             start_date = selected_date
 
+        dias = [
+            start_date + timedelta(days=index) for index in range(self.days_in_strip)
+        ]
+
+        # Uma consulta para os dias todos da faixa, em vez de uma por dia.
+        AvailabilityService.preload_appointments(dias)
+
         week_days = []
 
-        for index in range(self.days_in_strip):
-            current_date = start_date + timedelta(days=index)
+        for current_date in dias:
             availability_status = AvailabilityService.get_availability_status(
                 selected_service,
                 current_date,
@@ -621,6 +628,17 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         # Add public visual schedule data to context
+        with AvailabilityService.batch():
+            return self.build_context(**kwargs)
+
+    def build_context(self, **kwargs):
+        """Contexto da página, já dentro do lote de leitura.
+
+        A faixa de dias, a lista de datas e a grelha do dia escolhido olham
+        todas para o mesmo horário de funcionamento e para os mesmos bloqueios.
+        Sem o lote, cada dia repetia essas consultas.
+        """
+
         context = super().get_context_data(**kwargs)
 
         selected_service = self.get_selected_service()
