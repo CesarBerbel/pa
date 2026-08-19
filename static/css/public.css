@@ -5140,3 +5140,64 @@ textarea.form-control,
     height: 460px;
     width: 100%;
 }
+
+/* ======================
+   Painel de filtros colapsável
+   ====================== */
+
+/* Nos ecrãs pequenos os campos de pesquisa ficam fechados dentro do card: uma
+   coluna de seis campos empurrava a lista para fora do primeiro ecrã. A partir
+   de lg o botão desaparece e o painel fica sempre aberto (d-lg-block). */
+.filter-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-size: 15px;
+    font-weight: 600;
+    color: #3f3138;
+}
+
+.filter-toggle-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Quantos filtros estão aplicados. Um painel fechado esconde a razão de a
+   lista estar curta, e este número é o que evita a leitura errada. */
+.filter-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: #6c5962;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.filter-chevron {
+    transition: transform 0.2s ease;
+    color: #6c5962;
+}
+
+.filter-toggle.collapsed .filter-chevron {
+    transform: rotate(-90deg);
+}
+
+/* A margem entre o botão e os campos só faz sentido com o painel aberto — no
+   ecrã grande não há botão nenhum por cima. */
+@media (max-width: 991.98px) {
+    .filter-body.show,
+    .filter-body.collapsing {
+        margin-top: 16px;
+    }
+}

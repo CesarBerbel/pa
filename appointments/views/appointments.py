@@ -528,11 +528,18 @@ class AppointmentAuditView(InternalAreaRequiredMixin, ListView):
             .order_by("full_name")
         )
 
-        context["filters"] = {
+        filtros = {
             "action": self.request.GET.get("action", ""),
             "source": self.request.GET.get("source", ""),
             "user": self.request.GET.get("user", ""),
             "q": self.request.GET.get("q", ""),
         }
+
+        # No telemóvel o painel de filtros está fechado por omissão. O contador
+        # é o que impede alguém de ler uma lista filtrada como se fosse o
+        # registo todo.
+        filtros["active_count"] = len([valor for valor in filtros.values() if valor])
+
+        context["filters"] = filtros
 
         return context

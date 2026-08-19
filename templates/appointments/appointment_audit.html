@@ -12,62 +12,88 @@
 
 <div class="card shadow-sm border-0 mb-4">
     <div class="card-body">
-        <form method="get" class="row g-3 align-items-end">
-            <div class="col-md-4">
-                <label for="q" class="form-label">Procurar</label>
-                <input
-                    type="text"
-                    class="form-control"
-                    id="q"
-                    name="q"
-                    value="{{ filters.q }}"
-                    placeholder="Código ou nome da cliente"
-                >
-            </div>
+        {# Mesmo padrão da lista de marcações: no telemóvel os campos ficam #}
+        {# fechados para o registo começar logo no primeiro ecrã. #}
+        <button
+            class="filter-toggle d-lg-none{% if not filters.active_count %} collapsed{% endif %}"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#audit-filters"
+            aria-expanded="{% if filters.active_count %}true{% else %}false{% endif %}"
+            aria-controls="audit-filters"
+        >
+            <span class="filter-toggle-label">
+                <i class="bi bi-funnel"></i>
+                Procurar e filtrar
+                {% if filters.active_count %}
+                    <span class="filter-count">{{ filters.active_count }}</span>
+                {% endif %}
+            </span>
 
-            <div class="col-md-2">
-                <label for="action" class="form-label">Ação</label>
-                <select class="form-select" id="action" name="action">
-                    <option value="">Todas</option>
-                    {% for value, label in action_choices %}
-                        <option value="{{ value }}" {% if filters.action == value %}selected{% endif %}>
-                            {{ label }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
+            <i class="bi bi-chevron-down filter-chevron"></i>
+        </button>
 
-            <div class="col-md-2">
-                <label for="source" class="form-label">Origem</label>
-                <select class="form-select" id="source" name="source">
-                    <option value="">Todas</option>
-                    {% for value, label in source_choices %}
-                        <option value="{{ value }}" {% if filters.source == value %}selected{% endif %}>
-                            {{ label }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
+        <div
+            class="collapse d-lg-block filter-body{% if filters.active_count %} show{% endif %}"
+            id="audit-filters"
+        >
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="q" class="form-label">Procurar</label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="q"
+                        name="q"
+                        value="{{ filters.q }}"
+                        placeholder="Código ou nome da cliente"
+                    >
+                </div>
 
-            <div class="col-md-2">
-                <label for="user" class="form-label">Utilizador</label>
-                <select class="form-select" id="user" name="user">
-                    <option value="">Todos</option>
-                    {% for pessoa in users %}
-                        <option value="{{ pessoa.pk }}" {% if filters.user == pessoa.pk|stringformat:"s" %}selected{% endif %}>
-                            {{ pessoa.full_name|default:pessoa.email }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
+                <div class="col-md-2">
+                    <label for="action" class="form-label">Ação</label>
+                    <select class="form-select" id="action" name="action">
+                        <option value="">Todas</option>
+                        {% for value, label in action_choices %}
+                            <option value="{{ value }}" {% if filters.action == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-            <div class="col-md-2 d-flex gap-2">
-                <button type="submit" class="btn btn-primary flex-grow-1">Filtrar</button>
-                <a href="{% url 'appointments:appointment_audit' %}" class="btn btn-outline-secondary">
-                    Limpar
-                </a>
-            </div>
-        </form>
+                <div class="col-md-2">
+                    <label for="source" class="form-label">Origem</label>
+                    <select class="form-select" id="source" name="source">
+                        <option value="">Todas</option>
+                        {% for value, label in source_choices %}
+                            <option value="{{ value }}" {% if filters.source == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label for="user" class="form-label">Utilizador</label>
+                    <select class="form-select" id="user" name="user">
+                        <option value="">Todos</option>
+                        {% for pessoa in users %}
+                            <option value="{{ pessoa.pk }}" {% if filters.user == pessoa.pk|stringformat:"s" %}selected{% endif %}>
+                                {{ pessoa.full_name|default:pessoa.email }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1">Filtrar</button>
+                    <a href="{% url 'appointments:appointment_audit' %}" class="btn btn-outline-secondary">
+                        Limpar
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 

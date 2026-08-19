@@ -3,8 +3,12 @@
 {% block title %}Marcações | Priscila Arantes PA{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center gap-3 mb-4">
     <h1 class="h4 mb-0">Marcações</h1>
+
+    <a href="{% url 'appointments:appointment_create' %}" class="btn btn-primary">
+        Nova marcação
+    </a>
 </div>
 
 <style>
@@ -117,125 +121,150 @@
 
 <div class="card appointment-filter-card mb-4">
     <div class="card-body">
-        <form method="get" class="row g-3 align-items-end">
+        {# Seis campos empilhados empurravam a lista para fora do primeiro #}
+        {# ecrã no telemóvel. A partir de lg o painel está sempre aberto e o #}
+        {# botão desaparece, por isso o ecrã grande fica como estava. #}
+        <button
+            class="filter-toggle d-lg-none{% if not filters.active_count %} collapsed{% endif %}"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#appointment-filters"
+            aria-expanded="{% if filters.active_count %}true{% else %}false{% endif %}"
+            aria-controls="appointment-filters"
+        >
+            <span class="filter-toggle-label">
+                <i class="bi bi-funnel"></i>
+                Pesquisar e filtrar
+                {% if filters.active_count %}
+                    <span class="filter-count">{{ filters.active_count }}</span>
+                {% endif %}
+            </span>
 
-            {% if filters.show_all %}
-                {# Sem isto, filtrar por serviço depois de pedir "ver todas" #}
-                {# devolvia a lista ao intervalo por omissão. #}
-                <input type="hidden" name="all" value="1">
-            {% endif %}
+            <i class="bi bi-chevron-down filter-chevron"></i>
+        </button>
 
-            <div class="col-12 col-lg-3">
-                <label for="q" class="form-label">Pesquisar</label>
-                <input
-                    type="text"
-                    name="q"
-                    id="q"
-                    class="form-control"
-                    value="{{ filters.q }}"
-                    placeholder="Código, cliente, telefone, email ou serviço"
-                >
-            </div>
+        {# Com filtros ativos o painel abre sozinho: quem chega a esta página #}
+        {# por uma pesquisa precisa de ver e corrigir o que está aplicado. #}
+        <div
+            class="collapse d-lg-block filter-body{% if filters.active_count %} show{% endif %}"
+            id="appointment-filters"
+        >
+            <form method="get" class="row g-3 align-items-end">
 
-            <div class="col-12 col-md-6 col-lg-2">
-                <label for="status" class="form-label">Status</label>
-                <select name="status" id="status" class="form-select">
-                    <option value="">Todos</option>
-                    {% for value, label in status_choices %}
-                        <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>
-                            {{ label }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
+                {% if filters.show_all %}
+                    {# Sem isto, filtrar por serviço depois de pedir "ver todas" #}
+                    {# devolvia a lista ao intervalo por omissão. #}
+                    <input type="hidden" name="all" value="1">
+                {% endif %}
 
-            <div class="col-12 col-md-6 col-lg-2">
-                <label for="service" class="form-label">Serviço</label>
-                <select name="service" id="service" class="form-select">
-                    <option value="">Todos</option>
-                    {% for service in services %}
-                        <option value="{{ service.pk }}" {% if filters.service == service.pk|stringformat:"s" %}selected{% endif %}>
-                            {{ service.name }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <div class="col-12 col-md-6 col-lg-2">
-                <label for="date_from" class="form-label">Data inicial</label>
-                <input
-                    type="date"
-                    name="date_from"
-                    id="date_from"
-                    class="form-control"
-                    value="{{ filters.date_from }}"
-                >
-            </div>
-
-            <div class="col-12 col-md-6 col-lg-2">
-                <label for="date_to" class="form-label">Data final</label>
-                <input
-                    type="date"
-                    name="date_to"
-                    id="date_to"
-                    class="form-control"
-                    value="{{ filters.date_to }}"
-                >
-            </div>
-
-            <div class="col-12 col-md-6 col-lg-3">
-                <label for="ordering" class="form-label">Ordenar por</label>
-                <select name="ordering" id="ordering" class="form-select">
-                    <option value="date_asc" {% if filters.ordering == "date_asc" %}selected{% endif %}>
-                        Data mais próxima
-                    </option>
-                    <option value="date_desc" {% if filters.ordering == "date_desc" %}selected{% endif %}>
-                        Data mais distante
-                    </option>
-                    <option value="created_desc" {% if filters.ordering == "created_desc" %}selected{% endif %}>
-                        Criação mais recente
-                    </option>
-                    <option value="created_asc" {% if filters.ordering == "created_asc" %}selected{% endif %}>
-                        Criação mais antiga
-                    </option>
-                    <option value="customer_asc" {% if filters.ordering == "customer_asc" %}selected{% endif %}>
-                        Cliente A-Z
-                    </option>
-                    <option value="customer_desc" {% if filters.ordering == "customer_desc" %}selected{% endif %}>
-                        Cliente Z-A
-                    </option>
-                    <option value="service_asc" {% if filters.ordering == "service_asc" %}selected{% endif %}>
-                        Serviço A-Z
-                    </option>
-                    <option value="service_desc" {% if filters.ordering == "service_desc" %}selected{% endif %}>
-                        Serviço Z-A
-                    </option>
-                    <option value="status_asc" {% if filters.ordering == "status_asc" %}selected{% endif %}>
-                        Status A-Z
-                    </option>
-                    <option value="status_desc" {% if filters.ordering == "status_desc" %}selected{% endif %}>
-                        Status Z-A
-                    </option>
-                </select>
-            </div>
-
-            <div class="col-12 col-lg-6">
-                <div class="d-flex flex-wrap gap-4">
-                    <button type="submit" class="btn btn-primary">
-                        Filtrar
-                    </button>
-
-                    <a href="{% url 'appointments:appointment_list' %}" class="btn btn-outline-secondary">
-                        Limpar filtros
-                    </a>
-
-                    <a href="{% url 'appointments:appointment_create' %}" class="btn btn-primary">
-                        Nova marcação
-                    </a>
+                <div class="col-12 col-lg-3">
+                    <label for="q" class="form-label">Pesquisar</label>
+                    <input
+                        type="text"
+                        name="q"
+                        id="q"
+                        class="form-control"
+                        value="{{ filters.q }}"
+                        placeholder="Código, cliente, telefone, email ou serviço"
+                    >
                 </div>
-            </div>
 
-        </form>
+                <div class="col-12 col-md-6 col-lg-2">
+                    <label for="status" class="form-label">Status</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="">Todos</option>
+                        {% for value, label in status_choices %}
+                            <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-2">
+                    <label for="service" class="form-label">Serviço</label>
+                    <select name="service" id="service" class="form-select">
+                        <option value="">Todos</option>
+                        {% for service in services %}
+                            <option value="{{ service.pk }}" {% if filters.service == service.pk|stringformat:"s" %}selected{% endif %}>
+                                {{ service.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-2">
+                    <label for="date_from" class="form-label">Data inicial</label>
+                    <input
+                        type="date"
+                        name="date_from"
+                        id="date_from"
+                        class="form-control"
+                        value="{{ filters.date_from }}"
+                    >
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-2">
+                    <label for="date_to" class="form-label">Data final</label>
+                    <input
+                        type="date"
+                        name="date_to"
+                        id="date_to"
+                        class="form-control"
+                        value="{{ filters.date_to }}"
+                    >
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-3">
+                    <label for="ordering" class="form-label">Ordenar por</label>
+                    <select name="ordering" id="ordering" class="form-select">
+                        <option value="date_asc" {% if filters.ordering == "date_asc" %}selected{% endif %}>
+                            Data mais próxima
+                        </option>
+                        <option value="date_desc" {% if filters.ordering == "date_desc" %}selected{% endif %}>
+                            Data mais distante
+                        </option>
+                        <option value="created_desc" {% if filters.ordering == "created_desc" %}selected{% endif %}>
+                            Criação mais recente
+                        </option>
+                        <option value="created_asc" {% if filters.ordering == "created_asc" %}selected{% endif %}>
+                            Criação mais antiga
+                        </option>
+                        <option value="customer_asc" {% if filters.ordering == "customer_asc" %}selected{% endif %}>
+                            Cliente A-Z
+                        </option>
+                        <option value="customer_desc" {% if filters.ordering == "customer_desc" %}selected{% endif %}>
+                            Cliente Z-A
+                        </option>
+                        <option value="service_asc" {% if filters.ordering == "service_asc" %}selected{% endif %}>
+                            Serviço A-Z
+                        </option>
+                        <option value="service_desc" {% if filters.ordering == "service_desc" %}selected{% endif %}>
+                            Serviço Z-A
+                        </option>
+                        <option value="status_asc" {% if filters.ordering == "status_asc" %}selected{% endif %}>
+                            Status A-Z
+                        </option>
+                        <option value="status_desc" {% if filters.ordering == "status_desc" %}selected{% endif %}>
+                            Status Z-A
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-12 col-lg-6">
+                    <div class="d-flex flex-wrap gap-4">
+                        <button type="submit" class="btn btn-primary">
+                            Filtrar
+                        </button>
+
+                        <a href="{% url 'appointments:appointment_list' %}" class="btn btn-outline-secondary">
+                            Limpar filtros
+                        </a>
+                    </div>
+                </div>
+
+            </form>
+        </div>
     </div>
 </div>
 

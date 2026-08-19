@@ -69,6 +69,29 @@ class AppointmentFilters:
 
         return not (self.q or self.status)
 
+    @property
+    def active_count(self):
+        """Quantos filtros estão mesmo a mexer no resultado.
+
+        No telemóvel o painel de filtros fica fechado, e um painel fechado
+        esconde a razão de a lista estar como está. O número no botão evita
+        que se conclua que não há marcações quando o que há é um filtro
+        deixado para trás numa pesquisa anterior.
+        """
+
+        narrowing = [self.q, self.status, self.service, self.date_from, self.date_to]
+        count = len([value for value in narrowing if value])
+
+        if self.show_all:
+            count += 1
+
+        # A ordenação não corta resultados, mas troca o topo da lista — que no
+        # telemóvel é quase tudo o que se vê.
+        if self.ordering != "date_asc":
+            count += 1
+
+        return count
+
     def as_template_context(self):
         return {
             "q": self.q,
@@ -80,6 +103,7 @@ class AppointmentFilters:
             "show_all": self.show_all,
             "limits_to_upcoming": self.limits_to_upcoming,
             "hides_cancelled": self.hides_cancelled,
+            "active_count": self.active_count,
         }
 
 
