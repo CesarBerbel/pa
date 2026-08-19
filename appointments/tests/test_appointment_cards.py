@@ -55,7 +55,14 @@ class CardsBase(TestCase):
         self.client.force_login(self.user)
         self.url = reverse("appointments:appointment_list")
 
-    def marcar(self, cliente, data, hora, status=Appointment.STATUS_SCHEDULED):
+    def marcar(
+        self,
+        cliente,
+        data,
+        hora,
+        status=Appointment.STATUS_SCHEDULED,
+        origem=Appointment.ORIGIN_INTERNAL,
+    ):
         marcacao = Appointment(
             customer=cliente,
             service=self.service,
@@ -63,6 +70,7 @@ class CardsBase(TestCase):
             start_time=hora,
             status=status,
             created_by=self.user,
+            origin=origem,
         )
 
         marcacao.reference_code = marcacao.generate_reference_code()
@@ -135,6 +143,86 @@ class ListWithoutActionsTests(CardsBase):
         )
 
         self.assertIn(f"{detalhe}?q=", resposta.content.decode())
+
+
+class CardOriginTests(CardsBase):
+    """De onde veio cada marcação, visto de fora do cartão.
+
+    Um pedido feito no site e uma marcação combinada ao telefone pedem coisas
+    diferentes a quem olha para a lista: um está à espera de resposta, o outro
+    já foi tratado. Sem isto, era preciso abrir cada um para saber qual é qual.
+    """
+
+    def cartao(self, marcacao):
+        """O HTML do cartão desta marcação, e só dele."""
+
+        html = self.client.get(self.url).content.decode()
+        inicio = html.index(f"Detalhes da marcação {marcacao.reference_code}")
+
+        return html[inicio : html.index("</a>", inicio)]
+
+    def test_an_appointment_from_the_site_says_so(self):
+        pedido = self.marcar(
+            self.maria,
+            self.amanha,
+            time(11, 0),
+            origem=Appointment.ORIGIN_PUBLIC,
+        )
+
+        self.assertIn("Site", self.cartao(pedido))
+
+    def test_an_appointment_typed_in_the_clinic_says_so(self):
+        interna = self.marcar(
+            self.ana,
+            self.amanha,
+            time(12, 0),
+            origem=Appointment.ORIGIN_INTERNAL,
+        )
+
+        self.assertIn("Interna", self.cartao(interna))
+
+    def test_the_two_are_told_apart(self):
+        pedido = self.marcar(
+            self.maria, self.amanha, time(11, 0), origem=Appointment.ORIGIN_PUBLIC
+        )
+        interna = self.marcar(
+            self.ana, self.amanha, time(12, 0), origem=Appointment.ORIGIN_INTERNAL
+        )
+
+        self.assertNotIn("Interna", self.cartao(pedido))
+        self.assertNotIn(">Site", self.cartao(interna))
+
+    def test_an_appointment_from_before_this_existed_stays_quiet(self):
+        # As marcações anteriores ao registo da origem não sabem de onde vêm.
+        # Escrever "Desconhecida" em cada uma seria ruído numa lista inteira,
+        # e o ecrã de detalhe continua a dizê-lo a quem for lá ver.
+        antiga = self.marcar(
+            self.maria,
+            self.amanha,
+            time(13, 0),
+            origem=Appointment.ORIGIN_UNKNOWN,
+        )
+
+        cartao = self.cartao(antiga)
+
+        self.assertNotIn("Site", cartao)
+        self.assertNotIn("Interna", cartao)
+        self.assertIn(self.maria.full_name, cartao)
+
+    def test_the_status_is_still_there(self):
+        # A origem entrou ao lado do estado, não no lugar dele.
+        pedido = self.marcar(
+            self.maria,
+            self.amanha,
+            time(11, 0),
+            status=Appointment.STATUS_CONFIRMED,
+            origem=Appointment.ORIGIN_PUBLIC,
+        )
+
+        cartao = self.cartao(pedido)
+
+        self.assertIn("Confirmado", cartao)
+        self.assertIn("Site", cartao)
 
 
 class DetailPageTests(CardsBase):

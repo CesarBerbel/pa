@@ -87,6 +87,25 @@
         margin-bottom: 10px;
     }
 
+    .appointment-day-card-badges {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 6px;
+        /* Sem isto, um nome de cliente comprido espremia as etiquetas. */
+        flex-shrink: 0;
+    }
+
+    .appointment-day-card-origin {
+        font-size: 12px;
+        color: #7b6a72;
+        white-space: nowrap;
+    }
+
+    .appointment-day-card-origin i {
+        margin-right: 4px;
+    }
+
     .appointment-day-card-customer {
         font-size: 16px;
         font-weight: 700;
@@ -340,23 +359,38 @@
                                             </p>
                                         </div>
 
-                                        {% if appointment.status == "cancelled" %}
-                                            <span class="badge bg-danger">
-                                                {{ appointment.get_status_display }}
-                                            </span>
-                                        {% elif appointment.status == "completed" %}
-                                            <span class="badge bg-success">
-                                                {{ appointment.get_status_display }}
-                                            </span>
-                                        {% elif appointment.status == "confirmed" %}
-                                            <span class="badge bg-primary">
-                                                {{ appointment.get_status_display }}
-                                            </span>
-                                        {% else %}
-                                            <span class="badge bg-secondary">
-                                                {{ appointment.get_status_display }}
-                                            </span>
-                                        {% endif %}
+                                        <div class="appointment-day-card-badges">
+                                            {% if appointment.status == "cancelled" %}
+                                                <span class="badge bg-danger">
+                                                    {{ appointment.get_status_display }}
+                                                </span>
+                                            {% elif appointment.status == "completed" %}
+                                                <span class="badge bg-success">
+                                                    {{ appointment.get_status_display }}
+                                                </span>
+                                            {% elif appointment.status == "confirmed" %}
+                                                <span class="badge bg-primary">
+                                                    {{ appointment.get_status_display }}
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">
+                                                    {{ appointment.get_status_display }}
+                                                </span>
+                                            {% endif %}
+
+                                            {# De onde veio a marcação. As mesmas #}
+                                            {# palavras e os mesmos ícones do ecrã #}
+                                            {# de detalhe, em ponto pequeno.       #}
+                                            {% if appointment.origin == "public" %}
+                                                <span class="appointment-day-card-origin">
+                                                    <i class="bi bi-globe" aria-hidden="true"></i>Site
+                                                </span>
+                                            {% elif appointment.origin == "internal" %}
+                                                <span class="appointment-day-card-origin">
+                                                    <i class="bi bi-person-badge" aria-hidden="true"></i>Interna
+                                                </span>
+                                            {% endif %}
+                                        </div>
                                     </div>
 
                                     <div class="appointment-day-card-when">
