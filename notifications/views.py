@@ -529,7 +529,7 @@ class TwilioStatusWebhookView(View):
 
 
 class MessagingSettingView(InternalAreaRequiredMixin, UpdateView):
-    """Interruptor geral: liga e desliga o envio de emails e de WhatsApp."""
+    """Que canais podem escrever aos clientes: email, WhatsApp, ou nenhum."""
 
     model = MessagingSetting
     form_class = MessagingSettingForm
@@ -559,16 +559,27 @@ class MessagingSettingView(InternalAreaRequiredMixin, UpdateView):
 
         resposta = super().form_valid(form)
 
-        if form.instance.is_enabled:
+        # A mensagem diz o que fica calado, e não o que ficou ligado: é o
+        # silêncio que costuma ser descoberto tarde e por outra pessoa.
+        calados = [
+            nome
+            for nome, ligado in (
+                ("emails", form.instance.send_emails),
+                ("mensagens de WhatsApp", form.instance.send_whatsapp),
+            )
+            if not ligado
+        ]
+
+        if not calados:
             messages.success(
                 self.request,
-                "Envio de mensagens ligado. Emails e WhatsApp voltam a sair.",
+                "Envio ligado nos dois canais. Emails e WhatsApp voltam a sair.",
             )
         else:
             messages.warning(
                 self.request,
-                "Envio de mensagens desligado. Não sai nenhum email nem "
-                "mensagem de WhatsApp até voltar a ligar.",
+                f"Não saem {' nem '.join(calados)} até voltar a ligar. "
+                "As marcações continuam a funcionar.",
             )
 
         return resposta

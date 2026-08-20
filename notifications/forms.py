@@ -211,12 +211,10 @@ class WhatsAppTestForm(forms.Form):
 class MessagingSettingForm(forms.ModelForm):
     class Meta:
         model = MessagingSetting
-        fields = ["is_enabled"]
-        labels = {
-            "is_enabled": "Enviar mensagens",
-        }
+        fields = ["send_emails", "send_whatsapp"]
         widgets = {
-            "is_enabled": forms.CheckboxInput(
+            campo: forms.CheckboxInput(
                 attrs={"class": "form-check-input", "role": "switch"}
-            ),
+            )
+            for campo in ["send_emails", "send_whatsapp"]
         }

@@ -148,7 +148,7 @@ def send_rendered_email(subject, body_text, body_html, recipient_list):
     # Todos os emails do site passam por aqui, e é por isso que o interruptor
     # geral é lido neste ponto e não em cada função de envio: um email novo
     # escrito daqui a uns meses fica coberto sem ninguém se lembrar disso.
-    if not MessagingSetting.messaging_enabled():
+    if not MessagingSetting.emails_enabled():
         logger.info("Envio de mensagens desligado: email %r não foi enviado.", subject)
 
         return

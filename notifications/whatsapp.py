@@ -40,12 +40,12 @@ class WhatsAppAppointmentNotificationService:
     def send_confirmation(appointment) -> WhatsAppSendResult:
         template_name = settings.WHATSAPP_TEMPLATE_NAME
 
-        if not MessagingSetting.messaging_enabled():
+        if not MessagingSetting.whatsapp_enabled():
             return WhatsAppSendResult(
                 success=True,
                 skipped=True,
                 message=(
-                    "O envio de mensagens está desligado nas configurações. "
+                    "O envio de WhatsApp está desligado nas configurações. "
                     "Nada foi enviado."
                 ),
             )

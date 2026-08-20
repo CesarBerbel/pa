@@ -689,16 +689,21 @@ class InstagramPost(models.Model):
 
 
 class MessagingSetting(models.Model):
-    """Interruptor geral de mensagens para clientes.
+    """Que canais podem escrever aos clientes.
 
-    Há alturas em que a clínica não quer que saia nada: férias, uma migração de
-    número, um problema com o fornecedor, ou simplesmente o receio de que uma
+    Há alturas em que a clínica não quer que saia alguma coisa: férias, uma
+    migração de número, um problema com um fornecedor, ou o receio de que uma
     regra mal configurada comece a escrever a toda a gente. Sem um sítio único
     para desligar, a única saída era ir a cada regra de WhatsApp e a cada
     acontecimento de email e desligá-los um a um — demorado, fácil de esquecer
     metade, e pior ainda de repor depois.
 
-    Está acima de tudo o resto: com isto desligado não sai email nem WhatsApp,
+    É por canal e não um interruptor único porque os dois avariam por razões
+    diferentes: o WhatsApp perde a ligação, o fornecedor bloqueia, o número
+    muda — e nada disso é razão para a cliente deixar de receber a confirmação
+    por email. Desligar tudo por causa de um lado calava o outro sem motivo.
+
+    Cada canal está acima das regras dele: desligado, não sai nada por ali —
     nem automático, nem manual, nem de teste. Um interruptor que às vezes deixa
     passar mensagens não serve para o que é preciso, que é ter a certeza.
 
@@ -707,12 +712,21 @@ class MessagingSetting(models.Model):
 
     SINGLETON_PK = 1
 
-    is_enabled = models.BooleanField(
+    send_emails = models.BooleanField(
         default=True,
-        verbose_name="Enviar mensagens",
+        verbose_name="Enviar emails",
         help_text=(
-            "Quando desligado, o site não envia emails nem mensagens de "
-            "WhatsApp. As marcações continuam a funcionar normalmente."
+            "Confirmações, cancelamentos, seguimentos e envios manuais por "
+            "email. Desligado, as marcações continuam a funcionar."
+        ),
+    )
+
+    send_whatsapp = models.BooleanField(
+        default=True,
+        verbose_name="Enviar mensagens de WhatsApp",
+        help_text=(
+            "Todas as regras de WhatsApp, incluindo os envios manuais e os de "
+            "teste. Desligado, as marcações continuam a funcionar."
         ),
     )
 
@@ -734,11 +748,23 @@ class MessagingSetting(models.Model):
         verbose_name_plural = "Envio de mensagens"
 
     def __str__(self):
-        return "Mensagens ligadas" if self.is_enabled else "Mensagens desligadas"
+        ligados = [
+            nome
+            for nome, ligado in (
+                ("email", self.send_emails),
+                ("WhatsApp", self.send_whatsapp),
+            )
+            if ligado
+        ]
+
+        if not ligados:
+            return "Nada a sair"
+
+        return "A enviar por " + " e ".join(ligados)
 
     def save(self, *args, **kwargs):
-        # Uma segunda linha faria com que o interruptor visível na página não
-        # fosse necessariamente o que os envios consultam.
+        # Uma segunda linha faria com que os interruptores visíveis na página
+        # não fossem necessariamente os que os envios consultam.
         self.pk = self.SINGLETON_PK
 
         return super().save(*args, **kwargs)
@@ -750,17 +776,29 @@ class MessagingSetting(models.Model):
         return definicao
 
     @classmethod
-    def messaging_enabled(cls):
-        """Se as mensagens para clientes podem sair agora.
+    def _canal_ligado(cls, campo):
+        """Em caso de erro a ler a definição, responde que sim.
 
-        Em caso de erro a ler a definição responde que sim. A alternativa era
-        uma falha de base de dados calar as confirmações e os lembretes sem
-        ninguém dar por isso, o que é pior do que uma mensagem a mais.
+        A alternativa era uma falha de base de dados calar as confirmações e os
+        lembretes sem ninguém dar por isso, o que é pior do que uma mensagem a
+        mais.
         """
 
         try:
-            return cls.load().is_enabled
+            return getattr(cls.load(), campo)
         except Exception:
             logger.exception("Não foi possível ler o interruptor de mensagens.")
 
             return True
+
+    @classmethod
+    def emails_enabled(cls):
+        """Se os emails para clientes podem sair agora."""
+
+        return cls._canal_ligado("send_emails")
+
+    @classmethod
+    def whatsapp_enabled(cls):
+        """Se as mensagens de WhatsApp podem sair agora."""
+
+        return cls._canal_ligado("send_whatsapp")

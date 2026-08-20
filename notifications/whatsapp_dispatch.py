@@ -22,8 +22,7 @@ from notifications.whatsapp_common import SendResult
 logger = logging.getLogger(__name__)
 
 MESSAGING_OFF = (
-    "O envio de mensagens está desligado nas configurações. "
-    "Nada foi enviado."
+    "O envio de WhatsApp está desligado nas configurações. Nada foi enviado."
 )
 
 
@@ -83,7 +82,7 @@ def sent_logs(appointment, setting):
 def send_manual(appointment, setting):
     """Dispara esta regra agora, para esta marcação."""
 
-    if not MessagingSetting.messaging_enabled():
+    if not MessagingSetting.whatsapp_enabled():
         return messaging_off_result()
 
     return provider_module(setting).send_manual(appointment, setting)
@@ -94,7 +93,7 @@ def send_test(setting, recipient):
 
     # O teste também é uma mensagem que chega ao telemóvel de alguém, e por
     # isso está sujeito ao interruptor como os outros envios.
-    if not MessagingSetting.messaging_enabled():
+    if not MessagingSetting.whatsapp_enabled():
         return messaging_off_result()
 
     return provider_module(setting).send_test(setting, recipient)
@@ -107,7 +106,7 @@ def notify(appointment, event_type):
     que já foi gravada.
     """
 
-    if not MessagingSetting.messaging_enabled():
+    if not MessagingSetting.whatsapp_enabled():
         return messaging_off_result()
 
     regras = WhatsAppEventSetting.objects.filter(

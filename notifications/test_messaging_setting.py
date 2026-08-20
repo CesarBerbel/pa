@@ -1,9 +1,12 @@
-"""O interruptor geral de mensagens.
+"""Os interruptores de envio, um por canal.
 
-Com ele desligado não pode sair nada: nem email, nem WhatsApp, nem envios
-manuais, nem testes de configuração. O valor de um interruptor destes está em
-não haver exceções — é por isso que cada caminho de saída tem aqui o seu teste,
-incluindo os que não passam pelo despacho normal.
+Com um canal desligado não pode sair nada por ali: nem automático, nem manual,
+nem testes de configuração. O valor de um interruptor destes está em não haver
+exceções — é por isso que cada caminho de saída tem aqui o seu teste, incluindo
+os que não passam pelo despacho normal.
+
+E, desde que passaram a ser dois, há uma segunda coisa a garantir: desligar um
+canal não pode calar o outro. Foi essa a razão de deixar de ser um só.
 """
 
 from datetime import time, timedelta
@@ -22,18 +25,30 @@ from notifications import whatsapp_dispatch
 from notifications.models import MessagingSetting, WhatsAppEventSetting
 
 
+def definir(**canais):
+    definicao = MessagingSetting.load()
+
+    for campo, valor in canais.items():
+        setattr(definicao, campo, valor)
+
+    definicao.save()
+
+    return definicao
+
+
 class MessagingSettingModelTests(TestCase):
-    def test_messaging_is_enabled_by_default(self):
-        self.assertTrue(MessagingSetting.messaging_enabled())
+    def test_both_channels_are_on_by_default(self):
+        self.assertTrue(MessagingSetting.emails_enabled())
+        self.assertTrue(MessagingSetting.whatsapp_enabled())
 
     def test_only_one_row_ever_exists(self):
         MessagingSetting.load()
 
-        outra = MessagingSetting(is_enabled=False)
+        outra = MessagingSetting(send_emails=False, send_whatsapp=False)
         outra.save()
 
         self.assertEqual(MessagingSetting.objects.count(), 1)
-        self.assertFalse(MessagingSetting.load().is_enabled)
+        self.assertFalse(MessagingSetting.load().send_emails)
 
     def test_a_database_failure_does_not_silence_messages(self):
         # Falhar a ler a definição não pode calar as mensagens: ninguém daria
@@ -41,7 +56,20 @@ class MessagingSettingModelTests(TestCase):
         with patch.object(
             MessagingSetting, "load", side_effect=RuntimeError("sem base de dados")
         ):
-            self.assertTrue(MessagingSetting.messaging_enabled())
+            self.assertTrue(MessagingSetting.emails_enabled())
+            self.assertTrue(MessagingSetting.whatsapp_enabled())
+
+    def test_it_says_what_is_going_out(self):
+        self.assertEqual(
+            str(definir(send_emails=True, send_whatsapp=True)),
+            "A enviar por email e WhatsApp",
+        )
+        self.assertEqual(
+            str(definir(send_emails=True, send_whatsapp=False)), "A enviar por email"
+        )
+        self.assertEqual(
+            str(definir(send_emails=False, send_whatsapp=False)), "Nada a sair"
+        )
 
 
 class MessagingSettingEmailTests(TestCase):
@@ -53,19 +81,26 @@ class MessagingSettingEmailTests(TestCase):
             recipient_list=["maria@example.com"],
         )
 
-    def test_email_is_sent_while_messaging_is_on(self):
+    def test_email_is_sent_while_the_channel_is_on(self):
         self.enviar()
 
         self.assertEqual(len(mail.outbox), 1)
 
-    def test_email_is_not_sent_while_messaging_is_off(self):
-        definicao = MessagingSetting.load()
-        definicao.is_enabled = False
-        definicao.save()
+    def test_email_is_not_sent_while_the_channel_is_off(self):
+        definir(send_emails=False)
 
         self.enviar()
 
         self.assertEqual(mail.outbox, [])
+
+    def test_turning_whatsapp_off_does_not_silence_email(self):
+        # O ponto de haver dois interruptores: o WhatsApp perde a ligação, e a
+        # cliente continua a receber a confirmação por email.
+        definir(send_emails=True, send_whatsapp=False)
+
+        self.enviar()
+
+        self.assertEqual(len(mail.outbox), 1)
 
 
 class MessagingSettingWhatsAppTests(TestCase):
@@ -114,11 +149,9 @@ class MessagingSettingWhatsAppTests(TestCase):
             },
         )
 
-        definicao = MessagingSetting.load()
-        definicao.is_enabled = False
-        definicao.save()
+        definir(send_whatsapp=False)
 
-    def test_notify_sends_nothing_while_messaging_is_off(self):
+    def test_notify_sends_nothing_while_the_channel_is_off(self):
         with patch.object(whatsapp_dispatch, "provider_module") as fornecedor:
             resultado = whatsapp_dispatch.notify(
                 self.appointment,
@@ -130,21 +163,21 @@ class MessagingSettingWhatsAppTests(TestCase):
         self.assertTrue(resultado.success)
         self.assertTrue(resultado.skipped)
 
-    def test_manual_send_is_blocked_while_messaging_is_off(self):
+    def test_manual_send_is_blocked_while_the_channel_is_off(self):
         with patch.object(whatsapp_dispatch, "provider_module") as fornecedor:
             resultado = whatsapp_dispatch.send_manual(self.appointment, self.setting)
 
         fornecedor.assert_not_called()
         self.assertTrue(resultado.skipped)
 
-    def test_test_send_is_blocked_while_messaging_is_off(self):
+    def test_test_send_is_blocked_while_the_channel_is_off(self):
         with patch.object(whatsapp_dispatch, "provider_module") as fornecedor:
             resultado = whatsapp_dispatch.send_test(self.setting, "+351910000000")
 
         fornecedor.assert_not_called()
         self.assertTrue(resultado.skipped)
 
-    def test_meta_cloud_api_is_blocked_while_messaging_is_off(self):
+    def test_meta_cloud_api_is_blocked_while_the_channel_is_off(self):
         # Este caminho não passa pelo despacho: é chamado à parte, ao confirmar
         # uma marcação, e tinha de ser travado no próprio serviço.
         from notifications.whatsapp import WhatsAppAppointmentNotificationService
@@ -157,14 +190,25 @@ class MessagingSettingWhatsAppTests(TestCase):
         pedido.assert_not_called()
         self.assertTrue(resultado.skipped)
 
-    def test_notify_sends_again_once_messaging_is_back_on(self):
-        definicao = MessagingSetting.load()
-        definicao.is_enabled = True
-        definicao.save()
+    def test_notify_sends_again_once_the_channel_is_back_on(self):
+        definir(send_whatsapp=True)
 
         # O fornecedor é forçado a ligado: o que está a ser medido é o
-        # interruptor geral, não o TWILIO_ENABLED/BAILEYS_ENABLED do servidor
+        # interruptor do canal, não o TWILIO_ENABLED/BAILEYS_ENABLED do servidor
         # onde os testes correm.
+        with patch.object(whatsapp_dispatch, "provider_enabled", return_value=True):
+            with patch.object(whatsapp_dispatch, "provider_module") as fornecedor:
+                fornecedor.return_value.validate_settings.return_value = ""
+                whatsapp_dispatch.notify(
+                    self.appointment,
+                    WhatsAppEventSetting.EVENT_APPOINTMENT_CONFIRMED,
+                )
+
+        self.assertTrue(fornecedor.called)
+
+    def test_turning_email_off_does_not_silence_whatsapp(self):
+        definir(send_emails=False, send_whatsapp=True)
+
         with patch.object(whatsapp_dispatch, "provider_enabled", return_value=True):
             with patch.object(whatsapp_dispatch, "provider_module") as fornecedor:
                 fornecedor.return_value.validate_settings.return_value = ""
@@ -184,34 +228,41 @@ class MessagingSettingViewTests(TestCase):
             full_name="Admin User",
         )
 
+        self.client.force_login(self.user)
         self.url = reverse("notifications:messaging_setting")
 
     def test_the_page_requires_internal_access(self):
-        resposta = self.client.get(self.url)
+        self.client.logout()
 
-        self.assertNotEqual(resposta.status_code, 200)
+        self.assertNotEqual(self.client.get(self.url).status_code, 200)
 
-    def test_the_page_loads_for_internal_users(self):
-        self.client.force_login(self.user)
+    def test_the_page_offers_one_switch_per_channel(self):
+        html = self.client.get(self.url).content.decode()
 
-        resposta = self.client.get(self.url)
+        self.assertIn('name="send_emails"', html)
+        self.assertIn('name="send_whatsapp"', html)
 
-        self.assertEqual(resposta.status_code, 200)
-
-    def test_turning_it_off_records_who_did_it(self):
-        self.client.force_login(self.user)
-
-        self.client.post(self.url, {})
+    def test_turning_a_channel_off_records_who_did_it(self):
+        # Uma caixa não marcada não é submetida: só o WhatsApp fica ligado.
+        self.client.post(self.url, {"send_whatsapp": "on"})
 
         definicao = MessagingSetting.load()
 
-        self.assertFalse(definicao.is_enabled)
+        self.assertFalse(definicao.send_emails)
+        self.assertTrue(definicao.send_whatsapp)
         self.assertEqual(definicao.updated_by, self.user)
 
-    def test_turning_it_back_on(self):
-        self.client.force_login(self.user)
-
+    def test_turning_a_channel_back_on(self):
         self.client.post(self.url, {})
-        self.client.post(self.url, {"is_enabled": "on"})
+        self.client.post(self.url, {"send_emails": "on", "send_whatsapp": "on"})
 
-        self.assertTrue(MessagingSetting.load().is_enabled)
+        definicao = MessagingSetting.load()
+
+        self.assertTrue(definicao.send_emails)
+        self.assertTrue(definicao.send_whatsapp)
+
+    def test_the_message_names_the_channel_that_went_quiet(self):
+        # Quem desliga precisa de sair do ecrã a saber o que deixou de sair.
+        resposta = self.client.post(self.url, {"send_whatsapp": "on"}, follow=True)
+
+        self.assertContains(resposta, "Não saem emails")
