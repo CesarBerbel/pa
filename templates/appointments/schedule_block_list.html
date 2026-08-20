@@ -3,12 +3,35 @@
 {% block title %}Bloqueios de agenda | Priscila Arantes PA{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h4 mb-0">Bloqueios de agenda</h1>
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div>
+        <h1 class="h4 mb-0">Bloqueios de agenda</h1>
 
-    <a href="{% url 'appointments:schedule_block_create' %}" class="btn btn-primary">
-        Novo bloqueio
-    </a>
+        <p class="text-muted small mb-0 mt-1">
+            {% if shows_everything %}
+                A mostrar todos, incluindo os que já terminaram.
+            {% else %}
+                A mostrar os que ainda fecham a agenda.
+            {% endif %}
+        </p>
+    </div>
+
+    <div class="d-flex align-items-center gap-3">
+        {# Sem nada escondido, o link não teria nada para mostrar. #}
+        {% if shows_everything %}
+            <a href="{% url 'appointments:schedule_block_list' %}">
+                Ver só os que estão em vigor
+            </a>
+        {% elif hidden_total %}
+            <a href="{% url 'appointments:schedule_block_list' %}?todos=1">
+                Ver também os {{ hidden_total }} já terminados
+            </a>
+        {% endif %}
+
+        <a href="{% url 'appointments:schedule_block_create' %}" class="btn btn-primary">
+            Novo bloqueio
+        </a>
+    </div>
 </div>
 
 <style>
@@ -111,7 +134,11 @@
             </div>
         {% else %}
             <p class="mb-0">
-                Nenhum bloqueio registado.
+                {% if shows_everything %}
+                    Nenhum bloqueio registado.
+                {% else %}
+                    Nenhum bloqueio em vigor.
+                {% endif %}
             </p>
         {% endif %}
     </div>

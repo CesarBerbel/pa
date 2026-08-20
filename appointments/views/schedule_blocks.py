@@ -6,6 +6,7 @@ from django.views.generic import CreateView, ListView, TemplateView, UpdateView
 
 from appointments.forms import ScheduleBlockForm
 from appointments.models import ScheduleBlock
+from appointments.selectors import ScheduleBlockSelectors
 
 
 class ScheduleBlockListView(InternalAreaRequiredMixin, ListView):
@@ -15,12 +16,36 @@ class ScheduleBlockListView(InternalAreaRequiredMixin, ListView):
     template_name = "appointments/schedule_block_list.html"
     context_object_name = "blocks"
 
+    def shows_everything(self):
+        # O histórico continua a um clique de distância: um bloqueio antigo
+        # ainda se pode querer consultar ou apagar.
+        return self.request.GET.get("todos", "") == "1"
+
     def get_queryset(self):
-        # Return schedule blocks ordered by date and start time.
-        return ScheduleBlock.objects.order_by(
-            "date",
-            "start_time",
+        # Por omissão, só o que ainda fecha a agenda. Esta lista é para agir
+        # sobre a agenda que aí vem, e os bloqueios antigos acumulam-se
+        # depressa: um almoço recorrente que acabou empurra para baixo o que
+        # interessa.
+        blocos = (
+            ScheduleBlock.objects.all()
+            if self.shows_everything()
+            else ScheduleBlockSelectors.still_in_effect()
         )
+
+        return blocos.order_by("date", "start_time")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context["shows_everything"] = self.shows_everything()
+        context["hidden_total"] = (
+            0
+            if self.shows_everything()
+            else ScheduleBlock.objects.count()
+            - ScheduleBlockSelectors.still_in_effect().count()
+        )
+
+        return context
 
 
 class ScheduleBlockCreateView(InternalAreaRequiredMixin, CreateView):

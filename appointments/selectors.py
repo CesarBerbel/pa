@@ -6,7 +6,7 @@ from django.db import models
 from django.utils import timezone
 
 from appointments.availability import AvailabilityService
-from appointments.models import Appointment
+from appointments.models import Appointment, ScheduleBlock
 
 
 @dataclass(frozen=True)
@@ -218,3 +218,30 @@ class AppointmentSelectors:
     @staticmethod
     def blocks_for_date(selected_date):
         return AvailabilityService.get_active_blocks_for_date(selected_date)
+
+
+class ScheduleBlockSelectors:
+    @staticmethod
+    def still_in_effect(today=None):
+        """Bloqueios que ainda têm efeito hoje ou a partir de hoje.
+
+        Um bloqueio de um dia só conta enquanto esse dia não passar. Um
+        bloqueio que se repete conta enquanto a repetição não terminar — e é
+        por isso que a data de início não serve de filtro: o que começou ontem
+        e acaba amanhã continua a fechar a agenda hoje.
+
+        Sem data de fim, a repetição não acaba, e o bloqueio conta sempre.
+        """
+
+        today = today or timezone.localdate()
+
+        return ScheduleBlock.objects.filter(
+            models.Q(is_recurring=False, date__gte=today)
+            | (
+                models.Q(is_recurring=True)
+                & (
+                    models.Q(recurrence_end_date__isnull=True)
+                    | models.Q(recurrence_end_date__gte=today)
+                )
+            )
+        )
