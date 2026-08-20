@@ -27,8 +27,6 @@ class ScheduleBlockingService:
 
     slot_minutes = 30
 
-    DEFAULT_TITLE = "Agenda fechada"
-
     @classmethod
     def parse_slot_times(cls, raw_values):
         # Converte "HH:MM" para time, ignorando valores inválidos vindos do POST.
@@ -83,8 +81,10 @@ class ScheduleBlockingService:
         return merged
 
     @classmethod
-    def block_slots(cls, selected_date, times, title=""):
-        title = (title or "").strip() or cls.DEFAULT_TITLE
+    def block_slots(cls, selected_date, times, notes=""):
+        # O motivo escrito na agenda vai para as observações. Antes ia para um
+        # campo de título próprio, que dizia o mesmo que o tipo do bloqueio.
+        notes = (notes or "").strip()
 
         if not times:
             return SlotBlockingResult(
@@ -111,7 +111,7 @@ class ScheduleBlockingService:
         with transaction.atomic():
             for start_time, end_time in ranges:
                 ScheduleBlock.objects.create(
-                    title=title,
+                    notes=notes,
                     block_type=ScheduleBlock.BLOCK_TYPE_OTHER,
                     date=selected_date,
                     start_time=start_time,

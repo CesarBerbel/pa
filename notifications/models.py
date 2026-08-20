@@ -16,32 +16,38 @@ class EmailTemplate(models.Model):
     key = models.CharField(
         max_length=100,
         unique=True,
-        help_text="Unique identifier, e.g. appointment_cancelled",
+        verbose_name="Identificador",
+        help_text="Identificador interno, sem espaços. Exemplo: appointment_cancelled",
     )
 
     name = models.CharField(
         max_length=150,
-        help_text="Human-readable name",
+        verbose_name="Nome",
+        help_text="Nome legível, para identificar o modelo nas listas.",
     )
 
     subject = models.CharField(
         max_length=255,
+        verbose_name="Assunto",
     )
 
-    body_text = models.TextField()
+    body_text = models.TextField(verbose_name="Texto")
 
     body_html = models.TextField(
         blank=True,
-        help_text="Optional HTML version of the email",
+        verbose_name="HTML (opcional)",
+        help_text="Versão em HTML do email. Vazio envia só o texto acima.",
     )
 
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True, verbose_name="Ativo")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ["name"]
+        verbose_name = "Modelo de email"
+        verbose_name_plural = "Modelos de email"
 
     def __str__(self):
         return self.name
@@ -88,12 +94,14 @@ class EmailEventSetting(models.Model):
 
     name = models.CharField(
         max_length=150,
+        verbose_name="Nome",
         help_text="Nome interno para identificar esta regra no admin.",
     )
 
     event_type = models.CharField(
         max_length=50,
         choices=EVENT_CHOICES,
+        verbose_name="Acontecimento",
         help_text="Ação do sistema que poderá enviar email.",
     )
 
@@ -148,6 +156,8 @@ class EmailEventSetting(models.Model):
 
     class Meta:
         ordering = ["event_type", "name"]
+        verbose_name = "Regra de email"
+        verbose_name_plural = "Regras de email"
         constraints = [
             models.UniqueConstraint(
                 fields=["event_type", "audience"],

@@ -38,8 +38,8 @@ class User(AbstractUser):
 
     username = None
     email = models.EmailField(unique=True)
-    full_name = models.CharField(max_length=255)
-    phone = models.CharField(max_length=30, blank=True)
+    full_name = models.CharField(max_length=255, verbose_name="Nome completo")
+    phone = models.CharField(max_length=30, blank=True, verbose_name="Telefone")
 
     # Dois níveis distintos, porque a informação clínica não pode ficar
     # acessível a quem só trata da receção: quem marca consultas não tem de

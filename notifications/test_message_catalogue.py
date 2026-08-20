@@ -110,6 +110,20 @@ class MessageCatalogueTests(TestCase):
 
         self.assertIn("{{ internal_link }}", interno.body_text)
 
+    def test_a_cancellation_always_says_why(self):
+        # "A sua marcação foi cancelada", sozinho, deixa quem lê sem saber se
+        # foi engano, doença da profissional, ou o cancelamento que pediu.
+        for audience in ["customer", "professional"]:
+            with self.subTest(quem=audience):
+                regra = self.regra_whatsapp("appointment_cancelled", audience)
+
+                self.assertIn("{{ cancellation_reason }}", regra.body_template)
+                self.assertIn("Motivo", regra.body_template)
+
+        for key in ["appointment_cancelled", "appointment_cancelled_professional"]:
+            with self.subTest(modelo=key):
+                self.assertIn("{{ cancellation_reason }}", self.modelo(key).body_text)
+
     # -- mensagens por serviço ------------------------------------------
     def test_the_per_service_templates_are_ready_to_be_chosen(self):
         # Não pertencem a acontecimento nenhum: são escolhidos numa mensagem
@@ -148,6 +162,31 @@ class MessageCatalogueTests(TestCase):
         self.assertFalse(
             EmailEventSetting.objects.filter(is_active=False).exists(),
         )
+
+
+class CancellationReasonTests(TestCase):
+    """O motivo, tal como entra no meio da frase da mensagem."""
+
+    def motivo(self, texto):
+        from types import SimpleNamespace
+
+        from notifications.whatsapp_common import cancellation_reason
+
+        return cancellation_reason(SimpleNamespace(cancellation_reason=texto))
+
+    def test_a_reason_written_with_a_full_stop_does_not_double_it(self):
+        # A mensagem põe o ponto a seguir. Metade dos motivos vem com ponto e a
+        # outra metade sem, e sem isto saía "não poderá comparecer..".
+        self.assertEqual(self.motivo("Não poderá comparecer."), "Não poderá comparecer")
+
+    def test_a_reason_written_without_one_is_left_alone(self):
+        self.assertEqual(self.motivo("Doença"), "Doença")
+
+    def test_an_empty_reason_never_leaves_a_hole(self):
+        # Um modelo aprovado pela Meta é recusado se uma posição chegar vazia.
+        # O cancelamento exige motivo, mas a mensagem também sai à mão.
+        self.assertEqual(self.motivo("   "), "não indicado")
+        self.assertEqual(self.motivo(None), "não indicado")
 
 
 class ProfessionalNoticeTests(TestCase):

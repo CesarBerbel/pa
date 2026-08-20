@@ -519,7 +519,8 @@ class ScheduleBlockForm(forms.ModelForm):
     class Meta:
         model = ScheduleBlock
         fields = [
-            "title",
+            # Sem título: o tipo já diz o que é ("Pausa", "Férias") e as notas
+            # dizem o resto. Pedir os três era pedir a mesma coisa duas vezes.
             "block_type",
             "date",
             "start_time",

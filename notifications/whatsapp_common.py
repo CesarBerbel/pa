@@ -94,6 +94,25 @@ def booking_link():
     return f"{settings.SITE_URL}{reverse('appointments:public_visual_schedule')}"
 
 
+def cancellation_reason(appointment):
+    """O motivo do cancelamento, pronto a entrar no meio de uma frase.
+
+    Duas correções, ambas por causa de quem o escreve à mão:
+
+    * sai sem o ponto final, porque a mensagem já o põe a seguir — uns motivos
+      vêm com ponto, outros sem, e sem isto metade das mensagens dizia
+      "não poderá comparecer..";
+    * nunca sai vazio, porque um modelo aprovado pela Meta é recusado se uma
+      das posições chegar em branco. O cancelamento exige motivo, portanto
+      isto quase nunca serve de nada — mas "quase" não chega quando o custo é
+      a mensagem não sair.
+    """
+
+    motivo = (appointment.cancellation_reason or "").strip().rstrip(".").strip()
+
+    return motivo or "não indicado"
+
+
 def build_context(appointment):
     return {
         "customer_name": appointment.customer.full_name,
@@ -105,10 +124,7 @@ def build_context(appointment):
         "status": appointment.get_status_display(),
         "appointment_link": appointment_link(appointment.reference_code),
         "booking_link": booking_link(),
-        # Fica disponível para quem escreva um texto à medida. As mensagens de
-        # fábrica não a usam: um modelo aprovado pela Meta não aceita uma
-        # variável vazia, e a maior parte dos cancelamentos não traz motivo.
-        "cancellation_reason": appointment.cancellation_reason,
+        "cancellation_reason": cancellation_reason(appointment),
     }
 
 

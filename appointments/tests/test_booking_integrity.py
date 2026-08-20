@@ -43,7 +43,7 @@ class BookingIntegrityTestMixin:
         ensure_test_business_hour(weekday=self.appointment_date.weekday())
 
         ScheduleBlock.objects.filter(
-            title="Almoço",
+            notes="Almoço",
             block_type=ScheduleBlock.BLOCK_TYPE_BREAK,
             is_recurring=True,
         ).delete()

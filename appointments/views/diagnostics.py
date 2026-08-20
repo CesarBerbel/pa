@@ -109,7 +109,7 @@ class ScheduleDiagnosticsView(InternalAreaRequiredMixin, TemplateView):
 
                     if slot_start < block_end and slot_end > block_start:
                         status = "blocked"
-                        reason = f"Conflito com bloqueio: {block.title}"
+                        reason = f"Conflito com bloqueio: {block.label}"
                         related_object = block
                         break
 

@@ -64,7 +64,7 @@ class CriticalArchitectureTestMixin:
             },
         )
         ScheduleBlock.objects.filter(
-            title="Almoço",
+            notes="Almoço",
             block_type=ScheduleBlock.BLOCK_TYPE_BREAK,
             is_recurring=True,
         ).delete()
@@ -92,7 +92,7 @@ class AvailabilityCriticalTests(CriticalArchitectureTestMixin, TestCase):
     def test_available_slots_exclude_existing_appointments_and_schedule_blocks(self):
         self.create_appointment(start_time=time(10, 0), service=self.service)
         ScheduleBlock.objects.create(
-            title="Almoço",
+            notes="Almoço",
             block_type=ScheduleBlock.BLOCK_TYPE_BREAK,
             date=self.appointment_date,
             start_time=time(12, 0),
@@ -166,7 +166,7 @@ class AvailabilityCriticalTests(CriticalArchitectureTestMixin, TestCase):
 
     def test_recurring_schedule_block_applies_to_matching_weekday_only(self):
         block = ScheduleBlock.objects.create(
-            title="Pausa recorrente",
+            notes="Pausa recorrente",
             block_type=ScheduleBlock.BLOCK_TYPE_BREAK,
             date=self.appointment_date - timedelta(days=7),
             start_time=time(15, 0),

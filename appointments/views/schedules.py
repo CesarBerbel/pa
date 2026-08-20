@@ -110,7 +110,7 @@ class VisualScheduleBlockView(InternalAreaRequiredMixin, View):
             times=ScheduleBlockingService.parse_slot_times(
                 request.POST.getlist("slots")
             ),
-            title=request.POST.get("title", ""),
+            notes=request.POST.get("notes", ""),
         )
 
         if result.success:

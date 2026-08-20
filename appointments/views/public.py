@@ -566,12 +566,12 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
                 public_safe=True,
             )
 
+            # A data segue inteira para o template, que a escreve com o filtro
+            # `date`. `strftime` escrevia-a aqui, e escrevia-a sempre em inglês:
+            # usa a língua do sistema operativo do servidor, não a da página.
             week_days.append(
                 {
                     "date": current_date,
-                    "weekday": current_date.strftime("%a"),
-                    "day": current_date.strftime("%d"),
-                    "month": current_date.strftime("%b"),
                     "is_selected": current_date == selected_date,
                     "availability_status": availability_status,
                 }

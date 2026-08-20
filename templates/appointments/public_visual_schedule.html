@@ -193,9 +193,11 @@
                                 class="app-week-day {% if day.is_selected %}is-active{% endif %} {% if day.availability_status.is_fully_blocked %}is-fully-blocked{% endif %}"
                                 title="{{ day.availability_status.title }}"
                             >
-                                <span>{{ day.weekday }}</span>
-                                <strong>{{ day.day }}</strong>
-                                <small>{{ day.month }}</small>
+                                {# `capfirst` porque em português os nomes dos #}
+                                {# dias e dos meses são minúsculos.             #}
+                                <span>{{ day.date|date:"D"|capfirst }}</span>
+                                <strong>{{ day.date|date:"d" }}</strong>
+                                <small>{{ day.date|date:"M"|capfirst }}</small>
                                 {% if day.availability_status.is_fully_blocked %}
                                     <em>{% translate "Esgotado" %}</em>
                                 {% endif %}

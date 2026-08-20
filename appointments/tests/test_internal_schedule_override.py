@@ -143,7 +143,7 @@ class BookingOverABlockTests(InternalScheduleOverrideBase):
         super().setUp()
 
         self.block = ScheduleBlock.objects.create(
-            title="Formação",
+            notes="Formação",
             date=self.date,
             start_time=time(10, 0),
             end_time=time(12, 0),
@@ -326,7 +326,7 @@ class EncaixeIsVisibleTests(InternalScheduleOverrideBase):
 
     def test_it_appears_on_a_fully_blocked_day(self):
         ScheduleBlock.objects.create(
-            title="Férias",
+            notes="Férias",
             date=self.date,
             is_full_day=True,
             is_active=True,
@@ -342,7 +342,7 @@ class EncaixeIsVisibleTests(InternalScheduleOverrideBase):
     def test_a_fully_blocked_day_without_bookings_shows_no_grid(self):
         # O comportamento antigo mantém-se: a grelha continua escondida.
         ScheduleBlock.objects.create(
-            title="Férias",
+            notes="Férias",
             date=self.date,
             is_full_day=True,
             is_active=True,
@@ -352,7 +352,7 @@ class EncaixeIsVisibleTests(InternalScheduleOverrideBase):
 
     def test_a_booking_over_a_block_shows_the_booking(self):
         ScheduleBlock.objects.create(
-            title="Formação",
+            notes="Formação",
             date=self.date,
             start_time=time(10, 0),
             end_time=time(12, 0),
@@ -385,7 +385,7 @@ class PublicBookingIsUnaffectedTests(InternalScheduleOverrideBase):
 
     def test_the_public_cannot_book_over_a_block(self):
         ScheduleBlock.objects.create(
-            title="Formação",
+            notes="Formação",
             date=self.date,
             start_time=time(10, 0),
             end_time=time(12, 0),
@@ -416,7 +416,7 @@ class PublicBookingIsUnaffectedTests(InternalScheduleOverrideBase):
 
     def test_an_encaixe_inside_working_hours_takes_the_public_slot(self):
         ScheduleBlock.objects.create(
-            title="Formação",
+            notes="Formação",
             date=self.date,
             start_time=time(10, 0),
             end_time=time(12, 0),

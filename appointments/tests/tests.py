@@ -146,7 +146,7 @@ class AppointmentServiceTests(AppointmentTestSetupMixin, TestCase):
     def test_prevent_appointment_inside_schedule_block(self):
         # Ensure appointments inside blocked periods are blocked.
         ScheduleBlock.objects.create(
-            title="Lunch break",
+            notes="Lunch break",
             block_type=ScheduleBlock.BLOCK_TYPE_BREAK,
             date=self.appointment_date,
             start_time=time(12, 0),
@@ -611,7 +611,7 @@ class ScheduleBlockModelTests(TestCase):
     def test_schedule_block_without_time_and_not_full_day_is_invalid(self):
         # Ensure partial blocks require start and end time.
         block = ScheduleBlock(
-            title="Invalid block",
+            notes="Invalid block",
             block_type=ScheduleBlock.BLOCK_TYPE_OTHER,
             date=date(2026, 5, 4),
             is_full_day=False,
@@ -624,7 +624,7 @@ class ScheduleBlockModelTests(TestCase):
     def test_schedule_block_with_end_time_before_start_time_is_invalid(self):
         # Ensure block end time must be after start time.
         block = ScheduleBlock(
-            title="Invalid time block",
+            notes="Invalid time block",
             block_type=ScheduleBlock.BLOCK_TYPE_OTHER,
             date=date(2026, 5, 4),
             start_time=time(14, 0),
@@ -639,7 +639,7 @@ class ScheduleBlockModelTests(TestCase):
     def test_recurring_schedule_block_without_weekdays_is_invalid(self):
         # Ensure recurring blocks require selected weekdays.
         block = ScheduleBlock(
-            title="Recurring without weekdays",
+            notes="Recurring without weekdays",
             block_type=ScheduleBlock.BLOCK_TYPE_OTHER,
             date=date(2026, 5, 4),
             start_time=time(12, 0),
@@ -656,7 +656,7 @@ class ScheduleBlockModelTests(TestCase):
     def test_recurring_schedule_block_applies_to_correct_weekday(self):
         # Ensure recurring blocks apply only to selected weekdays.
         block = ScheduleBlock.objects.create(
-            title="Monday recurring block",
+            notes="Monday recurring block",
             block_type=ScheduleBlock.BLOCK_TYPE_BREAK,
             date=date(2026, 5, 4),
             start_time=time(12, 0),
@@ -676,7 +676,7 @@ class ScheduleBlockModelTests(TestCase):
     def test_recurring_schedule_block_does_not_apply_after_end_date(self):
         # Ensure recurring blocks stop after recurrence end date.
         block = ScheduleBlock.objects.create(
-            title="Temporary recurring block",
+            notes="Temporary recurring block",
             block_type=ScheduleBlock.BLOCK_TYPE_BREAK,
             date=date(2026, 5, 4),
             start_time=time(12, 0),
@@ -750,7 +750,7 @@ class PublicAvailableSlotsViewTests(AppointmentTestSetupMixin, TestCase):
     def test_available_slots_endpoint_hides_blocked_slot(self):
         # O endpoint devolve o horário bloqueado marcado como indisponível.
         ScheduleBlock.objects.create(
-            title="Lunch break",
+            notes="Lunch break",
             block_type=ScheduleBlock.BLOCK_TYPE_BREAK,
             date=self.appointment_date,
             start_time=time(12, 0),
@@ -1346,7 +1346,6 @@ class ScheduleBlockFormTests(TestCase):
         # Ensure recurring weekday checkboxes are saved as comma-separated values.
         form = ScheduleBlockForm(
             data={
-                "title": "Recurring break",
                 "block_type": ScheduleBlock.BLOCK_TYPE_BREAK,
                 "date": "2026-05-04",
                 "start_time": "12:00",
@@ -1370,7 +1369,6 @@ class ScheduleBlockFormTests(TestCase):
         # Ensure recurring blocks require at least one weekday.
         form = ScheduleBlockForm(
             data={
-                "title": "Invalid recurring break",
                 "block_type": ScheduleBlock.BLOCK_TYPE_BREAK,
                 "date": "2026-05-04",
                 "start_time": "12:00",
@@ -1865,7 +1863,7 @@ class PublicVisualScheduleAjaxTests(AppointmentTestSetupMixin, TestCase):
     def test_ajax_slots_endpoint_does_not_return_blocked_slot(self):
         # O horário bloqueado continua na resposta, marcado como indisponível.
         ScheduleBlock.objects.create(
-            title="Blocked period",
+            notes="Blocked period",
             block_type=ScheduleBlock.BLOCK_TYPE_BREAK,
             date=self.appointment_date,
             start_time=time(12, 0),

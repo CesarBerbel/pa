@@ -76,7 +76,7 @@ class PublicSlotGridTests(TestCase):
 
     def test_blocked_slot_is_kept_but_marked(self):
         ScheduleBlock.objects.create(
-            title="Almoço",
+            notes="Almoço",
             block_type=ScheduleBlock.BLOCK_TYPE_BREAK,
             date=self.selected_date,
             start_time=time(11, 0),

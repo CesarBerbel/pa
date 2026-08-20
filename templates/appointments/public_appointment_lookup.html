@@ -9,6 +9,11 @@
 <div class="row justify-content-center">
     <div class="col-12 col-lg-7">
 
+        {# A parte de procurar só aparece enquanto não há nada para mostrar.   #}
+        {# Com a marcação em cima da mesa — porque acabou de ser procurada, ou #}
+        {# porque se chegou aqui pelo link da mensagem — o formulário pedia    #}
+        {# outra vez o que já está no ecrã.                                    #}
+        {% if not appointment %}
         <div class="card shadow-sm border-0 mb-4">
             <div class="card-body p-4 text-center">
 
@@ -36,6 +41,7 @@
 
             </div>
         </div>
+        {% endif %}
 
         {% if appointment %}
             <div class="card shadow-sm border-0">
@@ -144,6 +150,12 @@
                             {% translate "Fazer nova marcação" %}
                         </a>
                     </div>
+
+                    <p class="text-center text-muted small mb-0 mt-3">
+                        <a href="{% url 'appointments:public_appointment_lookup' %}">
+                            {% translate "Consultar outra marcação" %}
+                        </a>
+                    </p>
 
                 </div>
             </div>

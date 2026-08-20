@@ -140,24 +140,26 @@ DEFAULT_MESSAGES = [
         "body_template": (
             "Olá {{ customer_name }}, a sua marcação de {{ service_name }}, "
             "de {{ appointment_date }} às {{ appointment_time }}, foi "
-            "cancelada e o horário ficou livre. A referência era "
+            "cancelada e o horário ficou livre. Motivo: "
+            "{{ cancellation_reason }}. A referência era "
             "{{ reference_code }}. Quando quiser remarcar, escolha um horário "
             "em {{ booking_link }} ou responda a esta mensagem — teremos todo "
             "o gosto em recebê-la."
         ),
         "meta_template_body": (
             "Olá {{1}}, a sua marcação de {{2}}, de {{3}} às {{4}}, foi "
-            "cancelada e o horário ficou livre. A referência era {{5}}. "
-            "Quando quiser remarcar, escolha um horário em {{6}} ou responda "
-            "a esta mensagem — teremos todo o gosto em recebê-la."
+            "cancelada e o horário ficou livre. Motivo: {{5}}. A referência "
+            "era {{6}}. Quando quiser remarcar, escolha um horário em {{7}} "
+            "ou responda a esta mensagem — teremos todo o gosto em recebê-la."
         ),
         "content_variables": {
             "1": "{{ customer_name }}",
             "2": "{{ service_name }}",
             "3": "{{ appointment_date }}",
             "4": "{{ appointment_time }}",
-            "5": "{{ reference_code }}",
-            "6": "{{ booking_link }}",
+            "5": "{{ cancellation_reason }}",
+            "6": "{{ reference_code }}",
+            "7": "{{ booking_link }}",
         },
     },
     {
@@ -165,22 +167,24 @@ DEFAULT_MESSAGES = [
         "audience": "professional",
         "body_template": (
             "Marcação cancelada: {{ customer_name }} — {{ service_name }}, "
-            "{{ appointment_date }} às {{ appointment_time }}. Contacto da "
-            "cliente: {{ customer_phone }}. Referência {{ reference_code }}. "
+            "{{ appointment_date }} às {{ appointment_time }}. Motivo: "
+            "{{ cancellation_reason }}. Contacto da cliente: "
+            "{{ customer_phone }}. Referência {{ reference_code }}. "
             "O horário voltou a ficar livre na agenda."
         ),
         "meta_template_body": (
-            "Marcação cancelada: {{1}} — {{2}}, {{3}} às {{4}}. Contacto da "
-            "cliente: {{5}}. Referência {{6}}. O horário voltou a ficar livre "
-            "na agenda."
+            "Marcação cancelada: {{1}} — {{2}}, {{3}} às {{4}}. Motivo: "
+            "{{5}}. Contacto da cliente: {{6}}. Referência {{7}}. O horário "
+            "voltou a ficar livre na agenda."
         ),
         "content_variables": {
             "1": "{{ customer_name }}",
             "2": "{{ service_name }}",
             "3": "{{ appointment_date }}",
             "4": "{{ appointment_time }}",
-            "5": "{{ customer_phone }}",
-            "6": "{{ reference_code }}",
+            "5": "{{ cancellation_reason }}",
+            "6": "{{ customer_phone }}",
+            "7": "{{ reference_code }}",
         },
     },
     {

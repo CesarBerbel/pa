@@ -114,10 +114,11 @@ class Service(models.Model):
         ServiceCategory,
         on_delete=models.PROTECT,
         related_name="services",
+        verbose_name="Categoria",
     )
 
-    name = models.CharField(max_length=120)
-    description = models.TextField(blank=True)
+    name = models.CharField(max_length=120, verbose_name="Nome")
+    description = models.TextField(blank=True, verbose_name="Descrição")
 
     name_en = models.CharField(
         max_length=120,
@@ -137,6 +138,7 @@ class Service(models.Model):
         validators=[
             MinValueValidator(1),
         ],
+        verbose_name="Duração (minutos)",
     )
 
     price = models.DecimalField(
@@ -145,9 +147,10 @@ class Service(models.Model):
         validators=[
             MinValueValidator(Decimal("0.00")),
         ],
+        verbose_name="Preço",
     )
 
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True, verbose_name="Ativo")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -185,12 +188,13 @@ class Service(models.Model):
 class Customer(models.Model):
     # Represents a customer who can book appointments
 
-    full_name = models.CharField(max_length=255)
-    email = models.EmailField(blank=True)
-    phone = models.CharField(max_length=30)
+    full_name = models.CharField(max_length=255, verbose_name="Nome completo")
+    email = models.EmailField(blank=True, verbose_name="Email")
+    phone = models.CharField(max_length=30, verbose_name="Telefone")
 
     is_guest = models.BooleanField(
         default=False,
+        verbose_name="Sem conta no site",
     )
 
     user = models.OneToOneField(
@@ -199,6 +203,7 @@ class Customer(models.Model):
         null=True,
         blank=True,
         related_name="customer_profile",
+        verbose_name="Conta de utilizador",
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -206,6 +211,8 @@ class Customer(models.Model):
 
     class Meta:
         ordering = ["full_name"]
+        verbose_name = "Cliente"
+        verbose_name_plural = "Clientes"
 
     def __str__(self):
         return self.full_name
@@ -587,7 +594,11 @@ class BusinessHour(models.Model):
         (6, "Domingo"),
     ]
 
-    weekday = models.IntegerField(choices=WEEKDAY_CHOICES, unique=True)
+    weekday = models.IntegerField(
+        choices=WEEKDAY_CHOICES,
+        unique=True,
+        verbose_name="Dia da semana",
+    )
     start_time = models.TimeField(verbose_name="Hora inicial")
     end_time = models.TimeField(verbose_name="Hora final")
 
@@ -607,10 +618,12 @@ class BusinessHour(models.Model):
         verbose_name="Hora final (tarde)",
     )
 
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True, verbose_name="Ativo")
 
     class Meta:
         ordering = ["weekday"]
+        verbose_name = "Horário de funcionamento"
+        verbose_name_plural = "Horários de funcionamento"
 
     def __str__(self):
         periodos = " e ".join(f"{inicio} às {fim}" for inicio, fim in self.periods)
@@ -723,38 +736,65 @@ class ScheduleBlock(models.Model):
         ("6", "Domingo"),
     ]
 
-    title = models.CharField(max_length=120)
     block_type = models.CharField(
         max_length=20,
         choices=BLOCK_TYPE_CHOICES,
         default=BLOCK_TYPE_OTHER,
+        verbose_name="Tipo",
     )
     date = models.DateField(
-        help_text="Use this date for a single block or as the recurrence start date."
+        verbose_name="Data",
+        help_text=(
+            "Num bloqueio único, o dia. Num bloqueio que se repete, o dia em "
+            "que a repetição começa."
+        ),
     )
-    start_time = models.TimeField(blank=True, null=True)
-    end_time = models.TimeField(blank=True, null=True)
-    is_full_day = models.BooleanField(default=False)
+    start_time = models.TimeField(blank=True, null=True, verbose_name="Hora de início")
+    end_time = models.TimeField(blank=True, null=True, verbose_name="Hora de fim")
+    is_full_day = models.BooleanField(default=False, verbose_name="Dia inteiro")
 
-    is_recurring = models.BooleanField(default=False)
+    is_recurring = models.BooleanField(default=False, verbose_name="Repete-se")
     recurring_weekdays = models.CharField(
         max_length=20,
         blank=True,
-        help_text="Comma-separated weekdays. Example: 0,1,2,3,4",
+        verbose_name="Dias da semana da repetição",
+        help_text="Dias separados por vírgula. Exemplo: 0,1,2,3,4",
     )
-    recurrence_end_date = models.DateField(blank=True, null=True)
+    recurrence_end_date = models.DateField(
+        blank=True,
+        null=True,
+        verbose_name="Repete até",
+    )
 
-    is_active = models.BooleanField(default=True)
-    notes = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True, verbose_name="Ativo")
+    notes = models.TextField(blank=True, verbose_name="Observações")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ["date", "start_time"]
+        verbose_name = "Bloqueio de agenda"
+        verbose_name_plural = "Bloqueios de agenda"
 
     def __str__(self):
-        return f"{self.title} - {self.date}"
+        return f"{self.label} - {self.date}"
+
+    @property
+    def label(self):
+        """Como o bloqueio se apresenta num ecrã.
+
+        Substituiu o campo de título, que pedia à mão aquilo que o tipo já
+        dizia. Quem quiser precisar mais escreve nas observações, e é a
+        primeira linha delas que aparece.
+        """
+
+        primeira_linha = (self.notes or "").strip().splitlines()
+
+        if primeira_linha:
+            return primeira_linha[0][:120]
+
+        return self.get_block_type_display()
 
     def get_recurring_weekday_list(self):
         # Returns selected recurring weekdays as a clean list
@@ -918,36 +958,48 @@ class Appointment(models.Model):
         unique=True,
         blank=True,
         editable=False,
+        verbose_name="Código da marcação",
     )
 
     customer = models.ForeignKey(
         Customer,
         on_delete=models.PROTECT,
         related_name="appointments",
+        verbose_name="Cliente",
     )
     service = models.ForeignKey(
         Service,
         on_delete=models.PROTECT,
         related_name="appointments",
+        verbose_name="Serviço",
     )
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
         related_name="created_appointments",
+        verbose_name="Criada por",
     )
 
-    date = models.DateField()
-    start_time = models.TimeField()
+    date = models.DateField(verbose_name="Data")
+    start_time = models.TimeField(verbose_name="Hora de início")
 
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
         default=STATUS_SCHEDULED,
+        verbose_name="Estado",
     )
 
-    notes = models.TextField(blank=True)
-    cancellation_reason = models.TextField(blank=True)
-    cancelled_at = models.DateTimeField(blank=True, null=True)
+    notes = models.TextField(blank=True, verbose_name="Observações")
+    cancellation_reason = models.TextField(
+        blank=True,
+        verbose_name="Motivo do cancelamento",
+    )
+    cancelled_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name="Cancelada em",
+    )
 
     # De onde veio a marcação. Não dá para deduzir do `created_by`: uma
     # marcação feita no site é gravada em nome do primeiro administrador, e
@@ -1005,6 +1057,8 @@ class Appointment(models.Model):
 
     class Meta:
         ordering = ["date", "start_time"]
+        verbose_name = "Marcação"
+        verbose_name_plural = "Marcações"
         constraints = [
             # Database-level guard against double booking. Application validation
             # can be bypassed by a concurrent request that passes availability

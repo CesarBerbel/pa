@@ -4,7 +4,6 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from appointments.blocking_services import ScheduleBlockingService
 from appointments.models import Appointment, BusinessHour, Customer, ScheduleBlock
 from appointments.tests.factories import create_test_service
 
@@ -45,23 +44,24 @@ class VisualSlotBlockingTests(TestCase):
         self.client.force_login(self.admin_user)
         self.url = reverse("appointments:visual_schedule_block")
 
-    def block(self, slots, title=""):
+    def block(self, slots, notas=""):
         return self.client.post(
             self.url,
             data={
                 "date": self.selected_date.isoformat(),
                 "slots": slots,
-                "title": title,
+                "notes": notas,
             },
         )
 
     def test_contiguous_slots_become_a_single_block(self):
-        self.block(["14:00", "14:30", "15:00"], title="Almoço alargado")
+        self.block(["14:00", "14:30", "15:00"], notas="Almoço alargado")
 
         blocks = list(ScheduleBlock.objects.all())
 
         self.assertEqual(len(blocks), 1)
-        self.assertEqual(blocks[0].title, "Almoço alargado")
+        self.assertEqual(blocks[0].notes, "Almoço alargado")
+        self.assertEqual(blocks[0].label, "Almoço alargado")
         self.assertEqual(blocks[0].start_time, time(14, 0))
         self.assertEqual(blocks[0].end_time, time(15, 30))
         self.assertEqual(blocks[0].date, self.selected_date)
@@ -76,13 +76,15 @@ class VisualSlotBlockingTests(TestCase):
         self.assertEqual(blocks[0].end_time, time(10, 30))
         self.assertEqual(blocks[1].start_time, time(16, 0))
 
-    def test_default_title_is_used_when_left_empty(self):
+    def test_without_a_reason_the_block_shows_its_type(self):
+        # O motivo é opcional. Sem ele, o que aparece nos ecrãs é o tipo do
+        # bloqueio, que já diz o suficiente.
         self.block(["11:00"])
 
-        self.assertEqual(
-            ScheduleBlock.objects.get().title,
-            ScheduleBlockingService.DEFAULT_TITLE,
-        )
+        bloqueio = ScheduleBlock.objects.get()
+
+        self.assertEqual(bloqueio.notes, "")
+        self.assertEqual(bloqueio.label, bloqueio.get_block_type_display())
 
     def test_blocked_slots_stop_appearing_as_available(self):
         from appointments.availability import AvailabilityService

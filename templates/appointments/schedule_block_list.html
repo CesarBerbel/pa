@@ -32,7 +32,6 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead>
                         <tr>
-                            <th>Título</th>
                             <th>Tipo</th>
                             <th>Data</th>
                             <th>Horário</th>
@@ -44,8 +43,6 @@
                     <tbody>
                         {% for block in blocks %}
                             <tr>
-                                <td>{{ block.title }}</td>
-
                                 <td>
                                     <span class="badge bg-secondary">
                                         {{ block.get_block_type_display }}
@@ -88,7 +85,7 @@
                                             data-bs-toggle="tooltip"
                                             data-bs-placement="top"
                                             data-bs-title="Editar bloqueio"
-                                            aria-label="Editar bloqueio {{ block.title }}"
+                                            aria-label="Editar bloqueio de {{ block.date|date:'d/m/Y' }}"
                                         >
                                             <i class="bi bi-pencil"></i>
                                         </a>
@@ -100,7 +97,7 @@
                                             data-bs-toggle="tooltip"
                                             data-bs-placement="top"
                                             data-bs-title="Eliminar bloqueio"
-                                            aria-label="Eliminar bloqueio {{ block.title }}"
+                                            aria-label="Eliminar bloqueio de {{ block.date|date:'d/m/Y' }}"
                                         >
                                             <i class="bi bi-trash"></i>
                                         </a>

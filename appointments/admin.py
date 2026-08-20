@@ -195,7 +195,7 @@ class AppointmentAdmin(admin.ModelAdmin):
 @admin.register(ScheduleBlock)
 class ScheduleBlockAdmin(admin.ModelAdmin):
     list_display = (
-        "title",
+        "block_type",
         "date",
         "start_time",
         "end_time",
@@ -211,7 +211,7 @@ class ScheduleBlockAdmin(admin.ModelAdmin):
         "block_type",
     )
 
-    search_fields = ("title",)
+    search_fields = ("notes",)
 
 
 @admin.register(BusinessHour)

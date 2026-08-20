@@ -60,7 +60,7 @@ class BlockAndAppointmentBase(TestCase):
 
     def bloqueio(self, **extra):
         dados = {
-            "title": "Férias",
+            "block_type": ScheduleBlock.BLOCK_TYPE_VACATION,
             "date": self.segunda,
             "is_full_day": True,
             "is_active": True,
@@ -71,7 +71,6 @@ class BlockAndAppointmentBase(TestCase):
 
     def criar_pelo_formulario(self, **extra):
         dados = {
-            "title": "Férias",
             "block_type": ScheduleBlock.BLOCK_TYPE_VACATION,
             "date": self.segunda.strftime("%Y-%m-%d"),
             "start_time": "",
@@ -104,7 +103,13 @@ class BlockingADayWithAppointmentsTests(BlockAndAppointmentBase):
         resposta = self.criar_pelo_formulario()
 
         self.assertEqual(resposta.status_code, 200)
-        self.assertEqual(ScheduleBlock.objects.filter(title="Férias").count(), 0)
+        self.assertEqual(
+            ScheduleBlock.objects.filter(
+                block_type=ScheduleBlock.BLOCK_TYPE_VACATION,
+                date=self.segunda,
+            ).count(),
+            0,
+        )
 
     def test_the_message_says_who_is_booked(self):
         # Sem o nome e a hora, quem bloqueia não sabe o que tem de desmarcar.
@@ -220,7 +225,7 @@ class EncaixeOverABlockedDayTests(BlockAndAppointmentBase):
         super().setUp()
 
         self.bloco = ScheduleBlock.objects.create(
-            title="Férias",
+            block_type=ScheduleBlock.BLOCK_TYPE_VACATION,
             date=self.segunda,
             is_full_day=True,
             is_active=True,
@@ -287,19 +292,19 @@ class EncaixeOverABlockedDayTests(BlockAndAppointmentBase):
     def test_the_block_can_still_be_edited_afterwards(self):
         """O encaixe não pode trancar o bloqueio que o acolheu.
 
-        Se contasse como conflito, mudar o título do bloqueio passaria a ser
+        Se contasse como conflito, mudar as notas do bloqueio passaria a ser
         impossível a partir do momento em que alguém fosse encaixado nele.
         """
 
         self.marcar_pelo_formulario()
 
-        self.bloco.title = "Férias de verão"
+        self.bloco.notes = "Férias de verão"
         self.bloco.full_clean()
         self.bloco.save()
 
         self.bloco.refresh_from_db()
 
-        self.assertEqual(self.bloco.title, "Férias de verão")
+        self.assertEqual(self.bloco.notes, "Férias de verão")
 
     def test_a_normal_appointment_added_later_does_lock_the_block(self):
         # Só o encaixe é dispensado. Uma marcação normal no dia continua a

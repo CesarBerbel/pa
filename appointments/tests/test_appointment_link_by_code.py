@@ -102,10 +102,25 @@ class AppointmentLinkByCodeTests(TestCase):
         self.assertEqual(resposta.status_code, 200)
         self.assertIsNone(resposta.context.get("appointment"))
 
-    def test_the_page_offers_the_lookup_form(self):
-        resposta = self.client.get(self.url)
+    def test_the_lookup_form_gets_out_of_the_way(self):
+        # Chegando aqui pelo link da mensagem, a marcação está no ecrã: pedir
+        # o código outra vez era pedir o que já se vê.
+        html = self.client.get(self.url).content.decode()
 
-        self.assertIn("form", resposta.context)
+        self.assertNotIn("Consulte diretamente pelo código", html)
+        self.assertIn(self.appointment.reference_code, html)
+
+    def test_an_unknown_code_still_offers_the_form(self):
+        # Aqui não há nada para mostrar, e o formulário é a saída: permite
+        # tentar outro código em vez de deixar a pessoa num beco.
+        url = reverse(
+            "appointments:public_appointment_by_code",
+            kwargs={"reference_code": "AGD-XXXXXX"},
+        )
+
+        html = self.client.get(url).content.decode()
+
+        self.assertIn("Consulte diretamente pelo código", html)
 
 
 class WhatsAppLinkContextTests(TestCase):

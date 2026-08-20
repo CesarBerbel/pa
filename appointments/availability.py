@@ -259,7 +259,7 @@ class AvailabilityService:
             block_end = block.get_end_datetime_for_date(selected_date)
 
             if cls.overlaps(inicio, fim, block_start, block_end):
-                return f"Este horário está bloqueado: {block.title}."
+                return f"Este horário está bloqueado: {block.label}."
 
         return None
 
@@ -365,7 +365,7 @@ class AvailabilityService:
                             "title": "Dia totalmente bloqueado",
                             "message": "Esta data está indisponível para marcações.",
                             "icon": "bi-slash-circle",
-                            "block_title": block.title,
+                            "block_title": block.label,
                             "block_notes": block.notes,
                         }
                     )

@@ -91,7 +91,7 @@
 
                 <div class="internal-full-day-block-main">
                     <span class="luxury-eyebrow">Dia inteiro bloqueado</span>
-                    <h2>{{ full_day_block.title }}</h2>
+                    <h2>{{ full_day_block.label }}</h2>
 
                     <p>
                         A agenda desta data está bloqueada durante todo o horário de funcionamento.
@@ -159,7 +159,7 @@
                                 <div class="calendar-event calendar-event-block" style="min-height: {{ slot.block_height }}px;">
                                     <div class="calendar-event-main">
                                         <span class="calendar-event-kicker">Bloqueio</span>
-                                        <h2>{{ slot.block.title }}</h2>
+                                        <h2>{{ slot.block.label }}</h2>
 
                                         <p>
                                             {{ slot.block.get_block_type_display }}
@@ -354,7 +354,7 @@
 
                 <input
                     type="text"
-                    name="title"
+                    name="notes"
                     class="form-control form-control-sm"
                     maxlength="120"
                     placeholder="Motivo (opcional)"
