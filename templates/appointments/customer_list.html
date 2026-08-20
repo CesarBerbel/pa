@@ -12,6 +12,62 @@
 </div>
 
 <style>
+    .customer-card {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        gap: 14px;
+        padding: 20px;
+        border: 1px solid #f0e8ec;
+        border-radius: 18px;
+        background: #ffffff;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.05);
+    }
+
+    .customer-card-name {
+        font-size: 16px;
+        font-weight: 700;
+        color: #3f3138;
+        line-height: 1.3;
+        margin: 0;
+    }
+
+    .customer-card-contacts {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 14px;
+        /* Empurra as ações para o fundo, para os cartões da mesma linha as
+           alinharem mesmo quando um deles não tem email. */
+        flex: 1 1 auto;
+    }
+
+    .customer-card-contacts a,
+    .customer-card-contacts span {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: #6c5962;
+        text-decoration: none;
+        word-break: break-word;
+    }
+
+    .customer-card-contacts a:hover,
+    .customer-card-contacts a:focus-visible {
+        text-decoration: underline;
+    }
+
+    .customer-card-whatsapp {
+        color: #128c7e !important;
+        font-weight: 600;
+    }
+
+    .customer-card-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
     .customer-action-button {
         width: 38px;
         height: 38px;
@@ -25,85 +81,106 @@
     }
 </style>
 
-<div class="card shadow-sm border-0">
-    <div class="card-body">
-        {% if customers %}
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead>
-                        <tr>
-                            <th>Nome</th>
-                            <th>Email</th>
-                            <th>Telefone</th>
-                            <th class="text-end">Ações</th>
-                        </tr>
-                    </thead>
+{% if customers %}
+    <div class="row g-3">
+        {% for customer in customers %}
+            <div class="col-12 col-md-6 col-xl-4">
+                <div class="customer-card">
 
-                    <tbody>
-                        {% for customer in customers %}
-                            <tr>
-                                <td>
-                                    {{ customer.full_name }}
+                    <div>
+                        <p class="customer-card-name">
+                            {{ customer.full_name }}
+                        </p>
 
-                                    {# Os avisos são informação clínica: só #}
-                                    {# aparecem a quem tem esse nível de acesso. #}
-                                    {% if user.has_clinical_access %}
-                                        {% for alerta in customer.patient_record.risk_alerts %}
-                                            <span class="badge text-bg-warning ms-1">{{ alerta }}</span>
-                                        {% endfor %}
-                                    {% endif %}
-                                </td>
-                                <td>{{ customer.email|default:"-" }}</td>
-                                <td>{{ customer.phone }}</td>
+                        {# Os avisos são informação clínica: só #}
+                        {# aparecem a quem tem esse nível de acesso. #}
+                        {% if user.has_clinical_access %}
+                            {% for alerta in customer.patient_record.risk_alerts %}
+                                <span class="badge text-bg-warning mt-1">{{ alerta }}</span>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
 
-                                <td class="text-end">
-                                    <div class="d-inline-flex flex-wrap justify-content-end gap-2">
+                    <div class="customer-card-contacts">
+                        {% if customer.whatsapp_url %}
+                            <a
+                                href="{{ customer.whatsapp_url }}"
+                                class="customer-card-whatsapp"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label="Falar com {{ customer.full_name }} pelo WhatsApp"
+                            >
+                                <i class="bi bi-whatsapp" aria-hidden="true"></i>
+                                {{ customer.phone }}
+                            </a>
+                        {% elif customer.phone %}
+                            {# Um número que não dá dígitos nenhuns não abre #}
+                            {# conversa. Fica à vista à mesma, sem prometer. #}
+                            <span>
+                                <i class="bi bi-telephone" aria-hidden="true"></i>
+                                {{ customer.phone }}
+                            </span>
+                        {% endif %}
 
-                                        {% if user.has_clinical_access %}
-                                        <a
-                                            href="{% url 'appointments:patient_record' customer.pk %}"
-                                            class="btn btn-sm customer-action-button d-inline-flex align-items-center justify-content-center {% if customer.patient_record.is_filled %}btn-outline-success{% else %}btn-outline-secondary{% endif %}"
-                                            data-bs-toggle="tooltip"
-                                            data-bs-placement="top"
-                                            data-bs-title="{% if customer.patient_record.is_filled %}Ver ficha de anamnese{% else %}Preencher ficha de anamnese{% endif %}"
-                                            aria-label="Ficha de anamnese de {{ customer.full_name }}"
-                                        >
-                                            <i class="bi bi-clipboard2-pulse"></i>
-                                        </a>
-                                        {% endif %}
+                        {% if customer.email %}
+                            <a href="mailto:{{ customer.email }}">
+                                <i class="bi bi-envelope" aria-hidden="true"></i>
+                                {{ customer.email }}
+                            </a>
+                        {% else %}
+                            <span class="text-muted">
+                                <i class="bi bi-envelope" aria-hidden="true"></i>
+                                Sem email
+                            </span>
+                        {% endif %}
+                    </div>
 
-                                        <a
-                                            href="{% url 'appointments:customer_update' customer.pk %}"
-                                            class="btn btn-outline-primary btn-sm customer-action-button d-inline-flex align-items-center justify-content-center"
-                                            data-bs-toggle="tooltip"
-                                            data-bs-placement="top"
-                                            data-bs-title="Editar cliente"
-                                            aria-label="Editar cliente {{ customer.full_name }}"
-                                        >
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
+                    <div class="customer-card-actions">
+                        {% if user.has_clinical_access %}
+                            <a
+                                href="{% url 'appointments:patient_record' customer.pk %}"
+                                class="btn btn-sm customer-action-button d-inline-flex align-items-center justify-content-center {% if customer.patient_record.is_filled %}btn-outline-success{% else %}btn-outline-secondary{% endif %}"
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="top"
+                                data-bs-title="{% if customer.patient_record.is_filled %}Ver ficha de anamnese{% else %}Preencher ficha de anamnese{% endif %}"
+                                aria-label="Ficha de anamnese de {{ customer.full_name }}"
+                            >
+                                <i class="bi bi-clipboard2-pulse"></i>
+                            </a>
+                        {% endif %}
 
-                                        <a
-                                            href="{% url 'appointments:customer_delete' customer.pk %}"
-                                            class="btn btn-outline-danger btn-sm customer-action-button d-inline-flex align-items-center justify-content-center"
-                                            data-bs-toggle="tooltip"
-                                            data-bs-placement="top"
-                                            data-bs-title="Eliminar cliente"
-                                            aria-label="Eliminar cliente {{ customer.full_name }}"
-                                        >
-                                            <i class="bi bi-trash"></i>
-                                        </a>
+                        <a
+                            href="{% url 'appointments:customer_update' customer.pk %}"
+                            class="btn btn-outline-primary btn-sm customer-action-button d-inline-flex align-items-center justify-content-center"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="top"
+                            data-bs-title="Editar cliente"
+                            aria-label="Editar cliente {{ customer.full_name }}"
+                        >
+                            <i class="bi bi-pencil"></i>
+                        </a>
 
-                                    </div>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                        <a
+                            href="{% url 'appointments:customer_delete' customer.pk %}"
+                            class="btn btn-outline-danger btn-sm customer-action-button d-inline-flex align-items-center justify-content-center"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="top"
+                            data-bs-title="Eliminar cliente"
+                            aria-label="Eliminar cliente {{ customer.full_name }}"
+                        >
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </div>
+
+                </div>
             </div>
-        {% else %}
-            <p class="mb-0">Nenhum cliente registado.</p>
-        {% endif %}
+        {% endfor %}
     </div>
-</div>
+{% else %}
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <p class="mb-0">Nenhum cliente registado.</p>
+        </div>
+    </div>
+{% endif %}
 {% endblock %}
