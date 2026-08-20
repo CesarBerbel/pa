@@ -172,26 +172,43 @@ class AppointmentCancellationFlowTests(TestCase):
         self.assertContains(response, "Motivo do cancelamento")
         self.assertContains(response, self.appointment.reference_code)
 
-    def test_internal_cancel_post_cancels_with_reason(self):
-        # Ensure staff can cancel internally only when a reason is submitted.
+    def cancelar_pela_area_interna(self, **extra):
         client = Client()
         client.force_login(self.superuser)
 
-        reason = "Cancelamento feito pela equipa após contacto telefónico."
-
-        url = reverse(
-            "appointments:appointment_cancel",
-            kwargs={"pk": self.appointment.pk},
-        )
+        dados = {
+            "cancellation_reason": (
+                "Cancelamento feito pela equipa após contacto telefónico."
+            )
+        }
+        dados.update(extra)
 
         with self.captureOnCommitCallbacks(execute=True):
-            response = client.post(
-                url,
-                data={
-                    "cancellation_reason": reason,
-                },
+            return client.post(
+                reverse(
+                    "appointments:appointment_cancel",
+                    kwargs={"pk": self.appointment.pk},
+                ),
+                data=dados,
                 follow=True,
             )
+
+    def test_internal_cancel_without_notifying_stays_quiet(self):
+        # A escolha por omissão é o silêncio: sem JavaScript o campo vai vazio,
+        # e a marcação é cancelada à mesma. O que se perde é o aviso.
+        response = self.cancelar_pela_area_interna()
+
+        self.appointment.refresh_from_db()
+
+        self.assertEqual(self.appointment.status, Appointment.STATUS_CANCELLED)
+        self.assertEqual(mail.outbox, [])
+        self.assertContains(response, "Não foi enviada mensagem")
+
+    def test_internal_cancel_post_cancels_with_reason(self):
+        # Ensure staff can cancel internally only when a reason is submitted.
+        reason = "Cancelamento feito pela equipa após contacto telefónico."
+
+        response = self.cancelar_pela_area_interna(send_message="1")
 
         self.assertEqual(response.status_code, 200)
 
@@ -201,6 +218,35 @@ class AppointmentCancellationFlowTests(TestCase):
         self.assertEqual(self.appointment.cancellation_reason, reason)
         self.assertIsNotNone(self.appointment.cancelled_at)
         self.assertIn(reason, self.email_para(self.appointment.customer.email).body)
+
+    def test_the_internal_screen_asks_before_notifying(self):
+        client = Client()
+        client.force_login(self.superuser)
+
+        html = client.get(
+            reverse(
+                "appointments:appointment_cancel",
+                kwargs={"pk": self.appointment.pk},
+            )
+        ).content.decode()
+
+        self.assertIn("sendMessageChoiceModal", html)
+        self.assertIn('name="send_message"', html)
+
+    def test_a_cancellation_from_the_site_always_notifies(self):
+        # Ali ninguém combinou nada com a cliente: a pergunta não existe, e a
+        # mensagem tem de sair.
+        with self.captureOnCommitCallbacks(execute=True):
+            Client().post(
+                reverse(
+                    "appointments:public_cancel_by_code",
+                    kwargs={"reference_code": self.appointment.reference_code},
+                ),
+                data={"cancellation_reason": "Não consigo comparecer nesta data."},
+                follow=True,
+            )
+
+        self.assertTrue(mail.outbox)
 
     def test_internal_cancel_post_rejects_short_reason(self):
         # Ensure staff cannot cancel with an invalid short reason.

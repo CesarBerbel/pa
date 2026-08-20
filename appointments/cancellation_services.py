@@ -27,12 +27,25 @@ class AppointmentCancellationService:
     # Centralizes all appointment cancellation business rules.
 
     @staticmethod
-    def cancel(appointment, user=None, cancellation_reason="", source=None):
-        # Cancel an appointment only when business rules allow it.
-        #
-        # `source` diz se o cancelamento partiu do site ou da área interna. Sem
-        # isso, um cancelamento feito pela cliente com o código ficava
-        # registado como se tivesse sido a equipa a desmarcar.
+    def cancel(
+        appointment,
+        user=None,
+        cancellation_reason="",
+        source=None,
+        send_message=True,
+    ):
+        """Cancela a marcação, se as regras o permitirem.
+
+        `source` diz se o cancelamento partiu do site ou da área interna. Sem
+        isso, um cancelamento feito pela cliente com o código ficava registado
+        como se tivesse sido a equipa a desmarcar.
+
+        `send_message` responde à pergunta feita no ecrã interno. Com ela em
+        falso, a marcação é cancelada em silêncio — é para o caso de já se ter
+        falado com a cliente, que é como a maioria dos cancelamentos acontece.
+        Vem ligado por omissão porque o cancelamento pelo site tem sempre de
+        avisar: aí ninguém combinou nada.
+        """
         if not appointment:
             return CancellationResult(
                 success=False,
@@ -101,26 +114,35 @@ class AppointmentCancellationService:
             ),
         )
 
-        deliver_after_commit(
-            send_appointment_cancelled_email,
-            appointment=appointment,
-            cancellation_reason=cancellation_reason,
-        )
+        if send_message:
+            deliver_after_commit(
+                send_appointment_cancelled_email,
+                appointment=appointment,
+                cancellation_reason=cancellation_reason,
+            )
 
-        deliver_after_commit(
-            notify_whatsapp,
-            appointment,
-            WhatsAppEventSetting.EVENT_APPOINTMENT_CANCELLED,
-        )
+            deliver_after_commit(
+                notify_whatsapp,
+                appointment,
+                WhatsAppEventSetting.EVENT_APPOINTMENT_CANCELLED,
+            )
 
-        # Um horário que vaga é um horário que se pode voltar a oferecer. O
-        # aviso vale sobretudo quando o cancelamento vem do site, fora de horas.
-        deliver_after_commit(
-            send_professional_notification_email,
-            appointment,
-            EmailEventSetting.EVENT_APPOINTMENT_CANCELLED,
-            "appointment_cancelled_professional",
-        )
+            # Um horário que vaga é um horário que se pode voltar a oferecer. O
+            # aviso vale sobretudo quando o cancelamento vem do site, fora de
+            # horas.
+            deliver_after_commit(
+                send_professional_notification_email,
+                appointment,
+                EmailEventSetting.EVENT_APPOINTMENT_CANCELLED,
+                "appointment_cancelled_professional",
+            )
+
+        if not send_message:
+            return CancellationResult(
+                success=True,
+                message="Marcação cancelada. Não foi enviada mensagem à cliente.",
+                appointment=appointment,
+            )
 
         return CancellationResult(
             success=True,

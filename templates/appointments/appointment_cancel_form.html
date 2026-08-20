@@ -46,8 +46,20 @@
                     </p>
                 </div>
 
-                <form method="post">
+                {# A pergunta é a mesma dos outros ecrãs: cancelar e avisar a #}
+                {# cliente são decisões separadas. Na maior parte dos          #}
+                {# cancelamentos já se falou com ela ao telefone.              #}
+                <form
+                    method="post"
+                    data-ask-send-message
+                    data-send-field="send_message"
+                    data-choice-title="Avisar a cliente do cancelamento?"
+                    data-choice-text="A marcação é cancelada de qualquer forma e o horário volta a ficar livre. O que esta escolha decide é se sai a mensagem de cancelamento, com o motivo indicado acima."
+                    data-choice-yes="Cancelar e avisar"
+                    data-choice-no="Cancelar sem avisar"
+                >
                     {% csrf_token %}
+                    <input type="hidden" name="send_message" value="">
 
                     {{ form|crispy }}
 
@@ -67,4 +79,6 @@
 
     </div>
 </div>
+
+{% include "appointments/_send_message_choice.html" %}
 {% endblock %}

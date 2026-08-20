@@ -367,6 +367,7 @@ class AppointmentCancelView(InternalAreaRequiredMixin, UpdateView):
             appointment=appointment,
             user=self.request.user,
             cancellation_reason=form.cleaned_data["cancellation_reason"],
+            send_message=wants_to_notify(self.request),
         )
 
         if result.success:
