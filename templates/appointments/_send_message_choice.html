@@ -15,7 +15,18 @@
                     Avisar a cliente?
                 </h2>
 
-                <p class="text-muted mb-4" data-choice-text></p>
+                <p class="text-muted mb-3" data-choice-text></p>
+
+                {# O que a cliente receberia. Vem do servidor quando a janela  #}
+                {# abre, e não com a página: numa lista de oito marcações,     #}
+                {# seriam oito pré-visualizações que ninguém pediu.            #}
+                <div data-choice-preview hidden>
+                    <h3 class="text-uppercase text-muted small mb-2">
+                        O que a cliente recebe
+                    </h3>
+
+                    <div class="send-message-preview mb-3" data-preview-body></div>
+                </div>
 
                 <div class="d-grid gap-2">
                     <button type="button" class="btn btn-primary" data-send-choice="1">
@@ -35,6 +46,52 @@
     </div>
 </div>
 
+<style>
+    .send-message-preview {
+        max-height: 260px;
+        overflow-y: auto;
+        border: 1px solid #f0e8ec;
+        border-radius: 12px;
+        background: #faf7f8;
+        padding: 12px 14px;
+    }
+
+    .send-message-preview-item + .send-message-preview-item {
+        border-top: 1px solid #eadde3;
+        margin-top: 12px;
+        padding-top: 12px;
+    }
+
+    .send-message-preview-kicker {
+        display: block;
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #8b5e66;
+        font-weight: 700;
+    }
+
+    .send-message-preview-subject {
+        font-weight: 600;
+        color: #3f3138;
+    }
+
+    .send-message-preview-body {
+        /* A mensagem tem parágrafos e quebras que fazem parte dela: colapsá-las
+           mostraria um texto diferente do que sai. */
+        white-space: pre-wrap;
+        font-size: 13px;
+        color: #5b4a52;
+        margin: 4px 0 0;
+    }
+
+    .send-message-preview-note {
+        font-size: 13px;
+        color: #8a6d1f;
+        margin: 0;
+    }
+</style>
+
 <script>
     // O `bootstrap` global só existe depois dos <script> do base.html, que vêm
     // abaixo deste bloco de conteúdo.
@@ -50,7 +107,135 @@
         var titulo = janela.querySelector("[data-choice-title]");
         var texto = janela.querySelector("[data-choice-text]");
         var botoes = janela.querySelectorAll("[data-send-choice]");
+        var caixaPrevia = janela.querySelector("[data-choice-preview]");
+        var corpoPrevia = janela.querySelector("[data-preview-body]");
         var pendente = null;
+        var pedidoPrevia = 0;
+
+        function escapar(valor) {
+            var caixa = document.createElement("div");
+            caixa.textContent = valor || "";
+            return caixa.innerHTML;
+        }
+
+        function desenharPrevia(dados) {
+            var partes = [];
+
+            (dados.emails || []).forEach(function (email) {
+                partes.push(
+                    '<div class="send-message-preview-item">' +
+                        '<span class="send-message-preview-kicker">Email para ' +
+                        escapar((email.to || []).join(", ")) +
+                        "</span>" +
+                        '<div class="send-message-preview-subject">' +
+                        escapar(email.subject) +
+                        "</div>" +
+                        '<p class="send-message-preview-body">' +
+                        escapar(email.body) +
+                        "</p>" +
+                        "</div>"
+                );
+            });
+
+            (dados.whatsapp || []).forEach(function (mensagem) {
+                partes.push(
+                    '<div class="send-message-preview-item">' +
+                        '<span class="send-message-preview-kicker">WhatsApp (' +
+                        escapar(mensagem.audience) +
+                        ") para " +
+                        escapar((mensagem.to || []).join(", ")) +
+                        "</span>" +
+                        '<p class="send-message-preview-body">' +
+                        escapar(mensagem.body) +
+                        "</p>" +
+                        "</div>"
+                );
+            });
+
+            (dados.notes || []).forEach(function (nota) {
+                partes.push(
+                    '<div class="send-message-preview-item">' +
+                        '<p class="send-message-preview-note">' +
+                        escapar(nota) +
+                        "</p></div>"
+                );
+            });
+
+            if (dados.is_empty && !(dados.notes || []).length) {
+                partes.push(
+                    '<div class="send-message-preview-item">' +
+                        '<p class="send-message-preview-note">' +
+                        "Nada seria enviado." +
+                        "</p></div>"
+                );
+            }
+
+            corpoPrevia.innerHTML = partes.join("");
+        }
+
+        function carregarPrevia(form) {
+            var endereco = form.dataset.previewUrl;
+
+            if (!endereco) {
+                caixaPrevia.hidden = true;
+                return;
+            }
+
+            // Cada abertura invalida a anterior: numa lista, abrir duas
+            // janelas seguidas depressa podia trocar as respostas.
+            var meuPedido = ++pedidoPrevia;
+
+            caixaPrevia.hidden = false;
+            corpoPrevia.innerHTML =
+                '<p class="send-message-preview-note">A preparar a mensagem…</p>';
+
+            var dados = new FormData();
+            dados.append("acao", form.dataset.previewAction || "");
+            dados.append(
+                "csrfmiddlewaretoken",
+                (form.querySelector("[name=csrfmiddlewaretoken]") || {}).value || ""
+            );
+
+            // O cancelamento cita o motivo que ainda está a ser escrito.
+            var motivo = form.querySelector("[name=cancellation_reason]");
+
+            if (motivo) {
+                dados.append("cancellation_reason", motivo.value);
+            }
+
+            fetch(endereco, {
+                method: "POST",
+                body: dados,
+                credentials: "same-origin",
+            })
+                .then(function (resposta) {
+                    if (!resposta.ok) {
+                        throw new Error(resposta.status);
+                    }
+
+                    return resposta.json();
+                })
+                .then(function (conteudo) {
+                    if (meuPedido !== pedidoPrevia) {
+                        return;
+                    }
+
+                    desenharPrevia(conteudo);
+                })
+                .catch(function () {
+                    if (meuPedido !== pedidoPrevia) {
+                        return;
+                    }
+
+                    // A pré-visualização é um extra: falhando, a escolha
+                    // continua a poder ser feita.
+                    corpoPrevia.innerHTML =
+                        '<p class="send-message-preview-note">' +
+                        "Não foi possível mostrar a mensagem. A escolha abaixo " +
+                        "continua a valer." +
+                        "</p>";
+                });
+        }
 
         Array.prototype.forEach.call(formularios, function (form) {
             // Intercetar a submissão, em vez de tirar o botão de submit, deixa
@@ -79,6 +264,7 @@
                     }
                 });
 
+                carregarPrevia(form);
                 escolha.show();
             });
         });

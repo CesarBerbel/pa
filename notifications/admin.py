@@ -391,7 +391,13 @@ class MessagingSettingAdmin(admin.ModelAdmin):
     # O sítio para mexer nisto é a área interna, em Configurações. Aqui fica
     # visível para inspeção e para o caso de a área interna estar inacessível.
 
-    list_display = ("__str__", "send_emails", "send_whatsapp", "updated_by", "updated_at")
+    list_display = (
+        "__str__",
+        "send_emails",
+        "send_whatsapp",
+        "updated_by",
+        "updated_at",
+    )
 
     readonly_fields = ("updated_by", "updated_at")
 

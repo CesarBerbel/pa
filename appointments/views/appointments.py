@@ -7,6 +7,7 @@ from appointments.mixins import (
     InternalAreaRequiredMixin,
     LoginRequiredMixin,
 )
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.urls import reverse, reverse_lazy
@@ -21,6 +22,7 @@ from django.views.generic import (
 )
 
 from appointments.audit_services import AppointmentAuditService
+from appointments.message_preview import build_preview
 from appointments.cancellation_services import AppointmentCancellationService
 from appointments.forms import (
     AppointmentCancelForm,
@@ -407,6 +409,31 @@ def wants_to_notify(request):
     """
 
     return request.POST.get("send_message") == "1"
+
+
+class AppointmentMessagePreviewView(InternalAreaRequiredMixin, View):
+    """O que a cliente receberia, para a janela mostrar antes de decidir.
+
+    É POST e não GET porque o cancelamento precisa do motivo que ainda está a
+    ser escrito no formulário — e porque nada disto deve acabar no histórico
+    do browser nem em registos de acesso.
+    """
+
+    def post(self, request, pk):
+        appointment = get_object_or_404(
+            Appointment.objects.select_related("customer", "service"), pk=pk
+        )
+
+        try:
+            preview = build_preview(
+                appointment,
+                action=request.POST.get("acao", ""),
+                cancellation_reason=request.POST.get("cancellation_reason", ""),
+            )
+        except ValueError:
+            return JsonResponse({"error": "Ação desconhecida."}, status=400)
+
+        return JsonResponse(preview.as_dict())
 
 
 class AppointmentConfirmView(InternalAreaRequiredMixin, View):

@@ -171,6 +171,8 @@
                             action="{% url 'appointments:appointment_confirm' appointment.pk %}"
                             data-ask-send-message
                             data-send-field="send_message"
+                            data-preview-url="{% url 'appointments:appointment_message_preview' appointment.pk %}"
+                            data-preview-action="confirm"
                             data-choice-title="Avisar {{ appointment.customer.full_name }} da confirmação?"
                             data-choice-text="A marcação fica confirmada de qualquer forma. O que esta escolha decide é se sai já a mensagem de confirmação, por email e por WhatsApp."
                             data-choice-yes="Confirmar e avisar"

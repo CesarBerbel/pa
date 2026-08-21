@@ -294,6 +294,8 @@
                         action="{% url 'appointments:appointment_confirm' appointment.pk %}"
                         data-ask-send-message
                         data-send-field="send_message"
+                        data-preview-url="{% url 'appointments:appointment_message_preview' appointment.pk %}"
+                        data-preview-action="confirm"
                         data-choice-title="Avisar a cliente da confirmação?"
                         data-choice-text="A marcação fica confirmada de qualquer forma. O que esta escolha decide é se sai já a mensagem de confirmação, por email e por WhatsApp."
                         data-choice-yes="Confirmar e avisar"
@@ -315,6 +317,8 @@
                         action="{% url 'appointments:appointment_complete' appointment.pk %}"
                         data-ask-send-message
                         data-send-field="send_message"
+                        data-preview-url="{% url 'appointments:appointment_message_preview' appointment.pk %}"
+                        data-preview-action="complete"
                         data-choice-title="Enviar a mensagem de fim de atendimento?"
                         data-choice-text="O atendimento fica concluído de qualquer forma. Se este serviço tiver mensagens próprias para o fim do atendimento, são essas que saem; se não tiver, sai o agradecimento comum."
                         data-choice-yes="Concluir e enviar"

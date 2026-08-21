@@ -17,7 +17,7 @@ from django.conf import settings
 
 from notifications import baileys_whatsapp, twilio_whatsapp
 from notifications.models import MessagingSetting, WhatsAppEventSetting
-from notifications.whatsapp_common import SendResult
+from notifications.whatsapp_common import SendResult, build_context
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +35,7 @@ def messaging_off_result():
     """
 
     return SendResult(True, MESSAGING_OFF, skipped=True)
+
 
 PROVIDERS = {
     WhatsAppEventSetting.PROVIDER_TWILIO: twilio_whatsapp,
@@ -97,6 +98,65 @@ def send_test(setting, recipient):
         return messaging_off_result()
 
     return provider_module(setting).send_test(setting, recipient)
+
+
+def preview(appointment, event_type):
+    """O que sairia por WhatsApp para este acontecimento, sem enviar nada.
+
+    Percorre as mesmas regras que o `notify` percorre e pede a cada fornecedor
+    o texto que ele construiria. O que não faz é a chamada ao fornecedor: é a
+    única diferença entre ver e enviar.
+
+    Devolve uma lista de mensagens e uma lista de razões — uma regra ligada mas
+    sem número válido, ou um canal desligado, é informação que quem está a
+    decidir precisa de ver antes de carregar no botão.
+    """
+
+    mensagens = []
+    avisos = []
+
+    if not MessagingSetting.whatsapp_enabled():
+        return [], ["O envio de WhatsApp está desligado nas configurações."]
+
+    regras = WhatsAppEventSetting.objects.filter(
+        event_type=event_type,
+        is_active=True,
+    )
+
+    if not regras:
+        return [], ["Nenhuma regra de WhatsApp ativa para este acontecimento."]
+
+    for regra in regras:
+        if not provider_enabled(regra.provider):
+            avisos.append(f"{regra.get_provider_display()} está desligado no servidor.")
+            continue
+
+        try:
+            destinatarios = resolve_recipients(regra, appointment)
+            texto = provider_module(regra).build_body(regra, build_context(appointment))
+        except Exception as erro:
+            logger.exception("Não foi possível pré-visualizar %s", regra)
+            avisos.append(f"{regra}: {erro}")
+            continue
+
+        if not destinatarios:
+            avisos.append(f"{regra}: nenhum número válido para enviar.")
+            continue
+
+        if not (texto or "").strip():
+            avisos.append(f"{regra}: a mensagem está vazia.")
+            continue
+
+        mensagens.append(
+            {
+                "audience": regra.get_audience_display(),
+                "provider": regra.get_provider_display(),
+                "to": destinatarios,
+                "body": texto,
+            }
+        )
+
+    return mensagens, avisos
 
 
 def notify(appointment, event_type):

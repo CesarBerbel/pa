@@ -1,6 +1,8 @@
 import logging
 import threading
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
+from contextvars import ContextVar
 
 from django.conf import settings
 from django.core import signing
@@ -142,12 +144,48 @@ def build_full_url(path):
     return f"{settings.SITE_URL}{path}"
 
 
+# Quando isto tem uma lista, os emails são recolhidos em vez de enviados. É o
+# que permite pré-visualizar exatamente o que sairia: a pré-visualização corre
+# as mesmas funções de envio que o envio a sério, e a única diferença é o que
+# acontece no fim. Um texto de pré-visualização escrito à parte mentiria mais
+# cedo ou mais tarde.
+_emails_recolhidos: ContextVar[list | None] = ContextVar(
+    "emails_recolhidos", default=None
+)
+
+
+@contextmanager
+def capture_emails():
+    """Recolhe os emails deste bloco em vez de os enviar."""
+
+    recolha = []
+    token = _emails_recolhidos.set(recolha)
+
+    try:
+        yield recolha
+    finally:
+        _emails_recolhidos.reset(token)
+
+
 def send_rendered_email(subject, body_text, body_html, recipient_list):
     # Sends text email with optional HTML alternative.
     #
     # Todos os emails do site passam por aqui, e é por isso que o interruptor
     # geral é lido neste ponto e não em cada função de envio: um email novo
     # escrito daqui a uns meses fica coberto sem ninguém se lembrar disso.
+    recolha = _emails_recolhidos.get()
+
+    if recolha is not None:
+        recolha.append(
+            {
+                "to": list(recipient_list),
+                "subject": subject,
+                "body": body_text,
+            }
+        )
+
+        return
+
     if not MessagingSetting.emails_enabled():
         logger.info("Envio de mensagens desligado: email %r não foi enviado.", subject)
 

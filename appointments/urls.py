@@ -5,6 +5,7 @@ from .views import (
     ClinicalNoteUpdateView,
     AppointmentCreateView,
     AppointmentAuditView,
+    AppointmentMessagePreviewView,
     AppointmentDetailView,
     AppointmentListView,
     AppointmentUpdateView,
@@ -195,6 +196,11 @@ urlpatterns = [
         "marcacoes/<int:pk>/nota-clinica/",
         ClinicalNoteUpdateView.as_view(),
         name="clinical_note",
+    ),
+    path(
+        "marcacoes/<int:pk>/mensagem/previsualizar/",
+        AppointmentMessagePreviewView.as_view(),
+        name="appointment_message_preview",
     ),
     path(
         "marcacoes/<int:pk>/confirmar/",

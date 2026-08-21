@@ -53,6 +53,8 @@
                     method="post"
                     data-ask-send-message
                     data-send-field="send_message"
+                    data-preview-url="{% url 'appointments:appointment_message_preview' object.pk %}"
+                    data-preview-action="cancel"
                     data-choice-title="Avisar a cliente do cancelamento?"
                     data-choice-text="A marcação é cancelada de qualquer forma e o horário volta a ficar livre. O que esta escolha decide é se sai a mensagem de cancelamento, com o motivo indicado acima."
                     data-choice-yes="Cancelar e avisar"
