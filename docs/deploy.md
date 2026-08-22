@@ -34,6 +34,48 @@ oficial estão em [baileys_whatsapp.md](baileys_whatsapp.md).
 A sessão emparelhada fica no volume `pa_baileys_auth` e **sobrevive a deploys**:
 um `up -d --build` não obriga a ler o QR code outra vez.
 
+## Variáveis novas não viajam no `git pull`
+
+O `.env.prod` vive **só no servidor** e está no `.gitignore`. Quando uma
+funcionalidade nova traz variáveis novas, o `git pull` traz o código mas não as
+variáveis: a funcionalidade fica em silêncio em produção enquanto funciona em
+desenvolvimento. Depois de cada deploy que estreie uma funcionalidade, comparar
+o `.env.prod` com o `.env.example` e acrescentar o que falta.
+
+## Avaliações do Google
+
+A secção de avaliações da página inicial só aparece com as duas variáveis
+preenchidas. Sem elas — ou com uma só — a página desenha-se na mesma e a secção
+não existe, que é o que se vê quando o `.env.prod` ficou para trás.
+
+```bash
+# no servidor, em /opt/pa/.env.prod
+GOOGLE_PLACES_API_KEY=...
+GOOGLE_PLACE_ID=ChIJceu6jmD5Ig0RnOXzF6FgzrM
+```
+
+A chamada é feita **pelo servidor**, não pelo navegador. Isso decide como a
+chave pode ser restringida na consola da Google:
+
+* **Restrição por endereço IP** (o IP público do servidor), ou sem restrição.
+* **Restrição por referenciador HTTP não serve** — não há referenciador num
+  pedido feito pelo Django, e a Google devolve 403.
+* Nas restrições de API, a **Places API (New)** tem de estar na lista.
+
+Depois de editar o `.env.prod`, é preciso recriar o contentor — mudar o
+ficheiro não chega, as variáveis são lidas no arranque:
+
+```bash
+cd /opt/pa && docker compose --env-file .env.prod -f docker-compose.prod.yml up -d web
+```
+
+As avaliações ficam em cache seis horas, e uma falha fica cinco minutos. Se a
+secção continuar sem aparecer, a razão está nos registos, em texto:
+
+```bash
+docker compose -f docker-compose.prod.yml logs web | grep "Avaliações do Google"
+```
+
 ---
 
 # Cópias de segurança da base de dados
