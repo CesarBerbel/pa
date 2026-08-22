@@ -576,7 +576,10 @@ class PatientRecordLog(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ["-created_at"]
+        # O `pk` desempata: a data tem resolução limitada e dois registos
+        # gravados no mesmo instante ficavam sem ordem definida entre si,
+        # com o mais antigo a aparecer como se fosse o último.
+        ordering = ["-created_at", "-pk"]
         verbose_name = "Alteração de ficha"
         verbose_name_plural = "Alterações de fichas"
 
@@ -1346,7 +1349,9 @@ class AppointmentLog(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ["-created_at"]
+        # Ver `PatientRecordLog`: sem o `pk`, dois registos do mesmo instante
+        # saíam pela ordem errada.
+        ordering = ["-created_at", "-pk"]
 
     def __str__(self):
         return f"{self.appointment.reference_code} - {self.action}"

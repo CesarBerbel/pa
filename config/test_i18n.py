@@ -70,10 +70,12 @@ class LanguageSelectorTests(ResetLanguageMixin, TestCase):
         self.assertEqual(response.headers["Location"], "/")
 
     def test_english_page_offers_the_portuguese_path_in_the_selector(self):
+        # Cada bandeira leva no seu formulário o caminho já traduzido: sem
+        # isso, mudar de idioma numa página interior devolvia à raiz.
         response = self.client.get("/en/agenda-publica/")
 
-        self.assertContains(response, 'data-path="/agenda-publica/"')
-        self.assertContains(response, 'data-path="/en/agenda-publica/"')
+        self.assertContains(response, 'name="next" value="/agenda-publica/"')
+        self.assertContains(response, 'name="next" value="/en/agenda-publica/"')
 
     def test_pages_declare_hreflang_alternates(self):
         response = self.client.get("/")

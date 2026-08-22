@@ -6,6 +6,7 @@ from appointments.customer_services import (
     find_or_create_customer,
     validate_phone_for_brazil_or_portugal,
 )
+from notifications.models import BeforeAfterCase
 
 from .models import (
     Appointment,
@@ -82,6 +83,34 @@ class ServiceForm(forms.ModelForm):
             self.save_m2m()
 
         return instance
+
+
+class BeforeAfterCaseForm(forms.ModelForm):
+    """Formulário do caso antes e depois, na área interna.
+
+    Ao editar, as fotografias já guardadas não têm de ser carregadas outra vez
+    — é por isso que deixam de ser obrigatórias assim que existe uma no
+    registo. Sem isto, mudar só a legenda obrigava a ir buscar os ficheiros ao
+    computador.
+    """
+
+    class Meta:
+        model = BeforeAfterCase
+        fields = [
+            "title",
+            "caption",
+            "before_image",
+            "after_image",
+            "display_order",
+            "is_active",
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        for campo in ("before_image", "after_image"):
+            if getattr(self.instance, campo, None):
+                self.fields[campo].required = False
 
 
 class CustomerForm(forms.ModelForm):

@@ -318,6 +318,7 @@ TEMPLATES = [
                 "config.context_processors.instagram_settings",
                 "config.context_processors.language_alternates",
                 "config.context_processors.clinical_settings",
+                "config.context_processors.before_after_gallery",
             ],
             "libraries": {
                 # `config` não é uma app instalada, por isso a biblioteca de

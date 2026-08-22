@@ -1,10 +1,9 @@
 from django.conf import settings
 from django.conf.urls.i18n import i18n_patterns
-from django.conf.urls.static import static
 from django.contrib import admin
 from django.db.models import Prefetch
 from django.shortcuts import redirect, render
-from django.urls import include, path
+from django.urls import include, path, re_path
 
 from accounts.views import DashboardView
 from appointments.homepage import build_home_service_cards
@@ -15,6 +14,7 @@ from config.views import (
     complaints_book,
     cookie_policy,
     manifest_webmanifest,
+    media_file,
     offline,
     privacy_policy,
     robots_txt,
@@ -89,6 +89,22 @@ urlpatterns += i18n_patterns(
     prefix_default_language=False,
 )
 
-if settings.DEBUG:
-    # Em produção, o servidor web (nginx/whitenoise) é quem deve servir MEDIA_ROOT.
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Ficheiros carregados (as fotografias do antes e depois). O `static()` acima
+# só funciona com `DEBUG=True` — devolve uma lista vazia em produção — e o
+# comentário que aqui estava dizia que o servidor web trataria disto. Não
+# trata: o Caddy encaminha tudo para o Django e o WhiteNoise serve apenas o
+# `STATIC_ROOT`, que é outra pasta. Sem esta rota as fotografias dão 404
+# assim que o site sai de desenvolvimento.
+#
+# Quem serve é o `django.views.static.serve`, que a documentação desaconselha
+# em produção por ser mais lento do que um servidor de ficheiros dedicado.
+# Aqui são poucas imagens numa página que quase ninguém abre ao mesmo tempo,
+# e a alternativa — montar a pasta no Caddy — obriga a mexer na configuração
+# do servidor a cada deploy. Se um dia forem muitas, `docs/deploy.md` explica
+# como passar isto para o Caddy.
+urlpatterns += [
+    re_path(
+        r"^%s(?P<path>.*)$" % settings.MEDIA_URL.lstrip("/"),
+        media_file,
+    ),
+]

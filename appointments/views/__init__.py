@@ -1,3 +1,10 @@
+from .before_after import (
+    BeforeAfterCreateView,
+    BeforeAfterDeleteView,
+    BeforeAfterListView,
+    BeforeAfterUpdateView,
+    PublicBeforeAfterView,
+)
 from .business_hours import (
     BusinessHourCreateView,
     BusinessHourDeleteView,
@@ -60,6 +67,11 @@ from .services import (
 )
 
 __all__ = [
+    "BeforeAfterCreateView",
+    "BeforeAfterDeleteView",
+    "BeforeAfterListView",
+    "BeforeAfterUpdateView",
+    "PublicBeforeAfterView",
     "BusinessHourUpdateView",
     "BusinessHourListView",
     "BusinessHourDeleteView",

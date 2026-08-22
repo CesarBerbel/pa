@@ -582,7 +582,10 @@ class AppointmentAuditView(InternalAreaRequiredMixin, ListView):
                 "performed_by",
             )
             .all()
-            .order_by("-created_at")
+            # O `pk` desempata dois registos do mesmo instante, tal como no
+            # `Meta` do modelo. Este `order_by` substitui o do modelo, por
+            # isso o desempate tem de ser repetido aqui.
+            .order_by("-created_at", "-pk")
         )
 
         acao = self.request.GET.get("action", "").strip()

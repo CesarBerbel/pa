@@ -43,6 +43,12 @@ services:
              gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120"
     env_file:
       - .env.prod
+    volumes:
+      # As fotografias carregadas na área interna. Sem este volume viviam
+      # dentro do contentor e desapareciam no primeiro `up --build`. Pasta do
+      # anfitrião e não volume nomeado, para entrarem nas cópias de segurança
+      # como qualquer outro ficheiro de /opt/pa.
+      - ./media:/app/media
     ports:
       - "127.0.0.1:8001:8000"
     depends_on:

@@ -5,6 +5,7 @@ from django.urls import path, reverse
 from django.utils.html import format_html
 
 from .models import (
+    BeforeAfterCase,
     EmailEventSetting,
     EmailTemplate,
     InstagramPost,
@@ -407,3 +408,14 @@ class MessagingSettingAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+@admin.register(BeforeAfterCase)
+class BeforeAfterCaseAdmin(admin.ModelAdmin):
+    # A gestão do dia a dia é feita na área interna; isto é a porta de trás,
+    # para quando é preciso ver ou corrigir um registo em bruto.
+
+    list_display = ("title", "display_order", "is_active", "updated_at")
+    list_filter = ("is_active",)
+    search_fields = ("title", "caption")
+    ordering = ("display_order", "-created_at")

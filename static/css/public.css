@@ -264,22 +264,6 @@ h1, h2, h3, .hero-title, .section-title {
    LOGO HEADER
 ====================== */
 
-.site-logo {
-    height: 120px;
-    width: auto;
-    transition: transform 0.25s ease;
-}
-
-.site-logo:hover {
-    transform: scale(1.04);
-}
-
-/* mobile */
-@media (max-width: 768px) {
-    .site-logo {
-        height: 72px;
-    }
-}
 
 .home-logo {
     max-width: 360px;
@@ -1433,54 +1417,197 @@ html {
    STICKY PREMIUM NAVBAR
 ====================== */
 
+/* ======================
+   BARRA DE NAVEGAÇÃO PÚBLICA
+
+   Um bloco só. A altura do logótipo estava definida em quatro sítios do
+   ficheiro e os itens do menu em dois, com valores diferentes: ganhava o que
+   estivesse mais abaixo, e mudar o de cima não fazia nada. Tudo o que diz
+   respeito a esta barra vive aqui.
+====================== */
+
 .public-navbar {
     position: sticky;
     top: 0;
     z-index: 1040;
-    background: rgba(255, 255, 255, 0.88);
+    padding-block: 12px;
+    background: rgba(255, 255, 255, 0.92);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    border-bottom: 1px solid #f1d5db;
-    box-shadow: 0 8px 28px rgba(139, 94, 102, 0.06);
+    border-bottom: 1px solid #f4e3e7;
+    box-shadow: 0 4px 18px rgba(139, 94, 102, 0.05);
 }
 
-.public-navbar .navbar-brand img {
-    height: 120px !important;
+.public-navbar .container {
+    gap: 16px;
+}
+
+.public-navbar .navbar-brand {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+}
+
+/* O <picture> entraria na flexbox como um bloco de altura própria e
+   desalinhava a imagem. */
+.public-navbar .navbar-brand picture {
+    display: flex;
+    align-items: center;
+}
+
+/* O logótipo tem o monograma e o nome. O nome ocupa dois terços da largura
+   e leva três linhas de texto lá dentro, portanto abaixo de meia centena de
+   píxeis deixa de se ler. */
+.site-logo {
+    height: 60px;
+    width: auto;
+    transition: transform 0.25s ease;
+}
+
+.site-logo:hover {
+    transform: scale(1.03);
+}
+
+/* Os itens ficam entre a marca e o canto direito, com o mesmo ar de
+   pastilha do resto do site quando o rato passa por cima. */
+.public-navbar .navbar-nav {
+    align-items: center;
+    gap: 2px;
+    margin-inline: auto;
 }
 
 .public-navbar .nav-link {
-    color: #2b2b2b;
+    color: #4a3b38;
+    font-size: 0.98rem;
     font-weight: 600;
-    font-size: 1.2rem;
-    padding-inline: 16px;
-}
-
-.public-navbar .nav-link:hover {
-    color: #8b5e66;
-}
-
-.public-navbar .btn-outline-primary {
-    border-color: #d8a7b1;
-    color: #8b5e66;
+    padding: 8px 13px;
     border-radius: 999px;
-    font-weight: 600;
+    /* "Antes e depois" partia-se em três linhas e desalinhava a barra
+       inteira. Um item de menu nunca dobra. */
+    white-space: nowrap;
+    transition: color 0.18s ease, background 0.18s ease;
 }
 
-.public-navbar .btn-outline-primary:hover {
-    background: #8b5e66;
-    border-color: #8b5e66;
+.public-navbar .nav-link:hover,
+.public-navbar .nav-link:focus-visible {
+    color: #8b5e66;
+    background: #fdf4f6;
+}
+
+.public-navbar .nav-link.is-active {
+    color: #8b5e66;
+    background: #fbeef1;
+}
+
+/* A coluna da direita: bandeiras em cima, menu do cliente por baixo. */
+.navbar-side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 7px;
+}
+
+.language-switcher {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* A bandeira em uso fica apagada e a outra viva. É o contrário do que se vê
+   por aí, e é de propósito: a que está viva é a única em que faz sentido
+   carregar, e é ela que tem de chamar. A que está apagada é o estado atual,
+   não um botão. */
+.language-flag {
+    display: block;
+    width: 26px;
+    padding: 0;
+    border: 1px solid #ead6da;
+    border-radius: 4px;
+    background: transparent;
+    line-height: 0;
+    overflow: hidden;
+    cursor: pointer;
+    opacity: 1;
+    transition: opacity 0.2s ease, filter 0.2s ease, transform 0.2s ease;
+}
+
+.language-flag svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.language-flag:hover,
+.language-flag:focus-visible {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(139, 94, 102, 0.18);
+}
+
+.language-flag.is-active,
+.language-flag:disabled {
+    opacity: 0.4;
+    filter: saturate(0.55);
+    cursor: default;
+    transform: none;
+    box-shadow: none;
+}
+
+.btn-client-area {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 16px;
+    border: 0;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #a9707b, #8b5e66);
     color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    white-space: nowrap;
+    box-shadow: 0 6px 16px rgba(139, 94, 102, 0.22);
+    transition: filter 0.2s ease, box-shadow 0.2s ease;
 }
 
+.btn-client-area:hover,
+.btn-client-area:focus-visible {
+    color: #ffffff;
+    filter: brightness(1.07);
+    box-shadow: 0 9px 20px rgba(139, 94, 102, 0.3);
+}
+
+.btn-client-area i {
+    font-size: 0.95rem;
+}
+
+.btn-client-area.dropdown-toggle::after {
+    margin-left: 2px;
+}
+
+/* O "Sair" é um <button> dentro de um <form>, para levar o CSRF. Sem isto
+   ficava com a largura do texto e não da linha. */
+.navbar-side-actions .dropdown-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    border: 0;
+    background: transparent;
+    text-align: left;
+}
+
+/* Menu recolhido: tudo passa a ocupar a linha toda. */
 @media (max-width: 991px) {
-    .public-navbar .container {
-        flex-wrap: wrap;
+    .public-navbar {
+        padding-block: 8px;
+    }
+
+    .site-logo {
+        height: 42px;
     }
 
     .public-navbar .navbar-nav {
         width: 100%;
-        margin-left: 0 !important;
-        margin-top: 14px;
+        margin: 14px 0 0;
         flex-direction: row;
         flex-wrap: wrap;
         gap: 8px;
@@ -1489,8 +1616,21 @@ html {
     .public-navbar .nav-link {
         background: #fff7f9;
         border: 1px solid #f1d5db;
-        border-radius: 999px;
         padding: 8px 14px;
+    }
+
+    .navbar-side {
+        align-items: stretch;
+        width: 100%;
+        margin-top: 14px;
+    }
+
+    .navbar-side .language-switcher {
+        justify-content: center;
+    }
+
+    .btn-client-area {
+        justify-content: center;
     }
 }
 
@@ -1571,17 +1711,6 @@ section[id] {
         gap: 8px;
     }
 
-    .public-navbar .nav-link {
-        background: #fff7f9;
-        border: 1px solid #f1d5db;
-        border-radius: 999px;
-        padding: 10px 16px;
-        text-align: center;
-    }
-
-    .public-navbar .nav-link:hover {
-        background: #f7e6ea;
-    }
 }
 
 /* ======================
@@ -1637,11 +1766,6 @@ section[id] {
     .footer-brand-panel img {
         height: 64px;
     }
-}
-
-.public-navbar .navbar-brand {
-    display: flex;
-    align-items: center;
 }
 
 .footer-brand-panel p,
@@ -1749,11 +1873,6 @@ footer[id] {
     scroll-margin-top: 110px;
 }
 
-.public-navbar .nav-link.is-active {
-    color: #8b5e66;
-    background: #fff7f9;
-    border-radius: 999px;
-}
 
 /* ======================
    STICKY FOOTER LAYOUT
@@ -3759,18 +3878,6 @@ small,
     box-shadow: 0 6px 20px rgba(139, 94, 102, 0.045);
 }
 
-.public-navbar .navbar-brand img,
-.site-logo {
-    height: 120px !important;
-}
-
-.public-navbar .nav-link {
-    font-size: 1.2rem;
-    font-weight: 600;
-    padding-inline: 16px;
-    padding-block: 10px;
-    line-height: 1.25;
-}
 
 .navbar-brand img {
     border-radius: 8px;
@@ -4206,11 +4313,6 @@ textarea.form-control,
 
 /* Melhor leitura em telemóveis */
 @media (max-width: 991px) {
-    .public-navbar .navbar-brand img,
-    .site-logo {
-        height: 86px !important;
-    }
-
     .public-navbar .navbar-collapse {
         border-radius: 18px;
         margin-top: 12px;
@@ -4220,11 +4322,6 @@ textarea.form-control,
 
     .public-navbar .navbar-nav {
         gap: 6px;
-    }
-
-    .public-navbar .nav-link {
-        font-size: 1.05rem;
-        padding: 9px 14px;
     }
 
     .app-agenda-shell {
@@ -4289,11 +4386,6 @@ textarea.form-control,
 @media (max-width: 576px) {
     .public-navbar .container {
         padding-inline: 14px;
-    }
-
-    .public-navbar .navbar-brand img,
-    .site-logo {
-        height: 72px !important;
     }
 
     .luxury-hero-actions,
@@ -5186,4 +5278,234 @@ textarea.form-control,
     .filter-body.collapsing {
         margin-top: 16px;
     }
+}
+
+/* ======================
+   ANTES E DEPOIS
+====================== */
+
+/* Flex e não grid: com um número ímpar de casos, a grelha deixava o último
+   encostado à esquerda e a coluna vazia ao lado. Aqui a última linha
+   incompleta fica centrada. */
+.ba-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 44px 32px;
+}
+
+/* A comparação não ganha nada em ocupar a largura toda: fotografias de pés a
+   meio metro de altura no ecrã são mais do que é preciso para ver a
+   diferença, e obrigam a rolar entre um caso e o seguinte. */
+.ba-case {
+    flex: 0 1 100%;
+    max-width: 460px;
+}
+
+/* Duas colunas a partir do tablet. No telemóvel continuam empilhadas: lado a
+   lado, cada comparação ficaria pequena de mais para se ver o que mudou. */
+@media (min-width: 768px) {
+    .ba-case {
+        flex-basis: calc((100% - 32px) / 2);
+    }
+}
+
+.ba-case-title {
+    font-size: clamp(1.1rem, 2vw, 1.3rem);
+    margin-bottom: 14px;
+    text-align: center;
+}
+
+/* A caixa que as duas fotografias partilham. É ela que fixa o enquadramento:
+   com `aspect-ratio` e `object-fit: cover`, duas fotografias de tamanhos
+   diferentes ocupam exatamente o mesmo espaço, que é o que faz a comparação
+   ler-se como uma só imagem a mudar. */
+.ba-compare {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border-radius: 22px;
+    box-shadow: 0 18px 40px rgba(139, 94, 102, 0.14);
+    background: #f4ecec;
+    touch-action: pan-y;
+}
+
+.ba-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+/* O recorte do "antes": da esquerda até à linha. */
+.ba-img-before {
+    clip-path: inset(0 calc(100% - var(--ba-position)) 0 0);
+}
+
+.ba-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--ba-position);
+    width: 2px;
+    margin-left: -1px;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 0 1px rgba(139, 94, 102, 0.25);
+    pointer-events: none;
+}
+
+.ba-grip {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #ffffff;
+    color: #8b5e66;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    font-size: 0.85rem;
+    box-shadow: 0 8px 20px rgba(139, 94, 102, 0.28);
+}
+
+.ba-tag {
+    position: absolute;
+    top: 14px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: rgba(43, 43, 43, 0.62);
+    color: #ffffff;
+    font-size: 0.74rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    pointer-events: none;
+}
+
+.ba-tag-before {
+    left: 14px;
+}
+
+.ba-tag-after {
+    right: 14px;
+}
+
+/* Invisível, mas é este elemento que recebe o arrasto — do rato, do dedo e do
+   teclado. Fica por cima de tudo e cobre a caixa toda, para que tocar em
+   qualquer ponto leve a linha até lá. */
+.ba-range {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    background: transparent;
+    cursor: ew-resize;
+}
+
+.ba-range:focus-visible {
+    outline: 3px solid #8b5e66;
+    outline-offset: 3px;
+}
+
+.ba-range::-webkit-slider-thumb {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 44px;
+    height: 44px;
+    background: transparent;
+    border: 0;
+    cursor: ew-resize;
+}
+
+.ba-range::-moz-range-thumb {
+    width: 44px;
+    height: 44px;
+    background: transparent;
+    border: 0;
+    cursor: ew-resize;
+}
+
+.ba-caption {
+    color: #6b6b6b;
+    font-size: 0.94rem;
+    line-height: 1.6;
+    margin: 14px 0 0;
+    text-align: center;
+}
+
+.ba-more {
+    display: flex;
+    justify-content: center;
+    margin-top: 44px;
+}
+
+/* Gestão */
+
+.ba-admin-grid {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+.ba-admin-card {
+    border: 1px solid #f1e3e6;
+    border-radius: 20px;
+    background: #ffffff;
+    overflow: hidden;
+    box-shadow: 0 10px 26px rgba(139, 94, 102, 0.08);
+}
+
+.ba-admin-card.is-hidden {
+    opacity: 0.62;
+}
+
+.ba-admin-thumbs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.ba-admin-thumbs figure {
+    position: relative;
+    margin: 0;
+    aspect-ratio: 1 / 1;
+}
+
+.ba-admin-thumbs img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.ba-admin-thumbs figcaption {
+    position: absolute;
+    left: 8px;
+    bottom: 8px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: rgba(43, 43, 43, 0.62);
+    color: #ffffff;
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.ba-admin-body {
+    padding: 18px 20px 20px;
+}
+
+.ba-admin-body h2 {
+    font-size: 1.05rem;
+    margin-bottom: 4px;
 }

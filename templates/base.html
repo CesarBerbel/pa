@@ -89,9 +89,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <nav class="navbar navbar-expand-lg navbar-light public-navbar">
     <div class="container">
         <a class="navbar-brand d-flex align-items-center gap-2 fw-semibold" href="{% url 'home' %}">
-            {# Abaixo de lg o menu recolhe e o conjunto com o nome ficaria a #}
-            {# competir com o botão do menu; aí fica só a marca. O <picture> #}
-            {# descarrega apenas a imagem que vai mostrar. #}
+            {# Abaixo de lg o menu recolhe e o nome ficaria a competir com o #}
+            {# botão do menu; aí fica só a marca. O <picture> descarrega #}
+            {# apenas a imagem que vai mostrar. #}
             <picture>
                 <source
                     media="(min-width: 992px)"
@@ -165,6 +165,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                                 </a>
                             </li>
                             <li>
+                                <a class="dropdown-item" href="{% url 'appointments:before_after_list' %}">
+                                    Antes e depois
+                                </a>
+                            </li>
+                            <li>
                                 <a class="dropdown-item" href="{% url 'notifications:email_template_list' %}">
                                     Modelos de email
                                 </a>
@@ -201,87 +206,145 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     <a class="nav-link" data-section-link href="{% url 'home' %}#marcacao">{% translate "Marcação" %}</a>
                     <a class="nav-link" data-section-link href="{% url 'home' %}#sobre">{% translate "Sobre" %}</a>
                     <a class="nav-link" data-section-link href="{% url 'home' %}#servicos">{% translate "Serviços" %}</a>
+                    {% if HAS_BEFORE_AFTER %}
+                        <a class="nav-link" href="{% url 'appointments:public_before_after' %}">{% translate "Antes e depois" %}</a>
+                    {% endif %}
                     {% if INSTAGRAM_PROFILE_URL %}
                         <a class="nav-link" data-section-link href="{% url 'home' %}#instagram">{% translate "Instagram" %}</a>
                     {% endif %}
                     <a class="nav-link" data-section-link href="{% url 'home' %}#contato">{% translate "Contacto" %}</a>
-                    {% if user.is_authenticated and not user.has_internal_access %}
-                        <a class="nav-link" href="{% url 'appointments:customer_appointments' %}">
-                            {% translate "Minhas marcações" %}
-                        </a>
-                    {% endif %}
                 </div>
             {% endif %}
+
+            {# As bandeiras por cima do botão, numa coluna encostada à direita. #}
+            <div class="navbar-side mt-3 mt-lg-0">
 
             {# A área interna existe só em português: o seletor de idioma ali #}
             {# não muda nada que a profissional veja. #}
             {% if not user.has_internal_access %}
-            <form
-                action="{% url 'set_language' %}"
-                method="post"
-                class="language-switcher ms-lg-auto mt-3 mt-lg-0"
-            >
-                {% csrf_token %}
-                {# O destino já vem traduzido de LANGUAGE_ALTERNATES. Deixar o #}
-                {# set_language traduzir sozinho falharia: nesse pedido o idioma #}
-                {# ativo é o do POST, e /en/... deixa de resolver. #}
-                <input type="hidden" name="next" value="{{ request.get_full_path }}">
-
-                <label class="visually-hidden" for="language-select">
-                    {% translate "Idioma" %}
-                </label>
-
-                <i class="bi bi-translate" aria-hidden="true"></i>
-
-                <select
-                    id="language-select"
-                    name="language"
-                    class="form-select form-select-sm"
-                    onchange="this.form.next.value = this.selectedOptions[0].dataset.path; this.form.submit();"
-                >
-                    {% for alternate in LANGUAGE_ALTERNATES %}
-                        <option
-                            value="{{ alternate.code }}"
-                            data-path="{{ alternate.path }}"
-                            {% if alternate.code == LANGUAGE_CODE %}selected{% endif %}
-                        >
-                            {{ alternate.name }}
-                        </option>
-                    {% endfor %}
-                </select>
-
-                <noscript>
-                    <button type="submit" class="btn btn-sm btn-outline-secondary">
-                        {% translate "Mudar" %}
-                    </button>
-                </noscript>
-            </form>
-            {% endif %}
-
-            <div class="mt-3 mt-lg-0 {% if user.has_internal_access %}ms-lg-auto{% endif %}">
-                {% if user.is_authenticated %}
-                    {# Na área interna isto vive dentro de Configurações. #}
-                    {% if not user.has_internal_access %}
-                        <a
-                            href="{% url 'accounts:passkey_devices' %}"
-                            class="btn btn-outline-secondary btn-sm w-100 mb-2"
-                        >
-                            <i class="bi bi-fingerprint me-1" aria-hidden="true"></i>
-                            {% translate "Entrar com digital" %}
-                        </a>
-                    {% endif %}
-
-                    <form method="post" action="{% url 'accounts:logout' %}">
+            <div class="language-switcher">
+                {# Uma bandeira, um formulário. Podia ser um formulário só com #}
+                {# dois botões, mas cada idioma tem o seu `next` — o caminho já #}
+                {# traduzido — e num formulário só não havia como mandar o #}
+                {# caminho certo com o botão certo. Assim funciona sem #}
+                {# JavaScript, que era o que o `onchange` do select exigia. #}
+                {% for alternate in LANGUAGE_ALTERNATES %}
+                    <form action="{% url 'set_language' %}" method="post">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-outline-danger btn-sm w-100">
-                            {% translate "Sair" %}
+
+                        {# O destino já vem traduzido de LANGUAGE_ALTERNATES. #}
+                        {# Deixar o set_language traduzir sozinho falharia: #}
+                        {# nesse pedido o idioma ativo é o do POST, e /en/... #}
+                        {# deixa de resolver. #}
+                        <input type="hidden" name="next" value="{{ alternate.path }}">
+                        <input type="hidden" name="language" value="{{ alternate.code }}">
+
+                        <button
+                            type="submit"
+                            class="language-flag{% if alternate.code == LANGUAGE_CODE %} is-active{% endif %}"
+                            title="{{ alternate.name }}"
+                            aria-label="{{ alternate.name }}"
+                            {% if alternate.code == LANGUAGE_CODE %}aria-current="true" disabled{% endif %}
+                        >
+                            {% if alternate.code|slice:":2" == "en" %}
+                                <svg viewBox="0 0 60 30" aria-hidden="true" focusable="false">
+                                    <clipPath id="uk-triangles">
+                                        <path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z"></path>
+                                    </clipPath>
+                                    <path d="M0,0 v30 h60 v-30 z" fill="#012169"></path>
+                                    <path d="M0,0 L60,30 M60,0 L0,30" stroke="#ffffff" stroke-width="6"></path>
+                                    <path d="M0,0 L60,30 M60,0 L0,30" clip-path="url(#uk-triangles)" stroke="#c8102e" stroke-width="4"></path>
+                                    <path d="M30,0 v30 M0,15 h60" stroke="#ffffff" stroke-width="10"></path>
+                                    <path d="M30,0 v30 M0,15 h60" stroke="#c8102e" stroke-width="6"></path>
+                                </svg>
+                            {% else %}
+                                <svg viewBox="0 0 60 40" aria-hidden="true" focusable="false">
+                                    <path d="M0,0 h60 v40 h-60 z" fill="#da291c"></path>
+                                    <path d="M0,0 h24 v40 h-24 z" fill="#046a38"></path>
+                                    <circle cx="24" cy="20" r="9" fill="#ffe900"></circle>
+                                    <circle cx="24" cy="20" r="5.4" fill="#ffffff" stroke="#da291c" stroke-width="1.4"></circle>
+                                </svg>
+                            {% endif %}
                         </button>
                     </form>
-                {% else %}
-                    <a href="{% url 'accounts:login' %}" class="btn btn-outline-primary btn-sm w-100">
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="navbar-side-actions dropdown">
+                {# Menu e não botão: quem já entrou tem mais do que uma coisa #}
+                {# para fazer aqui, e quem não entrou tem duas portas — entrar #}
+                {# e criar conta — além de consultar uma marcação sem conta #}
+                {# nenhuma, que é o que a maioria quer. #}
+                <button
+                    type="button"
+                    class="btn btn-client-area dropdown-toggle"
+                    id="clientAreaMenu"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                >
+                    <i class="bi bi-person" aria-hidden="true"></i>
+                    {% if user.is_authenticated and not user.has_internal_access %}
+                        {{ user.full_name|default:user.email }}
+                    {% else %}
                         {% translate "Área do cliente" %}
-                    </a>
-                {% endif %}
+                    {% endif %}
+                </button>
+
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="clientAreaMenu">
+                    {% if user.is_authenticated %}
+                        {% if not user.has_internal_access %}
+                            <li>
+                                <a class="dropdown-item" href="{% url 'appointments:customer_appointments' %}">
+                                    <i class="bi bi-calendar-check me-2" aria-hidden="true"></i>
+                                    {% translate "Minhas marcações" %}
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'accounts:passkey_devices' %}">
+                                    <i class="bi bi-fingerprint me-2" aria-hidden="true"></i>
+                                    {% translate "Entrar com digital" %}
+                                </a>
+                            </li>
+
+                            <li><hr class="dropdown-divider"></li>
+                        {% endif %}
+
+                        <li>
+                            <form method="post" action="{% url 'accounts:logout' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="dropdown-item">
+                                    <i class="bi bi-box-arrow-right me-2" aria-hidden="true"></i>
+                                    {% translate "Sair" %}
+                                </button>
+                            </form>
+                        </li>
+                    {% else %}
+                        <li>
+                            <a class="dropdown-item" href="{% url 'accounts:login' %}">
+                                <i class="bi bi-box-arrow-in-right me-2" aria-hidden="true"></i>
+                                {% translate "Entrar" %}
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'accounts:customer_signup' %}">
+                                <i class="bi bi-person-plus me-2" aria-hidden="true"></i>
+                                {% translate "Criar conta" %}
+                            </a>
+                        </li>
+
+                        <li><hr class="dropdown-divider"></li>
+
+                        <li>
+                            <a class="dropdown-item" href="{% url 'appointments:public_appointment_lookup' %}">
+                                <i class="bi bi-search me-2" aria-hidden="true"></i>
+                                {% translate "Consultar marcação" %}
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+
             </div>
         </div>
     </div>
@@ -333,6 +396,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             <a href="{% url 'home' %}#marcacao">{% translate "Marcação" %}</a>
                             <a href="{% url 'home' %}#sobre">{% translate "Sobre" %}</a>
                             <a href="{% url 'home' %}#servicos">{% translate "Serviços" %}</a>
+                            {% if HAS_BEFORE_AFTER %}
+                                <a href="{% url 'appointments:public_before_after' %}">{% translate "Antes e depois" %}</a>
+                            {% endif %}
                             {% if INSTAGRAM_PROFILE_URL %}
                                 <a href="{% url 'home' %}#instagram">{% translate "Instagram" %}</a>
                             {% endif %}

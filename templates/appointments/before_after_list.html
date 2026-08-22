@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Antes e depois | Priscila Arantes PA{% endblock %}
+
+{% block content %}
+<section class="internal-services-page">
+    <div class="internal-services-header mb-4">
+        <div>
+            <span class="luxury-eyebrow">Gestão de conteúdo</span>
+            <h1>Antes e depois</h1>
+            <p>
+                Cada caso é um par de fotografias comparadas no site. Só os marcados como visíveis aparecem na página pública.
+            </p>
+        </div>
+
+        <a href="{% url 'appointments:before_after_create' %}" class="btn btn-primary btn-lg">
+            <i class="bi bi-plus-lg me-1"></i>
+            Novo caso
+        </a>
+    </div>
+
+    <div class="service-admin-metrics mb-4">
+        <div class="service-admin-metric-card">
+            <span>Total</span>
+            <strong>{{ case_total }}</strong>
+            <small>casos registados</small>
+        </div>
+
+        <div class="service-admin-metric-card is-active">
+            <span>Visíveis</span>
+            <strong>{{ active_case_total }}</strong>
+            <small>a aparecer no site</small>
+        </div>
+    </div>
+
+    {% if cases %}
+        <div class="ba-admin-grid">
+            {% for case in cases %}
+                <article class="ba-admin-card{% if not case.is_active %} is-hidden{% endif %}">
+                    <div class="ba-admin-thumbs">
+                        <figure>
+                            <img src="{{ case.before_image.url }}" alt="Antes: {{ case.title }}" loading="lazy">
+                            <figcaption>Antes</figcaption>
+                        </figure>
+
+                        <figure>
+                            <img src="{{ case.after_image.url }}" alt="Depois: {{ case.title }}" loading="lazy">
+                            <figcaption>Depois</figcaption>
+                        </figure>
+                    </div>
+
+                    <div class="ba-admin-body">
+                        <h2>{{ case.title }}</h2>
+
+                        <p class="text-muted">
+                            Ordem {{ case.display_order }} ·
+                            {% if case.is_active %}Visível no site{% else %}Escondido{% endif %}
+                        </p>
+
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'appointments:before_after_update' case.pk %}" class="btn btn-outline-secondary btn-sm">
+                                Editar
+                            </a>
+
+                            <a href="{% url 'appointments:before_after_delete' case.pk %}" class="btn btn-outline-danger btn-sm">
+                                Apagar
+                            </a>
+                        </div>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4 text-center text-muted">
+                Ainda não há casos registados. O primeiro que criar aparece aqui e no site.
+            </div>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

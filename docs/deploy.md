@@ -42,6 +42,28 @@ variáveis: a funcionalidade fica em silêncio em produção enquanto funciona e
 desenvolvimento. Depois de cada deploy que estreie uma funcionalidade, comparar
 o `.env.prod` com o `.env.example` e acrescentar o que falta.
 
+## Fotografias do antes e depois
+
+As fotografias carregadas na área interna são servidas pelo Django, em
+`/media/`. O `whitenoise` serve apenas o `STATIC_ROOT`, que é outra pasta, e o
+Caddy encaminha tudo para o Django — não havia mais ninguém para as servir.
+
+Isso é suficiente para as poucas imagens de uma página que raramente é aberta
+por muita gente ao mesmo tempo. Se um dia forem muitas, o Caddy serve-as sem
+passar pelo Django, acrescentando ao bloco do site:
+
+```
+handle /media/* {
+    root * /opt/pa
+    file_server
+}
+```
+
+As fotografias não estão no git (`media/` está no `.gitignore`) e vivem em
+`/opt/pa/media`. Um `up --build` não lhes toca — a pasta é montada de fora do
+contentor — mas uma máquina nova começa sem elas: têm de vir da cópia de
+segurança.
+
 ## Avaliações do Google
 
 A secção de avaliações da página inicial só aparece com as duas variáveis
@@ -80,9 +102,19 @@ docker compose -f docker-compose.prod.yml logs web | grep "Avaliações do Googl
 
 # Cópias de segurança da base de dados
 
-A base de dados é o estado todo da aplicação: nenhum modelo guarda ficheiros,
-por isso não há media a proteger em separado. Perder a base é perder as
+A base de dados guarda quase todo o estado da aplicação: perdê-la é perder as
 marcações, os clientes e o histórico.
+
+**Deixou de ser tudo.** Os casos "antes e depois" trazem fotografias
+carregadas na área interna, e essas vivem em ficheiros, não na base. Ficam em
+`/opt/pa/media/`, montada no contentor pelo `docker-compose.prod.yml`. Uma
+cópia da base sozinha restaura os registos com as legendas e sem as
+fotografias — os `<img>` da página apontariam para ficheiros que já não
+existem. A pasta tem de ser copiada com a base:
+
+```bash
+tar czf /opt/backups/pa-media-$(date +%F).tar.gz -C /opt/pa media
+```
 
 Os dois scripts leem as credenciais do `.env.prod`, portanto não há palavras-passe
 escritas em lado nenhum.

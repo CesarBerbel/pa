@@ -6,6 +6,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
+from notifications.images import resize_uploaded_image
 
 logger = logging.getLogger(__name__)
 
@@ -802,3 +803,72 @@ class MessagingSetting(models.Model):
         """Se as mensagens de WhatsApp podem sair agora."""
 
         return cls._canal_ligado("send_whatsapp")
+
+
+class BeforeAfterCase(models.Model):
+    """Um caso mostrado no site como um par de fotografias, antes e depois.
+
+    As duas fotografias ocupam o mesmo espaço na página, uma por cima da
+    outra, e quem visita arrasta uma linha para revelar mais de uma ou da
+    outra. Por isso **as duas são recortadas para o mesmo enquadramento**: o
+    que muda entre elas tem de ser o tratamento, não a moldura. Fotografias
+    com proporções muito diferentes continuam a funcionar, mas perde-se mais
+    de uma delas no recorte.
+
+    São imagens de pessoas reais em contexto clínico: nada aqui aparece no
+    site sem `is_active`, e é por aí que se retira um caso depressa se a
+    pessoa mudar de ideias.
+    """
+
+    title = models.CharField(
+        "Título da foto",
+        max_length=140,
+        help_text="O que este par mostra. Aparece por cima das fotografias.",
+    )
+
+    caption = models.TextField(
+        "Legenda da foto",
+        blank=True,
+        help_text="Texto que acompanha o par. Aparece por baixo das fotografias.",
+    )
+
+    before_image = models.ImageField(
+        "Fotografia do antes",
+        upload_to="antes-e-depois/",
+    )
+
+    after_image = models.ImageField(
+        "Fotografia do depois",
+        upload_to="antes-e-depois/",
+    )
+
+    display_order = models.PositiveIntegerField(
+        "Ordem",
+        default=0,
+        help_text="Menor primeiro. Em caso de empate, o mais recente à frente.",
+    )
+
+    is_active = models.BooleanField(
+        "Visível no site",
+        default=True,
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["display_order", "-created_at"]
+        verbose_name = "Caso antes e depois"
+        verbose_name_plural = "Casos antes e depois"
+
+    def save(self, *args, **kwargs):
+        # As fotografias são encolhidas antes de ir para o disco. Aqui e não
+        # no formulário, para que o admin do Django — que grava o modelo
+        # diretamente — não fique de fora.
+        for campo in ("before_image", "after_image"):
+            resize_uploaded_image(getattr(self, campo))
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.title

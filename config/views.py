@@ -1,6 +1,7 @@
 from html import escape
 
 from django.conf import settings
+from django.views.static import serve
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.template.loader import render_to_string
@@ -53,6 +54,12 @@ def sitemap_xml(request):
             "lastmod": today,
             "changefreq": "weekly",
             "priority": "0.9",
+        },
+        {
+            "loc": f"{site_url}{reverse('appointments:public_before_after')}",
+            "lastmod": today,
+            "changefreq": "monthly",
+            "priority": "0.7",
         },
         {
             "loc": f"{site_url}{reverse('appointments:public_visual_schedule')}",
@@ -241,3 +248,14 @@ def offline(request):
     """Página mostrada quando não há rede."""
 
     return render(request, "pwa/offline.html")
+
+
+def media_file(request, path):
+    """Serve um ficheiro carregado, a partir do `MEDIA_ROOT` de agora.
+
+    Podia ser `serve` diretamente na rota, mas aí o `document_root` seria
+    lido uma vez, quando o URLConf é importado — e passaria a ignorar quem o
+    mudasse depois, os testes incluídos. Uma função lê-o a cada pedido.
+    """
+
+    return serve(request, path, document_root=settings.MEDIA_ROOT)

@@ -3,6 +3,8 @@ from urllib.parse import quote, urljoin
 from django.conf import settings
 from django.urls import translate_url
 
+from notifications.models import BeforeAfterCase
+
 
 def _format_pt_phone(phone):
     """Formats a +351XXXXXXXXX number as '+351 XXX XXX XXX' for display."""
@@ -89,3 +91,22 @@ def language_alternates(request):
         )
 
     return {"LANGUAGE_ALTERNATES": alternates}
+
+
+def before_after_gallery(request):
+    """Diz se há alguma comparação publicada.
+
+    A entrada de menu e a ligação do rodapé só existem quando há o que
+    mostrar: uma página vazia é um beco, e um menu que leva a lado nenhum
+    ensina as pessoas a não clicar no menu.
+
+    É uma consulta `EXISTS` por página. Podia ser guardada em cache, mas
+    guardá-la traz um problema pior: o valor teria de ser esquecido a cada
+    caso criado, apagado ou escondido, e um esquecimento falhado deixaria o
+    menu a mentir durante horas. Numa tabela desta dimensão a consulta não se
+    mede.
+    """
+
+    return {
+        "HAS_BEFORE_AFTER": BeforeAfterCase.objects.filter(is_active=True).exists(),
+    }

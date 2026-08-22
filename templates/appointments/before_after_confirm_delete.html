@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Apagar caso | Priscila Arantes PA{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-6">
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-3">
+                    Apagar este caso?
+                </h1>
+
+                <p class="mb-2">
+                    <strong>{{ case.title }}</strong>
+                </p>
+
+                <p class="text-muted">
+                    As duas fotografias são apagadas do servidor com o caso. Não há como as recuperar depois.
+                </p>
+
+                <form method="post" class="d-flex gap-2 mt-4">
+                    {% csrf_token %}
+
+                    <button type="submit" class="btn btn-danger">
+                        Apagar
+                    </button>
+
+                    <a href="{% url 'appointments:before_after_list' %}" class="btn btn-outline-secondary">
+                        Cancelar
+                    </a>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
