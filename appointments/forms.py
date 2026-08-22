@@ -13,6 +13,7 @@ from .models import (
     ClinicalNote,
     Customer,
     PatientRecord,
+    SchedulingSetting,
     ScheduleBlock,
     Service,
     get_default_service_category,
@@ -709,3 +710,30 @@ class AppointmentCancelForm(forms.Form):
             )
 
         return cancellation_reason
+
+
+class SchedulingSettingForm(forms.ModelForm):
+    class Meta:
+        model = SchedulingSetting
+        fields = [
+            "slot_minutes",
+            "booking_min_advance_hours",
+            "booking_horizon_days",
+            "cancellation_min_advance_hours",
+        ]
+        widgets = {
+            "slot_minutes": forms.RadioSelect,
+        }
+
+    def clean_booking_horizon_days(self):
+        dias = self.cleaned_data["booking_horizon_days"]
+
+        # Zero fechava o site a marcações sem o dizer em lado nenhum. Quem
+        # quiser fechar a agenda desliga os serviços ou o horário.
+        if dias < 1:
+            raise forms.ValidationError(
+                "Tem de haver pelo menos um dia, senão o site deixa de aceitar "
+                "marcações sem o dizer."
+            )
+
+        return dias

@@ -122,7 +122,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 {# O trabalho do dia a dia fica à vista; o que só se mexe de #}
                 {# vez em quando fica em Configurações. #}
                 <div class="navbar-nav ms-lg-4 mt-3 mt-lg-0">
-                    <a class="nav-link" href="{% url 'appointments:visual_schedule' %}">Agenda</a>
+                    <a class="nav-link" href="{% url 'appointments:weekly_schedule' %}">Agenda</a>
                     <a class="nav-link" href="{% url 'appointments:customer_list' %}">Clientes</a>
                     <a class="nav-link" href="{% url 'appointments:appointment_list' %}">Marcações</a>
 
@@ -142,6 +142,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             <li>
                                 <a class="dropdown-item" href="{% url 'appointments:appointment_audit' %}">
                                     Auditoria
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'appointments:scheduling_setting' %}">
+                                    Regras de agenda
                                 </a>
                             </li>
                             <li>

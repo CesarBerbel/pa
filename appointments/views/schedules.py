@@ -3,13 +3,16 @@ from datetime import datetime, timedelta
 from appointments.mixins import InternalAreaRequiredMixin
 from django.contrib import messages
 from django.shortcuts import redirect
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.utils import timezone
-from django.views.generic import TemplateView, View
+from django.views.generic import TemplateView, UpdateView, View
 
 from appointments.availability import AvailabilityService
 from appointments.blocking_services import ScheduleBlockingService
+from appointments.forms import SchedulingSettingForm
+from appointments.models import SchedulingSetting
 from appointments.selectors import AppointmentSelectors
+from appointments.weekly_schedule import build_week, day_agenda, week_start
 
 
 class DailyAgendaView(InternalAreaRequiredMixin, TemplateView):
@@ -43,11 +46,61 @@ class DailyAgendaView(InternalAreaRequiredMixin, TemplateView):
         return context
 
 
+class WeeklyScheduleView(InternalAreaRequiredMixin, TemplateView):
+    """A semana inteira em grelha, como se lê um calendário.
+
+    É a vista por omissão da agenda interna: numa semana vê-se onde há espaço,
+    que é a pergunta que se faz a uma agenda. A vista de dia continua a um
+    clique, e é lá que estão as ações sobre cada marcação e o bloqueio de
+    horários — coisas que não cabem numa coluna de um sétimo do ecrã.
+    """
+
+    template_name = "appointments/weekly_schedule.html"
+
+    def get_selected_date(self):
+        date_param = self.request.GET.get("date")
+
+        if date_param:
+            try:
+                return datetime.strptime(date_param, "%Y-%m-%d").date()
+            except ValueError:
+                return timezone.localdate()
+
+        return timezone.localdate()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        selected_date = self.get_selected_date()
+        inicio = week_start(selected_date)
+
+        semana = build_week(selected_date)
+
+        context["week"] = semana
+
+        # O dia que o telemóvel mostra: o escolhido, ou hoje quando a semana
+        # aberta é a de hoje.
+        escolhido = next(
+            (dia for dia in semana.days if dia.date == selected_date),
+            semana.days[0],
+        )
+
+        context["selected_day"] = escolhido
+        context["day_rows"] = day_agenda(escolhido)
+        context["week_start"] = inicio
+        context["week_end"] = inicio + timedelta(days=6)
+        context["previous_week"] = inicio - timedelta(days=7)
+        context["next_week"] = inicio + timedelta(days=7)
+        context["today"] = timezone.localdate()
+        context["selected_date"] = selected_date
+
+        return context
+
+
 class VisualScheduleView(InternalAreaRequiredMixin, TemplateView):
     # Shows a visual daily schedule with appointments and blocked periods
 
     template_name = "appointments/visual_schedule.html"
-    slot_minutes = 30
 
     def get_selected_date(self):
         date_param = self.request.GET.get("date")
@@ -74,7 +127,6 @@ class VisualScheduleView(InternalAreaRequiredMixin, TemplateView):
         # existem sem que ninguém os veja.
         business_hour, slots = AvailabilityService.build_visual_slots(
             selected_date=selected_date,
-            slot_minutes=self.slot_minutes,
             appointments_only=bool(full_day_block),
         )
 
@@ -119,3 +171,28 @@ class VisualScheduleBlockView(InternalAreaRequiredMixin, View):
             messages.error(request, result.message)
 
         return redirect(destino)
+
+
+class SchedulingSettingView(InternalAreaRequiredMixin, UpdateView):
+    """As regras de agenda, num sítio só.
+
+    O que aqui se mexe muda o que a agenda desenha e o que o site aceita — por
+    isso o ecrã diz, ao lado de cada campo, o que muda quando o valor muda.
+    """
+
+    model = SchedulingSetting
+    form_class = SchedulingSettingForm
+    template_name = "appointments/scheduling_setting_form.html"
+    success_url = reverse_lazy("appointments:scheduling_setting")
+
+    def get_object(self, queryset=None):
+        return SchedulingSetting.load()
+
+    def form_valid(self, form):
+        form.instance.updated_by = self.request.user
+
+        resposta = super().form_valid(form)
+
+        messages.success(self.request, "Regras de agenda atualizadas.")
+
+        return resposta

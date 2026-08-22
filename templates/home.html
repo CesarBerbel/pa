@@ -19,104 +19,6 @@
 
 {% block content %}
 
-{# Modal do novo local de atendimento. Não guarda estado: reaparece a cada #}
-{# entrada ou recarregamento da página inicial. #}
-<div
-    class="modal fade salon-modal"
-    id="salon-modal"
-    tabindex="-1"
-    aria-labelledby="salon-modal-title"
-    aria-hidden="true"
->
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-
-            <div class="modal-header">
-                <div>
-                    <span class="salon-modal-kicker">{% translate "Novo espaço" %}</span>
-                    <h2 class="salon-modal-title" id="salon-modal-title">
-                        {% translate "Galeria Avenida" %}
-                    </h2>
-                </div>
-
-                <button
-                    type="button"
-                    class="btn-close"
-                    data-bs-dismiss="modal"
-                    aria-label="{% translate "Fechar aviso" %}"
-                ></button>
-            </div>
-
-            <div class="modal-body">
-                <p class="salon-modal-lead">
-                    {% translate "Atendimento também com hora marcada" %}
-                </p>
-
-                <p class="salon-modal-address">
-                    <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
-                    {% translate "Av. Sá da Bandeira, n.º 33 — Loja 108, 3000-351 Coimbra" %}
-                </p>
-
-                <div class="salon-modal-map">
-                    <div id="salon-modal-map-placeholder" class="cookie-map-placeholder">
-                        <i class="bi bi-geo-alt"></i>
-                        <div>
-                            <strong>{% translate "Mapa bloqueado por preferências de cookies" %}</strong>
-                            <p>
-                                {% translate "Para ver o mapa incorporado do Google, aceite cookies funcionais. A marcação online continua disponível mesmo sem ativar esta opção." %}
-                            </p>
-                            <button type="button" class="btn btn-outline-secondary btn-sm" data-cookie-action="open-preferences">
-                                {% translate "Gerir cookies" %}
-                            </button>
-                        </div>
-                    </div>
-
-                    <iframe
-                        data-cookie-category="functional"
-                        data-cookie-placeholder="#salon-modal-map-placeholder"
-                        data-cookie-src="https://www.google.com/maps?q=DIVAH%2C%20Av.%20S%C3%A1%20da%20Bandeira%2033%2C%20Loja%20108%2C%203000-351%20Coimbra&amp;hl=pt-PT&amp;output=embed"
-                        title="{% translate "Mapa com a localização do salão DIVAH - Av. Sá da Bandeira 33, Loja 108, Coimbra" %}"
-                        style="border:0;"
-                        allowfullscreen=""
-                        loading="lazy"
-                        referrerpolicy="no-referrer-when-downgrade"
-                        hidden
-                    ></iframe>
-                </div>
-            </div>
-
-            <div class="modal-footer">
-                <a
-                    href="https://www.google.com/maps?q=DIVAH%2C%20Av.%20S%C3%A1%20da%20Bandeira%2033%2C%20Loja%20108%2C%203000-351%20Coimbra"
-                    class="btn btn-outline-secondary"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    <i class="bi bi-box-arrow-up-right me-1" aria-hidden="true"></i>
-                    {% translate "Abrir no Google Maps" %}
-                </a>
-
-                {# Quem está a ver um espaço novo costuma ter perguntas antes #}
-                {# de marcar. O WhatsApp abre já com a conversa iniciada. #}
-                <a
-                    href="{{ SEO_WHATSAPP_LINK }}"
-                    class="btn btn-outline-secondary"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    <i class="bi bi-whatsapp me-1" aria-hidden="true"></i>
-                    {% translate "Dúvidas" %}
-                </a>
-
-                <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary">
-                    {% translate "Marcar horário" %}
-                </a>
-            </div>
-
-        </div>
-    </div>
-</div>
-
 {% if home_hero_layout == "logo_top" %}
     <section
         id="inicio"
@@ -386,6 +288,91 @@
     {% endif %}
 </section>
 
+{% if google_reviews %}
+    <section id="avaliacoes" class="one-page-section mb-5">
+        <div class="text-center mb-5">
+            <span class="luxury-eyebrow">{% translate "Avaliações" %}</span>
+
+            <h2 class="section-title mt-2">
+                {% translate "O que dizem quem já veio" %}
+            </h2>
+
+            {% if google_reviews.rating %}
+                <div class="reviews-score">
+                    <strong>{{ google_reviews.rating|floatformat:1 }}</strong>
+
+                    <span class="reviews-stars" aria-hidden="true">
+                        {% for _ in ""|ljust:google_reviews.stars %}<i class="bi bi-star-fill"></i>{% endfor %}
+                        {% for _ in ""|ljust:google_reviews.empty_stars %}<i class="bi bi-star"></i>{% endfor %}
+                    </span>
+
+                    <span class="reviews-count">
+                        {% blocktranslate with total=google_reviews.total %}{{ total }} avaliações no Google{% endblocktranslate %}
+                    </span>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="reviews-grid">
+            {% for review in google_reviews.reviews %}
+                <figure class="review-card">
+                    <div class="review-card-head">
+                        {% if review.photo %}
+                            {# A fotografia e o nome de quem escreveu não são #}
+                            {# decoração: os termos da Google obrigam a       #}
+                            {# atribuir a avaliação a quem a fez.             #}
+                            <img
+                                src="{{ review.photo }}"
+                                alt=""
+                                class="review-card-photo"
+                                loading="lazy"
+                                referrerpolicy="no-referrer"
+                                width="40"
+                                height="40"
+                            >
+                        {% endif %}
+
+                        <div>
+                            <strong class="review-card-author">{{ review.author }}</strong>
+                            <span class="review-card-when">{{ review.when }}</span>
+                        </div>
+                    </div>
+
+                    <div class="review-card-stars" aria-label="{{ review.rating }} em 5">
+                        {% for _ in ""|ljust:review.rating %}<i class="bi bi-star-fill"></i>{% endfor %}
+                        {% for _ in ""|ljust:review.empty_stars %}<i class="bi bi-star"></i>{% endfor %}
+                    </div>
+
+                    {# O texto vai como veio: alterá-lo é proibido pelos #}
+                    {# termos, e truncá-lo mudaria o que a pessoa disse. #}
+                    <blockquote class="review-card-text">{{ review.text }}</blockquote>
+
+                    {% if review.url %}
+                        <figcaption>
+                            <a href="{{ review.url }}" target="_blank" rel="noopener noreferrer">
+                                {% translate "Ver no Google" %}
+                            </a>
+                        </figcaption>
+                    {% endif %}
+                </figure>
+            {% endfor %}
+        </div>
+
+        {% if google_reviews.url %}
+            <div class="text-center mt-4">
+                <a
+                    href="{{ google_reviews.url }}"
+                    class="btn btn-outline-secondary btn-lg px-5"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    {% translate "Ver todas as avaliações no Google" %}
+                </a>
+            </div>
+        {% endif %}
+    </section>
+{% endif %}
+
 {% if instagram_posts or INSTAGRAM_PROFILE_URL %}
     <section id="instagram" class="one-page-section mb-5">
         <div class="text-center mb-5">
@@ -462,51 +449,5 @@
     </section>
 {% endif %}
 
-<script>
-    // Este bloco é renderizado dentro do <main>, antes dos <script> do fim do
-    // base.html. Esperar pelo DOMContentLoaded garante que o bundle do
-    // Bootstrap e o cookie_consent.js já correram.
-    document.addEventListener("DOMContentLoaded", function () {
-        var element = document.getElementById("salon-modal");
-
-        if (!element || typeof bootstrap === "undefined") {
-            return;
-        }
-
-        // Nada é persistido: o modal abre em cada entrada ou recarregamento.
-        function abrir() {
-            bootstrap.Modal.getOrCreateInstance(element).show();
-        }
-
-        var consentimento = window.paCookieConsent;
-        var jaRespondeu = !consentimento || Boolean(consentimento.get());
-
-        // Numa primeira visita o pedido de consentimento tem prioridade: o
-        // modal só abre depois de respondido, para não tapar o banner.
-        if (jaRespondeu) {
-            abrir();
-            return;
-        }
-
-        var cookieBanner = document.getElementById("cookie-consent-banner");
-
-        if (!cookieBanner) {
-            abrir();
-            return;
-        }
-
-        var observer = new MutationObserver(function () {
-            if (cookieBanner.hidden) {
-                observer.disconnect();
-                abrir();
-            }
-        });
-
-        observer.observe(cookieBanner, {
-            attributes: true,
-            attributeFilter: ["hidden"],
-        });
-    });
-</script>
 
 {% endblock %}

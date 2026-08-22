@@ -27,6 +27,11 @@ DEBUG = config("DEBUG", default=False, cast=bool)
 
 ENVIRONMENT = config("ENVIRONMENT", default="development")
 
+# Debaixo dos testes, o que fala com o exterior fica desligado: uma suite que
+# chama serviços a sério é uma suite lenta, instável e — no caso da Google —
+# paga. Cada sítio que a usa explica porquê.
+RUNNING_TESTS = "test" in sys.argv or "pytest" in sys.modules
+
 SITE_URL = config("SITE_URL", default="http://localhost:8000").rstrip("/")
 
 ALLOWED_HOSTS = env_list(
@@ -127,6 +132,51 @@ HOME_HERO_LAYOUT = config("HOME_HERO_LAYOUT", default="classic").strip().lower()
 
 if HOME_HERO_LAYOUT not in HOME_HERO_LAYOUT_CHOICES:
     HOME_HERO_LAYOUT = "classic"
+
+
+# =============================================================================
+# Avaliações do Google
+# =============================================================================
+# A secção da página inicial mostra as avaliações do estabelecimento, lidas da
+# Places API. Sem chave ou sem identificador do local, a secção não aparece e o
+# site funciona na mesma.
+#
+# A API devolve no máximo cinco avaliações, escolhidas por ela: não há forma de
+# pedir mais nem de paginar.
+
+GOOGLE_PLACES_API_KEY = config("GOOGLE_PLACES_API_KEY", default="").strip()
+
+# Sem chave, a secção não aparece e nada é pedido. É assim que os testes que
+# desenham a página inicial deixam de chamar a Google: com a chave verdadeira
+# no .env, cada um deles seria uma chamada externa, lenta e paga. Os testes das
+# avaliações ligam-na de volta com override_settings e uma chave de mentira.
+if RUNNING_TESTS:
+    GOOGLE_PLACES_API_KEY = ""
+
+# Identificador do local no Google. Encontra-se no Place ID Finder da Google ou
+# no endereço do perfil da empresa; é o único dado do local que a Google
+# permite guardar indefinidamente.
+GOOGLE_PLACE_ID = config("GOOGLE_PLACE_ID", default="").strip()
+
+GOOGLE_PLACES_API_URL = config(
+    "GOOGLE_PLACES_API_URL",
+    default="https://places.googleapis.com/v1/places",
+).rstrip("/")
+
+# Quantas mostrar, até ao limite de cinco que a Google devolve.
+GOOGLE_REVIEWS_LIMIT = config("GOOGLE_REVIEWS_LIMIT", default=5, cast=int)
+
+# Seis horas. A Google não permite guardar dados de um local por muito tempo, e
+# as avaliações também não mudam de minuto a minuto.
+GOOGLE_REVIEWS_CACHE_SECONDS = config(
+    "GOOGLE_REVIEWS_CACHE_SECONDS",
+    default=6 * 60 * 60,
+    cast=int,
+)
+
+GOOGLE_REVIEWS_LANGUAGE = config("GOOGLE_REVIEWS_LANGUAGE", default="pt-PT").strip()
+
+GOOGLE_REQUEST_TIMEOUT = config("GOOGLE_REQUEST_TIMEOUT", default=10, cast=int)
 
 
 # =============================================================================
@@ -563,10 +613,8 @@ PROFESSIONAL_EMAIL = config("PROFESSIONAL_EMAIL", default=SEO_BUSINESS_EMAIL)
 # perdem-se. Substitui, sim, o pior caso — o site parar por causa de um SMTP
 # que não responde.
 
-# Em testes tem de ser imediato: quase 400 testes verificam o que foi enviado
-# na linha a seguir à chamada, e numa thread isso passaria a corrida.
-RUNNING_TESTS = "test" in sys.argv or "pytest" in sys.modules
-
+# Em testes o envio tem de ser imediato: quase 400 testes verificam o que foi
+# enviado na linha a seguir à chamada, e numa thread isso passaria a corrida.
 # O `and not RUNNING_TESTS` no fim é deliberado: nem um .env que ligue isto
 # consegue pôr os testes a enviar em segundo plano. Quem precisa do contrário
 # num teste concreto usa override_settings.

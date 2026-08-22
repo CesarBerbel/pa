@@ -4348,101 +4348,110 @@ textarea.form-control,
 }
 
 /* =========================================================================
-   Modal do novo local de atendimento
+   Avaliações do Google
    ========================================================================= */
 
-.salon-modal .modal-content {
-    border: 1px solid rgba(139, 94, 102, 0.18);
-    border-radius: 28px;
-    box-shadow: 0 26px 80px rgba(40, 26, 22, 0.24);
-    overflow: hidden;
+.reviews-score {
+    align-items: center;
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 14px;
 }
 
-.salon-modal .modal-header {
-    align-items: flex-start;
-    background: linear-gradient(135deg, var(--primary-light) 0%, var(--white) 70%);
-    border-bottom: 1px solid rgba(139, 94, 102, 0.12);
-    padding: 22px 26px;
+.reviews-score strong {
+    color: #3f3138;
+    font-size: 2rem;
+    line-height: 1;
 }
 
-.salon-modal-kicker {
-    color: var(--primary-dark);
-    display: block;
-    font-size: 0.72rem;
-    font-weight: 900;
-    letter-spacing: 0.14em;
-    margin-bottom: 4px;
-    text-transform: uppercase;
+.reviews-stars,
+.review-card-stars {
+    color: #e8a53d;
+    letter-spacing: 1px;
 }
 
-.salon-modal-title {
-    color: var(--text-dark);
-    font-size: 1.9rem;
-    font-weight: 700;
-    line-height: 1.15;
-    margin: 0;
-}
-
-.salon-modal .modal-body {
-    padding: 24px 26px 8px;
-}
-
-.salon-modal-lead {
-    color: var(--text-dark);
-    font-size: 1.05rem;
-    margin-bottom: 10px;
-}
-
-.salon-modal-address {
-    align-items: baseline;
-    color: var(--text-muted);
-    display: flex;
+.reviews-count {
+    color: #6b6b6b;
     font-size: 0.95rem;
-    gap: 8px;
-    margin-bottom: 20px;
 }
 
-.salon-modal-address i {
-    color: var(--primary);
-    flex-shrink: 0;
+/* Flex e não grid, por causa da última fila: são cinco avaliações, e numa
+   grelha de três colunas as duas que sobram encostavam à esquerda, com um
+   buraco à direita. Em flex, `justify-content: center` centra o que sobrar —
+   e continua a valer se um dia forem quatro ou duas. */
+.reviews-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
 }
 
-.salon-modal-map {
-    border: 1px solid rgba(139, 94, 102, 0.14);
-    border-radius: 18px;
-    overflow: hidden;
+.review-card {
+    background: #ffffff;
+    border: 1px solid #f1d5db;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding: 22px;
+    /* A largura vem daqui e não do número de colunas. `flex-grow` a zero é o
+       que impede as duas da última fila de esticarem para ocupar a linha
+       toda: centradas e do mesmo tamanho das de cima é o que se quer. */
+    flex: 0 1 100%;
 }
 
-.salon-modal-map iframe {
+@media (min-width: 576px) {
+    .review-card {
+        flex-basis: calc((100% - 20px) / 2);
+    }
+}
+
+@media (min-width: 992px) {
+    .review-card {
+        flex-basis: calc((100% - 40px) / 3);
+    }
+}
+
+.review-card-head {
+    align-items: center;
+    display: flex;
+    gap: 12px;
+}
+
+.review-card-photo {
+    border-radius: 50%;
+    height: 40px;
+    object-fit: cover;
+    width: 40px;
+}
+
+.review-card-author {
+    color: #3f3138;
     display: block;
-    height: 280px;
-    width: 100%;
+    font-size: 0.98rem;
 }
 
-.salon-modal .modal-footer {
-    border-top: 1px solid rgba(139, 94, 102, 0.12);
-    gap: 8px;
-    padding: 18px 26px;
+.review-card-when {
+    color: #8a7b81;
+    font-size: 0.85rem;
 }
 
-@media (max-width: 575.98px) {
-    .salon-modal .modal-header,
-    .salon-modal .modal-body,
-    .salon-modal .modal-footer {
-        padding-inline: 18px;
-    }
+.review-card-text {
+    color: #5b4a52;
+    line-height: 1.7;
+    margin: 0;
+    /* O texto vai inteiro, como os termos da Google exigem. O cartão cresce
+       com ele em vez de o cortar. */
+    white-space: pre-line;
+}
 
-    .salon-modal-title {
-        font-size: 1.5rem;
-    }
-
-    .salon-modal-map iframe {
-        height: 220px;
-    }
-
-    .salon-modal .modal-footer .btn {
-        flex: 1 1 auto;
-    }
+.review-card figcaption {
+    font-size: 0.85rem;
+    margin-top: auto;
+    padding-top: 6px;
 }
 
 /* =========================================================================

@@ -19,7 +19,9 @@ class InternalNavigationTests(ResetLanguageMixin, TestCase):
     """
 
     DIA_A_DIA = [
-        ("appointments:visual_schedule", "Agenda"),
+        # A agenda do menu é a da semana: é dela que se abre um dia, e não ao
+        # contrário.
+        ("appointments:weekly_schedule", "Agenda"),
         ("appointments:customer_list", "Clientes"),
         ("appointments:appointment_list", "Marcações"),
     ]

@@ -1,3 +1,4 @@
+import logging
 import random
 import re
 import string
@@ -9,6 +10,8 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import get_language
+
+logger = logging.getLogger(__name__)
 
 
 def get_localized_value(default_value, english_value):
@@ -579,6 +582,133 @@ class PatientRecordLog(models.Model):
 
     def __str__(self):
         return f"{self.record.customer.full_name} - {self.created_at:%Y-%m-%d %H:%M}"
+
+
+class SchedulingSetting(models.Model):
+    """As regras de agenda que a profissional decide, e que estavam no código.
+
+    Intervalo da grelha, antecedência mínima para marcar, prazo para cancelar e
+    até quando o site aceita marcações: quatro números que mudam com a forma de
+    trabalhar e que, escritos no código, obrigavam a um deploy para mudar de
+    ideias.
+
+    Existe uma linha só, com pk fixo. É uma definição da clínica, não uma lista.
+    """
+
+    SINGLETON_PK = 1
+
+    SLOT_CHOICES = [
+        (15, "15 minutos"),
+        (30, "30 minutos"),
+        (60, "1 hora"),
+    ]
+
+    slot_minutes = models.PositiveIntegerField(
+        choices=SLOT_CHOICES,
+        default=30,
+        verbose_name="Intervalo da grelha",
+        help_text=(
+            "De quanto em quanto tempo a agenda é dividida. Vale para a agenda "
+            "interna e para os horários oferecidos no site."
+        ),
+    )
+
+    booking_min_advance_hours = models.PositiveIntegerField(
+        default=3,
+        verbose_name="Antecedência mínima para marcar",
+        help_text=(
+            "Horas que têm de faltar para um horário poder ser marcado no "
+            "site. Zero aceita marcações até à hora exata."
+        ),
+    )
+
+    booking_horizon_days = models.PositiveIntegerField(
+        default=21,
+        verbose_name="Marcações até",
+        help_text=(
+            "Quantos dias à frente o site deixa marcar. Encurtar não afeta as "
+            "marcações que já existem."
+        ),
+    )
+
+    cancellation_min_advance_hours = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Prazo para cancelar no site",
+        help_text=(
+            "Horas que têm de faltar para a cliente ainda poder cancelar "
+            "sozinha. Passado o prazo, a marcação só é cancelada pela clínica. "
+            "Zero deixa cancelar até à hora da marcação."
+        ),
+    )
+
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="scheduling_setting_changes",
+        verbose_name="Alterado por",
+    )
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Regras de agenda"
+        verbose_name_plural = "Regras de agenda"
+
+    def __str__(self):
+        return f"Grelha de {self.get_slot_minutes_display()}"
+
+    def save(self, *args, **kwargs):
+        # Uma segunda linha faria com que a grelha visível na página não fosse
+        # necessariamente a que a agenda usa.
+        self.pk = self.SINGLETON_PK
+
+        return super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        definicao, _criada = cls.objects.get_or_create(pk=cls.SINGLETON_PK)
+
+        return definicao
+
+    @classmethod
+    def _valor(cls, campo, reserva):
+        """Lê uma regra sem nunca escrever.
+
+        Não passa pelo `load()` de propósito: esse cria a linha se ela faltar,
+        e estas leituras acontecem a desenhar páginas — um GET não deve gravar
+        nada. Sem linha, valem os valores de fábrica do próprio modelo.
+
+        Em caso de erro responde com o valor de reserva: uma falha de base de
+        dados não pode partir a agenda. Mais vale a grelha sair com o intervalo
+        de fábrica do que não sair de todo.
+        """
+
+        try:
+            definicao = cls.objects.filter(pk=cls.SINGLETON_PK).first()
+
+            return getattr(definicao, campo) if definicao else reserva
+        except Exception:
+            logger.exception("Não foi possível ler as regras de agenda.")
+
+            return reserva
+
+    @classmethod
+    def get_slot_minutes(cls):
+        return cls._valor("slot_minutes", 30)
+
+    @classmethod
+    def get_booking_min_advance_hours(cls):
+        return cls._valor("booking_min_advance_hours", 3)
+
+    @classmethod
+    def get_booking_horizon_days(cls):
+        return cls._valor("booking_horizon_days", 21)
+
+    @classmethod
+    def get_cancellation_min_advance_hours(cls):
+        return cls._valor("cancellation_min_advance_hours", 0)
 
 
 class BusinessHour(models.Model):

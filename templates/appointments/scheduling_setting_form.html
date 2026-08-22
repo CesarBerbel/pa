@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}Regras de agenda | Priscila Arantes PA{% endblock %}
+
+{% block content %}
+<style>
+    .rule-card {
+        border: 1px solid #f0e8ec;
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 18px;
+    }
+
+    .rule-card:last-of-type {
+        margin-bottom: 0;
+    }
+
+    .rule-card label.form-label,
+    .rule-card > label {
+        font-weight: 600;
+        color: #3f3138;
+    }
+
+    .rule-card .form-text {
+        display: block;
+        margin-top: 6px;
+    }
+
+    .rule-effect {
+        font-size: 13px;
+        color: #8b5e66;
+        margin: 10px 0 0;
+    }
+
+    .rule-slots {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+    }
+
+    .rule-slots .form-check {
+        margin: 0;
+        padding: 8px 14px 8px 34px;
+        border: 1px solid #eadde3;
+        border-radius: 12px;
+    }
+</style>
+
+<div class="mb-4">
+    <h1 class="h4 mb-1">Regras de agenda</h1>
+    <p class="text-muted mb-0">
+        Como a agenda é dividida e o que o site aceita. Nenhuma destas regras
+        mexe nas marcações que já existem.
+    </p>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                    {% endif %}
+
+                    <div class="rule-card">
+                        <label class="form-label">{{ form.slot_minutes.label }}</label>
+
+                        <div class="rule-slots">
+                            {% for opcao in form.slot_minutes %}
+                                <div class="form-check">
+                                    {{ opcao.tag }}
+                                    <label class="form-check-label" for="{{ opcao.id_for_label }}">
+                                        {{ opcao.choice_label }}
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <span class="form-text">{{ form.slot_minutes.help_text }}</span>
+                        {{ form.slot_minutes.errors }}
+
+                        <p class="rule-effect">
+                            Muda as linhas da agenda da semana e do dia, e os
+                            horários que o site oferece.
+                        </p>
+                    </div>
+
+                    <div class="rule-card">
+                        <label class="form-label" for="{{ form.booking_min_advance_hours.id_for_label }}">
+                            {{ form.booking_min_advance_hours.label }}
+                        </label>
+
+                        <div class="input-group">
+                            {{ form.booking_min_advance_hours }}
+                            <span class="input-group-text">horas</span>
+                        </div>
+
+                        <span class="form-text">{{ form.booking_min_advance_hours.help_text }}</span>
+                        {{ form.booking_min_advance_hours.errors }}
+
+                        <p class="rule-effect">
+                            Com {{ object.booking_min_advance_hours }} hora(s), um
+                            horário deixa de aparecer no site quando falta menos
+                            do que isso para ele.
+                        </p>
+                    </div>
+
+                    <div class="rule-card">
+                        <label class="form-label" for="{{ form.booking_horizon_days.id_for_label }}">
+                            {{ form.booking_horizon_days.label }}
+                        </label>
+
+                        <div class="input-group">
+                            {{ form.booking_horizon_days }}
+                            <span class="input-group-text">dias à frente</span>
+                        </div>
+
+                        <span class="form-text">{{ form.booking_horizon_days.help_text }}</span>
+                        {{ form.booking_horizon_days.errors }}
+                    </div>
+
+                    <div class="rule-card">
+                        <label class="form-label" for="{{ form.cancellation_min_advance_hours.id_for_label }}">
+                            {{ form.cancellation_min_advance_hours.label }}
+                        </label>
+
+                        <div class="input-group">
+                            {{ form.cancellation_min_advance_hours }}
+                            <span class="input-group-text">horas antes</span>
+                        </div>
+
+                        <span class="form-text">{{ form.cancellation_min_advance_hours.help_text }}</span>
+                        {{ form.cancellation_min_advance_hours.errors }}
+
+                        <p class="rule-effect">
+                            {% if object.cancellation_min_advance_hours %}
+                                A menos de {{ object.cancellation_min_advance_hours }}
+                                hora(s) da marcação, a cliente vê um pedido para
+                                telefonar em vez do botão de cancelar.
+                            {% else %}
+                                A cliente pode cancelar sozinha até à hora da
+                                marcação.
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary mt-4">
+                        Guardar
+                    </button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body">
+                <h2 class="h6 text-uppercase text-muted mb-3">Onde isto se vê</h2>
+
+                <ul class="list-unstyled mb-0 small">
+                    <li class="mb-2">
+                        <i class="bi bi-calendar-week me-1" aria-hidden="true"></i>
+                        <a href="{% url 'appointments:weekly_schedule' %}">Agenda da semana</a>
+                        — as linhas da grelha
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-globe me-1" aria-hidden="true"></i>
+                        <a href="{% url 'appointments:public_visual_schedule' %}">Agenda do site</a>
+                        — os horários oferecidos
+                    </li>
+                    <li>
+                        <i class="bi bi-clock-history me-1" aria-hidden="true"></i>
+                        <a href="{% url 'appointments:business_hour_list' %}">Horas trabalhadas</a>
+                        — a que horas se abre e fecha
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        {% if object.updated_by or object.updated_at %}
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h2 class="h6 text-uppercase text-muted mb-2">Última alteração</h2>
+
+                    <p class="mb-0 small">
+                        {{ object.updated_at|date:"d/m/Y H:i" }}
+                        {% if object.updated_by %}
+                            por {{ object.updated_by.full_name|default:object.updated_by.email }}
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

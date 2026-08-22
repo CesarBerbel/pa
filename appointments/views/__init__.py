@@ -48,6 +48,8 @@ from .schedules import (
     DailyAgendaView,
     VisualScheduleBlockView,
     VisualScheduleView,
+    SchedulingSettingView,
+    WeeklyScheduleView,
 )
 from .services import (
     PublicServiceFeedView,
@@ -98,6 +100,8 @@ __all__ = [
     "DailyAgendaView",
     "VisualScheduleBlockView",
     "VisualScheduleView",
+    "SchedulingSettingView",
+    "WeeklyScheduleView",
     "ServiceCreateView",
     "ServiceDeleteView",
     "ServiceListView",

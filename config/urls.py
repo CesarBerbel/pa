@@ -9,6 +9,7 @@ from django.urls import include, path
 from accounts.views import DashboardView
 from appointments.homepage import build_home_service_cards
 from appointments.models import Service, ServiceCategory
+from config.google_reviews import get_reviews
 from config.seo import build_home_structured_data
 from config.views import (
     complaints_book,
@@ -51,6 +52,7 @@ def home_view(request):
             "service_cards": build_home_service_cards(service_categories),
             "home_structured_data": build_home_structured_data(service_categories),
             "instagram_posts": InstagramPost.objects.filter(is_active=True),
+            "google_reviews": get_reviews(),
         },
     )
 

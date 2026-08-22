@@ -494,10 +494,15 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
 
     days_in_strip = 7
 
-    # No telemóvel não há faixa de dias: a escolha passa por uma lista. Chega
-    # para três a quatro semanas, que é o horizonte de quem marca podologia.
-    days_in_selector = 21
+    # No telemóvel não há faixa de dias: a escolha passa por uma lista. Quantos
+    # dias ela cobre é uma regra de agenda, e não uma decisão do código.
     selector_search_window = 60
+
+    @property
+    def days_in_selector(self):
+        from appointments.models import SchedulingSetting
+
+        return SchedulingSetting.get_booking_horizon_days()
 
     def get_day_options(self, selected_date):
         """Dias oferecidos na lista de datas do telemóvel.

@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 
 from django.contrib.auth.models import AnonymousUser
+from datetime import timedelta
+
 from django.utils import timezone
 
 from notifications.models import EmailEventSetting, WhatsAppEventSetting
@@ -11,6 +13,7 @@ from appointments.emails import (
     deliver_after_commit,
     send_appointment_cancelled_email,
 )
+from appointments.availability import AvailabilityService
 from appointments.audit_services import AppointmentAuditService
 from appointments.models import Appointment, AppointmentLog
 
@@ -25,6 +28,33 @@ class CancellationResult:
 
 class AppointmentCancellationService:
     # Centralizes all appointment cancellation business rules.
+
+    @staticmethod
+    def too_late_to_cancel(appointment):
+        """Se já passou o prazo de a cliente cancelar sozinha.
+
+        Devolve a explicação a mostrar, ou string vazia quando ainda dá. O
+        prazo existe para uma desmarcação em cima da hora não deixar o horário
+        vazio sem ninguém saber: passado ele, a cliente é encaminhada para o
+        telefone, que é onde isso se resolve.
+        """
+
+        from appointments.models import SchedulingSetting
+
+        horas = SchedulingSetting.get_cancellation_min_advance_hours()
+
+        if not horas:
+            return ""
+
+        limite = appointment.get_start_datetime() - timedelta(hours=horas)
+
+        if AvailabilityService.get_public_booking_now() < limite:
+            return ""
+
+        return (
+            f"Já não é possível cancelar aqui: faltam menos de {horas} hora(s) "
+            "para a marcação. Ligue-nos e tratamos disso."
+        )
 
     @staticmethod
     def cancel(
@@ -79,6 +109,18 @@ class AppointmentCancellationService:
                 message="Marcações confirmadas só podem ser canceladas pela equipa.",
                 appointment=appointment,
             )
+
+        # O prazo só vale para quem cancela no site: a clínica cancela sempre,
+        # a qualquer hora — é ela que fica com o horário vazio.
+        if source == AppointmentLog.SOURCE_PUBLIC:
+            recusa = AppointmentCancellationService.too_late_to_cancel(appointment)
+
+            if recusa:
+                return CancellationResult(
+                    success=False,
+                    message=recusa,
+                    appointment=appointment,
+                )
 
         cancellation_reason = (cancellation_reason or "").strip()
 

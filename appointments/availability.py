@@ -28,6 +28,7 @@ class _Lote:
 
     business_hours: dict[int, BusinessHour] | None = None
     active_blocks: list[ScheduleBlock] | None = None
+    slot_minutes: int | None = None
     blocks_by_date: dict = field(default_factory=dict)
     appointments_by_date: dict = field(default_factory=dict)
 
@@ -45,7 +46,32 @@ class AvailabilityService:
     appointment overlap detection and public slot generation.
     """
 
+    # Valor de reserva. O que vale é o das regras de agenda; isto só serve para
+    # o caso de a definição não poder ser lida.
     slot_minutes = 30
+
+    @classmethod
+    def get_slot_minutes(cls):
+        """De quanto em quanto tempo a agenda é dividida.
+
+        Vem das regras de agenda, que a profissional edita. Dentro de um lote
+        é lido uma vez só: é consultado em ciclos, uma vez por horário
+        oferecido.
+        """
+
+        lote = _lote_ativo.get()
+
+        if lote is not None and lote.slot_minutes is not None:
+            return lote.slot_minutes
+
+        from appointments.models import SchedulingSetting
+
+        minutos = SchedulingSetting.get_slot_minutes()
+
+        if lote is not None:
+            lote.slot_minutes = minutos
+
+        return minutos
 
     @classmethod
     @contextmanager
@@ -470,7 +496,7 @@ class AvailabilityService:
                         ).as_dict()
                     )
 
-                current_datetime += timedelta(minutes=cls.slot_minutes)
+                current_datetime += timedelta(minutes=cls.get_slot_minutes())
 
         return available_slots
 
@@ -527,7 +553,7 @@ class AvailabilityService:
                     }
                 )
 
-                current += timedelta(minutes=cls.slot_minutes)
+                current += timedelta(minutes=cls.get_slot_minutes())
 
         return slots
 
@@ -586,11 +612,11 @@ class AvailabilityService:
         if selected_date > now.date():
             return None
 
-        minimum_advance_hours = getattr(
-            settings,
-            "PUBLIC_BOOKING_MIN_ADVANCE_HOURS",
-            3,
-        )
+        from appointments.models import SchedulingSetting
+
+        # Vinha das definições do servidor, o que obrigava a um deploy para
+        # mudar de ideias sobre quanto tempo antes se aceita uma marcação.
+        minimum_advance_hours = SchedulingSetting.get_booking_min_advance_hours()
 
         minimum_start = now + timedelta(hours=minimum_advance_hours)
 
@@ -645,11 +671,11 @@ class AvailabilityService:
 
     @classmethod
     def round_datetime_up_to_slot(cls, value):
-        minute = value.minute
-        remainder = minute % cls.slot_minutes
+        slot_minutes = cls.get_slot_minutes()
+        remainder = value.minute % slot_minutes
 
         if remainder:
-            value += timedelta(minutes=cls.slot_minutes - remainder)
+            value += timedelta(minutes=slot_minutes - remainder)
 
         return value.replace(second=0, microsecond=0)
 
@@ -736,7 +762,7 @@ class AvailabilityService:
 
     @classmethod
     def build_visual_slots(
-        cls, selected_date, slot_minutes=30, appointments_only=False
+        cls, selected_date, slot_minutes=None, appointments_only=False
     ):
         """Grelha da agenda interna.
 
@@ -744,6 +770,9 @@ class AvailabilityService:
         que o dia inteiramente bloqueado precisa: continua a esconder a grelha
         toda, mas sem esconder um encaixe que foi posto lá de propósito.
         """
+
+        # Sem intervalo dado, vale o das regras de agenda.
+        slot_minutes = slot_minutes or cls.get_slot_minutes()
 
         business_hour = cls.get_business_hour(selected_date)
         appointments = cls.get_active_appointments_for_date(selected_date)

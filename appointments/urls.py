@@ -23,6 +23,8 @@ from .views import (
     ServiceCreateView,
     ServiceListView,
     VisualScheduleView,
+    SchedulingSettingView,
+    WeeklyScheduleView,
     VisualScheduleBlockView,
     PublicAppointmentCreateView,
     PublicAppointmentSuccessView,
@@ -60,6 +62,12 @@ urlpatterns = [
         "agenda-publica/",
         PublicVisualScheduleView.as_view(),
         name="public_visual_schedule",
+    ),
+    path("agenda/semana/", WeeklyScheduleView.as_view(), name="weekly_schedule"),
+    path(
+        "agenda/regras/",
+        SchedulingSettingView.as_view(),
+        name="scheduling_setting",
     ),
     path("agenda/horarios/", VisualScheduleView.as_view(), name="visual_schedule"),
     path(

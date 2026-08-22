@@ -35,6 +35,15 @@
                 Próximo dia →
             </a>
 
+            {# O caminho de volta: a agenda é semanal, e este ecrã é o dia #}
+            {# aberto a partir dela.                                       #}
+            <a
+                href="{% url 'appointments:weekly_schedule' %}?date={{ selected_date|date:'Y-m-d' }}"
+                class="btn btn-outline-secondary"
+            >
+                Ver a semana
+            </a>
+
             <a
                 href="{% url 'appointments:schedule_block_create' %}"
                 class="btn btn-outline-warning"

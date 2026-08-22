@@ -1,0 +1,585 @@
+{% extends "base.html" %}
+
+{% block title %}Agenda da semana | Priscila Arantes PA{% endblock %}
+
+{% block content %}
+<style>
+    .week-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .week-range {
+        font-size: 15px;
+        color: #6c5962;
+        margin: 4px 0 0;
+    }
+
+    /* A grelha rola dentro da própria caixa, nos dois eixos. É isso que faz
+       o cabeçalho dos dias e a coluna das horas ficarem colados: `sticky` só
+       agarra dentro do elemento que rola, e com a página a rolar por fora os
+       nomes dos dias fugiam ao primeiro deslize para baixo.
+
+       A altura é a do ecrã menos o espaço da barra de cima. */
+    .week-grid-scroll {
+        overflow: auto;
+        max-height: calc(100vh - 210px);
+        min-height: 320px;
+        border-radius: 18px;
+        background: #ffffff;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.06);
+        overscroll-behavior: contain;
+        scroll-snap-type: x proximity;
+    }
+
+    .week-grid {
+        display: grid;
+        grid-template-columns: 62px repeat(7, minmax(132px, 1fr));
+        min-width: 100%;
+    }
+
+    /* Fundo de cada coluna, por baixo das células. Serve três coisas ao mesmo
+       tempo: marcar o dia de hoje, esbater os dias fechados, e dar ao deslize
+       lateral um sítio onde encaixar — sem isto, cada célula era um alvo de
+       encaixe e o deslize parava a meio de um dia. */
+    .week-column {
+        grid-row: 2 / -1;
+        scroll-snap-align: start;
+        pointer-events: none;
+        border-right: 1px solid #f4ecef;
+    }
+
+    .week-column.is-closed {
+        background: #fbf8f9;
+    }
+
+    .week-column.is-today {
+        background: #fdf7f8;
+    }
+
+    .week-head {
+        position: sticky;
+        top: 0;
+        z-index: 3;
+        background: #ffffff;
+        border-bottom: 1px solid #eadde3;
+        padding: 12px 8px;
+        text-align: center;
+    }
+
+    .week-corner {
+        position: sticky;
+        top: 0;
+        left: 0;
+        /* Acima do cabeçalho e da coluna das horas: é o único sítio onde os
+           dois se cruzam, e sem isto viam-se um por baixo do outro. */
+        z-index: 4;
+        background: #ffffff;
+        border-bottom: 1px solid #eadde3;
+        border-right: 1px solid #eadde3;
+    }
+
+    .week-head-weekday {
+        display: block;
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #8b5e66;
+        font-weight: 700;
+    }
+
+    .week-head-day {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        font-size: 17px;
+        font-weight: 600;
+        color: #3f3138;
+        text-decoration: none;
+        margin-top: 2px;
+    }
+
+    .week-head-day:hover {
+        background: #f6eef1;
+        color: #3f3138;
+    }
+
+    .week-head.is-today .week-head-day {
+        background: #8b5e66;
+        color: #ffffff;
+    }
+
+    .week-head.is-closed .week-head-weekday,
+    .week-head.is-closed .week-head-day {
+        color: #b6a7ad;
+    }
+
+    .week-hour {
+        grid-column: 1;
+        border-right: 1px solid #eadde3;
+        padding: 0 8px;
+        font-size: 12px;
+        color: #9b8b92;
+        text-align: right;
+        /* A etiqueta encosta ao topo da linha, como num calendário: é a linha
+           que marca a hora, não o meio da célula. */
+        transform: translateY(-7px);
+        background: #ffffff;
+        position: sticky;
+        left: 0;
+        z-index: 2;
+    }
+
+    .week-cell {
+        border-top: 1px solid #f4ecef;
+        border-right: 1px solid #f4ecef;
+        min-height: 34px;
+    }
+
+    .week-cell.is-hour {
+        border-top-color: #eadde3;
+    }
+
+    .week-cell.is-free {
+        display: block;
+        cursor: pointer;
+    }
+
+    /* O convite só aparece com o rato em cima: uma grelha com sinais de "+" em
+       todas as horas livres é uma grelha cheia de ruído. */
+    .week-cell.is-free:hover {
+        background: #f6eef1;
+        box-shadow: inset 0 0 0 1px #e2cdd5;
+    }
+
+    .week-event {
+        margin: 1px 3px;
+        padding: 4px 7px;
+        border-radius: 8px;
+        font-size: 12px;
+        line-height: 1.25;
+        overflow: hidden;
+        text-decoration: none;
+        display: block;
+        z-index: 1;
+    }
+
+    .week-event strong {
+        display: block;
+        font-weight: 600;
+    }
+
+    .week-event small {
+        display: block;
+        opacity: 0.85;
+    }
+
+    .week-event-scheduled {
+        background: #efe7ea;
+        color: #4a3a41;
+        border-left: 3px solid #8b5e66;
+    }
+
+    .week-event-confirmed {
+        background: #dfe9f7;
+        color: #26405f;
+        border-left: 3px solid #3f6cb4;
+    }
+
+    .week-event-completed {
+        background: #dff0e4;
+        color: #1f4a2c;
+        border-left: 3px solid #3f9256;
+    }
+
+    .week-event-cancelled {
+        background: #f6e3e3;
+        color: #7a3838;
+        border-left: 3px solid #b45050;
+        text-decoration: line-through;
+    }
+
+    /* ------------------------------------------------------------------
+       Telemóvel: um dia de cada vez
+
+       A grelha da semana não cabe num ecrã de telemóvel — nem esticada, nem
+       encolhida. Em vez de a arrastar de lado, mostra-se o dia escolhido de
+       cima para baixo, e a faixa de dias serve para trocar.
+       ------------------------------------------------------------------ */
+    .day-strip {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        margin-bottom: 14px;
+    }
+
+    .day-strip-item {
+        flex: 1 0 auto;
+        min-width: 46px;
+        padding: 8px 4px;
+        border-radius: 12px;
+        border: 1px solid #eadde3;
+        background: #ffffff;
+        text-align: center;
+        text-decoration: none;
+        color: #3f3138;
+    }
+
+    .day-strip-item span {
+        display: block;
+        font-size: 10px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #8b5e66;
+        font-weight: 700;
+    }
+
+    .day-strip-item strong {
+        display: block;
+        font-size: 17px;
+        font-weight: 600;
+    }
+
+    .day-strip-item.is-closed {
+        background: #fbf8f9;
+        color: #b6a7ad;
+    }
+
+    .day-strip-item.is-selected {
+        background: #8b5e66;
+        border-color: #8b5e66;
+        color: #ffffff;
+    }
+
+    .day-strip-item.is-selected span {
+        color: #f3e3e7;
+    }
+
+    .day-list {
+        border-radius: 18px;
+        background: #ffffff;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+    }
+
+    .day-row {
+        display: flex;
+        gap: 12px;
+        align-items: stretch;
+        padding: 10px 14px;
+        border-bottom: 1px solid #f4ecef;
+        text-decoration: none;
+    }
+
+    .day-row:last-child {
+        border-bottom: 0;
+    }
+
+    .day-row-time {
+        flex: 0 0 46px;
+        font-size: 13px;
+        color: #9b8b92;
+        padding-top: 2px;
+    }
+
+    .day-row-body {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .day-row-free {
+        color: #a8969e;
+        font-size: 14px;
+    }
+
+    .day-row-free .bi {
+        margin-right: 4px;
+    }
+
+    .day-row.is-free:active,
+    .day-row.is-free:hover {
+        background: #faf5f7;
+    }
+
+    .day-row-title {
+        display: block;
+        font-weight: 600;
+        color: #3f3138;
+    }
+
+    .day-row-meta {
+        display: block;
+        font-size: 13px;
+        color: #6c5962;
+    }
+
+    .day-row-tag {
+        display: inline-block;
+        margin-top: 2px;
+        font-size: 11px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        font-weight: 700;
+    }
+
+    .week-event-block {
+        background: repeating-linear-gradient(
+            45deg,
+            #f2eef0,
+            #f2eef0 6px,
+            #eae2e6 6px,
+            #eae2e6 12px
+        );
+        color: #6b5c63;
+        border-left: 3px solid #b6a7ad;
+    }
+</style>
+
+<div class="week-toolbar">
+    <div>
+        <h1 class="h4 mb-0">Agenda da semana</h1>
+
+        <p class="week-range">
+            {{ week_start|date:"j \d\e F" }} — {{ week_end|date:"j \d\e F \d\e Y" }}
+            · grelha de {{ week.slot_minutes }} min
+        </p>
+    </div>
+
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+        <div class="btn-group" role="group" aria-label="Semana">
+            <a
+                href="{% url 'appointments:weekly_schedule' %}?date={{ previous_week|date:'Y-m-d' }}"
+                class="btn btn-outline-secondary btn-sm"
+                aria-label="Semana anterior"
+            >
+                <i class="bi bi-chevron-left" aria-hidden="true"></i>
+            </a>
+
+            <a
+                href="{% url 'appointments:weekly_schedule' %}"
+                class="btn btn-outline-secondary btn-sm"
+            >
+                Hoje
+            </a>
+
+            <a
+                href="{% url 'appointments:weekly_schedule' %}?date={{ next_week|date:'Y-m-d' }}"
+                class="btn btn-outline-secondary btn-sm"
+                aria-label="Semana seguinte"
+            >
+                <i class="bi bi-chevron-right" aria-hidden="true"></i>
+            </a>
+        </div>
+
+        {# As ações sobre cada marcação e o bloqueio de horários vivem na vista #}
+        {# de dia: não cabem numa coluna de um sétimo do ecrã.                  #}
+        {# No telemóvel este botão é redundante: tocar no número do dia, no #}
+        {# cabeçalho da coluna, abre o mesmo ecrã.                          #}
+        <a
+            href="{% url 'appointments:visual_schedule' %}?date={{ today|date:'Y-m-d' }}"
+            class="btn btn-outline-secondary btn-sm d-none d-md-inline-block"
+        >
+            Ver por dia
+        </a>
+
+        <a href="{% url 'appointments:appointment_create' %}" class="btn btn-primary btn-sm">
+            Nova marcação
+        </a>
+    </div>
+</div>
+
+{# A grelha da semana, de tablet para cima. Abaixo disso vem a lista do dia, #}
+{# mais abaixo neste ficheiro.                                               #}
+<div class="week-grid-scroll d-none d-md-block">
+    <div class="week-grid">
+
+        {# Canto vazio, onde o cabeçalho e a coluna das horas se cruzam. #}
+        <div class="week-corner" style="grid-column: 1; grid-row: 1;"></div>
+
+        {% for day in week.days %}
+            <div
+                class="week-column {% if day.is_today %}is-today{% endif %} {% if not day.is_open %}is-closed{% endif %}"
+                style="grid-column: {{ forloop.counter|add:1 }};"
+            ></div>
+        {% endfor %}
+
+        {% for day in week.days %}
+            <div
+                class="week-head {% if day.is_today %}is-today{% endif %} {% if not day.is_open %}is-closed{% endif %}"
+                style="grid-column: {{ forloop.counter|add:1 }}; grid-row: 1;"
+            >
+                <span class="week-head-weekday">{{ day.date|date:"D"|capfirst }}</span>
+
+                <a
+                    class="week-head-day"
+                    href="{% url 'appointments:visual_schedule' %}?date={{ day.date|date:'Y-m-d' }}"
+                    aria-label="Ver o dia {{ day.date|date:'d/m/Y' }}"
+                >
+                    {{ day.date|date:"j" }}
+                </a>
+            </div>
+        {% endfor %}
+
+        {% for label in week.row_labels %}
+            <div class="week-hour" style="grid-row: {{ forloop.counter|add:1 }};">
+                {% if label.minute == 0 %}{{ label|time:"H:i" }}{% endif %}
+            </div>
+        {% endfor %}
+
+        {# As células por coluna, e não por linha: assim cada uma sabe a sua  #}
+        {# hora sem ser preciso cruzar dois ciclos.                           #}
+        {% for day in week.days %}
+            {% for cell in day.cells %}
+                {% if cell.is_free %}
+                    {# Uma célula livre é um convite: abre a marcação já com #}
+                    {# este dia e esta hora preenchidos.                     #}
+                    <a
+                        class="week-cell is-free {% if cell.is_hour %}is-hour{% endif %}"
+                        style="grid-column: {{ forloop.parentloop.counter|add:1 }}; grid-row: {{ cell.row|add:1 }};"
+                        href="{% url 'appointments:appointment_create' %}?date={{ day.date|date:'Y-m-d' }}&start_time={{ cell.time|time:'H:i' }}"
+                        title="Marcar às {{ cell.time|time:'H:i' }} de {{ day.date|date:'d/m' }}"
+                        aria-label="Marcar às {{ cell.time|time:'H:i' }} de {{ day.date|date:'d/m/Y' }}"
+                    ></a>
+                {% else %}
+                    <div
+                        class="week-cell {% if cell.is_hour %}is-hour{% endif %}"
+                        style="grid-column: {{ forloop.parentloop.counter|add:1 }}; grid-row: {{ cell.row|add:1 }};"
+                    ></div>
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+
+        {% for day in week.days %}
+            {% for event in day.events %}
+                {% if event.kind == "appointment" %}
+                    <a
+                        href="{% url 'appointments:appointment_detail' event.appointment.pk %}"
+                        class="week-event week-event-{{ event.appointment.status }}"
+                        style="grid-column: {{ forloop.parentloop.counter|add:1 }}; grid-row: {{ event.row|add:1 }} / span {{ event.span }};"
+                        title="{{ event.appointment.start_time|time:'H:i' }} · {{ event.appointment.customer.full_name }} · {{ event.appointment.service.name }}"
+                    >
+                        <strong>{{ event.appointment.customer.full_name }}</strong>
+                        <small>
+                            {{ event.appointment.start_time|time:"H:i" }} ·
+                            {{ event.appointment.service.name }}
+                        </small>
+                    </a>
+                {% else %}
+                    <div
+                        class="week-event week-event-block"
+                        style="grid-column: {{ forloop.parentloop.counter|add:1 }}; grid-row: {{ event.row|add:1 }} / span {{ event.span }};"
+                        title="{{ event.block.label }}"
+                    >
+                        <strong>{{ event.block.label }}</strong>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+
+    </div>
+</div>
+
+<div class="d-md-none">
+    <div class="day-strip">
+        {% for day in week.days %}
+            <a
+                class="day-strip-item
+                    {% if day.date == selected_day.date %}is-selected{% endif %}
+                    {% if not day.is_open %}is-closed{% endif %}"
+                href="{% url 'appointments:weekly_schedule' %}?date={{ day.date|date:'Y-m-d' }}"
+                aria-label="Ver {{ day.date|date:'l, d \d\e F' }}"
+                {% if day.date == selected_day.date %}aria-current="date"{% endif %}
+            >
+                <span>{{ day.date|date:"D"|capfirst }}</span>
+                <strong>{{ day.date|date:"j" }}</strong>
+            </a>
+        {% endfor %}
+    </div>
+
+    <div class="day-list">
+        {% for row in day_rows %}
+            {% if row.event %}
+                {% if row.event.kind == "appointment" %}
+                    <a
+                        class="day-row"
+                        href="{% url 'appointments:appointment_detail' row.event.appointment.pk %}"
+                    >
+                        <span class="day-row-time">{{ row.cell.time|time:"H:i" }}</span>
+
+                        <span class="day-row-body">
+                            <strong class="day-row-title">
+                                {{ row.event.appointment.customer.full_name }}
+                            </strong>
+                            <span class="day-row-meta">
+                                {{ row.event.appointment.service.name }}
+                            </span>
+                            <span class="day-row-tag week-event-{{ row.event.appointment.status }}"
+                                  style="background: transparent; border: 0; padding: 0;">
+                                {{ row.event.appointment.get_status_display }}
+                            </span>
+                        </span>
+                    </a>
+                {% else %}
+                    <div class="day-row">
+                        <span class="day-row-time">{{ row.cell.time|time:"H:i" }}</span>
+
+                        <span class="day-row-body">
+                            <strong class="day-row-title">{{ row.event.block.label }}</strong>
+                            <span class="day-row-meta">Bloqueio</span>
+                        </span>
+                    </div>
+                {% endif %}
+            {% elif row.cell.is_free %}
+                {# Livre é para tocar: abre a marcação já com este dia e hora. #}
+                <a
+                    class="day-row is-free"
+                    href="{% url 'appointments:appointment_create' %}?date={{ selected_day.date|date:'Y-m-d' }}&start_time={{ row.cell.time|time:'H:i' }}"
+                >
+                    <span class="day-row-time">{{ row.cell.time|time:"H:i" }}</span>
+
+                    <span class="day-row-body day-row-free">
+                        <i class="bi bi-plus-lg" aria-hidden="true"></i>Livre
+                    </span>
+                </a>
+            {% endif %}
+        {% empty %}
+            <div class="day-row">
+                <span class="day-row-body day-row-free">
+                    {% if selected_day.is_open %}
+                        Nada marcado neste dia.
+                    {% else %}
+                        Dia fechado.
+                    {% endif %}
+                </span>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    // Sem isto, abrir a agenda no telemóvel mostrava a segunda-feira e obrigava
+    // a deslizar até ao dia de hoje — que é o dia que se vem ver.
+    document.addEventListener("DOMContentLoaded", function () {
+        var caixa = document.querySelector(".week-grid-scroll");
+        var hoje = caixa && caixa.querySelector(".week-column.is-today");
+
+        if (!caixa || !hoje) {
+            return;
+        }
+
+        // Só quando as colunas não cabem todas: num ecrã largo a semana inteira
+        // já está à vista e deslizar seria mexer no que não precisa.
+        if (caixa.scrollWidth > caixa.clientWidth) {
+            caixa.scrollLeft = hoje.offsetLeft - caixa.offsetLeft;
+        }
+    });
+</script>
+{% endblock %}
