@@ -1418,66 +1418,6 @@ html {
     margin: 0;
 }
 
-.instagram-embed-carousel {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.instagram-embed-track {
-    display: flex;
-    gap: 20px;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    padding: 4px 4px 12px;
-    flex: 1 1 auto;
-    scrollbar-width: thin;
-}
-
-.instagram-embed-item {
-    flex: 0 0 auto;
-    scroll-snap-align: start;
-    width: min(90vw, 340px);
-    /* o <iframe> do Instagram nasce "position: absolute; height: 0" e só
-       ganha altura real depois, via postMessage — sem isto, a linha inteira
-       colapsa visualmente enquanto o embed carrega. */
-    position: relative;
-    min-height: 480px;
-}
-
-/* o embed.js do Instagram define sua própria largura/altura no <iframe> gerado */
-.instagram-embed-item .instagram-media {
-    margin: 0 !important;
-    min-width: 0 !important;
-    width: 100% !important;
-}
-
-.instagram-embed-nav {
-    flex-shrink: 0;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    border: 1px solid #f1d5db;
-    background: #ffffff;
-    color: #8b5e66;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.1rem;
-    box-shadow: 0 8px 20px rgba(139, 94, 102, 0.1);
-}
-
-.instagram-embed-nav:hover {
-    background: #8b5e66;
-    color: #ffffff;
-}
-
-@media (max-width: 768px) {
-    .instagram-embed-nav {
-        display: none;
-    }
-}
-
 @media (max-width: 768px) {
     .one-page-section {
         padding: 36px 24px;
@@ -3442,8 +3382,7 @@ footer[id] {
 }
 
 .footer-legal-links a,
-.footer-legal-links button,
-.footer-cookie-link {
+.footer-legal-links button {
     background: transparent;
     border: 0;
     color: inherit;
@@ -3456,12 +3395,12 @@ footer[id] {
 }
 
 .footer-legal-links a:hover,
-.footer-legal-links button:hover,
-.footer-cookie-link:hover {
+.footer-legal-links button:hover {
     text-decoration: underline;
 }
 
-.cookie-map-placeholder {
+.cookie-map-placeholder,
+.cookie-embed-placeholder {
     align-items: flex-start;
     background: linear-gradient(135deg, #fff8f5, #ffffff);
     border: 1px dashed rgba(168, 117, 95, 0.34);
@@ -3473,18 +3412,21 @@ footer[id] {
     padding: 24px;
 }
 
-.cookie-map-placeholder i {
+.cookie-map-placeholder i,
+.cookie-embed-placeholder i {
     color: #a8755f;
     font-size: 1.8rem;
 }
 
-.cookie-map-placeholder strong {
+.cookie-map-placeholder strong,
+.cookie-embed-placeholder strong {
     color: #3f2f2a;
     display: block;
     margin-bottom: 6px;
 }
 
-.cookie-map-placeholder p {
+.cookie-map-placeholder p,
+.cookie-embed-placeholder p {
     color: #6b5a54;
     line-height: 1.6;
     margin-bottom: 14px;
@@ -3679,7 +3621,8 @@ footer[id] {
         padding: 18px;
     }
 
-    .cookie-map-placeholder {
+    .cookie-map-placeholder,
+    .cookie-embed-placeholder {
         flex-direction: column;
     }
 }

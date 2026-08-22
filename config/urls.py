@@ -21,7 +21,6 @@ from config.views import (
     service_worker,
     sitemap_xml,
 )
-from notifications.models import InstagramPost
 
 
 def home_view(request):
@@ -51,7 +50,6 @@ def home_view(request):
             "home_hero_layout": settings.HOME_HERO_LAYOUT,
             "service_cards": build_home_service_cards(service_categories),
             "home_structured_data": build_home_structured_data(service_categories),
-            "instagram_posts": InstagramPost.objects.filter(is_active=True),
             "google_reviews": get_reviews(),
         },
     )

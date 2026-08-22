@@ -373,7 +373,7 @@
     </section>
 {% endif %}
 
-{% if instagram_posts or INSTAGRAM_PROFILE_URL %}
+{% if INSTAGRAM_PROFILE_URL %}
     <section id="instagram" class="one-page-section mb-5">
         <div class="text-center mb-5">
             <span class="luxury-eyebrow">{% translate "Instagram" %}</span>
@@ -386,66 +386,73 @@
             </p>
         </div>
 
-        {% if instagram_posts %}
-            <div class="instagram-embed-carousel">
-                {% if instagram_posts|length > 1 %}
-                    <button class="instagram-embed-nav instagram-embed-nav-prev" type="button" aria-label="{% translate "Anterior" %}">
-                        <i class="bi bi-chevron-left"></i>
-                    </button>
-                {% endif %}
-
-                <div class="instagram-embed-track">
-                    {% for post in instagram_posts %}
-                        <div class="instagram-embed-item">
-                            {{ post.embed_code|safe }}
-                        </div>
-                    {% endfor %}
-                </div>
-
-                {% if instagram_posts|length > 1 %}
-                    <button class="instagram-embed-nav instagram-embed-nav-next" type="button" aria-label="{% translate "Próximo" %}">
-                        <i class="bi bi-chevron-right"></i>
-                    </button>
-                {% endif %}
+        <div id="instagram-cookie-placeholder" class="cookie-embed-placeholder">
+            <i class="bi bi-instagram"></i>
+            <div>
+                <strong>{% translate "Publicações bloqueadas por preferências de cookies" %}</strong>
+                <p>
+                    {% translate "Para ver aqui as publicações do Instagram, aceite cookies funcionais. Sem isso, continua a poder vê-las no Instagram pelo botão abaixo." %}
+                </p>
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-cookie-action="open-preferences">
+                    {% translate "Gerir cookies" %}
+                </button>
             </div>
+        </div>
 
-            <script async src="//www.instagram.com/embed.js"></script>
-            <script>
-                document.addEventListener("DOMContentLoaded", function () {
-                    const track = document.querySelector(".instagram-embed-track");
+        <div class="elfsight-app-7c1bad08-f8a9-41c4-88cb-df35cd29c808" data-elfsight-app-lazy hidden></div>
 
-                    if (!track) {
+        <script>
+            // O widget da Elfsight traz JavaScript de terceiros que põe cookies
+            // e contacta os servidores deles. O mapa do rodapé é travado da
+            // mesma maneira: sem consentimento funcional, não se carrega nada.
+            //
+            // O mecanismo do `cookie_consent.js` só sabe travar elementos com
+            // `src` (iframes). Um <script> não serve: uma vez no documento sem
+            // `src`, dar-lhe um depois já não o faz correr. Daí criá-lo aqui.
+            (function () {
+                const FONTE = "https://elfsightcdn.com/platform.js";
+                const widget = document.querySelector(".elfsight-app-7c1bad08-f8a9-41c4-88cb-df35cd29c808");
+                const aviso = document.getElementById("instagram-cookie-placeholder");
+                let pedido = false;
+
+                function aplicar(consentimento) {
+                    const permitido = Boolean(consentimento && consentimento.functional);
+
+                    widget.hidden = !permitido;
+                    aviso.hidden = permitido;
+
+                    if (!permitido || pedido) {
                         return;
                     }
 
-                    const prevButton = document.querySelector(".instagram-embed-nav-prev");
-                    const nextButton = document.querySelector(".instagram-embed-nav-next");
-                    const scrollAmount = 340;
+                    // Uma vez pedido, fica pedido: retirar o consentimento
+                    // esconde o widget, mas não desfaz o que já correu. Para
+                    // isso é preciso recarregar a página, e o aviso volta.
+                    pedido = true;
 
-                    prevButton?.addEventListener("click", function () {
-                        track.scrollBy({ left: -scrollAmount, behavior: "smooth" });
-                    });
+                    const script = document.createElement("script");
+                    script.src = FONTE;
+                    script.async = true;
+                    document.head.appendChild(script);
+                }
 
-                    nextButton?.addEventListener("click", function () {
-                        track.scrollBy({ left: scrollAmount, behavior: "smooth" });
-                    });
+                window.addEventListener("paCookieConsentChanged", function (evento) {
+                    aplicar(evento.detail);
                 });
-            </script>
-        {% endif %}
+            })();
+        </script>
 
-        {% if INSTAGRAM_PROFILE_URL %}
-            <div class="text-center {% if instagram_posts %}mt-4{% endif %}">
-                <a
-                    href="{{ INSTAGRAM_PROFILE_URL }}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="btn btn-outline-secondary btn-lg px-5"
-                >
-                    <i class="bi bi-instagram me-2"></i>
-                    {% translate "Seguir no Instagram" %}
-                </a>
-            </div>
-        {% endif %}
+        <div class="text-center mt-4">
+            <a
+                href="{{ INSTAGRAM_PROFILE_URL }}"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn btn-outline-secondary btn-lg px-5"
+            >
+                <i class="bi bi-instagram me-2"></i>
+                {% translate "Seguir no Instagram" %}
+            </a>
+        </div>
     </section>
 {% endif %}
 

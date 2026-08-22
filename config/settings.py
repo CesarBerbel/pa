@@ -1,9 +1,31 @@
 import sys
 from pathlib import Path
 
-from decouple import config
+from decouple import Config, RepositoryEmpty, RepositoryEnv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+def _repositorio_de_variaveis():
+    """O ficheiro de onde saem as variáveis, quando há um.
+
+    Em produção elas chegam pelo ambiente — é o `env_file` do compose que as
+    injeta — e o ambiente ganha sempre a quem estiver no ficheiro. Em
+    desenvolvimento vêm de um ficheiro na raiz do projeto: `.env`, ou
+    `.env.prod` quando é esse o que lá está. Sem nenhum dos dois, resta o
+    ambiente, que é o suficiente em produção e falha cedo em desenvolvimento.
+    """
+
+    for nome in (".env", ".env.prod"):
+        caminho = BASE_DIR / nome
+
+        if caminho.is_file():
+            return RepositoryEnv(caminho)
+
+    return RepositoryEmpty()
+
+
+config = Config(_repositorio_de_variaveis())
 
 
 def env_list(name: str, default: str = "") -> list[str]:

@@ -48,6 +48,36 @@ class HomePageTests(ResetLanguageMixin, TestCase):
 
         self.assertIn(f"https://wa.me/{digitos}", html)
 
+    def test_the_legal_links_appear_once_in_the_footer(self):
+        # Estavam em dois sítios: na coluna "Links rápidos" e na barra final.
+        # Duas ligações para o mesmo sítio a três centímetros uma da outra não
+        # ajudam ninguém a encontrá-las — só alongam a coluna.
+        html = self.client.get(reverse("home")).content.decode()
+        # Limitado ao rodapé: o banner de cookies vem depois e também liga para
+        # a política, o que não é duplicação nenhuma.
+        rodape = html[html.index("<footer") : html.index("</footer>")]
+
+        for nome in ("privacy_policy", "cookie_policy", "complaints_book"):
+            with self.subTest(nome):
+                self.assertEqual(rodape.count(f'href="{reverse(nome)}"'), 1)
+
+    def test_the_quick_links_column_has_no_cookie_button(self):
+        # O "Gerir cookies" da barra final chega. O do bloqueio do mapa fica,
+        # que esse está onde a pessoa topa com o mapa em falta.
+        html = self.client.get(reverse("home")).content.decode()
+
+        self.assertNotIn("footer-cookie-link", html)
+
+    def test_the_instagram_widget_waits_for_cookie_consent(self):
+        # O widget da Elfsight é JavaScript de terceiros: não pode ser pedido
+        # antes de a pessoa aceitar cookies funcionais. Uma tag <script> com o
+        # endereço no HTML corria sempre, e é isso que este teste impede.
+        html = self.client.get(reverse("home")).content.decode()
+
+        self.assertIn("elfsight-app-", html)
+        self.assertNotIn('<script src="https://elfsightcdn.com', html)
+        self.assertIn("instagram-cookie-placeholder", html)
+
     def test_external_links_are_safe(self):
         # target="_blank" sem rel deixaria a página aberta ao window.opener.
         html = self.client.get(reverse("home")).content.decode()
