@@ -2303,19 +2303,34 @@ footer[id] {
     justify-content: flex-start;
 }
 
-/* mobile: background-attachment: fixed é instável no iOS/Android.
-   Trocamos por scroll e empurramos o texto para cima, deixando a
-   foto aparecer abaixo do conteúdo. */
+/* mobile: `background-attachment: fixed` é instável no iOS/Android, e o
+   `cover` do ecrã grande não serve aqui — num ecrã estreito a fotografia é
+   mais alta que a secção e o cartão do texto tapava-lhe a cara. Aqui a
+   fotografia manda na altura e o cartão vem a seguir ao rosto. */
 @media (max-width: 768px) {
     .luxury-hero-photo {
         margin-top: -3rem;
         min-height: auto;
         background-attachment: scroll;
+        /* A fotografia à largura toda em vez de `cover`: assim a altura dela
+           é previsível — 1,5 × a largura do ecrã, que é a proporção do
+           ficheiro — e dá para colocar o cartão a seguir ao rosto em vez de
+           por cima dele. Com `cover` a altura dependia da do cartão, e a
+           profissional ficava no que sobrasse. */
+        background-size: 100% auto;
         background-position: center top;
+        background-repeat: no-repeat;
+        /* onde a fotografia acaba, abaixo do cartão */
+        background-color: #fff7f9;
     }
 
     .luxury-hero-photo-inner {
-        padding: 20px 20px 150px;
+        /* Contas sobre a fotografia, em unidades de largura do ecrã. A
+           fotografia tem 1,5 × a largura do ecrã de altura; nela, o queixo
+           fica a 43% e os ombros a 52% — ou seja, a 64vw e a 78vw. O cartão
+           começa depois disso, deixando rosto e ombros à vista e
+           sobrepondo-se só ao tronco. */
+        padding: 72vw 20px 28px;
     }
 
     /* Cartão próprio atrás do texto: assim o véu geral pode ficar bem
@@ -2323,21 +2338,40 @@ footer[id] {
     .luxury-hero-photo-content {
         background: rgba(255, 247, 249, 0.88);
         border-radius: 24px;
-        padding: 22px 20px;
+        padding: 18px 16px;
     }
 
     .luxury-hero-photo::before {
         background: linear-gradient(
             180deg,
-            rgba(255, 247, 249, 0.55) 0%,
-            rgba(255, 247, 249, 0.32) 28%,
-            rgba(255, 247, 249, 0.1) 50%,
-            rgba(255, 247, 249, 0) 68%
+            rgba(255, 247, 249, 0.34) 0%,
+            rgba(255, 247, 249, 0.16) 22%,
+            rgba(255, 247, 249, 0) 42%
         );
     }
 
+    /* Daqui para baixo, o cartão encolhe. A fotografia ocupa 72vw antes de
+       ele começar, e sem isto os botões caíam abaixo do primeiro ecrã: só o
+       rosto dela obriga a 64vw, e o cartão no tamanho de origem não cabe no
+       que sobra. Nada sai — muda o tamanho, não o conteúdo. */
     .luxury-hero-photo .luxury-logo-transparent {
-        max-width: 260px;
+        max-width: 170px;
+    }
+
+    .luxury-hero-photo .luxury-title {
+        font-size: clamp(1.6rem, 6.4vw, 2rem);
+    }
+
+    .luxury-hero-photo .luxury-subtitle {
+        font-size: 0.94rem;
+        line-height: 1.55;
+    }
+
+    /* Lado a lado, a dividir a largura em partes iguais. O `px-5` e o
+       `btn-lg` do HTML são para ecrã grande e aqui não caberiam. */
+    .luxury-hero-photo .luxury-hero-actions .btn {
+        flex: 1 1 0;
+        font-size: 0.95rem;
     }
 }
 
