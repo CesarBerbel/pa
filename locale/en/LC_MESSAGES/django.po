@@ -1790,3 +1790,35 @@ msgstr "What podiatry treats"
 #: templates/home.html
 msgid "Podologia e outros cuidados, em Coimbra"
 msgstr "Podiatry and other care, in Coimbra"
+
+#: templates/home.html
+msgid "Verruga plantar"
+msgstr "Plantar wart"
+
+#: templates/home.html
+msgid "Lesão dolorosa na planta do pé, de origem viral, que se confunde facilmente com um calo. O tratamento é outro — por isso se avalia antes de tratar."
+msgstr "A painful lesion on the sole of the foot, viral in origin, easily mistaken for a callus. The treatment is different — which is why it is assessed before being treated."
+
+#: templates/home.html
+msgid "Fissuras e gretas"
+msgstr "Cracked heels"
+
+#: templates/home.html
+msgid "Gretas nos calcanhares que chegam a abrir e a infetar. Trata-se a pele e procura-se a causa: calçado, secura ou apoio desequilibrado."
+msgstr "Cracks in the heels that can open up and become infected. The skin is treated and the cause is looked for: footwear, dryness or uneven weight-bearing."
+
+#: templates/home.html
+msgid "Unhas espessas ou deformadas"
+msgstr "Thickened or misshapen nails"
+
+#: templates/home.html
+msgid "Unhas que engrossam, mudam de forma ou magoam ao cortar. Corte técnico e, quando é preciso endireitar a unha, colocação de órtese ungueal."
+msgstr "Nails that thicken, change shape or hurt when cut. Technical trimming and, where the nail needs straightening, a nail brace."
+
+#: templates/home.html
+msgid "Feridas e pensos"
+msgstr "Wounds and dressings"
+
+#: templates/home.html
+msgid "Feridas que demoram a fechar, pós-operatório e troca de penso. Aqui a enfermagem e a podologia trabalham juntas, com laserterapia quando ajuda a cicatrizar."
+msgstr "Wounds that are slow to close, post-operative care and dressing changes. Here nursing and podiatry work together, with laser therapy where it helps healing."

@@ -32,6 +32,9 @@ def home_view(request):
         ServiceCategory.objects.filter(
             is_active=True,
             services__is_active=True,
+            # A página inicial mostra o que posiciona a casa; a lista
+            # completa vive na página de serviços.
+            show_on_homepage=True,
         )
         .prefetch_related(
             Prefetch(
@@ -54,6 +57,13 @@ def home_view(request):
             # As perguntas frequentes dizem o prazo de cancelamento. Escrito à
             # mão ficaria a mentir assim que a profissional o mudasse nas
             # regras de agenda.
+            # O cartão "Feridas e pensos" depende da enfermagem: o penso
+            # especializado só se marca quando a categoria abrir. Ler o estado
+            # dela aqui faz as duas coisas andarem juntas sozinhas, em vez de
+            # dependerem de alguém se lembrar de mexer nas duas.
+            "nursing_coming_soon": ServiceCategory.objects.filter(
+                slug="enfermagem", is_coming_soon=True
+            ).exists(),
             "cancellation_min_advance_hours": (
                 SchedulingSetting.get_cancellation_min_advance_hours()
             ),

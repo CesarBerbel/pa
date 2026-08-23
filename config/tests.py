@@ -85,3 +85,77 @@ class HomePageTests(ResetLanguageMixin, TestCase):
         for ligacao in re.findall(r"<a[^>]*>", html):
             if 'target="_blank"' in ligacao:
                 self.assertIn("noopener", ligacao, ligacao)
+
+
+class TemplateSyntaxNeverReachesThePageTests(ResetLanguageMixin, TestCase):
+    """Nenhuma página serve sintaxe de template por processar.
+
+    O `{# ... #}` do Django **só funciona numa linha**: um comentário que
+    atravesse várias é impresso como texto visível, no meio da página, sem
+    erro nenhum a avisar. Aconteceu, e é uma falha que passa por todos os
+    testes normais porque a página continua a responder 200.
+    """
+
+    PAGINAS = [
+        "/",
+        "/en/",
+        "/servicos/feed/",
+        "/agenda-publica/",
+        "/antes-e-depois/",
+        "/politica-de-privacidade/",
+        "/politica-de-cookies/",
+        "/livro-de-reclamacoes/",
+    ]
+
+    def test_no_page_leaks_template_syntax(self):
+        for caminho in self.PAGINAS:
+            with self.subTest(caminho):
+                html = self.client.get(caminho, follow=True).content.decode()
+
+                self.assertNotIn("{#", html)
+                self.assertNotIn("#}", html)
+                self.assertNotIn("{%", html)
+                self.assertNotIn("endcomment", html)
+
+
+class WoundCardFollowsNursingTests(ResetLanguageMixin, TestCase):
+    """O cartão "Feridas e pensos" anda com a categoria Enfermagem.
+
+    O penso especializado só se marca quando a enfermagem abrir. Ligar as duas
+    coisas por dados, e não por memória, é o que impede o site de continuar a
+    dizer "Em breve" depois de a marcação já estar aberta.
+    """
+
+    def enfermagem(self, em_breve):
+        from appointments.models import ServiceCategory
+
+        ServiceCategory.objects.update_or_create(
+            slug="enfermagem",
+            defaults={"name": "Enfermagem", "is_active": True, "is_coming_soon": em_breve},
+        )
+
+    def cartao(self):
+        html = self.client.get(reverse("home")).content.decode()
+        inicio = html.index("Feridas e pensos")
+
+        return html[inicio - 700 : inicio + 100]
+
+    def test_the_badge_is_there_while_nursing_is_coming_soon(self):
+        self.enfermagem(em_breve=True)
+
+        self.assertIn("coming-soon-badge", self.cartao())
+
+    def test_the_badge_goes_away_when_nursing_opens(self):
+        self.enfermagem(em_breve=False)
+
+        self.assertNotIn("coming-soon-badge", self.cartao())
+
+    def test_without_the_nursing_category_there_is_no_badge(self):
+        # Uma categoria apagada não pode deixar o cartão preso em "Em breve".
+        from appointments.models import Service, ServiceCategory
+
+        # Os serviços protegem a categoria; saem primeiro.
+        Service.objects.filter(category__slug="enfermagem").delete()
+        ServiceCategory.objects.filter(slug="enfermagem").delete()
+
+        self.assertNotIn("coming-soon-badge", self.cartao())

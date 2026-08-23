@@ -5754,13 +5754,6 @@ textarea.form-control,
     box-shadow: 0 10px 28px rgba(139, 94, 102, 0.06);
 }
 
-.problem-card i {
-    display: block;
-    color: #a9707b;
-    font-size: 1.6rem;
-    margin-bottom: 12px;
-}
-
 .problem-card h3 {
     font-family: 'Playfair Display', serif;
     font-size: 1.18rem;
@@ -6149,4 +6142,39 @@ textarea.form-control,
     margin: 8px 0 0;
     font-size: 0.82rem;
     color: #8b7c78;
+}
+
+/* Os cartões das categorias na página inicial. Ocupam sempre a largura toda,
+   independentemente de quantas categorias estejam ligadas para aqui. */
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 24px;
+}
+
+/* O ícone dos cartões de problemas: a mesma pegada em todos, para a secção se
+   ler como um conjunto e não como oito símbolos diferentes. */
+.problem-icon {
+    display: block;
+    width: 30px;
+    height: 30px;
+    fill: #a9707b;
+    margin-bottom: 12px;
+}
+
+/* Cabeçalho do cartão de problema: o ícone à esquerda, o selo à direita
+   quando o tratamento ainda não se marca. */
+.problem-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.problem-card-head .problem-icon {
+    margin-bottom: 0;
+}
+
+.problem-card-head + h3 {
+    margin-top: 12px;
 }

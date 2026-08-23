@@ -62,6 +62,19 @@ class ServiceCategory(models.Model):
         ),
     )
 
+    # A página inicial posiciona a casa como podologia. Nem tudo o que se
+    # marca precisa de estar lá: a lista completa vive na página de serviços,
+    # e é essa que continua a mostrar tudo. Interruptor e não regra escrita no
+    # código, para a decisão poder mudar sem um deploy.
+    show_on_homepage = models.BooleanField(
+        default=True,
+        verbose_name="Mostrar na página inicial",
+        help_text=(
+            "Desligado, a categoria continua marcável e visível na página de "
+            "serviços, mas deixa de aparecer na página inicial."
+        ),
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

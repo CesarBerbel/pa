@@ -146,6 +146,21 @@
 </section>
 
 <section id="problemas" class="one-page-section mb-5">
+    {% comment %}
+        A pegada é desenhada uma vez e reutilizada nos oito cartões: repetir o
+        desenho oito vezes seria o mesmo peso multiplicado por oito.
+    {% endcomment %}
+    <svg width="0" height="0" aria-hidden="true" style="position:absolute">
+        <symbol id="icone-pegada" viewBox="0 0 24 24">
+            <path d="M11.6 8.8c3 0 4.9 2.1 4.9 5.2 0 1.9-.5 3.2-1 4.4-.4 1-.8 1.9-.8 2.9 0 1.5-1.2 2.7-2.7 2.7h-1.5c-1.5 0-2.7-1.2-2.7-2.7 0-1-.4-1.9-.8-2.9-.5-1.2-1-2.5-1-4.4 0-3.1 1.9-5.2 4.9-5.2Z"/>
+            <ellipse cx="6.6" cy="6.4" rx="2.1" ry="2.4"/>
+            <ellipse cx="10.6" cy="3.6" rx="1.7" ry="2"/>
+            <ellipse cx="14.4" cy="2.9" rx="1.5" ry="1.8"/>
+            <ellipse cx="17.6" cy="4" rx="1.3" ry="1.6"/>
+            <ellipse cx="20.1" cy="6.2" rx="1.1" ry="1.4"/>
+        </symbol>
+    </svg>
+
     <div class="text-center mb-5">
         <span class="luxury-eyebrow">{% translate "O que se trata" %}</span>
         <h2 class="section-title mt-2">
@@ -159,7 +174,7 @@
 
     <div class="problem-grid">
         <article class="problem-card">
-            <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+            <svg class="problem-icon" aria-hidden="true" focusable="false"><use href="#icone-pegada"></use></svg>
             <h3>{% translate "Unha encravada" %}</h3>
             <p>
                 {% translate "Dor ao calçar, inchaço ou vermelhidão à volta da unha. Trata-se sem cirurgia na maioria dos casos, e pode ser corrigido com órtese para não voltar." %}
@@ -167,7 +182,7 @@
         </article>
 
         <article class="problem-card">
-            <i class="bi bi-circle-half" aria-hidden="true"></i>
+            <svg class="problem-icon" aria-hidden="true" focusable="false"><use href="#icone-pegada"></use></svg>
             <h3>{% translate "Calos e calosidades" %}</h3>
             <p>
                 {% translate "Pele espessa que dói ao pisar. O desbaste alivia logo, mas o que interessa é perceber o que está a causar a pressão." %}
@@ -175,7 +190,7 @@
         </article>
 
         <article class="problem-card">
-            <i class="bi bi-droplet" aria-hidden="true"></i>
+            <svg class="problem-icon" aria-hidden="true" focusable="false"><use href="#icone-pegada"></use></svg>
             <h3>{% translate "Fungos nas unhas" %}</h3>
             <p>
                 {% translate "Unhas amareladas, espessas ou quebradiças. Avaliação, tratamento e, quando indicado, laserterapia para onicomicose." %}
@@ -183,10 +198,54 @@
         </article>
 
         <article class="problem-card">
-            <i class="bi bi-heart-pulse" aria-hidden="true"></i>
+            <svg class="problem-icon" aria-hidden="true" focusable="false"><use href="#icone-pegada"></use></svg>
+            <h3>{% translate "Verruga plantar" %}</h3>
+            <p>
+                {% translate "Lesão dolorosa na planta do pé, de origem viral, que se confunde facilmente com um calo. O tratamento é outro — por isso se avalia antes de tratar." %}
+            </p>
+        </article>
+
+        <article class="problem-card">
+            <svg class="problem-icon" aria-hidden="true" focusable="false"><use href="#icone-pegada"></use></svg>
+            <h3>{% translate "Fissuras e gretas" %}</h3>
+            <p>
+                {% translate "Gretas nos calcanhares que chegam a abrir e a infetar. Trata-se a pele e procura-se a causa: calçado, secura ou apoio desequilibrado." %}
+            </p>
+        </article>
+
+        <article class="problem-card">
+            <svg class="problem-icon" aria-hidden="true" focusable="false"><use href="#icone-pegada"></use></svg>
+            <h3>{% translate "Unhas espessas ou deformadas" %}</h3>
+            <p>
+                {% translate "Unhas que engrossam, mudam de forma ou magoam ao cortar. Corte técnico e, quando é preciso endireitar a unha, colocação de órtese ungueal." %}
+            </p>
+        </article>
+
+        <article class="problem-card">
+            <svg class="problem-icon" aria-hidden="true" focusable="false"><use href="#icone-pegada"></use></svg>
             <h3>{% translate "Risco Podológico" %}</h3>
             <p>
                 {% translate "Avaliação do risco e cuidado adaptado a quem tem diabetes, problemas de circulação ou sensibilidade alterada nos pés — situações em que se deve vigiar mesmo sem queixas." %}
+            </p>
+        </article>
+
+        <article class="problem-card">
+            {% comment %}
+                O mesmo selo das categorias, e ligado ao mesmo estado: este
+                tratamento depende de a enfermagem estar aberta à marcação, e
+                desaparece sozinho quando ela abrir.
+            {% endcomment %}
+            <div class="problem-card-head">
+                <svg class="problem-icon" aria-hidden="true" focusable="false"><use href="#icone-pegada"></use></svg>
+
+                {% if nursing_coming_soon %}
+                    <span class="coming-soon-badge">{% translate "Em breve" %}</span>
+                {% endif %}
+            </div>
+
+            <h3>{% translate "Feridas e pensos" %}</h3>
+            <p>
+                {% translate "Feridas que demoram a fechar, pós-operatório e troca de penso. Aqui a enfermagem e a podologia trabalham juntas, com laserterapia quando ajuda a cicatrizar." %}
             </p>
         </article>
     </div>
@@ -205,9 +264,15 @@
     </div>
 
     {% if service_cards %}
-        <div class="row g-4">
+        {% comment %}
+            `auto-fit` e não colunas fixas: com três categorias visíveis são
+            três colunas a ocupar a largura toda; com quatro, quatro. Uma
+            grelha de quatro fixas deixava um vazio à direita sempre que uma
+            categoria saísse da página inicial.
+        {% endcomment %}
+        <div class="services-grid">
             {% for card in service_cards %}
-                <div class="col-12 col-md-6 col-xl-3">
+                <div>
                     <div class="luxury-card h-100">
                         <div class="d-flex justify-content-between align-items-start">
                             <div class="luxury-icon">{{ forloop.counter|stringformat:"02d" }}</div>
