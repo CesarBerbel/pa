@@ -1758,3 +1758,7 @@ msgstr "Podiatric risk"
 #: templates/home.html
 msgid "Avaliação do risco e cuidado adaptado a quem tem diabetes, problemas de circulação ou sensibilidade alterada nos pés — situações em que se deve vigiar mesmo sem queixas."
 msgstr "Risk assessment and care adapted to people with diabetes, circulation problems or altered sensation in the feet — situations that need checking even when nothing hurts."
+
+#: templates/home.html
+msgid "O cuidado com os seus pés começa antes da dor"
+msgstr "Caring for your feet begins before the pain does"
