@@ -5428,19 +5428,31 @@ textarea.form-control,
     touch-action: pan-y;
 }
 
-.ba-img {
+/* A moldura é que é recortada pela linha; a imagem lá dentro é que leva a
+   aproximação. Ao contrário, o recorte seria transformado com a imagem e a
+   linha deixava de coincidir com o que se vê. */
+.ba-frame {
     position: absolute;
     inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    user-select: none;
-    -webkit-user-drag: none;
+    overflow: hidden;
 }
 
 /* O recorte do "antes": da esquerda até à linha. */
-.ba-img-before {
+.ba-frame-before {
     clip-path: inset(0 calc(100% - var(--ba-position)) 0 0);
+}
+
+.ba-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Enquadramento decidido ao carregar a fotografia, no formulário. Os
+       valores por omissão dão a imagem inteira, centrada. */
+    object-position: var(--ba-x, 50%) var(--ba-y, 50%);
+    transform: scale(var(--ba-zoom, 1));
+    transform-origin: var(--ba-x, 50%) var(--ba-y, 50%);
+    user-select: none;
+    -webkit-user-drag: none;
 }
 
 .ba-line {
@@ -5582,6 +5594,9 @@ textarea.form-control,
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: var(--ba-x, 50%) var(--ba-y, 50%);
+    transform: scale(var(--ba-zoom, 1));
+    transform-origin: var(--ba-x, 50%) var(--ba-y, 50%);
     display: block;
 }
 
@@ -6041,4 +6056,97 @@ textarea.form-control,
     color: #5a8a63;
     font-size: 1rem;
     flex-shrink: 0;
+}
+
+/* ======================
+   EDITOR DE ENQUADRAMENTO (área interna)
+====================== */
+
+.ba-editor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 22px;
+    margin-bottom: 22px;
+}
+
+.ba-editor {
+    border: 1px solid #f1d5db;
+    border-radius: 18px;
+    padding: 18px;
+    background: #fffdfd;
+}
+
+.ba-editor-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #8b5e66;
+    margin-bottom: 12px;
+}
+
+/* O palco tem a mesma proporção da caixa do site: o que se vê aqui é o que
+   fica publicado, e não uma aproximação. */
+.ba-editor-stage {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border-radius: 12px;
+    background: #f4ecec;
+    cursor: grab;
+    touch-action: none;
+}
+
+.ba-editor-stage:active {
+    cursor: grabbing;
+}
+
+.ba-editor-stage img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: var(--ba-x, 50%) var(--ba-y, 50%);
+    transform: scale(var(--ba-zoom, 1));
+    transform-origin: var(--ba-x, 50%) var(--ba-y, 50%);
+    user-select: none;
+    -webkit-user-drag: none;
+    pointer-events: none;
+}
+
+.ba-editor-empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    text-align: center;
+    color: #8b7c78;
+    font-size: 0.88rem;
+}
+
+.ba-editor-zoom {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    font-size: 0.85rem;
+    color: #6b6b6b;
+}
+
+.ba-editor-zoom input[type="range"] {
+    flex: 1 1 auto;
+    accent-color: #8b5e66;
+}
+
+.ba-editor-zoom output {
+    min-width: 48px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.ba-editor-hint {
+    margin: 8px 0 0;
+    font-size: 0.82rem;
+    color: #8b7c78;
 }

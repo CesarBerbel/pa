@@ -176,8 +176,8 @@ class BeforeAfterPublicPageTests(TestCase):
         ).content.decode()
 
         self.assertIn('class="ba-compare"', html)
-        self.assertIn('class="ba-img ba-img-before"', html)
-        self.assertIn('class="ba-img ba-img-after"', html)
+        self.assertIn('class="ba-frame ba-frame-before"', html)
+        self.assertIn('class="ba-frame ba-frame-after"', html)
         self.assertIn('type="range"', html)
 
     def test_a_hidden_case_does_not_reach_the_site(self):
@@ -414,3 +414,132 @@ class BeforeAfterMenuEntryTests(TestCase):
             self.client.get(reverse("appointments:public_before_after")).status_code,
             200,
         )
+
+
+@override_settings(MEDIA_ROOT=MEDIA_DE_TESTE)
+class BeforeAfterFramingTests(TestCase):
+    """Aproximar e reposicionar cada fotografia dentro da caixa."""
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(MEDIA_DE_TESTE, ignore_errors=True)
+        super().tearDownClass()
+
+    def setUp(self):
+        User = get_user_model()
+        User.objects.create_superuser(
+            email="admin@test.com", password="testpass123", full_name="Admin"
+        )
+        self.client.login(email="admin@test.com", password="testpass123")
+
+    def criar(self, **campos):
+        valores = {
+            "title": "Caso",
+            "before_image": imagem("antes.jpg", "red"),
+            "after_image": imagem("depois.jpg", "green"),
+        }
+        valores.update(campos)
+
+        return BeforeAfterCase.objects.create(**valores)
+
+    def test_a_new_case_shows_the_whole_photo_centred(self):
+        # O enquadramento por omissão não pode cortar nada: quem não mexer no
+        # editor tem de ficar com a fotografia como a carregou.
+        caso = self.criar()
+
+        self.assertEqual(caso.before_zoom, 100)
+        self.assertEqual(caso.before_focus_x, 50)
+        self.assertEqual(caso.before_focus_y, 50)
+
+    def test_the_framing_reaches_the_public_page_as_css(self):
+        caso = self.criar(before_zoom=180, before_focus_x=30, before_focus_y=20)
+
+        html = self.client.get(
+            reverse("appointments:public_before_after")
+        ).content.decode()
+
+        self.assertIn("--ba-zoom: 1.8;", html)
+        self.assertIn("--ba-x: 30%;", html)
+        self.assertIn("--ba-y: 20%;", html)
+
+    def test_each_side_is_framed_on_its_own(self):
+        # Duas fotografias tiradas a distâncias diferentes só se alinham se
+        # cada uma puder ser ajustada à parte.
+        caso = self.criar(before_zoom=150, after_zoom=220)
+
+        self.assertEqual(caso.framing("before")["zoom"], 1.5)
+        self.assertEqual(caso.framing("after")["zoom"], 2.2)
+
+    def test_the_line_is_clipped_on_the_frame_and_not_on_the_photo(self):
+        # A aproximação é uma transformação da imagem. Se o recorte da linha
+        # vivesse na própria imagem, seria transformado com ela e a linha
+        # deixava de coincidir com o que se vê.
+        self.criar(before_zoom=200)
+
+        html = self.client.get(
+            reverse("appointments:public_before_after")
+        ).content.decode()
+
+        moldura = html[html.index('class="ba-frame ba-frame-before"') :][:400]
+
+        self.assertIn("--ba-zoom: 2.0;", moldura)
+        self.assertNotIn("clip-path", moldura)
+
+    def test_the_form_offers_an_editor_for_each_side(self):
+        caso = self.criar()
+
+        html = self.client.get(
+            reverse("appointments:before_after_update", args=[caso.pk])
+        ).content.decode()
+
+        # `data-ba-editor` aparece também no JavaScript que os procura; o
+        # que conta são os dois blocos de marcação.
+        self.assertEqual(html.count('data-ba-editor data-side='), 2)
+        self.assertIn('data-side="before"', html)
+        self.assertIn('data-side="after"', html)
+        self.assertIn('id="id_before_zoom"', html)
+
+    def test_saving_without_the_hidden_fields_keeps_the_defaults(self):
+        # Um formulário submetido sem eles é um enquadramento por decidir, e
+        # não um erro que impeça de guardar o caso.
+        resposta = self.client.post(
+            reverse("appointments:before_after_create"),
+            data={
+                "title": "Sem enquadramento",
+                "before_image": imagem("antes.jpg", "red"),
+                "after_image": imagem("depois.jpg", "green"),
+                "display_order": 0,
+                "is_active": "on",
+            },
+        )
+
+        self.assertRedirects(resposta, reverse("appointments:before_after_list"))
+
+        caso = BeforeAfterCase.objects.get(title="Sem enquadramento")
+
+        self.assertEqual(caso.before_zoom, 100)
+        self.assertEqual(caso.after_focus_y, 50)
+
+    def test_an_impossible_zoom_is_refused(self):
+        # O valor vem de um campo escondido, portanto vem de qualquer pessoa.
+        caso = self.criar()
+
+        resposta = self.client.post(
+            reverse("appointments:before_after_update", args=[caso.pk]),
+            data={
+                "title": "Caso",
+                "display_order": 0,
+                "is_active": "on",
+                "before_zoom": 9000,
+                "before_focus_x": 50,
+                "before_focus_y": 50,
+                "after_zoom": 100,
+                "after_focus_x": 50,
+                "after_focus_y": 50,
+            },
+        )
+
+        self.assertEqual(resposta.status_code, 200)
+
+        caso.refresh_from_db()
+        self.assertEqual(caso.before_zoom, 100)

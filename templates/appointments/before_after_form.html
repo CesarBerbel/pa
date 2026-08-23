@@ -6,7 +6,7 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-12 col-lg-7">
+    <div class="col-12 col-lg-8">
 
         <div class="card shadow-sm border-0">
             <div class="card-body p-4">
@@ -15,14 +15,71 @@
                 </h1>
 
                 <p class="text-muted mb-4">
-                    As duas fotografias são mostradas no mesmo espaço, uma por cima da outra, e quem visita arrasta uma linha para comparar. Fotografias tiradas da mesma distância e do mesmo ângulo são as que melhor mostram a diferença.
+                    As duas fotografias são mostradas no mesmo espaço, uma por cima da outra, e quem visita arrasta uma linha para comparar. Fotografias tiradas da mesma distância e do mesmo ângulo são as que melhor mostram a diferença — e o enquadramento abaixo serve para as acertar quando não são.
                 </p>
 
                 {# `multipart/form-data`: sem isto os ficheiros não chegam ao servidor. #}
                 <form method="post" enctype="multipart/form-data" novalidate>
                     {% csrf_token %}
 
-                    {{ form|crispy }}
+                    {{ form.title|as_crispy_field }}
+                    {{ form.caption|as_crispy_field }}
+
+                    <div class="ba-editor-grid">
+                        {% for lado in framing_sides %}
+                            <div class="ba-editor" data-ba-editor data-side="{{ lado.name }}">
+                                <h2 class="ba-editor-title">{{ lado.label }}</h2>
+
+                                {{ lado.field|as_crispy_field }}
+
+                                <div class="ba-editor-stage" data-ba-stage>
+                                    {% if lado.url %}
+                                        <img
+                                            data-ba-preview
+                                            src="{{ lado.url }}"
+                                            alt=""
+                                            style="--ba-zoom: {{ lado.zoom }}; --ba-x: {{ lado.x }}; --ba-y: {{ lado.y }};"
+                                        >
+                                    {% else %}
+                                        <img data-ba-preview alt="" hidden>
+                                        <span class="ba-editor-empty" data-ba-empty>
+                                            Escolha uma fotografia para a enquadrar
+                                        </span>
+                                    {% endif %}
+                                </div>
+
+                                <label class="ba-editor-zoom">
+                                    <span>Aproximação</span>
+
+                                    <input
+                                        type="range"
+                                        min="100"
+                                        max="300"
+                                        step="5"
+                                        value="{{ lado.zoom_percent }}"
+                                        data-ba-zoom
+                                        aria-label="Aproximação da fotografia {{ lado.label|lower }}"
+                                    >
+
+                                    <output data-ba-zoom-value>{{ lado.zoom }}×</output>
+                                </label>
+
+                                <p class="ba-editor-hint">
+                                    Arraste dentro da fotografia para escolher o que fica à vista.
+                                    <button type="button" class="btn btn-link btn-sm p-0" data-ba-reset>
+                                        Repor
+                                    </button>
+                                </p>
+
+                                {{ lado.zoom_input }}
+                                {{ lado.x_input }}
+                                {{ lado.y_input }}
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    {{ form.display_order|as_crispy_field }}
+                    {{ form.is_active|as_crispy_field }}
 
                     <div class="d-flex gap-2 mt-3">
                         <button type="submit" class="btn btn-primary">
@@ -39,4 +96,115 @@
 
     </div>
 </div>
+
+<script>
+    // O enquadramento é decidido aqui e guardado em números; a página pública
+    // limita-se a aplicá-los. Sem JavaScript o formulário continua a funcionar
+    // — os campos escondidos mantêm o que já lá estava, e o enquadramento por
+    // omissão é a fotografia inteira, centrada.
+    (function () {
+        document.querySelectorAll("[data-ba-editor]").forEach(function (editor) {
+            const palco = editor.querySelector("[data-ba-stage]");
+            const imagem = editor.querySelector("[data-ba-preview]");
+            const vazio = editor.querySelector("[data-ba-empty]");
+            const barra = editor.querySelector("[data-ba-zoom]");
+            const valor = editor.querySelector("[data-ba-zoom-value]");
+            const repor = editor.querySelector("[data-ba-reset]");
+            const ficheiro = editor.querySelector('input[type="file"]');
+
+            const lado = editor.dataset.side;
+            const campoZoom = document.getElementById("id_" + lado + "_zoom");
+            const campoX = document.getElementById("id_" + lado + "_focus_x");
+            const campoY = document.getElementById("id_" + lado + "_focus_y");
+
+            if (!palco || !imagem || !campoZoom) {
+                return;
+            }
+
+            function aplicar() {
+                const zoom = Number(campoZoom.value) / 100;
+
+                imagem.style.setProperty("--ba-zoom", zoom);
+                imagem.style.setProperty("--ba-x", campoX.value + "%");
+                imagem.style.setProperty("--ba-y", campoY.value + "%");
+
+                barra.value = campoZoom.value;
+                valor.textContent = zoom.toFixed(2).replace(".", ",") + "×";
+            }
+
+            function entre(numero) {
+                return Math.max(0, Math.min(100, Math.round(numero)));
+            }
+
+            function mover(evento) {
+                const caixa = palco.getBoundingClientRect();
+
+                campoX.value = entre(((evento.clientX - caixa.left) / caixa.width) * 100);
+                campoY.value = entre(((evento.clientY - caixa.top) / caixa.height) * 100);
+
+                aplicar();
+            }
+
+            let a_arrastar = false;
+
+            palco.addEventListener("pointerdown", function (evento) {
+                if (imagem.hidden) {
+                    return;
+                }
+
+                a_arrastar = true;
+                palco.setPointerCapture(evento.pointerId);
+                mover(evento);
+            });
+
+            palco.addEventListener("pointermove", function (evento) {
+                if (a_arrastar) {
+                    mover(evento);
+                }
+            });
+
+            palco.addEventListener("pointerup", function () {
+                a_arrastar = false;
+            });
+
+            barra.addEventListener("input", function () {
+                campoZoom.value = barra.value;
+                aplicar();
+            });
+
+            repor.addEventListener("click", function () {
+                campoZoom.value = 100;
+                campoX.value = 50;
+                campoY.value = 50;
+                aplicar();
+            });
+
+            // Uma fotografia acabada de escolher mostra-se logo, para o
+            // enquadramento ser feito sobre ela e não sobre a anterior.
+            if (ficheiro) {
+                ficheiro.addEventListener("change", function () {
+                    const escolhido = ficheiro.files && ficheiro.files[0];
+
+                    if (!escolhido) {
+                        return;
+                    }
+
+                    imagem.src = URL.createObjectURL(escolhido);
+                    imagem.hidden = false;
+
+                    if (vazio) {
+                        vazio.hidden = true;
+                    }
+
+                    campoZoom.value = 100;
+                    campoX.value = 50;
+                    campoY.value = 50;
+                    aplicar();
+                });
+            }
+
+            aplicar();
+        });
+    })();
+</script>
 {% endblock %}

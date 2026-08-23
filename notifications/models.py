@@ -4,6 +4,7 @@ import re
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Q
 from notifications.images import resize_uploaded_image
@@ -928,6 +929,53 @@ class BeforeAfterCase(models.Model):
         upload_to="antes-e-depois/",
     )
 
+    # Enquadramento de cada fotografia dentro da caixa quadrada do site.
+    #
+    # A caixa tem proporção fixa e recorta o que sobra, e o que interessa numa
+    # fotografia de pé raramente está no meio exato do ficheiro. Estes valores
+    # dizem quanto aproximar e que ponto manter à vista, e são o que faz as
+    # duas fotografias ficarem alinhadas uma com a outra — sem isso, uma
+    # tirada um passo mais atrás desalinha a comparação inteira.
+    #
+    # Percentagens e não decimais: `object-position` e `scale()` recebem-nas
+    # tal como estão, sem conversões pelo caminho.
+    before_zoom = models.PositiveSmallIntegerField(
+        "Aproximação do antes",
+        default=100,
+        validators=[MinValueValidator(100), MaxValueValidator(300)],
+        help_text="100 é a fotografia inteira; 200 é o dobro do tamanho.",
+    )
+
+    before_focus_x = models.PositiveSmallIntegerField(
+        "Ponto do antes (horizontal)",
+        default=50,
+        validators=[MaxValueValidator(100)],
+    )
+
+    before_focus_y = models.PositiveSmallIntegerField(
+        "Ponto do antes (vertical)",
+        default=50,
+        validators=[MaxValueValidator(100)],
+    )
+
+    after_zoom = models.PositiveSmallIntegerField(
+        "Aproximação do depois",
+        default=100,
+        validators=[MinValueValidator(100), MaxValueValidator(300)],
+    )
+
+    after_focus_x = models.PositiveSmallIntegerField(
+        "Ponto do depois (horizontal)",
+        default=50,
+        validators=[MaxValueValidator(100)],
+    )
+
+    after_focus_y = models.PositiveSmallIntegerField(
+        "Ponto do depois (vertical)",
+        default=50,
+        validators=[MaxValueValidator(100)],
+    )
+
     display_order = models.PositiveIntegerField(
         "Ordem",
         default=0,
@@ -946,6 +994,37 @@ class BeforeAfterCase(models.Model):
         ordering = ["display_order", "-created_at"]
         verbose_name = "Caso antes e depois"
         verbose_name_plural = "Casos antes e depois"
+
+    def framing(self, lado):
+        """O enquadramento de um dos lados, pronto para o CSS.
+
+        Um sítio só a montar isto: o mesmo enquadramento é usado na página
+        pública, na pré-visualização do formulário e nas miniaturas da
+        gestão, e três construções à mão divergiriam à primeira alteração.
+        """
+
+        return {
+            "zoom": getattr(self, f"{lado}_zoom") / 100,
+            "x": f"{getattr(self, f'{lado}_focus_x')}%",
+            "y": f"{getattr(self, f'{lado}_focus_y')}%",
+        }
+
+    @property
+    def before_style(self):
+        return self._estilo("before")
+
+    @property
+    def after_style(self):
+        return self._estilo("after")
+
+    def _estilo(self, lado):
+        enquadramento = self.framing(lado)
+
+        return (
+            f"--ba-zoom: {enquadramento['zoom']};"
+            f"--ba-x: {enquadramento['x']};"
+            f"--ba-y: {enquadramento['y']};"
+        )
 
     def save(self, *args, **kwargs):
         # As fotografias são encolhidas antes de ir para o disco. Aqui e não

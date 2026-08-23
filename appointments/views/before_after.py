@@ -75,7 +75,49 @@ class BeforeAfterListView(InternalAreaRequiredMixin, ListView):
         return context
 
 
-class BeforeAfterCreateView(InternalAreaRequiredMixin, CreateView):
+class FramingSidesMixin:
+    """Junta, por lado, tudo o que o editor de enquadramento precisa.
+
+    O template poderia ir buscar isto peça a peça — o campo do ficheiro, o
+    URL da imagem, os três campos escondidos, os valores atuais —, mas seriam
+    doze acessos escritos duas vezes, uma por lado. Aqui é uma lista de dois.
+    """
+
+    SIDES = (("before", "Antes"), ("after", "Depois"))
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        formulario = context["form"]
+        caso = getattr(self, "object", None)
+
+        lados = []
+
+        for nome, etiqueta in self.SIDES:
+            imagem = getattr(caso, f"{nome}_image", None) if caso else None
+            enquadramento = caso.framing(nome) if caso else {"zoom": 1, "x": "50%", "y": "50%"}
+
+            lados.append(
+                {
+                    "name": nome,
+                    "label": etiqueta,
+                    "field": formulario[f"{nome}_image"],
+                    "url": imagem.url if imagem else "",
+                    "zoom": enquadramento["zoom"],
+                    "zoom_percent": int(enquadramento["zoom"] * 100),
+                    "x": enquadramento["x"],
+                    "y": enquadramento["y"],
+                    "zoom_input": formulario[f"{nome}_zoom"],
+                    "x_input": formulario[f"{nome}_focus_x"],
+                    "y_input": formulario[f"{nome}_focus_y"],
+                }
+            )
+
+        context["framing_sides"] = lados
+
+        return context
+
+
+class BeforeAfterCreateView(FramingSidesMixin, InternalAreaRequiredMixin, CreateView):
     model = BeforeAfterCase
     form_class = BeforeAfterCaseForm
     template_name = "appointments/before_after_form.html"
@@ -86,7 +128,7 @@ class BeforeAfterCreateView(InternalAreaRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class BeforeAfterUpdateView(InternalAreaRequiredMixin, UpdateView):
+class BeforeAfterUpdateView(FramingSidesMixin, InternalAreaRequiredMixin, UpdateView):
     model = BeforeAfterCase
     form_class = BeforeAfterCaseForm
     template_name = "appointments/before_after_form.html"

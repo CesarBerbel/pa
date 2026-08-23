@@ -103,7 +103,33 @@ class BeforeAfterCaseForm(forms.ModelForm):
             "after_image",
             "display_order",
             "is_active",
+            # Escondidos: quem os mexe é o editor de enquadramento, à conta
+            # da pré-visualização. Escritos à mão seriam seis números sem
+            # significado nenhum para quem os lê.
+            "before_zoom",
+            "before_focus_x",
+            "before_focus_y",
+            "after_zoom",
+            "after_focus_x",
+            "after_focus_y",
         ]
+        widgets = {
+            "before_zoom": forms.HiddenInput(),
+            "before_focus_x": forms.HiddenInput(),
+            "before_focus_y": forms.HiddenInput(),
+            "after_zoom": forms.HiddenInput(),
+            "after_focus_x": forms.HiddenInput(),
+            "after_focus_y": forms.HiddenInput(),
+        }
+
+    ENQUADRAMENTO = {
+        "before_zoom": 100,
+        "before_focus_x": 50,
+        "before_focus_y": 50,
+        "after_zoom": 100,
+        "after_focus_x": 50,
+        "after_focus_y": 50,
+    }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -111,6 +137,21 @@ class BeforeAfterCaseForm(forms.ModelForm):
         for campo in ("before_image", "after_image"):
             if getattr(self.instance, campo, None):
                 self.fields[campo].required = False
+
+        # O enquadramento vem de campos escondidos que o editor preenche. Um
+        # formulário submetido sem eles é um enquadramento por decidir, não um
+        # erro: vale o valor de origem, que é a fotografia inteira e centrada.
+        for campo in self.ENQUADRAMENTO:
+            self.fields[campo].required = False
+
+    def clean(self):
+        dados = super().clean()
+
+        for campo, omissao in self.ENQUADRAMENTO.items():
+            if dados.get(campo) in (None, ""):
+                dados[campo] = omissao
+
+        return dados
 
 
 class CustomerForm(forms.ModelForm):

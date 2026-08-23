@@ -38,13 +38,15 @@
             {% for case in cases %}
                 <article class="ba-admin-card{% if not case.is_active %} is-hidden{% endif %}">
                     <div class="ba-admin-thumbs">
+                        {% comment %} As miniaturas mostram o enquadramento escolhido, senão a
+                           lista mentia sobre o que está publicado. {% endcomment %}
                         <figure>
-                            <img src="{{ case.before_image.url }}" alt="Antes: {{ case.title }}" loading="lazy">
+                            <img src="{{ case.before_image.url }}" style="{{ case.before_style }}" alt="Antes: {{ case.title }}" loading="lazy">
                             <figcaption>Antes</figcaption>
                         </figure>
 
                         <figure>
-                            <img src="{{ case.after_image.url }}" alt="Depois: {{ case.title }}" loading="lazy">
+                            <img src="{{ case.after_image.url }}" style="{{ case.after_style }}" alt="Depois: {{ case.title }}" loading="lazy">
                             <figcaption>Depois</figcaption>
                         </figure>
                     </div>
