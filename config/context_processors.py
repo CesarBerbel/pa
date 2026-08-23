@@ -110,3 +110,16 @@ def before_after_gallery(request):
     return {
         "HAS_BEFORE_AFTER": BeforeAfterCase.objects.filter(is_active=True).exists(),
     }
+
+
+def opening_hours(request):
+    """O horário de funcionamento para o rodapé.
+
+    Mesma fonte que a agenda e que os dados estruturados: os `BusinessHour`.
+    O rodapé tinha o horário escrito à mão e ficava a mentir sempre que a
+    profissional o mudava na área interna.
+    """
+
+    from appointments.opening_hours import opening_hours as horario
+
+    return {"OPENING_HOURS": horario()}

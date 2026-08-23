@@ -380,11 +380,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         {% translate "Cuidado, bem-estar e profissionalismo em podologia." %}
                     </p>
 
-                    <div class="footer-hours">
-                        <h4>{% translate "Horário de funcionamento" %}</h4>
-                        <p>{% translate "Todos os dias: 08:00 — 20:00" %}</p>
-                        <p>{% translate "Almoço: 13:00 — 14:00" %}</p>
-                    </div>
+                    {% if OPENING_HOURS %}
+                        <div class="footer-hours">
+                            <h4>{% translate "Horário de funcionamento" %}</h4>
+
+                            {% for linha in OPENING_HOURS %}
+                                <p>
+                                    {{ linha.days }}:
+                                    {% for periodo in linha.periods %}{% if not forloop.first %} {% translate "e" %} {% endif %}{{ periodo }}{% endfor %}
+                                </p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
 
                 <div class="footer-info-panel">

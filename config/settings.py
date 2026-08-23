@@ -319,6 +319,7 @@ TEMPLATES = [
                 "config.context_processors.language_alternates",
                 "config.context_processors.clinical_settings",
                 "config.context_processors.before_after_gallery",
+                "config.context_processors.opening_hours",
             ],
             "libraries": {
                 # `config` não é uma app instalada, por isso a biblioteca de
@@ -461,6 +462,21 @@ MEDIA_URL = config("MEDIA_URL", default="/media/")
 MEDIA_ROOT = BASE_DIR / config("MEDIA_ROOT", default="media")
 
 # WhiteNoise serve os ficheiros estáticos comprimidos direto pelo Django em produção.
+
+# Quanto tempo o browser pode guardar um ficheiro estático. Por omissão o
+# WhiteNoise diz 60 segundos, porque com nomes de ficheiro fixos não há como
+# saber quando o conteúdo muda — passado esse minuto, cada visita volta a
+# perguntar por cada ficheiro.
+#
+# Aqui há como: o `{% versioned_static %}` acrescenta `?v=<data do ficheiro>`
+# ao endereço, portanto um ficheiro alterado passa a ter outro endereço e o
+# que está guardado deixa de ser pedido. Isso torna seguro guardar durante um
+# ano, que é o máximo que a norma recomenda.
+#
+# A exceção é o `apple-touch-icon`, que usa `{% static %}` sem versão: se um
+# dia mudar, quem já a tiver visto fica com a antiga. É um ícone.
+WHITENOISE_MAX_AGE = config("WHITENOISE_MAX_AGE", default=31536000, cast=int)
+
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",

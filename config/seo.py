@@ -9,6 +9,37 @@ def absolute_url(path: str) -> str:
     return urljoin(settings.SITE_URL.rstrip("/") + "/", path.lstrip("/"))
 
 
+def opening_hours_specification():
+    """O horário para o Google, tirado do que a profissional configurou.
+
+    Enquanto não houver nenhum dia configurado, valem as definições — uma
+    ficha sem horário nenhum é pior do que uma com um horário genérico.
+    """
+
+    from appointments.opening_hours import structured_data_specification
+
+    configurado = structured_data_specification()
+
+    if configurado:
+        return configurado
+
+    return [
+        {
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday",
+            ],
+            "opens": settings.SEO_BUSINESS_OPENS_AT,
+            "closes": settings.SEO_BUSINESS_CLOSES_AT,
+        }
+    ]
+
 def build_home_structured_data(service_categories):
     """Build JSON-LD for the public homepage."""
 
@@ -50,22 +81,7 @@ def build_home_structured_data(service_categories):
             "addressCountry": settings.SEO_BUSINESS_COUNTRY,
         },
         "areaServed": settings.SEO_BUSINESS_AREA_SERVED,
-        "openingHoursSpecification": [
-            {
-                "@type": "OpeningHoursSpecification",
-                "dayOfWeek": [
-                    "Monday",
-                    "Tuesday",
-                    "Wednesday",
-                    "Thursday",
-                    "Friday",
-                    "Saturday",
-                    "Sunday",
-                ],
-                "opens": settings.SEO_BUSINESS_OPENS_AT,
-                "closes": settings.SEO_BUSINESS_CLOSES_AT,
-            }
-        ],
+        "openingHoursSpecification": opening_hours_specification(),
         "makesOffer": services,
     }
 
