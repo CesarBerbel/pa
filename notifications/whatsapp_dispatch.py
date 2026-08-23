@@ -17,7 +17,11 @@ from django.conf import settings
 
 from notifications import baileys_whatsapp, twilio_whatsapp
 from notifications.models import MessagingSetting, WhatsAppEventSetting
-from notifications.whatsapp_common import SendResult, build_context
+from notifications.whatsapp_common import (
+    SendResult,
+    audience_language,
+    build_context,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -133,7 +137,13 @@ def preview(appointment, event_type):
 
         try:
             destinatarios = resolve_recipients(regra, appointment)
-            texto = provider_module(regra).build_body(regra, build_context(appointment))
+            # A pré-visualização mostra o que a pessoa vai mesmo receber,
+            # incluindo a língua.
+            texto = provider_module(regra).build_body(
+                regra,
+                build_context(appointment),
+                language=audience_language(regra, appointment),
+            )
         except Exception as erro:
             logger.exception("Não foi possível pré-visualizar %s", regra)
             avisos.append(f"{regra}: {erro}")

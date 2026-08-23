@@ -7,7 +7,7 @@ from django.urls import include, path, re_path
 
 from accounts.views import DashboardView
 from appointments.homepage import build_home_service_cards
-from appointments.models import Service, ServiceCategory
+from appointments.models import SchedulingSetting, Service, ServiceCategory
 from config.google_reviews import get_reviews
 from config.seo import build_home_structured_data
 from config.views import (
@@ -51,6 +51,12 @@ def home_view(request):
             "service_cards": build_home_service_cards(service_categories),
             "home_structured_data": build_home_structured_data(service_categories),
             "google_reviews": get_reviews(),
+            # As perguntas frequentes dizem o prazo de cancelamento. Escrito à
+            # mão ficaria a mentir assim que a profissional o mudasse nas
+            # regras de agenda.
+            "cancellation_min_advance_hours": (
+                SchedulingSetting.get_cancellation_min_advance_hours()
+            ),
         },
     )
 

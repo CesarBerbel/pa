@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% load assets static i18n %}
 
-{% block title %}{% translate "Priscila Arantes PA | Podologia, estética e enfermagem em Coimbra" %}{% endblock %}
+{% block title %}{% translate "Podóloga em Coimbra | Podologia e Tratamentos dos Pés | Pri Arantes" %}{% endblock %}
 {% block meta_description %}{% translate "Atendimento profissional em podologia, manicure, pedicure e enfermagem em Coimbra. Consulte os serviços disponíveis e marque o seu horário online." %}{% endblock %}
 {% block meta_keywords %}{% translate "podologia Coimbra, manicure Coimbra, pedicure Coimbra, enfermagem Coimbra, pés diabéticos, unha em gel, troca de penso" %}{% endblock %}
-{% block og_title %}{% translate "Priscila Arantes PA | Podologia, estética e enfermagem em Coimbra" %}{% endblock %}
+{% block og_title %}{% translate "Podóloga em Coimbra | Podologia e Tratamentos dos Pés | Pri Arantes" %}{% endblock %}
 {% block og_description %}{% translate "Cuidado profissional, marcação online e atendimento personalizado em podologia, estética e enfermagem em Coimbra." %}{% endblock %}
-{% block twitter_title %}{% translate "Priscila Arantes PA | Podologia, estética e enfermagem em Coimbra" %}{% endblock %}
+{% block twitter_title %}{% translate "Podóloga em Coimbra | Podologia e Tratamentos dos Pés | Pri Arantes" %}{% endblock %}
 {% block twitter_description %}{% translate "Consulte serviços e marque online o seu horário com Priscila Arantes PA em Coimbra." %}{% endblock %}
 
 {% block structured_data %}
@@ -38,13 +38,16 @@
                 <span class="luxury-eyebrow">{% translate "Podologia • Estética • Enfermagem" %}</span>
 
                 <h1 class="luxury-title mt-3 mb-2 mb-md-4">
-                    {% translate "Cuidados profissionais com" %}
-                    <span class="signature-font">{% translate "delicadeza" %}</span>
-                    {% translate "e organização" %}
+                    {% translate "Saúde dos pés com conhecimento, experiência e ciência" %}
+                    <span class="signature-font">{% translate "em Coimbra" %}</span>
                 </h1>
 
+                <p class="luxury-lead">
+                    {% translate "Um olhar técnico-científico para a saúde dos seus pés." %}
+                </p>
+
                 <p class="luxury-subtitle mb-3 mb-md-4">
-                    {% translate "Atendimento especializado em podologia, manicure, pedicure e apoio de enfermagem, com marcação online simples, segura e prática. Também disponível atendimento em domicílio, mediante disponibilidade." %}
+                    {% translate "Tratamento de unhas encravadas, calos, micoses e feridas que não saram, em adultos, idosos e pessoas com diabetes — na clínica ou em sua casa, com marcação online." %}
                 </p>
 
                 <div class="luxury-hero-actions d-flex flex-row gap-2 gap-md-3">
@@ -66,13 +69,16 @@
                 <span class="luxury-eyebrow">{% translate "Podologia • Estética • Enfermagem" %}</span>
 
                 <h1 class="luxury-title mt-3 mb-4">
-                    {% translate "Cuidados profissionais com" %}
-                    <span class="signature-font">{% translate "delicadeza" %}</span>
-                    {% translate "e organização" %}
+                    {% translate "Saúde dos pés com conhecimento, experiência e ciência" %}
+                    <span class="signature-font">{% translate "em Coimbra" %}</span>
                 </h1>
 
+                <p class="luxury-lead">
+                    {% translate "Um olhar técnico-científico para a saúde dos seus pés." %}
+                </p>
+
                 <p class="luxury-subtitle mb-4">
-                    {% translate "Atendimento especializado em podologia, manicure, pedicure e apoio de enfermagem, com marcação online simples, segura e prática. Também disponível atendimento em domicílio, mediante disponibilidade." %}
+                    {% translate "Tratamento de unhas encravadas, calos, micoses e feridas que não saram, em adultos, idosos e pessoas com diabetes — na clínica ou em sua casa, com marcação online." %}
                 </p>
 
                 <div class="d-flex flex-column flex-md-row gap-3">
@@ -102,9 +108,28 @@
 {% endif %}
 
 <section class="trust-strip mb-5">
+    {% if google_reviews.rating %}
+        {# A nota vem primeiro e é a única coisa aqui que não é a casa a #}
+        {# falar de si: são pessoas que já cá vieram. #}
+        <a class="trust-item trust-item-rating" href="{{ google_reviews.url }}" target="_blank" rel="noopener noreferrer">
+            <span class="trust-stars" aria-hidden="true">
+                {% for _ in ""|ljust:google_reviews.stars %}<i class="bi bi-star-fill"></i>{% endfor %}
+                {% for _ in ""|ljust:google_reviews.empty_stars %}<i class="bi bi-star"></i>{% endfor %}
+            </span>
+
+            <strong>
+                {% blocktranslate with nota=google_reviews.rating|floatformat:1 %}{{ nota }} no Google{% endblocktranslate %}
+            </strong>
+
+            <span>
+                {% blocktranslate with total=google_reviews.total %}{{ total }} avaliações{% endblocktranslate %}
+            </span>
+        </a>
+    {% endif %}
+
     <div class="trust-item">
-        <strong>{% translate "Atendimento cuidadoso" %}</strong>
-        <span>{% translate "Foco em conforto e bem-estar" %}</span>
+        <strong>{% translate "Atendimento em Coimbra" %}</strong>
+        <span>{% translate "Av. Sá da Bandeira 33, Loja 108" %}</span>
     </div>
 
     <div class="trust-item">
@@ -113,80 +138,55 @@
     </div>
 
     <div class="trust-item">
-        <strong>{% translate "Ambiente profissional" %}</strong>
-        <span>{% translate "Organização, higiene e atenção" %}</span>
-    </div>
-
-    <div class="trust-item">
         <strong>{% translate "Atendimento em domicílio" %}</strong>
         <span>{% translate "Disponível mediante consulta prévia" %}</span>
     </div>
 </section>
 
-<section id="marcacao" class="one-page-section mb-5">
-    <div class="row align-items-center g-4">
-        <div class="col-12 col-lg-6">
-            <span class="luxury-eyebrow">{% translate "Marcação online" %}</span>
-            <h2 class="section-title mt-2 mb-3">
-                {% translate "Escolha o seu horário de forma simples" %}
-            </h2>
+<section id="problemas" class="one-page-section mb-5">
+    <div class="text-center mb-5">
+        <span class="luxury-eyebrow">{% translate "O que se trata" %}</span>
+        <h2 class="section-title mt-2">
+            {% translate "Principais problemas tratados" %}
+        </h2>
 
-            <p class="text-muted mb-3">
-                {% translate "Consulte os horários disponíveis, escolha a categoria e o serviço desejado e confirme a sua marcação em poucos passos." %}
-            </p>
-
-            <p class="text-muted mb-4">
-                <i class="bi bi-info-circle me-1"></i>
-                {% translate "Cada pedido de horário é analisado e confirmado pela profissional antes de ficar definitivo. Precisa de atendimento em domicílio? Fale connosco pelo" %}
-                <a href="{{ SEO_WHATSAPP_LINK }}" target="_blank" rel="noopener noreferrer">WhatsApp</a>.
-            </p>
-
-            <div class="d-flex flex-column flex-md-row gap-3">
-                <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary btn-lg px-5">
-                    {% translate "Ver agenda disponível" %}
-                </a>
-
-                <a href="{% url 'appointments:public_appointment_lookup' %}" class="btn btn-outline-secondary btn-lg px-5">
-                    {% translate "Consultar código" %}
-                </a>
-            </div>
-        </div>
-
-        <div class="col-12 col-lg-6">
-            <div class="luxury-code-box">
-                <span>{% translate "Fluxo de marcação" %}</span>
-                <strong>{% translate "Categoria → Serviço → Agenda → Confirmação" %}</strong>
-            </div>
-        </div>
+        <p class="text-muted mb-0">
+            {% translate "Se reconhece algum destes, é caso para consulta." %}
+        </p>
     </div>
-</section>
 
-<section id="sobre" class="one-page-section mb-5">
-    <div class="row align-items-center g-5">
-        <div class="col-12 col-lg-5">
-            <div class="about-card">
-                <span class="signature-font">Priscila Arantes</span>
-                <h2>Priscila Arantes PA</h2>
-                <p>
-                    {% translate "Cuidado profissional, atenção individualizada e compromisso com o bem-estar de cada cliente." %}
-                </p>
-            </div>
-        </div>
-
-        <div class="col-12 col-lg-7">
-            <span class="luxury-eyebrow">{% translate "Sobre a profissional" %}</span>
-            <h2 class="section-title mt-2 mb-3">
-                {% translate "Atendimento cuidadoso, humano e profissional" %}
-            </h2>
-
-            <p class="text-muted mb-3">
-                {% translate "A proposta é oferecer um atendimento acolhedor e responsável, respeitando as necessidades de cada cliente e valorizando conforto, higiene e confiança." %}
+    <div class="problem-grid">
+        <article class="problem-card">
+            <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+            <h3>{% translate "Unha encravada" %}</h3>
+            <p>
+                {% translate "Dor ao calçar, inchaço ou vermelhidão à volta da unha. Trata-se sem cirurgia na maioria dos casos, e pode ser corrigido com órtese para não voltar." %}
             </p>
+        </article>
 
-            <p class="text-muted mb-0">
-                {% translate "Cada marcação é pensada para proporcionar uma experiência tranquila, organizada e com acompanhamento adequado." %}
+        <article class="problem-card">
+            <i class="bi bi-circle-half" aria-hidden="true"></i>
+            <h3>{% translate "Calos e calosidades" %}</h3>
+            <p>
+                {% translate "Pele espessa que dói ao pisar. O desbaste alivia logo, mas o que interessa é perceber o que está a causar a pressão." %}
             </p>
-        </div>
+        </article>
+
+        <article class="problem-card">
+            <i class="bi bi-droplet" aria-hidden="true"></i>
+            <h3>{% translate "Fungos nas unhas" %}</h3>
+            <p>
+                {% translate "Unhas amareladas, espessas ou quebradiças. Avaliação, tratamento e, quando indicado, laserterapia para onicomicose." %}
+            </p>
+        </article>
+
+        <article class="problem-card">
+            <i class="bi bi-heart-pulse" aria-hidden="true"></i>
+            <h3>{% translate "Risco Podológico" %}</h3>
+            <p>
+                {% translate "Avaliação do risco e cuidado adaptado a quem tem diabetes, problemas de circulação ou sensibilidade alterada nos pés — situações em que se deve vigiar mesmo sem queixas." %}
+            </p>
+        </article>
     </div>
 </section>
 
@@ -288,13 +288,51 @@
     {% endif %}
 </section>
 
+<section id="sobre" class="about-banner mb-5">
+    <div class="about-banner-inner">
+        <figure class="about-banner-photo">
+            <img
+                src="{% versioned_static 'img/sobre.webp' %}"
+                alt="{% translate "Priscila Arantes a tratar os pés de uma cliente" %}"
+                width="900"
+                height="900"
+                loading="lazy"
+            >
+        </figure>
+
+        <div class="about-banner-body">
+            <span class="luxury-eyebrow">{% translate "Sobre a profissional" %}</span>
+
+            <h2 class="about-banner-title">
+                {% translate "Quem trata dos seus pés" %}
+            </h2>
+
+            <span class="signature-font about-banner-signature">Priscila Arantes</span>
+
+            <div class="about-banner-text">
+                <p>
+                    {% translate "Sou Enfermeira em Portugal e no Brasil, com experiência profissional na área da Oncologia, e atuo há mais de 20 anos no cuidado especializado dos pés." %}
+                </p>
+
+                <p>
+                    {% translate "No Brasil, realizei formação em Podologia, com habilitação em Podiatria Clínica. Em Portugal, complementei o meu percurso com formação em Pedicure Terapêutica, integrando diferentes conhecimentos e experiências numa abordagem individualizada, criteriosa e fundamentada." %}
+                </p>
+
+                <p>
+                    {% translate "A minha prática alia experiência clínica, conhecimento técnico-científico, segurança e cuidado humanizado, respeitando as necessidades e o contexto de saúde de cada pessoa." %}
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
 {% if google_reviews %}
     <section id="avaliacoes" class="one-page-section mb-5">
         <div class="text-center mb-5">
             <span class="luxury-eyebrow">{% translate "Avaliações" %}</span>
 
             <h2 class="section-title mt-2">
-                {% translate "O que dizem quem já veio" %}
+                {% translate "O que diz quem já veio" %}
             </h2>
 
             {% if google_reviews.rating %}
@@ -358,8 +396,15 @@
             {% endfor %}
         </div>
 
-        {% if google_reviews.url %}
-            <div class="text-center mt-4">
+        {# A marcação vem primeiro: quem acabou de ler o que os outros #}
+        {# dizem está no momento em que decide, e não deve ter de procurar #}
+        {# onde se marca. A ligação para a Google fica ao lado. #}
+        <div class="reviews-actions mt-4">
+            <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary btn-lg px-5">
+                {% translate "Marcar atendimento" %}
+            </a>
+
+            {% if google_reviews.url %}
                 <a
                     href="{{ google_reviews.url }}"
                     class="btn btn-outline-secondary btn-lg px-5"
@@ -368,10 +413,142 @@
                 >
                     {% translate "Ver todas as avaliações no Google" %}
                 </a>
-            </div>
-        {% endif %}
+            {% endif %}
+        </div>
     </section>
 {% endif %}
+
+{% if HAS_BEFORE_AFTER %}
+    <section id="antes-e-depois" class="ba-teaser mb-5">
+        <div class="ba-teaser-inner">
+            <span class="luxury-eyebrow">{% translate "Resultados" %}</span>
+
+            <h2 class="section-title mt-2 mb-3">
+                {% translate "Antes e depois" %}
+            </h2>
+
+            <p class="text-muted mb-4">
+                {% translate "Fotografias reais de tratamentos, publicadas com autorização. Arraste a linha sobre cada uma para comparar." %}
+            </p>
+
+            <a href="{% url 'appointments:public_before_after' %}" class="btn btn-primary btn-lg px-5">
+                {% translate "Ver antes e depois" %}
+            </a>
+        </div>
+    </section>
+{% endif %}
+
+<section id="marcacao" class="one-page-section mb-5">
+    <div class="text-center mb-5">
+        <span class="luxury-eyebrow">{% translate "Marcação online" %}</span>
+        <h2 class="section-title mt-2">
+            {% translate "Como funciona a marcação" %}
+        </h2>
+
+        <p class="text-muted mb-0">
+            {% translate "Três passos, sem telefonemas nem esperas." %}
+        </p>
+    </div>
+
+    <ol class="steps-grid">
+        <li class="step-card">
+            <span class="step-number">1</span>
+            <h3>{% translate "Escolha o serviço e a hora" %}</h3>
+            <p>
+                {% translate "A agenda mostra apenas as horas que estão mesmo livres. Escolhe a categoria, o serviço e o horário que lhe der jeito." %}
+            </p>
+        </li>
+
+        <li class="step-card">
+            <span class="step-number">2</span>
+            <h3>{% translate "Receba a confirmação" %}</h3>
+            <p>
+                {% translate "Cada pedido é visto pela profissional antes de ficar definitivo. Assim que estiver confirmado, recebe email e mensagem com o código da marcação." %}
+            </p>
+        </li>
+
+        <li class="step-card">
+            <span class="step-number">3</span>
+            <h3>{% translate "Venha — ou remarque" %}</h3>
+            <p>
+                {% if cancellation_min_advance_hours %}
+                    {% blocktranslate with horas=cancellation_min_advance_hours %}Com o código pode consultar, alterar ou cancelar a marcação até {{ horas }} horas antes da hora marcada, sem ter de falar com ninguém. Passado esse prazo, fale connosco por WhatsApp.{% endblocktranslate %}
+                {% else %}
+                    {% translate "Com o código pode consultar, alterar ou cancelar a marcação a qualquer momento, sem ter de falar com ninguém." %}
+                {% endif %}
+            </p>
+        </li>
+    </ol>
+
+    <div class="steps-actions">
+        <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary btn-lg px-5">
+            {% translate "Ver agenda disponível" %}
+        </a>
+
+        <a href="{% url 'appointments:public_appointment_lookup' %}" class="btn btn-outline-secondary btn-lg px-5">
+            {% translate "Consultar marcação" %}
+        </a>
+    </div>
+
+    <p class="steps-note">
+        <i class="bi bi-house-door me-1" aria-hidden="true"></i>
+        {% translate "Precisa de atendimento em domicílio? Fale connosco pelo" %}
+        <a href="{{ SEO_WHATSAPP_LINK }}" target="_blank" rel="noopener noreferrer">WhatsApp</a>.
+    </p>
+</section>
+
+<section id="perguntas" class="one-page-section mb-5">
+    <div class="text-center mb-5">
+        <span class="luxury-eyebrow">{% translate "Antes de vir" %}</span>
+        <h2 class="section-title mt-2">
+            {% translate "Perguntas frequentes" %}
+        </h2>
+    </div>
+
+    <div class="faq-list">
+        <details class="faq-item">
+            <summary>{% translate "Preciso de encaminhamento médico?" %}</summary>
+            <p>
+                {% translate "Não. Pode marcar diretamente. Se estiver a ser seguido por médico para alguma condição dos pés, traga essa informação — ajuda a adaptar o tratamento." %}
+            </p>
+        </details>
+
+        <details class="faq-item">
+            <summary>{% translate "Quanto tempo demora uma consulta?" %}</summary>
+            <p>
+                {% translate "Depende do serviço, e a duração de cada um está indicada na agenda quando escolhe o horário." %}
+            </p>
+        </details>
+
+        <details class="faq-item">
+            <summary>{% translate "Tenho diabetes. Posso ser atendido?" %}</summary>
+            <p>
+                {% translate "Sim, e deve. O pé diabético precisa de vigilância regular mesmo sem queixas. Diga-o ao marcar, para o atendimento ser preparado em conformidade." %}
+            </p>
+        </details>
+
+        <details class="faq-item">
+            <summary>{% translate "Como cancelo ou altero a marcação?" %}</summary>
+            <p>
+                {% blocktranslate with horas=cancellation_min_advance_hours %}Com o código que recebeu, na página de consulta de marcação. O cancelamento é possível até {{ horas }} horas antes da hora marcada; depois disso, fale connosco por WhatsApp.{% endblocktranslate %}
+            </p>
+        </details>
+
+        <details class="faq-item">
+            <summary>{% translate "Fazem atendimento ao domicílio?" %}</summary>
+            <p>
+                {% translate "Sim, mediante disponibilidade e consulta prévia. Combine por WhatsApp, porque o domicílio não se marca pela agenda online." %}
+            </p>
+        </details>
+
+        <details class="faq-item">
+            <summary>{% translate "Onde fica e como se estaciona?" %}</summary>
+            <p>
+                {% translate "Galeria Avenida, Av. Sá da Bandeira 33, Loja 108, em Coimbra. É no centro, com parques públicos a poucos minutos a pé." %}
+            </p>
+        </details>
+    </div>
+</section>
 
 {% if INSTAGRAM_PROFILE_URL %}
     <section id="instagram" class="one-page-section mb-5">
@@ -456,5 +633,25 @@
     </section>
 {% endif %}
 
+<section class="final-cta mb-5">
+    <div class="final-cta-inner">
+        <h2>{% translate "Os seus pés merecem atenção antes de doerem" %}</h2>
+
+        <p>
+            {% translate "Marque online em menos de um minuto, ou fale connosco se preferir explicar primeiro o que se passa." %}
+        </p>
+
+        <div class="final-cta-actions">
+            <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-lg px-5 final-cta-primary">
+                {% translate "Marcar consulta" %}
+            </a>
+
+            <a href="{{ SEO_WHATSAPP_LINK }}" class="btn btn-lg px-5 final-cta-secondary" target="_blank" rel="noopener noreferrer">
+                <i class="bi bi-whatsapp me-2" aria-hidden="true"></i>
+                {% translate "Falar por WhatsApp" %}
+            </a>
+        </div>
+    </div>
+</section>
 
 {% endblock %}

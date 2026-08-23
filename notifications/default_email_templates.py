@@ -25,6 +25,25 @@ RODAPE_TEXTO = "Priscila Arantes — Enfermeira e Podóloga\nCoimbra"
 MORADA = "Galeria Avenida, Av. Sá da Bandeira 33, Loja 108, 3000-351 Coimbra"
 
 
+# Os rótulos do quadro de detalhes e a assinatura, por língua. O esqueleto do
+# email é o mesmo nas duas: só estas palavras mudam.
+ROTULOS_PT = {
+    "servico": "Serviço",
+    "data": "Data",
+    "horario": "Horário",
+    "codigo": "Código",
+    "assinatura": "Priscila Arantes — Enfermeira e Podóloga<br>Coimbra",
+}
+
+ROTULOS_EN = {
+    "servico": "Service",
+    "data": "Date",
+    "horario": "Time",
+    "codigo": "Reference",
+    "assinatura": "Priscila Arantes — Nurse and Podologist<br>Coimbra, Portugal",
+}
+
+
 def _html(
     titulo,
     saudacao,
@@ -33,8 +52,11 @@ def _html(
     acao=None,
     aviso=None,
     detalhes_extra="",
+    rotulos=None,
 ):
     """Monta o email a partir das partes que mudam entre eles."""
+
+    rotulos = rotulos or ROTULOS_PT
 
     bloco_detalhes = ""
 
@@ -43,10 +65,10 @@ def _html(
         <table role="presentation" cellpadding="0" cellspacing="0" width="100%"
                style="background:#fff7f9;border:1px solid #f1d5db;border-radius:14px;margin:22px 0;">
           <tr><td style="padding:18px 20px;font-size:15px;color:#2b2b2b;line-height:1.9;">
-{detalhes_extra}            <strong>Serviço:</strong> {{{{ service_name }}}}<br>
-            <strong>Data:</strong> {{{{ appointment_date }}}}<br>
-            <strong>Horário:</strong> {{{{ appointment_time }}}}<br>
-            <strong>Código:</strong> {{{{ reference_code }}}}
+{detalhes_extra}            <strong>{rotulos['servico']}:</strong> {{{{ service_name }}}}<br>
+            <strong>{rotulos['data']}:</strong> {{{{ appointment_date }}}}<br>
+            <strong>{rotulos['horario']}:</strong> {{{{ appointment_time }}}}<br>
+            <strong>{rotulos['codigo']}:</strong> {{{{ reference_code }}}}
           </td></tr>
         </table>"""
 
@@ -99,8 +121,7 @@ def _html(
         <hr style="border:0;border-top:1px solid #f1d5db;margin:26px 0 16px;">
 
         <p style="margin:0;font-size:13px;color:#6b6b6b;line-height:1.7;">
-          Priscila Arantes — Enfermeira e Podóloga<br>
-          Coimbra
+          {rotulos['assinatura']}
         </p>
 
       </td></tr>

@@ -279,12 +279,110 @@ h1, h2, h3, .hero-title, .section-title {
 
 /* Floating WhatsApp button */
 
-.whatsapp-floating-button {
+/* Os dois atalhos, lado a lado no canto inferior direito. */
+.floating-actions {
     position: fixed;
     right: 24px;
     bottom: 24px;
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Só o ícone, do mesmo tamanho do botão do WhatsApp ao lado: dois círculos
+   iguais lêem-se como um par, e a etiqueta em texto desequilibrava-os. */
+.floating-book {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: 62px;
     height: 62px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #a9707b, #8b5e66);
+    color: #ffffff;
+    font-size: 0.98rem;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    box-shadow: 0 12px 28px rgba(139, 94, 102, 0.34);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.floating-book:hover {
+    color: #ffffff;
+    transform: translateY(-4px);
+    box-shadow: 0 16px 36px rgba(139, 94, 102, 0.42);
+}
+
+.floating-book i {
+    font-size: 1.6rem;
+}
+
+/* A barra do telemóvel: só aparece em ecrã estreito, e aí é ela que manda —
+   os botões flutuantes tapariam conteúdo num ecrã pequeno. */
+.mobile-action-bar {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .floating-actions {
+        display: none;
+    }
+
+    .mobile-action-bar {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1050;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        background: #ffffff;
+        border-top: 1px solid #f1d5db;
+        box-shadow: 0 -6px 22px rgba(139, 94, 102, 0.12);
+        /* Nos telemóveis com barra de gestos, o rodapé do sistema fica por
+           cima do que estiver colado ao fundo. */
+        padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+
+    .mobile-action {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 15px 10px;
+        font-size: 0.97rem;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .mobile-action i {
+        font-size: 1.1rem;
+    }
+
+    .mobile-action-book {
+        background: linear-gradient(135deg, #a9707b, #8b5e66);
+        color: #ffffff;
+    }
+
+    .mobile-action-whatsapp {
+        background: #25d366;
+        color: #ffffff;
+    }
+
+    /* A barra tapa o fim da página. Sem esta folga, as últimas linhas do
+       rodapé ficavam permanentemente debaixo dela. */
+    body {
+        padding-bottom: 62px;
+    }
+}
+
+.whatsapp-floating-button {
+    width: 62px;
+    height: 62px;
+    flex-shrink: 0;
     border-radius: 50%;
     background-color: #25d366;
     color: #ffffff;
@@ -293,7 +391,6 @@ h1, h2, h3, .hero-title, .section-title {
     justify-content: center;
     text-decoration: none;
     box-shadow: 0 12px 28px rgba(37, 211, 102, 0.35);
-    z-index: 1050;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -1380,36 +1477,11 @@ html {
     box-shadow: 0 16px 42px rgba(139, 94, 102, 0.08);
 }
 
-.about-card {
-    background: linear-gradient(135deg, #fff7f9, #f7e6ea);
-    border: 1px solid #f1d5db;
-    border-radius: 30px;
-    padding: 40px;
-    min-height: 280px;
-    box-shadow: 0 18px 48px rgba(139, 94, 102, 0.1);
-}
-
-.about-card h2 {
-    font-family: 'Playfair Display', serif;
-    color: #2b2b2b;
-    font-size: 2rem;
-    margin: 8px 0 16px;
-}
-
-.about-card p {
-    color: #6b6b6b;
-    line-height: 1.8;
-    margin: 0;
-}
 
 @media (max-width: 768px) {
     .one-page-section {
         padding: 36px 24px;
         border-radius: 26px;
-    }
-
-    .about-card {
-        padding: 32px 24px;
     }
 }
 
@@ -1642,9 +1714,12 @@ section[id] {
    TRUST STRIP
 ====================== */
 
+/* `auto-fit` e não quatro colunas fixas: o cartão da nota só existe quando a
+   Google responde, e com três cartões numa grelha de quatro ficava um vazio
+   à direita. */
 .trust-strip {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
     gap: 18px;
 }
 
@@ -1668,6 +1743,29 @@ section[id] {
 .trust-item span {
     color: #6b6b6b;
     font-size: 0.95rem;
+}
+
+/* O cartão da nota é uma ligação para o perfil na Google — os termos deles
+   exigem que a nota leve à origem. */
+.trust-item-rating {
+    display: block;
+    text-decoration: none;
+    background: linear-gradient(135deg, #fffdf7, #fff7f9);
+    border-color: #f0dcc8;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.trust-item-rating:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 36px rgba(139, 94, 102, 0.12);
+}
+
+.trust-stars {
+    display: block;
+    color: #e0a63c;
+    font-size: 1rem;
+    letter-spacing: 2px;
+    margin-bottom: 4px;
 }
 
 @media (max-width: 992px) {
@@ -2321,6 +2419,11 @@ footer[id] {
 }
 
 .luxury-logo-transparent {
+    /* Sem isto a imagem é inline e o sobretítulo, que também é inline,
+       encosta-se-lhe ao lado quando o texto é curto o bastante para caber —
+       era o que acontecia em inglês, onde "PODIATRY • BEAUTY • NURSING" é
+       mais curto do que a versão portuguesa e deixava de mudar de linha. */
+    display: block;
     width: min(100%, 560px);
     max-width: 560px;
     height: auto;
@@ -3931,7 +4034,6 @@ form .btn {
 .luxury-info-panel,
 .luxury-logo-card,
 .one-page-section,
-.about-card,
 .app-agenda-filter,
 .app-agenda-results,
 .internal-calendar-filter,
@@ -3959,7 +4061,6 @@ form .btn {
 .soft-panel,
 .luxury-card,
 .one-page-section,
-.about-card,
 .app-agenda-filter,
 .app-agenda-results,
 .service-category-card,
@@ -4067,19 +4168,10 @@ form .btn {
 }
 
 .luxury-card p,
-.about-card p,
 .service-category-description {
     line-height: 1.6;
 }
 
-.about-card {
-    min-height: 220px;
-    padding: 30px;
-}
-
-.about-card h2 {
-    font-size: 1.55rem;
-}
 
 /* Agenda pública e interna mais compactas */
 .app-agenda-shell {
@@ -5508,4 +5600,416 @@ textarea.form-control,
 .ba-admin-body h2 {
     font-size: 1.05rem;
     margin-bottom: 4px;
+}
+
+/* ======================
+   BANNER "SOBRE A PROFISSIONAL"
+
+   De um lado da página ao outro, como o herói do topo: é a apresentação de
+   quem trata, e a seguir a uma promessa ("voltar a andar sem dor") o que se
+   procura é a razão para acreditar nela.
+====================== */
+
+.about-banner {
+    /* Quebra o container e ocupa a largura toda do ecrã. */
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    padding: 72px 24px;
+    background: linear-gradient(135deg, #fff7f9 0%, #fdf1f3 45%, #f8e8ec 100%);
+    border-top: 1px solid #f3dde2;
+    border-bottom: 1px solid #f3dde2;
+}
+
+.about-banner-inner {
+    max-width: 760px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.about-banner-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.4rem, 3.2vw, 2.05rem);
+    line-height: 1.35;
+    font-weight: 600;
+    color: #2b2b2b;
+    margin: 12px 0 0;
+}
+
+.about-banner-signature {
+    display: block;
+    font-size: clamp(1.9rem, 5vw, 2.6rem);
+    margin: 18px 0 6px;
+}
+
+/* Um traço curto por baixo da assinatura, em vez de mais uma linha de texto
+   a separar a apresentação do currículo. */
+.about-banner-signature::after {
+    content: "";
+    display: block;
+    width: 64px;
+    height: 1px;
+    margin: 14px auto 0;
+    background: #d8b3bb;
+}
+
+.about-banner-text {
+    margin-top: 26px;
+    text-align: left;
+}
+
+.about-banner-text p {
+    color: #5f5350;
+    font-size: 1.02rem;
+    line-height: 1.85;
+    margin-bottom: 18px;
+}
+
+.about-banner-text p:last-child {
+    margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+    .about-banner {
+        padding: 48px 22px;
+    }
+
+    .about-banner-text {
+        margin-top: 22px;
+    }
+
+    .about-banner-text p {
+        font-size: 0.97rem;
+        line-height: 1.75;
+    }
+}
+
+/* A frase de posicionamento do herói: entre o título e a lista de
+   tratamentos, e por isso entre os dois em tamanho. */
+.luxury-lead {
+    color: #8b5e66;
+    font-size: 1.06rem;
+    font-weight: 600;
+    line-height: 1.5;
+    margin-bottom: 12px;
+}
+
+@media (max-width: 768px) {
+    .luxury-lead {
+        font-size: 0.98rem;
+        margin-bottom: 10px;
+    }
+}
+
+/* Os dois botões do fim das avaliações, lado a lado e centrados. */
+.reviews-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 14px;
+}
+
+@media (max-width: 576px) {
+    .reviews-actions .btn {
+        width: 100%;
+    }
+}
+
+/* ======================
+   PRINCIPAIS PROBLEMAS TRATADOS
+====================== */
+
+.problem-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 20px;
+}
+
+.problem-card {
+    background: #ffffff;
+    border: 1px solid #f1d5db;
+    border-radius: 22px;
+    padding: 26px 24px;
+    box-shadow: 0 10px 28px rgba(139, 94, 102, 0.06);
+}
+
+.problem-card i {
+    display: block;
+    color: #a9707b;
+    font-size: 1.6rem;
+    margin-bottom: 12px;
+}
+
+.problem-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.18rem;
+    color: #2b2b2b;
+    margin-bottom: 8px;
+}
+
+.problem-card p {
+    color: #6b6b6b;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    margin: 0;
+}
+
+/* ======================
+   SOBRE: FOTOGRAFIA AO LADO DO TEXTO
+====================== */
+
+.about-banner-photo {
+    margin: 0 0 26px;
+}
+
+/* Redondo a sério: a largura e a altura têm de ser iguais, senão o
+   `border-radius: 50%` desenha uma elipse. Daí o `aspect-ratio` e o
+   `object-fit`, que recortam a imagem em vez de a espremerem. */
+.about-banner-photo img {
+    display: block;
+    width: 320px;
+    height: 320px;
+    max-width: 100%;
+    margin: 0 auto;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 50%;
+    border: 5px solid #ffffff;
+    box-shadow: 0 18px 40px rgba(139, 94, 102, 0.18);
+}
+
+@media (min-width: 992px) {
+    /* Em ecrã largo o retrato fica ao lado do texto, e não por cima. */
+    .about-banner-inner {
+        display: grid;
+        grid-template-columns: 340px 1fr;
+        gap: 44px;
+        align-items: center;
+        max-width: 1000px;
+        text-align: left;
+    }
+
+    .about-banner-photo {
+        margin: 0;
+    }
+
+    .about-banner-signature::after {
+        margin-left: 0;
+    }
+}
+
+/* ======================
+   ANTES E DEPOIS: CHAMADA NA PÁGINA INICIAL
+====================== */
+
+.ba-teaser {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    padding: 64px 24px;
+    background: linear-gradient(135deg, #fdf1f3, #fff8f5);
+    border-top: 1px solid #f3dde2;
+    border-bottom: 1px solid #f3dde2;
+}
+
+.ba-teaser-inner {
+    max-width: 620px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+/* ======================
+   COMO FUNCIONA A MARCAÇÃO
+====================== */
+
+.steps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    counter-reset: none;
+}
+
+.step-card {
+    position: relative;
+    background: #fff7f9;
+    border: 1px solid #f1d5db;
+    border-radius: 22px;
+    padding: 28px 24px 24px;
+}
+
+.step-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #a9707b, #8b5e66);
+    color: #ffffff;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin-bottom: 14px;
+    box-shadow: 0 8px 18px rgba(139, 94, 102, 0.24);
+}
+
+.step-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    color: #2b2b2b;
+    margin-bottom: 8px;
+}
+
+.step-card p {
+    color: #6b6b6b;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    margin: 0;
+}
+
+.steps-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 34px;
+}
+
+.steps-note {
+    color: #6b6b6b;
+    font-size: 0.94rem;
+    text-align: center;
+    margin: 18px 0 0;
+}
+
+/* ======================
+   PERGUNTAS FREQUENTES
+====================== */
+
+.faq-list {
+    max-width: 760px;
+    margin: 0 auto;
+    display: grid;
+    gap: 12px;
+}
+
+/* <details> e não JavaScript: abre e fecha sozinho, funciona sem scripts, e
+   o que está fechado continua a ser encontrado pela pesquisa do browser. */
+.faq-item {
+    background: #ffffff;
+    border: 1px solid #f1d5db;
+    border-radius: 18px;
+    padding: 4px 22px;
+}
+
+.faq-item summary {
+    cursor: pointer;
+    padding: 16px 0;
+    font-weight: 600;
+    color: #2b2b2b;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.faq-item summary::-webkit-details-marker {
+    display: none;
+}
+
+.faq-item summary::after {
+    content: "+";
+    color: #8b5e66;
+    font-size: 1.35rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.faq-item[open] summary::after {
+    content: "−";
+}
+
+.faq-item p {
+    color: #6b6b6b;
+    font-size: 0.96rem;
+    line-height: 1.75;
+    margin: 0 0 18px;
+}
+
+/* ======================
+   APELO FINAL
+====================== */
+
+.final-cta {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    padding: 72px 24px;
+    background: linear-gradient(135deg, #8b5e66, #a9707b);
+}
+
+.final-cta-inner {
+    max-width: 660px;
+    margin: 0 auto;
+    text-align: center;
+    color: #ffffff;
+}
+
+.final-cta-inner h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.5rem, 3.4vw, 2.1rem);
+    color: #ffffff;
+    margin-bottom: 14px;
+}
+
+.final-cta-inner p {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.02rem;
+    line-height: 1.7;
+    margin-bottom: 28px;
+}
+
+.final-cta-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 14px;
+}
+
+.final-cta-primary {
+    background: #ffffff;
+    border: 0;
+    color: #8b5e66;
+    border-radius: 999px;
+    font-weight: 700;
+}
+
+.final-cta-primary:hover {
+    background: #fff7f9;
+    color: #8b5e66;
+}
+
+.final-cta-secondary {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    color: #ffffff;
+    border-radius: 999px;
+    font-weight: 600;
+}
+
+.final-cta-secondary:hover {
+    background: rgba(255, 255, 255, 0.14);
+    color: #ffffff;
+}
+
+@media (max-width: 576px) {
+    .steps-actions .btn,
+    .final-cta-actions .btn {
+        width: 100%;
+    }
 }

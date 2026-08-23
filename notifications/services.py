@@ -7,8 +7,13 @@ from .models import EmailEventSetting, EmailTemplate
 class EmailTemplateService:
     # Handles loading and rendering of email templates.
 
+    # `language` atravessa os três: é a língua da cliente, e só ela decide
+    # qual das versões do modelo se usa. Fica a `None` para os avisos à
+    # profissional e para a pré-visualização no admin, que são em português.
     @staticmethod
-    def render(template_key, context_data, fallback_subject, fallback_body):
+    def render(
+        template_key, context_data, fallback_subject, fallback_body, language=None
+    ):
         # Render email using DB template or fallback.
         template = EmailTemplate.objects.filter(
             key=template_key,
@@ -20,11 +25,12 @@ class EmailTemplateService:
             context_data=context_data,
             fallback_subject=fallback_subject,
             fallback_body=fallback_body,
+            language=language,
         )
 
     @staticmethod
     def render_template_or_fallback(
-        email_template, context_data, fallback_subject, fallback_body
+        email_template, context_data, fallback_subject, fallback_body, language=None
     ):
         # Render a specific template when available; otherwise use fallback content.
         if not email_template or not email_template.is_active:
@@ -37,18 +43,21 @@ class EmailTemplateService:
         return EmailTemplateService.render_template_object(
             email_template=email_template,
             context_data=context_data,
+            language=language,
         )
 
     @staticmethod
-    def render_template_object(email_template, context_data):
+    def render_template_object(email_template, context_data, language=None):
         # Render a specific EmailTemplate instance for admin preview.
-        subject = Template(email_template.subject).render(Context(context_data))
-        body_text = Template(email_template.body_text).render(Context(context_data))
+        versao = email_template.for_language(language)
+
+        subject = Template(versao["subject"]).render(Context(context_data))
+        body_text = Template(versao["body_text"]).render(Context(context_data))
 
         body_html = ""
 
-        if email_template.body_html:
-            body_html = Template(email_template.body_html).render(Context(context_data))
+        if versao["body_html"]:
+            body_html = Template(versao["body_html"]).render(Context(context_data))
 
         return {
             "subject": subject,

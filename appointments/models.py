@@ -200,6 +200,18 @@ class Customer(models.Model):
         verbose_name="Sem conta no site",
     )
 
+    # Guardado a partir da versão do site em que a marcação foi feita. É por
+    # aqui que as mensagens sabem em que língua falar com esta pessoa: quem
+    # marcou em /en/ não percebe uma confirmação em português, e quem marcou
+    # em português não quer receber inglês.
+    language = models.CharField(
+        max_length=10,
+        choices=settings.LANGUAGES,
+        default="pt-pt",
+        verbose_name="Idioma",
+        help_text="Língua em que esta cliente recebe emails e mensagens.",
+    )
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -219,6 +231,10 @@ class Customer(models.Model):
 
     def __str__(self):
         return self.full_name
+
+    @property
+    def prefers_english(self):
+        return (self.language or "").lower().startswith("en")
 
     @property
     def whatsapp_url(self):

@@ -113,6 +113,21 @@ def cancellation_reason(appointment):
     return motivo or "não indicado"
 
 
+def audience_language(setting, appointment):
+    """A língua desta mensagem.
+
+    À cliente fala-se na língua dela; à profissional fala-se sempre
+    português, seja qual for a da cliente — quem lê os avisos internos é
+    sempre a mesma pessoa.
+    """
+
+    if setting.audience != setting.AUDIENCE_CUSTOMER:
+        return "pt-pt"
+
+    cliente = getattr(appointment, "customer", None)
+
+    return getattr(cliente, "language", "") or "pt-pt"
+
 def build_context(appointment):
     return {
         "customer_name": appointment.customer.full_name,

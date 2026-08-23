@@ -1,6 +1,7 @@
 import re
 
 from django.core.exceptions import ValidationError
+from django.utils.translation import get_language
 
 from appointments.models import Customer
 
@@ -78,6 +79,18 @@ def find_customer_by_email_or_phone(email="", phone=""):
     return None
 
 
+def current_language():
+    """A língua da página onde a pessoa está, normalizada.
+
+    É o que decide em que língua ela vai receber as mensagens. Quem marca em
+    /en/ recebe inglês; quem marca em português recebe português.
+    """
+
+    codigo = (get_language() or "").lower()
+
+    return "en" if codigo.startswith("en") else "pt-pt"
+
+
 def update_customer_contact_details(customer, name="", phone="", email="", user=None):
     # Refresh contact details of an existing customer without erasing stored data
     # and without downgrading a registered customer back to guest.
@@ -94,6 +107,14 @@ def update_customer_contact_details(customer, name="", phone="", email="", user=
     if email and customer.email != email:
         customer.email = email
         update_fields.append("email")
+
+    # A língua acompanha a última marcação: quem marcou em português e volta a
+    # marcar na versão inglesa está a dizer em que língua quer ser tratado.
+    lingua = current_language()
+
+    if customer.language != lingua:
+        customer.language = lingua
+        update_fields.append("language")
 
     if user is not None:
         if customer.user_id != user.pk:
@@ -138,4 +159,5 @@ def find_or_create_customer(name, phone, email, user=None):
         full_name=name,
         phone=normalized_phone or phone,
         email=normalized_email,
+        language=current_language(),
     )

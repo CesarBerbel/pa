@@ -23,6 +23,9 @@ class EmailTemplateForm(forms.ModelForm):
             "subject",
             "body_text",
             "body_html",
+            "subject_en",
+            "body_text_en",
+            "body_html_en",
             "is_active",
         ]
         labels = {
@@ -31,6 +34,9 @@ class EmailTemplateForm(forms.ModelForm):
             "subject": "Assunto",
             "body_text": "Texto",
             "body_html": "HTML (opcional)",
+            "subject_en": "Assunto (inglês)",
+            "body_text_en": "Texto (inglês)",
+            "body_html_en": "HTML (inglês)",
             "is_active": "Ativo",
         }
         help_texts = {
@@ -39,11 +45,18 @@ class EmailTemplateForm(forms.ModelForm):
                 "Deixe vazio para enviar só texto. Se preencher, o cliente vê "
                 "esta versão e o texto acima serve de alternativa."
             ),
+            "subject_en": (
+                "Para quem marcou na versão inglesa do site. Vazio envia o "
+                "texto português."
+            ),
         }
         widgets = {
             "subject": forms.TextInput(attrs={"class": "form-control"}),
             "body_text": forms.Textarea(attrs={"rows": 14}),
             "body_html": forms.Textarea(attrs={"rows": 10}),
+            "subject_en": forms.TextInput(attrs={"class": "form-control"}),
+            "body_text_en": forms.Textarea(attrs={"rows": 14}),
+            "body_html_en": forms.Textarea(attrs={"rows": 10}),
         }
 
     def clean_key(self):
@@ -69,7 +82,16 @@ class EmailTemplateForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
 
-        for campo in ["subject", "body_text", "body_html"]:
+        # A versão inglesa leva as mesmas variáveis, portanto pode ter os
+        # mesmos erros de sintaxe — e um erro só descoberto no envio é tarde.
+        for campo in [
+            "subject",
+            "body_text",
+            "body_html",
+            "subject_en",
+            "body_text_en",
+            "body_html_en",
+        ]:
             self._validar_sintaxe(campo)
 
         return cleaned_data
@@ -123,13 +145,16 @@ class WhatsAppEventSettingForm(forms.ModelForm):
             "custom_recipients",
             "provider",
             "body_template",
+            "body_template_en",
             "meta_template_body",
             "content_sid",
+            "content_sid_en",
             "content_variables",
             "is_active",
         ]
         widgets = {
             "body_template": forms.Textarea(attrs={"rows": 5}),
+            "body_template_en": forms.Textarea(attrs={"rows": 5}),
             "meta_template_body": forms.Textarea(attrs={"rows": 5}),
             "content_variables": forms.Textarea(attrs={"rows": 5}),
         }

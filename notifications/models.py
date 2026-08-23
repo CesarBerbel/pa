@@ -40,6 +40,26 @@ class EmailTemplate(models.Model):
         help_text="Versão em HTML do email. Vazio envia só o texto acima.",
     )
 
+    # A versão inglesa, para quem marcou na versão inglesa do site. Vazia
+    # significa "não traduzido": envia-se o português, que é melhor do que
+    # não enviar nada. Os avisos à profissional não têm versão inglesa
+    # nenhuma — quem os lê fala português.
+    subject_en = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name="Assunto (inglês)",
+    )
+
+    body_text_en = models.TextField(
+        blank=True,
+        verbose_name="Texto (inglês)",
+    )
+
+    body_html_en = models.TextField(
+        blank=True,
+        verbose_name="HTML (inglês)",
+    )
+
     is_active = models.BooleanField(default=True, verbose_name="Ativo")
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -49,6 +69,29 @@ class EmailTemplate(models.Model):
         ordering = ["name"]
         verbose_name = "Modelo de email"
         verbose_name_plural = "Modelos de email"
+
+    def for_language(self, language):
+        """O assunto e o corpo na língua pedida, com o português como recurso.
+
+        Um campo inglês vazio não é um email vazio: é um email por traduzir, e
+        aí vale mais o português. Isto vale campo a campo, para uma tradução
+        feita a meio não deixar o assunto numa língua e o corpo noutra.
+        """
+
+        ingles = (language or "").lower().startswith("en")
+
+        if not ingles:
+            return {
+                "subject": self.subject,
+                "body_text": self.body_text,
+                "body_html": self.body_html,
+            }
+
+        return {
+            "subject": self.subject_en or self.subject,
+            "body_text": self.body_text_en or self.body_text,
+            "body_html": self.body_html_en or self.body_html,
+        }
 
     def __str__(self):
         return self.name
@@ -377,6 +420,18 @@ class WhatsAppEventSetting(models.Model):
         ),
     )
 
+    # A versão inglesa do texto livre, para quem marcou na versão inglesa do
+    # site. Vazia envia-se o português: melhor a mensagem na língua errada do
+    # que mensagem nenhuma.
+    body_template_en = models.TextField(
+        blank=True,
+        verbose_name="Mensagem (inglês)",
+        help_text=(
+            "Deixe vazio para enviar a mensagem em português também a quem "
+            "marcou na versão inglesa do site."
+        ),
+    )
+
     content_sid = models.CharField(
         max_length=64,
         blank=True,
@@ -384,6 +439,19 @@ class WhatsAppEventSetting(models.Model):
         help_text=(
             "Começa por HX. Necessário para mensagens iniciadas pela clínica, "
             "que é o caso de tudo o que sai daqui."
+        ),
+    )
+
+    # A Meta aprova um modelo por língua, cada um com o seu identificador. Não
+    # há como traduzir um modelo aprovado no momento do envio: ou existe um
+    # inglês aprovado à parte, ou vai o português.
+    content_sid_en = models.CharField(
+        max_length=64,
+        blank=True,
+        verbose_name="Modelo aprovado em inglês (Content SID)",
+        help_text=(
+            "O modelo equivalente, aprovado em inglês. Vazio envia o modelo "
+            "português também a quem marcou na versão inglesa."
         ),
     )
 
@@ -422,6 +490,24 @@ class WhatsAppEventSetting(models.Model):
 
     def __str__(self):
         return f"{self.get_event_type_display()} → {self.get_audience_display()}"
+
+    def for_language(self, language):
+        """O texto livre e o modelo aprovado na língua pedida.
+
+        Devolve sempre alguma coisa: sem versão inglesa configurada, o
+        português. Uma mensagem na língua errada continua a avisar a pessoa;
+        uma mensagem por enviar não avisa ninguém.
+        """
+
+        ingles = (language or "").lower().startswith("en")
+
+        if not ingles:
+            return {"body": self.body_template, "content_sid": self.content_sid}
+
+        return {
+            "body": self.body_template_en or self.body_template,
+            "content_sid": self.content_sid_en or self.content_sid,
+        }
 
     def clean(self):
         if self.audience == self.AUDIENCE_CUSTOM and not self.custom_recipients.strip():

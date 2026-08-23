@@ -1408,3 +1408,353 @@ msgstr "last used"
 #~ msgstr " — by appointment only"
 #~ msgid "Atendimento também no salão"
 #~ msgstr "Also available at"
+
+#: templates/home.html
+msgid "Podologia em Coimbra para voltar a andar"
+msgstr "Podiatry in Coimbra so you can walk"
+
+#: templates/home.html
+msgid "sem dor e com conforto"
+msgstr "pain-free and in comfort"
+
+#: templates/home.html
+msgid ""
+"Tratamento de unhas encravadas, calos, micoses e feridas que não saram, em "
+"adultos, idosos e pessoas com diabetes — na clínica ou em sua casa, com "
+"marcação online."
+msgstr ""
+"Treatment for ingrown nails, calluses, fungal infections and wounds that "
+"will not heal, for adults, older people and people with diabetes — at the "
+"clinic or in your own home, booked online."
+
+#: templates/
+msgid "Ainda não há casos publicados."
+msgstr "No cases published yet."
+
+#: templates/
+msgid "Antes"
+msgstr "Before"
+
+#: templates/
+msgid "Antes e depois"
+msgstr "Before and after"
+
+#: templates/
+msgid "Arraste a linha sobre cada fotografia para comparar."
+msgstr "Drag the line across each photo to compare."
+
+#: templates/
+msgid "Arraste para comparar o antes e o depois"
+msgstr "Drag to compare before and after"
+
+#: templates/
+msgid "Avaliações"
+msgstr "Reviews"
+
+#: templates/
+msgid "Consultar outra marcação"
+msgstr "Look up another appointment"
+
+#: templates/
+msgid "Depois"
+msgstr "After"
+
+#: templates/
+msgid "Laserterapia"
+msgstr "Laser therapy"
+
+#: templates/
+msgid "Manicure e Pedicure"
+msgstr "Manicure and Pedicure"
+
+#: templates/
+msgid "Mostrar mais"
+msgstr "Show more"
+
+#: templates/
+msgid "O que diz quem já veio"
+msgstr "What people who came here say"
+
+#: templates/
+msgid "Para ver aqui as publicações do Instagram, aceite cookies funcionais. Sem isso, continua a poder vê-las no Instagram pelo botão abaixo."
+msgstr "To see the Instagram posts here, accept functional cookies. Without them, you can still see them on Instagram using the button below."
+
+#: templates/
+msgid "Publicações bloqueadas por preferências de cookies"
+msgstr "Posts blocked by cookie preferences"
+
+#: templates/
+msgid "Resultados"
+msgstr "Results"
+
+#: templates/
+msgid "Tratamento com laser para onicomicose e outras alterações das unhas."
+msgstr "Laser treatment for nail fungus and other nail conditions."
+
+#: templates/
+msgid "Unha em gel, manicure simples, cutícula russa, pedicure e hidratação profunda."
+msgstr "Gel nails, simple manicure, Russian cuticle, pedicure and deep hydration."
+
+#: templates/
+msgid "Ver no Google"
+msgstr "View on Google"
+
+#: templates/
+msgid "Ver todas as avaliações no Google"
+msgstr "See all reviews on Google"
+
+#: templates/
+msgid "e"
+msgstr "and"
+
+#: templates/home.html
+msgid "Cuidado especializado, experiência e um olhar técnico-científico para a saúde dos seus pés."
+msgstr "Specialised care, experience and a technical and scientific eye for the health of your feet."
+
+#: templates/home.html
+msgid "Sou Enfermeira em Portugal e no Brasil, com experiência profissional na área da Oncologia, e atuo há mais de 20 anos no cuidado especializado dos pés."
+msgstr "I am a registered nurse in Portugal and in Brazil, with professional experience in oncology, and I have worked in specialised foot care for more than 20 years."
+
+#: templates/home.html
+msgid "No Brasil, realizei formação em Podologia, com habilitação em Podiatria Clínica. Em Portugal, complementei o meu percurso com formação em Pedicure Terapêutica, integrando diferentes conhecimentos e experiências numa abordagem individualizada, criteriosa e fundamentada."
+msgstr "In Brazil I trained in podology, qualified in clinical podiatry. In Portugal I added training in therapeutic pedicure, bringing different bodies of knowledge and experience together into an individual, careful and evidence-based approach."
+
+#: templates/home.html
+msgid "A minha prática alia experiência clínica, conhecimento técnico-científico, segurança e cuidado humanizado, respeitando as necessidades e o contexto de saúde de cada pessoa."
+msgstr "My practice combines clinical experience, technical and scientific knowledge, safety and humane care, respecting the needs and the health context of each person."
+
+#: templates/home.html
+msgid "Um olhar técnico-científico para a saúde dos seus pés."
+msgstr "A technical and scientific eye for the health of your feet."
+
+#: templates/home.html
+msgid "Quem trata dos seus pés"
+msgstr "Who will care for your feet"
+
+#: templates/home.html
+msgid "Podologia em Coimbra, com"
+msgstr "Podiatry in Coimbra, with"
+
+#: templates/home.html
+msgid "cuidado"
+msgstr "care"
+
+#: templates/home.html
+msgid "e critério clínico"
+msgstr "and clinical judgement"
+
+#: templates/home.html
+msgid "Saúde dos pés com conhecimento, experiência e ciência"
+msgstr "Foot health with knowledge, experience and science"
+
+#: templates/home.html
+msgid "em Coimbra"
+msgstr "in Coimbra"
+
+#: templates/home.html
+msgid "Atendimento em Coimbra"
+msgstr "Care in Coimbra"
+
+#: templates/home.html
+#, python-format
+msgid "%(nota)s no Google"
+msgstr "%(nota)s on Google"
+
+#: templates/home.html
+#, python-format
+msgid "%(total)s avaliações"
+msgstr "%(total)s reviews"
+
+#: templates/home.html
+msgid "Podóloga em Coimbra | Podologia e Tratamentos dos Pés | Pri Arantes"
+msgstr "Podiatrist in Coimbra | Podiatry and Foot Treatments | Pri Arantes"
+
+#: templates/home.html
+msgid "Marcar atendimento"
+msgstr "Book an appointment"
+
+#: templates/home.html
+msgid "O que se trata"
+msgstr "What is treated"
+
+#: templates/home.html
+msgid "Principais problemas tratados"
+msgstr "Conditions we treat most"
+
+#: templates/home.html
+msgid "Se reconhece algum destes, é caso para consulta."
+msgstr "If any of these sounds familiar, it is worth an appointment."
+
+#: templates/home.html
+msgid "Unha encravada"
+msgstr "Ingrown toenail"
+
+#: templates/home.html
+msgid "Dor ao calçar, inchaço ou vermelhidão à volta da unha. Trata-se sem cirurgia na maioria dos casos, e pode ser corrigido com órtese para não voltar."
+msgstr "Pain when putting shoes on, swelling or redness around the nail. In most cases it is treated without surgery, and a nail brace can stop it coming back."
+
+#: templates/home.html
+msgid "Calos e calosidades"
+msgstr "Corns and callus"
+
+#: templates/home.html
+msgid "Pele espessa que dói ao pisar. O desbaste alivia logo, mas o que interessa é perceber o que está a causar a pressão."
+msgstr "Thickened skin that hurts to walk on. Removing it brings immediate relief, but what matters is finding what is causing the pressure."
+
+#: templates/home.html
+msgid "Fungos nas unhas"
+msgstr "Nail fungus"
+
+#: templates/home.html
+msgid "Unhas amareladas, espessas ou quebradiças. Avaliação, tratamento e, quando indicado, laserterapia para onicomicose."
+msgstr "Yellowed, thickened or brittle nails. Assessment, treatment and, where indicated, laser therapy for onychomycosis."
+
+#: templates/home.html
+msgid "Pé diabético"
+msgstr "Diabetic foot"
+
+#: templates/home.html
+msgid "Acompanhamento com avaliação de risco e cuidado adaptado. Quem tem diabetes deve vigiar os pés mesmo sem queixas."
+msgstr "Follow-up with risk assessment and care adapted to you. If you have diabetes, your feet need checking even when nothing hurts."
+
+#: templates/home.html
+msgid "Priscila Arantes a tratar os pés de uma cliente"
+msgstr "Priscila Arantes treating a client's feet"
+
+#: templates/home.html
+msgid "Fotografias reais de tratamentos, publicadas com autorização. Arraste a linha sobre cada uma para comparar."
+msgstr "Real treatment photographs, published with consent. Drag the line across each one to compare."
+
+#: templates/home.html
+msgid "Ver antes e depois"
+msgstr "See before and after"
+
+#: templates/home.html
+msgid "Como funciona a marcação"
+msgstr "How booking works"
+
+#: templates/home.html
+msgid "Três passos, sem telefonemas nem esperas."
+msgstr "Three steps, no phone calls, no waiting."
+
+#: templates/home.html
+msgid "Escolha o serviço e a hora"
+msgstr "Choose the service and the time"
+
+#: templates/home.html
+msgid "A agenda mostra apenas as horas que estão mesmo livres. Escolhe a categoria, o serviço e o horário que lhe der jeito."
+msgstr "The diary shows only the times that are genuinely free. Pick the category, the service and the time that suits you."
+
+#: templates/home.html
+msgid "Receba a confirmação"
+msgstr "Get your confirmation"
+
+#: templates/home.html
+msgid "Cada pedido é visto pela profissional antes de ficar definitivo. Assim que estiver confirmado, recebe email e mensagem com o código da marcação."
+msgstr "Every request is seen by the practitioner before it is final. Once it is confirmed, you get an email and a message with your booking reference."
+
+#: templates/home.html
+msgid "Venha — ou remarque"
+msgstr "Come in — or rebook"
+
+#: templates/home.html
+msgid "Com o código pode consultar, alterar ou cancelar a marcação a qualquer momento, sem ter de falar com ninguém."
+msgstr "With your reference you can check, change or cancel the appointment at any time, without having to speak to anyone."
+
+#: templates/home.html
+msgid "Precisa de atendimento em domicílio? Fale connosco pelo"
+msgstr "Need a home visit? Talk to us on"
+
+#: templates/home.html
+msgid "Antes de vir"
+msgstr "Before you come"
+
+#: templates/home.html
+msgid "Perguntas frequentes"
+msgstr "Frequently asked questions"
+
+#: templates/home.html
+msgid "Preciso de encaminhamento médico?"
+msgstr "Do I need a referral?"
+
+#: templates/home.html
+msgid "Não. Pode marcar diretamente. Se estiver a ser seguido por médico para alguma condição dos pés, traga essa informação — ajuda a adaptar o tratamento."
+msgstr "No. You can book directly. If a doctor is already treating you for a foot condition, bring that information — it helps us adapt the treatment."
+
+#: templates/home.html
+msgid "Quanto tempo demora uma consulta?"
+msgstr "How long does an appointment take?"
+
+#: templates/home.html
+msgid "Depende do serviço, e a duração de cada um está indicada na agenda quando escolhe o horário."
+msgstr "It depends on the service, and each one shows its length in the diary when you pick a time."
+
+#: templates/home.html
+msgid "Tenho diabetes. Posso ser atendido?"
+msgstr "I have diabetes. Can I be seen?"
+
+#: templates/home.html
+msgid "Sim, e deve. O pé diabético precisa de vigilância regular mesmo sem queixas. Diga-o ao marcar, para o atendimento ser preparado em conformidade."
+msgstr "Yes, and you should be. The diabetic foot needs regular checking even when nothing hurts. Say so when you book, so the appointment can be prepared accordingly."
+
+#: templates/home.html
+msgid "Como cancelo ou altero a marcação?"
+msgstr "How do I cancel or change my appointment?"
+
+#: templates/home.html
+msgid "Fazem atendimento ao domicílio?"
+msgstr "Do you do home visits?"
+
+#: templates/home.html
+msgid "Sim, mediante disponibilidade e consulta prévia. Combine por WhatsApp, porque o domicílio não se marca pela agenda online."
+msgstr "Yes, subject to availability and arranged in advance. Ask on WhatsApp — home visits are not booked through the online diary."
+
+#: templates/home.html
+msgid "Onde fica e como se estaciona?"
+msgstr "Where are you, and where can I park?"
+
+#: templates/home.html
+msgid "Galeria Avenida, Av. Sá da Bandeira 33, Loja 108, em Coimbra. É no centro, com parques públicos a poucos minutos a pé."
+msgstr "Galeria Avenida, Av. Sá da Bandeira 33, Loja 108, in Coimbra. It is in the centre, with public car parks a few minutes away on foot."
+
+#: templates/home.html
+msgid "Os seus pés merecem atenção antes de doerem"
+msgstr "Your feet deserve attention before they start hurting"
+
+#: templates/home.html
+msgid "Marque online em menos de um minuto, ou fale connosco se preferir explicar primeiro o que se passa."
+msgstr "Book online in under a minute, or talk to us first if you would rather explain what is going on."
+
+#: templates/home.html
+msgid "Marcar consulta"
+msgstr "Book an appointment"
+
+#: templates/home.html
+msgid "Falar por WhatsApp"
+msgstr "Message us on WhatsApp"
+
+#: templates/home.html
+#, python-format
+msgid "Com o código que recebeu, na página de consulta de marcação. O cancelamento é possível até %(horas)s horas antes da hora marcada; depois disso, fale connosco por WhatsApp."
+msgstr "With the reference you received, on the appointment lookup page. You can cancel up to %(horas)s hours before your appointment time; after that, talk to us on WhatsApp."
+
+#: templates/base.html
+msgid "Ações rápidas"
+msgstr "Quick actions"
+
+#: templates/base.html
+msgid "Agendar"
+msgstr "Book"
+
+#: templates/home.html
+#, python-format
+msgid "Com o código pode consultar, alterar ou cancelar a marcação até %(horas)s horas antes da hora marcada, sem ter de falar com ninguém. Passado esse prazo, fale connosco por WhatsApp."
+msgstr "With your reference you can check, change or cancel the appointment up to %(horas)s hours before your appointment time, without having to speak to anyone. After that, talk to us on WhatsApp."
+
+#: templates/home.html
+msgid "Risco Podológico"
+msgstr "Podiatric risk"
+
+#: templates/home.html
+msgid "Avaliação do risco e cuidado adaptado a quem tem diabetes, problemas de circulação ou sensibilidade alterada nos pés — situações em que se deve vigiar mesmo sem queixas."
+msgstr "Risk assessment and care adapted to people with diabetes, circulation problems or altered sensation in the feet — situations that need checking even when nothing hurts."

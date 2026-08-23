@@ -398,8 +398,8 @@ class BeforeAfterMenuEntryTests(TestCase):
     def test_one_case_is_enough_to_show_it(self):
         self.criar()
 
-        # Menu e rodapé.
-        self.assertEqual(self.ligacoes(), 2)
+        # Três sítios: o menu, o rodapé e a chamada na própria página inicial.
+        self.assertEqual(self.ligacoes(), 3)
 
     def test_a_hidden_case_does_not_count(self):
         # Esconder o único caso deixa a página vazia: a entrada sai com ele.

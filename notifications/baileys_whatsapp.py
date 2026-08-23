@@ -28,6 +28,7 @@ from django.db import IntegrityError
 from notifications.models import WhatsAppEventSetting, WhatsAppMessageLog
 from notifications.whatsapp_common import (
     SendResult,
+    audience_language,
     build_context,
     get_sample_context,
     render_text,
@@ -173,14 +174,15 @@ def resolve_recipients(setting, appointment):
     return [numero for numero in map(to_e164, brutos) if numero]
 
 
-def build_body(setting, context):
-    """O texto que vai sair.
+def build_body(setting, context, language=None):
+    """O texto que vai sair, na língua de quem o vai ler.
 
     O Baileys não conhece modelos aprovados: o `content_sid` da regra não lhe
-    serve de nada e o que conta é o texto livre.
+    serve de nada e o que conta é o texto livre. Sem versão inglesa
+    configurada, sai o português.
     """
 
-    return render_text(setting.body_template, context).strip()
+    return render_text(setting.for_language(language)["body"], context).strip()
 
 
 def sent_logs(appointment, setting):
@@ -235,7 +237,11 @@ def send_for_setting(appointment, setting, force=False):
             message=f"{setting}: nenhum número válido para enviar.",
         )
 
-    texto = build_body(setting, build_context(appointment))
+    texto = build_body(
+        setting,
+        build_context(appointment),
+        language=audience_language(setting, appointment),
+    )
 
     if not texto:
         return SendResult(

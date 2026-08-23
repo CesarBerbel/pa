@@ -28,6 +28,7 @@ from notifications.models import WhatsAppEventSetting, WhatsAppMessageLog
 from notifications.twilio_callbacks import status_callback_url
 from notifications.whatsapp_common import (
     SendResult,
+    audience_language,
     build_context,
     get_sample_context,
     render_text,
@@ -83,7 +84,7 @@ def resolve_recipients(setting, appointment):
     return [numero for numero in map(normalize_whatsapp_address, brutos) if numero]
 
 
-def build_payload(setting, context, recipient):
+def build_payload(setting, context, recipient, language=None):
     payload = {
         "From": normalize_whatsapp_address(settings.TWILIO_WHATSAPP_FROM),
         "To": recipient,
@@ -96,8 +97,13 @@ def build_payload(setting, context, recipient):
     if callback:
         payload["StatusCallback"] = callback
 
-    if setting.content_sid.strip():
-        payload["ContentSid"] = setting.content_sid.strip()
+    # A Meta aprova um modelo por língua, cada um com o seu identificador: não
+    # há como traduzir um modelo aprovado no momento do envio. Sem um inglês
+    # aprovado, `for_language` devolve o português.
+    versao = setting.for_language(language)
+
+    if versao["content_sid"].strip():
+        payload["ContentSid"] = versao["content_sid"].strip()
 
         if setting.content_variables.strip():
             posicoes = json.loads(setting.content_variables)
@@ -111,7 +117,7 @@ def build_payload(setting, context, recipient):
 
         return payload
 
-    payload["Body"] = render_text(setting.body_template, context)
+    payload["Body"] = render_text(versao["body"], context)
 
     return payload
 
@@ -228,7 +234,12 @@ def send_for_setting(appointment, setting, force=False):
         if not force and already_sent(appointment, setting, destinatario):
             continue
 
-        payload = build_payload(setting, contexto, destinatario)
+        payload = build_payload(
+            setting,
+            contexto,
+            destinatario,
+            language=audience_language(setting, appointment),
+        )
 
         try:
             resposta = post_message(payload)

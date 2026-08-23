@@ -204,6 +204,18 @@ def send_rendered_email(subject, body_text, body_html, recipient_list):
     email.send(fail_silently=False)
 
 
+def customer_language(appointment):
+    """A língua da cliente desta marcação, ou o português se não houver.
+
+    Um único sítio a decidir isto: cada email que sai para a cliente passa
+    por aqui, e os avisos à profissional não passam.
+    """
+
+    cliente = getattr(appointment, "customer", None)
+
+    return getattr(cliente, "language", "") or "pt-pt"
+
+
 def render_email_for_event(
     event_type,
     template_key,
@@ -211,6 +223,7 @@ def render_email_for_event(
     fallback_subject,
     fallback_body,
     email_template=None,
+    language=None,
 ):
     # Render an email for an event setting, selected template, default template key, or fallback text.
     selected_template = email_template
@@ -221,6 +234,7 @@ def render_email_for_event(
             context_data=context,
             fallback_subject=fallback_subject,
             fallback_body=fallback_body,
+            language=language,
         )
 
     event_setting = EmailEventSettingService.get_active_setting(event_type)
@@ -231,6 +245,7 @@ def render_email_for_event(
             context_data=context,
             fallback_subject=fallback_subject,
             fallback_body=fallback_body,
+            language=language,
         )
 
     return EmailTemplateService.render(
@@ -238,6 +253,7 @@ def render_email_for_event(
         context_data=context,
         fallback_subject=fallback_subject,
         fallback_body=fallback_body,
+        language=language,
     )
 
 
@@ -314,6 +330,7 @@ def send_appointment_confirmation_email(appointment):
         fallback_subject=fallback_subject,
         fallback_body=fallback_body,
         email_template=event_setting.email_template,
+        language=customer_language(appointment),
     )
 
     send_rendered_email(
@@ -368,6 +385,7 @@ def send_appointment_cancelled_email(appointment, cancellation_reason=""):
         fallback_subject=fallback_subject,
         fallback_body=fallback_body,
         email_template=event_setting.email_template,
+        language=customer_language(appointment),
     )
 
     send_rendered_email(
@@ -417,6 +435,7 @@ def send_appointment_completed_email(appointment):
         fallback_subject="Obrigada pela sua visita",
         fallback_body=fallback_body,
         email_template=event_setting.email_template,
+        language=customer_language(appointment),
     )
 
     send_rendered_email(
@@ -514,6 +533,7 @@ def send_service_followup_email(appointment, followup):
     rendered_email = EmailTemplateService.render_template_object(
         email_template=template,
         context_data=context,
+        language=customer_language(appointment),
     )
 
     send_rendered_email(

@@ -74,7 +74,7 @@ SEO_SITE_NAME = config("SEO_SITE_NAME", default="Priscila Arantes PA")
 
 SEO_DEFAULT_TITLE = config(
     "SEO_DEFAULT_TITLE",
-    default="Priscila Arantes PA | Podologia, estética e enfermagem em Coimbra",
+    default="Podóloga em Coimbra | Podologia e Tratamentos dos Pés | Pri Arantes",
 )
 
 SEO_DEFAULT_DESCRIPTION = config(
