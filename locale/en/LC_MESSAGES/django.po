@@ -1766,3 +1766,27 @@ msgstr "Caring for your feet begins before the pain does"
 #: templates/
 msgid "Todas as fotografias publicadas são de clientes reais, que autorizaram a sua exibição."
 msgstr "Every photograph published here is of a real client, shown with their consent."
+
+#: templates/home.html
+msgid "Podologia em Coimbra"
+msgstr "Podiatry in Coimbra"
+
+#: templates/home.html
+msgid "Podologia em Coimbra:"
+msgstr "Podiatry in Coimbra:"
+
+#: templates/home.html
+msgid "saúde dos pés"
+msgstr "foot health"
+
+#: templates/home.html
+msgid "com conhecimento, experiência e ciência"
+msgstr "with knowledge, experience and science"
+
+#: templates/home.html
+msgid "O que a podologia trata"
+msgstr "What podiatry treats"
+
+#: templates/home.html
+msgid "Podologia e outros cuidados, em Coimbra"
+msgstr "Podiatry and other care, in Coimbra"

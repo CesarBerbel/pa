@@ -65,7 +65,22 @@ def build_home_structured_data(service_categories):
 
     payload = {
         "@context": "https://schema.org",
-        "@type": "HealthAndBeautyBusiness",
+        # Dois tipos e não um: `HealthAndBeautyBusiness` descreve o negócio,
+        # mas é `MedicalBusiness` que aceita `medicalSpecialty` — e sem ela
+        # nada nos dados dizia qual é a especialidade da casa. Um array de
+        # tipos é JSON-LD válido e o Google lê os dois.
+        "@type": ["HealthAndBeautyBusiness", "MedicalBusiness"],
+        "medicalSpecialty": "Podiatric",
+        # O que a casa trata, em termos que um motor de busca reconhece.
+        "knowsAbout": [
+            "Podologia",
+            "Podiatria",
+            "Unha encravada",
+            "Onicomicose",
+            "Calosidades",
+            "Pé diabético",
+            "Pedicure terapêutica",
+        ],
         "name": settings.SEO_SITE_NAME,
         "url": settings.SITE_URL.rstrip("/"),
         "image": absolute_url(settings.SEO_DEFAULT_IMAGE_PATH),
