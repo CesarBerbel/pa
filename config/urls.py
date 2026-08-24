@@ -6,7 +6,6 @@ from django.shortcuts import redirect, render
 from django.urls import include, path, re_path
 
 from accounts.views import DashboardView
-from appointments.homepage import build_home_service_cards
 from appointments.models import SchedulingSetting, Service, ServiceCategory
 from config.google_reviews import get_reviews
 from config.seo import build_home_structured_data
@@ -51,7 +50,7 @@ def home_view(request):
         "home.html",
         {
             "home_hero_layout": settings.HOME_HERO_LAYOUT,
-            "service_cards": build_home_service_cards(service_categories),
+            "service_categories": service_categories,
             "home_structured_data": build_home_structured_data(service_categories),
             "google_reviews": get_reviews(),
             # As perguntas frequentes dizem o prazo de cancelamento. Escrito à

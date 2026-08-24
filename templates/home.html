@@ -263,7 +263,7 @@
         </p>
     </div>
 
-    {% if service_cards %}
+    {% if service_categories %}
         {% comment %}
             `auto-fit` e não colunas fixas: com três categorias visíveis são
             três colunas a ocupar a largura toda; com quatro, quatro. Uma
@@ -271,31 +271,31 @@
             categoria saísse da página inicial.
         {% endcomment %}
         <div class="services-grid">
-            {% for card in service_cards %}
+            {% for category in service_categories %}
                 <div>
                     <div class="luxury-card h-100">
                         <div class="d-flex justify-content-between align-items-start">
                             <div class="luxury-icon">{{ forloop.counter|stringformat:"02d" }}</div>
 
-                            {% if card.is_coming_soon %}
+                            {% if category.is_coming_soon %}
                                 <span class="coming-soon-badge">{% translate "Em breve" %}</span>
                             {% endif %}
                         </div>
 
-                        <h3>{{ card.display_name }}</h3>
+                        <h3>{{ category.display_name }}</h3>
 
                         <p>
-                            {{ card.display_description }}
+                            {{ category.display_description }}
                         </p>
 
                         <ul class="list-unstyled text-muted small mb-4 service-teaser-list">
-                            {% for service in card.services|slice:":4" %}
+                            {% for service in category.services.all|slice:":4" %}
                                 <li class="mb-2">
                                     <span class="service-teaser-name">
                                         • {{ service.display_name }}
                                     </span>
 
-                                    {% if card.show_prices %}
+                                    {% if category.show_prices %}
                                         <span class="service-teaser-price">
                                             {{ service.price|floatformat:"-2" }} €
                                         </span>
@@ -304,7 +304,7 @@
                             {% endfor %}
                         </ul>
 
-                        {% if card.is_coming_soon %}
+                        {% if category.is_coming_soon %}
                             <span class="text-muted small">
                                 <i class="bi bi-hourglass-split me-1"></i>
                                 {% translate "Marcações em breve" %}
