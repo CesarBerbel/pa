@@ -1,4 +1,5 @@
 import sys
+from datetime import timedelta
 from pathlib import Path
 
 from decouple import Config, RepositoryEmpty, RepositoryEnv
@@ -261,6 +262,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "crispy_forms",
     "crispy_bootstrap5",
+    "axes",
     "accounts",
     "appointments",
     "notifications",
@@ -290,6 +292,10 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # No fim, e tem de ser no fim: é este middleware que transforma o pedido
+    # marcado pelo backend do axes na resposta de bloqueio. Acima do
+    # AuthenticationMiddleware não veria o utilizador da tentativa.
+    "axes.middleware.AxesMiddleware",
 ]
 
 
@@ -392,6 +398,19 @@ else:
 # =============================================================================
 
 AUTH_USER_MODEL = "accounts.User"
+
+
+# =============================================================================
+# Authentication backends
+# =============================================================================
+
+# O backend do axes vem primeiro porque não autentica ninguém: só verifica se
+# aquele par utilizador/endereço está bloqueado e interrompe a cadeia se
+# estiver. Depois dele, o backend normal do Django é que valida a palavra-passe.
+AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesStandaloneBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
 
 
 # =============================================================================
@@ -533,8 +552,24 @@ SECURE_SSL_REDIRECT = config(
 
 # Enable only if Django is behind a trusted reverse proxy that sets:
 # X-Forwarded-Proto: https
-if config("SECURE_PROXY_SSL_HEADER", default=False, cast=bool):
+BEHIND_TRUSTED_PROXY = config("SECURE_PROXY_SSL_HEADER", default=False, cast=bool)
+
+if BEHIND_TRUSTED_PROXY:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# Quantos proxies de confiança estão à frente do Django, para saber qual dos
+# endereços do X-Forwarded-For é mesmo o do cliente. Em produção é um — o
+# Caddy. Ver config/client_ip.py, que explica porque é que o último elemento é
+# o único que se pode acreditar.
+#
+# O valor importa: com zero atrás do Caddy, todos os pedidos chegariam como
+# 127.0.0.1 e os travões por endereço passariam a valer para o site inteiro em
+# vez de por cliente.
+TRUSTED_PROXY_COUNT = config(
+    "TRUSTED_PROXY_COUNT",
+    default=1 if BEHIND_TRUSTED_PROXY else 0,
+    cast=int,
+)
 
 USE_X_FORWARDED_HOST = config(
     "USE_X_FORWARDED_HOST",
@@ -600,6 +635,62 @@ SECURE_REFERRER_POLICY = config(
 X_FRAME_OPTIONS = config(
     "X_FRAME_OPTIONS",
     default="DENY",
+)
+
+
+# =============================================================================
+# Travões de tentativas
+# =============================================================================
+#
+# django-axes no login, django-ratelimit nos pontos públicos. Os limites são
+# largos de propósito: numa clínica com uma profissional, o pior que estes
+# números podem fazer é impedir uma cliente de cancelar a horas.
+
+# Em testes fica desligado. Quase mil testes entram e saem da área interna a
+# partir do mesmo endereço, e o `client.login()` do Django chama o
+# `authenticate()` sem pedido nenhum — coisa que o backend do axes recusa. Os
+# testes do próprio travão ligam-no de volta com override_settings.
+AXES_ENABLED = config("AXES_ENABLED", default=True, cast=bool) and not RUNNING_TESTS
+
+# Oito e não três (o valor de fábrica): quem entra aqui é a profissional, do
+# telemóvel, muitas vezes com a palavra-passe guardada e desatualizada. Três
+# enganos acontecem num dia mau; oito já é alguém a experimentar.
+AXES_FAILURE_LIMIT = config("AXES_FAILURE_LIMIT", default=8, cast=int)
+
+# Meia hora. Torna a força bruta inútil — oito tentativas por meia hora dá
+# menos de quatrocentas por dia — e não deixa ninguém de fora até amanhã.
+AXES_COOLOFF_TIME = timedelta(
+    minutes=config("AXES_COOLOFF_MINUTES", default=30, cast=int)
+)
+
+# A lista dentro da lista é um "e": bloqueia o par utilizador+endereço, não
+# cada um por si. Sem isto, bastava alguém martelar o email da profissional de
+# fora para a deixar à porta do seu próprio sistema; e bloquear só o endereço
+# fecharia a porta a toda a gente que partilhe uma rede.
+AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]]
+
+# O axes lê o utilizador da chave `USERNAME_FIELD` do modelo, que aqui é
+# "email". Mas quem chama o `authenticate()` é o AuthenticationForm do Django,
+# e esse passa sempre a chave "username" — mesmo quando o campo se chama outra
+# coisa. Sem isto, cada tentativa ficava registada com utilizador `None`: as
+# falhas contavam-se, o bloqueio disparava, e a tentativa seguinte com a
+# palavra-passe certa não encontrava registo nenhum e entrava à mesma.
+AXES_USERNAME_FORM_FIELD = "username"
+
+# Entrar bem limpa o contador. Sem isto, sete enganos ao longo de um mês
+# deixavam a conta a uma tentativa do bloqueio sem razão nenhuma.
+AXES_RESET_ON_SUCCESS = True
+
+# Atrás do Caddy, o REMOTE_ADDR é sempre 127.0.0.1.
+AXES_CLIENT_IP_CALLABLE = "config.client_ip.endereco_do_cliente"
+
+AXES_LOCKOUT_TEMPLATE = "429.html"
+
+# Desligado em testes pela mesma razão do axes: os testes correm todos do mesmo
+# endereço e em sequência, e um travão ligado faria o segundo teste de cada
+# ficheiro apanhar um 429 que nada tem a ver com o que estava a verificar.
+RATELIMIT_ENABLE = (
+    config("RATELIMIT_ENABLE", default=True, cast=bool) and not RUNNING_TESTS
 )
 
 

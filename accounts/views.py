@@ -61,7 +61,16 @@ class CustomerSignupView(CreateView):
                 start_time_value=start_time_value,
             )
 
-            login(self.request, result.user)
+            # O backend vai explícito porque há mais do que um configurado
+            # (o do axes, que só vigia, e o do Django, que autentica): sem ele
+            # o `login()` recusa-se a escolher. Aqui a conta acabou de ser
+            # criada e não passou por `authenticate()` nenhum, por isso não há
+            # backend guardado no utilizador para o `login()` reaproveitar.
+            login(
+                self.request,
+                result.user,
+                backend="django.contrib.auth.backends.ModelBackend",
+            )
 
             if result.appointment:
                 self.request.session["last_reference_code"] = (

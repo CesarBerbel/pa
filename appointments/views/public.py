@@ -24,6 +24,7 @@ from appointments.customer_services import find_or_create_customer
 from appointments.lookup_services import PublicAppointmentLookupService
 from appointments.appointment_services import AppointmentService
 from appointments.availability import AvailabilityService
+from appointments.ratelimit import RateLimitedMixin
 
 
 class PublicBookingAvailabilityMixin:
@@ -46,8 +47,17 @@ class PublicBookingAvailabilityMixin:
         )
 
 
-class PublicAppointmentCreateView(PublicBookingAvailabilityMixin, FormView):
+class PublicAppointmentCreateView(
+    RateLimitedMixin, PublicBookingAvailabilityMixin, FormView
+):
     # Public booking form for customers
+
+    # Doze submissões por hora, e só as submissões: ver a página e escolher
+    # horários não conta, senão travava-se quem está só a ver. Doze marcações
+    # verdadeiras na mesma hora e do mesmo endereço não acontecem numa clínica
+    # com uma profissional; um script a encher a agenda faz isso em segundos.
+    ratelimit_rate = "12/h"
+    ratelimit_methods = ("POST",)
 
     template_name = "appointments/public_appointment_form.html"
     form_class = PublicAppointmentForm
@@ -331,8 +341,16 @@ class PublicCancelSuccessView(TemplateView):
         return context
 
 
-class PublicCancelAppointmentByCodeView(TemplateView):
+class PublicCancelAppointmentByCodeView(RateLimitedMixin, TemplateView):
     # Allows public cancellation using a direct reference code URL
+
+    # O código no endereço é a credencial, por isso aqui o travão também conta
+    # os GET: é a leitura, e não o cancelamento, que serve para adivinhar
+    # códigos. Quarenta por hora deixa uma cliente reabrir o link do WhatsApp
+    # as vezes que quiser e torna a força bruta inútil — a 40/h, percorrer os
+    # 36^6 códigos possíveis levaria mais de seis mil anos.
+    ratelimit_rate = "40/h"
+    ratelimit_methods = ("GET", "POST")
 
     template_name = "appointments/public_cancel_by_code.html"
 
@@ -391,7 +409,7 @@ class PublicCancelAppointmentByCodeView(TemplateView):
         )
 
 
-class PublicAppointmentByCodeView(FormView):
+class PublicAppointmentByCodeView(RateLimitedMixin, FormView):
     """A marcação aberta direto pelo código, sem ninguém ter de o escrever.
 
     É para onde aponta o link que segue nas mensagens de WhatsApp. Não usa o
@@ -404,6 +422,11 @@ class PublicAppointmentByCodeView(FormView):
     O código é a credencial, como já é para cancelar em `/cancelar/<código>/`.
     Mostrar a marcação é menos do que isso permite fazer.
     """
+
+    # Mesmo travão do cancelamento pelo código, e pela mesma razão: é o mesmo
+    # segredo que abre as duas páginas.
+    ratelimit_rate = "40/h"
+    ratelimit_methods = ("GET", "POST")
 
     template_name = "appointments/public_appointment_lookup.html"
     form_class = PublicAppointmentLookupForm
@@ -439,8 +462,16 @@ class PublicAppointmentByCodeView(FormView):
         return context
 
 
-class PublicAppointmentLookupView(FormView):
+class PublicAppointmentLookupView(RateLimitedMixin, FormView):
     # Allows customers to search by reference code or request details by email.
+
+    # Cada submissão com email envia uma mensagem a partir do domínio da
+    # clínica: repetida em série, é o domínio a servir de trampolim para spam e
+    # a reputação de envio a pagar a conta. Só os POST são contados, e doze por
+    # hora dão margem de sobra a quem se engana no código algumas vezes antes
+    # de acertar.
+    ratelimit_rate = "12/h"
+    ratelimit_methods = ("POST",)
 
     template_name = "appointments/public_appointment_lookup.html"
     form_class = PublicAppointmentLookupForm
