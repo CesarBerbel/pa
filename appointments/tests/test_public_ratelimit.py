@@ -12,7 +12,10 @@ from django.core.cache import cache
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from appointments.views.public import PublicAppointmentByCodeView
+from appointments.views.public import (
+    PublicAppointmentByCodeView,
+    PublicCancelAppointmentByCodeView,
+)
 
 CODIGO_INEXISTENTE = "AGD-XXXXXX"
 
@@ -60,6 +63,25 @@ class TravaoDosPontosPublicosTests(TestCase):
                 self.assertEqual(self.client.get(self.por_codigo).status_code, 200)
 
             self.assertEqual(self.client.get(self.por_codigo).status_code, 429)
+
+    def test_consultar_e_cancelar_partilham_o_contador(self):
+        # É o mesmo código que abre as duas páginas. Contadores separados
+        # davam o dobro das tentativas a quem alternasse entre elas.
+        cancelar = reverse(
+            "appointments:public_cancel_by_code",
+            kwargs={"reference_code": CODIGO_INEXISTENTE},
+        )
+
+        with patch.object(PublicAppointmentByCodeView, "ratelimit_rate", "2/h"):
+            with patch.object(
+                PublicCancelAppointmentByCodeView, "ratelimit_rate", "2/h"
+            ):
+                self.client.get(self.por_codigo)
+                self.client.get(cancelar)
+
+                resposta = self.client.get(self.por_codigo)
+
+        self.assertEqual(resposta.status_code, 429)
 
     def test_cada_endereco_conta_por_si(self):
         # Atrás do Caddy todos os pedidos chegam de 127.0.0.1; é o

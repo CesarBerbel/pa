@@ -351,6 +351,10 @@ class PublicCancelAppointmentByCodeView(RateLimitedMixin, TemplateView):
     # 36^6 códigos possíveis levaria mais de seis mil anos.
     ratelimit_rate = "40/h"
     ratelimit_methods = ("GET", "POST")
+    # Contador partilhado com a consulta pelo código: é o mesmo segredo que
+    # abre as duas páginas, e dois contadores separados davam o dobro das
+    # tentativas a quem alternasse entre elas.
+    ratelimit_group = "codigo-da-marcacao"
 
     template_name = "appointments/public_cancel_by_code.html"
 
@@ -423,10 +427,10 @@ class PublicAppointmentByCodeView(RateLimitedMixin, FormView):
     Mostrar a marcação é menos do que isso permite fazer.
     """
 
-    # Mesmo travão do cancelamento pelo código, e pela mesma razão: é o mesmo
-    # segredo que abre as duas páginas.
+    # Mesmo travão do cancelamento pelo código, e o mesmo contador.
     ratelimit_rate = "40/h"
     ratelimit_methods = ("GET", "POST")
+    ratelimit_group = "codigo-da-marcacao"
 
     template_name = "appointments/public_appointment_lookup.html"
     form_class = PublicAppointmentLookupForm
