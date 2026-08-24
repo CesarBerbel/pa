@@ -1,6 +1,6 @@
 import logging
-import random
 import re
+import secrets
 import string
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -1239,10 +1239,19 @@ class Appointment(models.Model):
         return f"{self.reference_code} - {self.customer} - {self.service}"
 
     def generate_reference_code(self):
-        # Generate unique professional reference code
+        # `secrets` e não `random`: este código é a credencial de acesso à
+        # marcação. Com ele, e sem sessão iniciada, vê-se e cancela-se —
+        # ver PublicAppointmentByCodeView e PublicCancelAppointmentByCodeView.
+        # O `random` é um Mersenne Twister: quem visse alguns códigos emitidos
+        # podia reconstruir o estado do gerador e prever os seguintes.
+        #
+        # Formato e alfabeto ficam como estavam: há códigos já enviados em
+        # mensagens e emails de clientes, e é este o formato que os testes e o
+        # exemplo do formulário de consulta mostram.
         while True:
             random_code = "".join(
-                random.choices(string.ascii_uppercase + string.digits, k=6)
+                secrets.choice(string.ascii_uppercase + string.digits)
+                for _ in range(6)
             )
             code = f"AGD-{random_code}"
 
