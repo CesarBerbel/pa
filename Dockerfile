@@ -28,9 +28,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
 # `libpq5` e não `libpq-dev`: é a biblioteca de execução, sem cabeçalhos nem
-# compilador atrás. Faz falta mesmo — o `requirements.txt` traz o psycopg 3, e
-# é esse que o Django escolhe quando está instalado. Sem a biblioteca, a
-# imagem sobe e morre à primeira ligação à base.
+# compilador atrás. Faz falta porque o `requirements.txt` traz o psycopg 3, e
+# é esse que o Django tenta primeiro. Sem ela nada rebentava — o Django cairia
+# em silêncio para o psycopg2-binary, que traz a sua própria cópia — e é
+# precisamente isso que se quer evitar: uma imagem que muda de driver de base
+# de dados sozinha, sem ninguém dar por ela.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libpq5 \
     && rm -rf /var/lib/apt/lists/*
