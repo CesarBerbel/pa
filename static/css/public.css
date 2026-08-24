@@ -707,16 +707,9 @@ h1, h2, h3, .hero-title, .section-title {
 .app-agenda-shell {
     display: grid;
     grid-template-columns: 360px 1fr;
-    grid-template-areas:
-        "filter results"
-        "feed   results";
-    grid-template-rows: auto 1fr;
+    grid-template-areas: "feed results";
     gap: 28px;
     align-items: start;
-}
-
-.app-agenda-filter {
-    grid-area: filter;
 }
 
 .app-agenda-feed {
@@ -727,67 +720,22 @@ h1, h2, h3, .hero-title, .section-title {
     grid-area: results;
 }
 
-.app-agenda-filter,
+/* Uma célula de grelha com `min-width: auto` nunca fica mais estreita do que
+   aquilo que tem dentro. A faixa de dias tem lá dentro a janela de marcação
+   inteira — um mês de cartões, que só se veem a rolar —, e sem isto a célula
+   estica até caberem todos e leva a página atrás dela, para fora do ecrã.
+
+   Vale para as duas células: qualquer uma pode vir a ter conteúdo largo. */
+.app-agenda-feed,
+.app-agenda-results {
+    min-width: 0;
+}
+
 .app-agenda-results {
     background: #ffffff;
     border: 1px solid #f1d5db;
     border-radius: 32px;
     box-shadow: 0 18px 48px rgba(139, 94, 102, 0.08);
-}
-
-/* Sem `position: sticky`: preso no topo, o cartão do serviço ficava por cima
-   das categorias assim que a lista subia. Desce com elas. */
-.app-agenda-filter {
-    padding: 28px;
-}
-
-.app-agenda-filter .form-label {
-    color: #2b2b2b;
-    font-weight: 600;
-}
-
-.app-agenda-filter .form-select,
-.app-agenda-filter .form-control {
-    border-radius: 18px;
-    border-color: #f1d5db;
-    padding: 14px 16px;
-}
-
-.app-agenda-filter .form-select:focus,
-.app-agenda-filter .form-control:focus {
-    border-color: #d8a7b1;
-    box-shadow: 0 0 0 0.2rem rgba(216, 167, 177, 0.18);
-}
-
-.app-service-summary {
-    background: linear-gradient(135deg, #fff7f9, #f7e6ea);
-    border: 1px solid #f1d5db;
-    border-radius: 24px;
-    padding: 22px;
-}
-
-.app-service-summary span {
-    display: block;
-    color: #8b5e66;
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-}
-
-.app-service-summary strong {
-    display: block;
-    color: #2b2b2b;
-    font-family: 'Playfair Display', serif;
-    font-size: 1.35rem;
-    line-height: 1.2;
-}
-
-.app-service-summary small {
-    display: block;
-    color: #6b6b6b;
-    margin-top: 6px;
 }
 
 .app-agenda-results {
@@ -1089,26 +1037,6 @@ form .btn {
     letter-spacing: 0.12em;
 }
 
-/* Agenda auto-submit loading */
-
-#agenda-filter-form {
-    transition: opacity 0.2s ease;
-}
-
-#agenda-filter-form.is-loading {
-    opacity: 0.55;
-    pointer-events: none;
-}
-
-.app-agenda-filter.is-loading::after {
-    content: "A carregar horários...";
-    display: block;
-    margin-top: 16px;
-    color: #8b5e66;
-    font-size: 0.9rem;
-    font-weight: 600;
-}
-
 /* ======================
    INTERNAL APP CALENDAR
 ====================== */
@@ -1378,8 +1306,54 @@ form .btn {
    PUBLIC WEEK NAVIGATION
 ====================== */
 
+/* A faixa e as duas setas numa linha só. A faixa é a única parte que encolhe:
+   sem o `min-width: 0` o flex dá-lhe a largura de todos os dias juntos e a
+   seta da direita sai do ecrã. */
+.app-week-carousel {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.app-week-arrow {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border: 1px solid #f1d5db;
+    border-radius: 50%;
+    background: #ffffff;
+    color: #8b5e66;
+    font-size: 1.05rem;
+    cursor: pointer;
+    box-shadow: 0 10px 28px rgba(139, 94, 102, 0.07);
+    transition: all 0.2s ease;
+}
+
+@media (hover: hover) {
+    .app-week-arrow:not(:disabled):hover {
+        border-color: #d8a7b1;
+        background: #fff5f6;
+    }
+}
+
+/* Desligada é o estado normal nas pontas — hoje à esquerda, o fim do horizonte
+   à direita — e não um erro. Fica visível e apagada, para se perceber que o
+   carrossel acabou e não que a seta desapareceu. */
+.app-week-arrow:disabled {
+    opacity: 0.35;
+    cursor: default;
+    box-shadow: none;
+}
+
 .app-week-strip {
     display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
     gap: 12px;
     overflow-x: auto;
     padding: 6px 2px 12px;
@@ -1396,6 +1370,7 @@ form .btn {
 }
 
 .app-week-day {
+    flex: 0 0 auto;
     min-width: 92px;
     background: #ffffff;
     border: 1px solid #f1d5db;
@@ -4028,7 +4003,6 @@ form .btn {
 .luxury-info-panel,
 .luxury-logo-card,
 .one-page-section,
-.app-agenda-filter,
 .app-agenda-results,
 .internal-calendar-filter,
 .internal-business-hour,
@@ -4055,7 +4029,6 @@ form .btn {
 .soft-panel,
 .luxury-card,
 .one-page-section,
-.app-agenda-filter,
 .app-agenda-results,
 .service-category-card,
 .service-admin-group,
@@ -4092,7 +4065,6 @@ form .btn {
 .dashboard-action-card span,
 .dashboard-metric-card span,
 .booking-summary span,
-.app-service-summary span,
 .calendar-event-kicker,
 .appointment-detail-grid span,
 .appointment-detail-notes span,
@@ -4121,7 +4093,6 @@ form .btn {
 .trust-item,
 .luxury-code-box,
 .booking-summary,
-.app-service-summary,
 .calendar-empty-slot,
 .service-public-card,
 .service-admin-metric-card,
@@ -4179,7 +4150,6 @@ form .btn {
     font-size: clamp(1.75rem, 3.4vw, 2.45rem);
 }
 
-.app-agenda-filter,
 .app-agenda-results,
 .internal-calendar-filter,
 .dashboard-hero,
@@ -4304,9 +4274,7 @@ form .btn {
 
 .form-control,
 .form-select,
-textarea.form-control,
-.app-agenda-filter .form-select,
-.app-agenda-filter .form-control {
+textarea.form-control {
     border-radius: 13px;
     font-size: 0.92rem;
     padding: 10px 13px;
@@ -5126,15 +5094,10 @@ textarea.form-control,
     .app-agenda-shell {
         grid-template-columns: 1fr;
         grid-template-areas:
-            "filter"
             "results"
             "feed";
         grid-template-rows: auto;
         gap: 20px;
-    }
-
-    .app-agenda-filter {
-        position: static;
     }
 }
 
@@ -5143,23 +5106,9 @@ textarea.form-control,
         font-size: 0.95rem;
     }
 
-    .app-agenda-filter,
     .app-agenda-results {
         border-radius: 22px;
         padding: 18px;
-    }
-
-    .app-agenda-filter .mb-4 {
-        margin-bottom: 1rem !important;
-    }
-
-    .app-service-summary {
-        border-radius: 18px;
-        padding: 16px;
-    }
-
-    .app-service-summary strong {
-        font-size: 1.15rem;
     }
 
     .app-results-top,
@@ -5182,12 +5131,24 @@ textarea.form-control,
     }
 
     /* A tira de dias corre de margem a margem em vez de ficar encaixada
-       dentro do cartão, que só dava para ver dois dias e meio. */
+       dentro do cartão, que só dava para ver dois dias e meio. Agora é o
+       carrossel que sangra: as margens negativas na faixa punham-na por baixo
+       das setas. */
+    .app-week-carousel {
+        gap: 4px;
+        margin-inline: -18px;
+        padding-inline: 6px;
+    }
+
+    .app-week-arrow {
+        width: 30px;
+        height: 30px;
+        font-size: 0.9rem;
+    }
+
     .app-week-strip {
         gap: 8px;
-        margin-inline: -18px;
-        padding-inline: 18px;
-        scroll-padding-left: 18px;
+        scroll-padding-left: 2px;
     }
 
     .app-week-day {
@@ -5236,11 +5197,6 @@ textarea.form-control,
         font-size: 0.9rem;
     }
 
-    /* Já existe o aviso sobreposto aos horários; dois de cada vez faziam a
-       página saltar. */
-    .app-agenda-filter.is-loading::after {
-        display: none;
-    }
 }
 
 /* =========================================================================
@@ -6265,9 +6221,30 @@ textarea.form-control,
     color: #a9707b;
 }
 
-/* O convite a escolher um dia, antes de haver horários para mostrar. */
-.app-pick-day-state .app-empty-icon i {
+/* O convite a escolher, antes de haver horários para mostrar. */
+.app-pick-day-state .app-empty-icon i,
+.app-pick-service-state .app-empty-icon i {
     color: #a9707b;
+}
+
+/* A mão aponta para aquilo em que é preciso carregar, e isso muda com o que
+   falta escolher: a faixa de dias está por cima do convite, e o catálogo de
+   serviços ao lado. O ícone é o mesmo — aponta para cima — e roda.
+
+   `inline-block` porque o <i> é inline, e `transform` não pega em caixas
+   inline: sem isto a mão ficava sempre virada para cima. */
+.app-pick-service-state .app-empty-icon i {
+    display: inline-block;
+    transform: rotate(-90deg);
+}
+
+/* No telemóvel não há "ao lado": a grelha passa a uma coluna e o catálogo vai
+   para baixo dos horários. Tem de ficar depois da regra de cima, senão perde:
+   uma media query não acrescenta especificidade nenhuma. */
+@media (max-width: 992px) {
+    .app-pick-service-state .app-empty-icon i {
+        transform: rotate(180deg);
+    }
 }
 
 

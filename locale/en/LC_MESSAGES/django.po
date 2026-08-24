@@ -574,6 +574,10 @@ msgstr "Pick a service, choose a date and book the best time."
 msgid "Escolha o seu horário de forma simples"
 msgstr "Choose your time slot the easy way"
 
+#: templates/appointments/public_visual_schedule.html:293
+msgid "Escolha um serviço"
+msgstr "Choose a service"
+
 #: templates/appointments/public_visual_schedule.html:200
 msgid "Esgotado"
 msgstr "Fully booked"
@@ -880,6 +884,10 @@ msgstr "No"
 msgid "Não cancelar"
 msgstr "Don't cancel"
 
+#: templates/appointments/public_visual_schedule.html:218
+msgid "Não há dias de atendimento no período em que o site aceita marcações. Fale connosco para combinar uma data."
+msgstr "There are no working days within the period the site accepts bookings for. Get in touch with us to arrange a date."
+
 #: templates/pwa/offline.html:22
 msgid "Não é possível mostrar horários sem ligação: a agenda muda ao longo do dia e mostrar dados guardados poderia levá-la a escolher um horário que já não existe."
 msgstr "Times cannot be shown without a connection: the schedule changes through the day, and showing stored data could lead you to pick a slot that no longer exists."
@@ -955,6 +963,10 @@ msgstr "Personal data is processed for the following purposes:"
 #: templates/legal/privacy_policy.html:81
 msgid "Os dados são conservados apenas pelo período necessário para cumprir as finalidades indicadas nesta política, salvo quando exista obrigação legal de conservação por período superior ou necessidade legítima de defesa de direitos."
 msgstr "Data is kept only for as long as needed to fulfil the purposes set out in this policy, unless there is a legal obligation to retain it for longer or a legitimate need to defend legal claims."
+
+#: templates/appointments/public_visual_schedule.html:296
+msgid "Os horários dependem do serviço. Escolha um no catálogo para ver os dias com vagas."
+msgstr "Available times depend on the service. Pick one from the catalogue to see the days with openings."
 
 #: templates/legal/privacy_policy.html:123
 msgid "Para exercer estes direitos, contacte <a href=\"mailto:atendimento@priarantes.com\">atendimento@priarantes.com</a>. O titular tem ainda o direito de apresentar reclamação junto da <strong>Comissão Nacional de Proteção de Dados (CNPD)</strong>."
@@ -1130,6 +1142,10 @@ msgstr "Security"
 msgid "Selecione a categoria, escolha o serviço, defina a data e reserve o seu horário disponível."
 msgstr "Select the category, choose the service, set the date and book your available time."
 
+#: templates/appointments/public_visual_schedule.html:215
+msgid "Sem dias de atendimento"
+msgstr "No working days"
+
 #: templates/pwa/offline.html:5
 msgid "Sem ligação"
 msgstr "Offline"
@@ -1146,10 +1162,6 @@ msgstr "Where applicable, these third parties must process the data in accordanc
 #: templates/appointments/public_appointment_lookup.html:88
 msgid "Serviço"
 msgstr "Service"
-
-#: templates/appointments/public_visual_schedule.html:102
-msgid "Serviço selecionado"
-msgstr "Selected service"
 
 #: templates/appointments/public_cancel_by_code.html:51
 msgid "Serviço:"

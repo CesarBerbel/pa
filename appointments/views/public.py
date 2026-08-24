@@ -17,6 +17,7 @@ from appointments.forms import (
 from appointments.models import (
     Appointment,
     AppointmentLog,
+    SchedulingSetting,
     Service,
     ServiceCategory,
 )
@@ -526,26 +527,47 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
 
     template_name = "appointments/public_visual_schedule.html"
 
-    days_in_strip = 7
+    def get_booking_window(self):
+        """O primeiro e o último dia que o site aceita marcar.
 
-    def get_week_days(self, selected_date, selected_service=None):
-        """Faixa dos próximos dias, a começar em hoje.
+        Hoje é sempre o primeiro: um dia que já passou não tem horários para
+        oferecer. O último vem das regras de agenda, que até aqui ninguém lia —
+        estava escrito na página de definições que o site deixa marcar até N
+        dias, e a faixa mostrava sempre sete, uns aquém e outros além do que a
+        clínica tinha decidido.
 
-        Antes começava sempre na segunda-feira da semana escolhida, o que numa
-        quinta-feira mostrava três dias já passados e sem utilidade nenhuma.
-        Agora corre para a frente e atravessa a semana quando é preciso.
+        O horizonte conta hoje: um horizonte de um dia deixa marcar só hoje,
+        que é o mínimo que o formulário das regras aceita.
         """
 
         today = timezone.localdate()
-        start_date = today
+        horizon_days = max(SchedulingSetting.get_booking_horizon_days(), 1)
 
-        # Quando a cliente salta para uma data distante pelo campo de data, a
-        # faixa acompanha-a; caso contrário mantém-se ancorada em hoje.
-        if selected_date > today + timedelta(days=self.days_in_strip - 1):
-            start_date = selected_date
+        return today, today + timedelta(days=horizon_days - 1)
+
+    def get_week_days(self, selected_date, selected_service=None):
+        """A faixa de dias que se podem marcar, do primeiro ao último.
+
+        Antes começava sempre na segunda-feira da semana escolhida, o que numa
+        quinta-feira mostrava três dias já passados e sem utilidade nenhuma.
+        Depois passou a sete dias a contar de hoje, e saltava com a data
+        escolhida — a faixa mudava de sítio debaixo de quem a estava a usar.
+
+        Agora vem inteira e o carrossel é que anda: começa no primeiro dia de
+        trabalho e acaba no último que o horizonte permite, o que dá às setas
+        dois limites verdadeiros em vez de uma janela que desliza.
+
+        Só entram dias de trabalho. Um domingo fechado ou uma semana de férias
+        não são uma escolha: ocupavam cartões da faixa a dizer que não há nada,
+        e com a janela inteira à frente eram muitos — a cliente passava metade
+        do carrossel a saltar por cima de dias que nunca teriam horários.
+        """
+
+        first_day, last_day = self.get_booking_window()
 
         dias = [
-            start_date + timedelta(days=index) for index in range(self.days_in_strip)
+            first_day + timedelta(days=index)
+            for index in range((last_day - first_day).days + 1)
         ]
 
         # Uma consulta para os dias todos da faixa, em vez de uma por dia.
@@ -559,6 +581,12 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
                 current_date,
                 public_safe=True,
             )
+
+            # Dia sem horário de funcionamento ou fechado de ponta a ponta por
+            # um bloqueio. Um dia cheio é outra coisa e fica: trabalha-se nele,
+            # e uma desmarcação pode abri-lo a qualquer momento.
+            if availability_status["is_fully_blocked"]:
+                continue
 
             # Quantas vagas tem o dia. É o que faz a faixa valer a pena: sem
             # o número, escolher um dia é adivinhar, e a pessoa acaba a clicar
@@ -586,24 +614,19 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
         return week_days
 
     def get_selected_service(self):
-        # Get selected service from query string
+        """O serviço que veio no endereço, e mais nenhum.
+
+        Sem `service`, a página abre sem horários e à espera da escolha no
+        catálogo. Antes escolhia o primeiro serviço da lista por conta própria:
+        a agenda abria cheia de horas que eram de um serviço que a cliente não
+        tinha pedido — e a duração do serviço é o que decide quais são as horas
+        livres, portanto eram horas que podiam não servir para nada.
+        """
+
         service_id = self.request.GET.get("service")
 
         if not service_id:
-            return (
-                Service.objects.filter(
-                    is_active=True,
-                    category__is_active=True,
-                    category__is_coming_soon=False,
-                )
-                .select_related("category")
-                .order_by(
-                    "category__display_order",
-                    "category__name",
-                    "name",
-                )
-                .first()
-            )
+            return None
 
         return (
             Service.objects.filter(
@@ -617,20 +640,22 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
         )
 
     def get_selected_date(self):
-        # Data escolhida, nunca no passado: um dia que já passou não tem
-        # horários para oferecer, e mostrá-lo só confunde.
-        today = timezone.localdate()
+        # Data escolhida, sempre dentro da janela de marcação: um dia que já
+        # passou não tem horários para oferecer, e um dia para lá do horizonte
+        # não é para marcar. Um endereço escrito à mão é a via que sobra para
+        # pedir qualquer um dos dois, e cai no dia mais próximo que sirva.
+        first_day, last_day = self.get_booking_window()
         date_value = self.request.GET.get("date")
 
         if not date_value:
-            return today
+            return first_day
 
         try:
             selected_date = datetime.strptime(date_value, "%Y-%m-%d").date()
         except ValueError:
-            return today
+            return first_day
 
-        return max(selected_date, today)
+        return min(max(selected_date, first_day), last_day)
 
     def get_context_data(self, **kwargs):
         # Add public visual schedule data to context
@@ -649,6 +674,26 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
 
         selected_service = self.get_selected_service()
         selected_date = self.get_selected_date()
+
+        # Sem serviço não há faixa: o número de vagas de cada dia depende da
+        # duração do serviço, e desenhar a faixa sem ele era percorrer a janela
+        # de marcação inteira para escrever "sem vagas" em todos os dias.
+        week_days = (
+            self.get_week_days(selected_date, selected_service)
+            if selected_service
+            else []
+        )
+
+        # Sem `date` no endereço ninguém escolheu dia nenhum, e o dia de
+        # referência é o primeiro cartão da faixa. Hoje servia enquanto hoje
+        # estava sempre lá; num domingo fechado, a faixa começava na segunda e
+        # o rótulo do estado continuava a falar do domingo — dizia "dia sem
+        # atendimento" por cima de uma faixa cheia de dias com vagas.
+        if not self.request.GET.get("date") and week_days:
+            selected_date = week_days[0]["date"]
+
+            for day in week_days:
+                day["is_selected"] = day["date"] == selected_date
 
         slots = []
         availability_status = {
@@ -710,7 +755,7 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
         context["day_chosen"] = bool(self.request.GET.get("date"))
         context["slots"] = slots
         context["availability_status"] = availability_status
-        context["week_days"] = self.get_week_days(selected_date, selected_service)
+        context["week_days"] = week_days
         context["today"] = timezone.localdate()
 
         return context

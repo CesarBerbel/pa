@@ -6,8 +6,6 @@ $(document).ready(function () {
     // No telemóvel a data escolhe-se por lista, mas quem manda continua a ser
     // #date: um único estado, dois controlos a escrever nele.
     const daySelect = $("#day-select");
-    const filterForm = $("#agenda-filter-form");
-    const filterPanel = $(".app-agenda-filter");
     const resultsPanel = $(".app-agenda-results");
     const slotsContainer = $("#agenda-slots-container");
     const statusPill = $("#availability-status-pill");
@@ -188,12 +186,6 @@ $(document).ready(function () {
         daySelect.val(selectedDate);
     }
 
-    function updateServiceSummary() {
-        // O resumo é escrito por quem escolhe o serviço, no feed. Ficou aqui
-        // por o carregamento dos horários lhe chamar, e não faz nada: sem o
-        // antigo <select>, não há de onde ler o nome outra vez.
-    }
-
     function loadAvailableSlots() {
         // Load available slots using AJAX.
         const serviceId = serviceInput.val();
@@ -206,8 +198,6 @@ $(document).ready(function () {
             return;
         }
 
-        filterForm.addClass("is-loading");
-        filterPanel.addClass("is-loading");
         resultsPanel.addClass("is-loading");
 
         renderLoading();
@@ -223,7 +213,6 @@ $(document).ready(function () {
                 renderSlots(response.slots, serviceId, selectedDate, response.availability_status);
                 updateBrowserUrl(serviceId, selectedDate);
                 updateSelectedWeekDay(selectedDate);
-                updateServiceSummary();
             },
             error: function () {
                 slotsContainer.html(`
@@ -237,8 +226,6 @@ $(document).ready(function () {
                 `);
             },
             complete: function () {
-                filterForm.removeClass("is-loading");
-                filterPanel.removeClass("is-loading");
                 resultsPanel.removeClass("is-loading");
                 slotsContainer.removeClass("is-loading");
             }
@@ -253,27 +240,73 @@ $(document).ready(function () {
         loadAvailableSlots();
     });
 
-    // O feed de serviços passou a ser o seletor de serviço. Sem isto cada
-    // escolha recarregava a página inteira; assim troca-se só a grelha.
-    $(".app-agenda-feed .list-group-item").on("click", function (event) {
-        const alvo = $(this);
-        const servico = alvo.data("service");
+    // Escolher o serviço segue a ligação do catálogo e recarrega a página.
+    // Era trocada só a grelha de horários, e isso deixava para trás tudo o
+    // resto que depende do serviço: a faixa de dias continuava a mostrar as
+    // vagas do serviço anterior, e numa página que abre sem serviço nenhum
+    // nem sequer havia faixa para trocar.
 
-        if (!servico) {
+    // ------------------------------------------------------------------
+    // Carrossel de dias
+    //
+    // A faixa traz todos os dias de trabalho que o site aceita marcar, do
+    // primeiro ao fim do horizonte, e mostra os que couberem no ecrã. As setas
+    // correm-na de uma página de cada vez; quem tem ecrã tátil continua a
+    // arrastar.
+    // ------------------------------------------------------------------
+
+    const weekStrip = $("#app-week-strip");
+    const weekArrows = $("[data-week-arrow]");
+
+    function updateWeekArrows() {
+        if (!weekStrip.length) {
             return;
         }
 
-        event.preventDefault();
+        const strip = weekStrip[0];
+        // Um pixel de folga: a rolagem dá valores fracionários e o fim quase
+        // nunca calha exatamente em scrollWidth - clientWidth.
+        const inicio = strip.scrollLeft <= 1;
+        const fim = strip.scrollLeft >= strip.scrollWidth - strip.clientWidth - 1;
 
-        serviceInput.val(servico);
-        $("#selected-service-name").text(alvo.data("name") || alvo.text().trim());
-        $("#selected-service-category").text(alvo.data("category") || "");
+        weekArrows.filter('[data-week-arrow="prev"]').prop("disabled", inicio);
+        weekArrows.filter('[data-week-arrow="next"]').prop("disabled", fim);
+    }
 
-        alvo.closest(".app-agenda-feed").find(".list-group-item").removeClass("is-selected");
-        alvo.addClass("is-selected");
+    function scrollWeekStrip(direcao) {
+        const strip = weekStrip[0];
+        const primeiroDia = weekStrip.find(".app-week-day").first();
+        // Uma página de cada vez, mas nunca menos do que um dia: num ecrã
+        // estreito onde só cabe um cartão e meio, saltar a largura visível
+        // deixava meio dia por ver de cada vez que se carregava na seta.
+        const largura = Math.max(
+            strip.clientWidth,
+            primeiroDia.length ? primeiroDia.outerWidth(true) : 0
+        );
 
-        loadAvailableSlots();
+        strip.scrollBy({ left: direcao * largura, behavior: "smooth" });
+    }
+
+    weekArrows.on("click", function () {
+        scrollWeekStrip($(this).data("week-arrow") === "prev" ? -1 : 1);
     });
+
+    weekStrip.on("scroll", updateWeekArrows);
+    $(window).on("resize", updateWeekArrows);
+
+    // Com uma data no endereço, o dia escolhido pode estar fora do que se vê:
+    // a faixa começa sempre em hoje, e sem isto a marcação escolhida ficava
+    // longe à direita, sem sinal nenhum de que estava lá.
+    const diaAtivo = weekStrip.find(".app-week-day.is-active")[0];
+
+    if (diaAtivo) {
+        // Sem animação e sem mexer na página à volta, ao contrário do que
+        // `scrollIntoView` faria: ao abrir, o dia escolhido está no sítio, não
+        // desliza até lá nem arrasta a página consigo.
+        weekStrip[0].scrollLeft = diaAtivo.offsetLeft - weekStrip[0].offsetLeft;
+    }
+
+    updateWeekArrows();
 
     $(".app-week-day").on("click", function (event) {
         // Load selected week day without full page reload.

@@ -16,7 +16,7 @@ CSS = Path(settings.BASE_DIR) / "static" / "css" / "public.css"
 class PublicScheduleLayoutTests(TestCase):
     """Estrutura da agenda pública no telemóvel.
 
-    O que estes testes protegem é a ordem em que as três áreas aparecem e o
+    O que estes testes protegem é a ordem em que as duas áreas aparecem e o
     facto de a folha de estilo as saber colocar. O aspeto em si não se testa
     daqui, mas a estrutura que o torna possível sim.
     """
@@ -47,23 +47,25 @@ class PublicScheduleLayoutTests(TestCase):
     def test_page_loads(self):
         self.assertEqual(self.response.status_code, 200)
 
-    def test_the_three_areas_exist(self):
-        self.assertIn('class="app-agenda-filter"', self.html)
+    def test_the_two_areas_exist(self):
         self.assertIn('class="app-agenda-feed"', self.html)
         self.assertIn('class="app-agenda-results"', self.html)
 
-    def test_catalog_comes_after_the_slots_in_the_markup(self):
-        # No telemóvel a grelha passa a uma coluna e segue a ordem do HTML.
-        # Se o catálogo voltasse para dentro do <aside>, ficava entre a escolha
-        # do serviço e os horários, que é o que a página serve para mostrar.
-        fim_do_filtro = self.html.index("</aside>")
+    def test_the_side_panel_is_gone(self):
+        # Era um <aside> só para repetir o nome do serviço já assinalado no
+        # catálogo, e ocupava a primeira área da grelha — no telemóvel, o
+        # primeiro ecrã inteiro.
+        self.assertNotIn("<aside", self.html)
+        self.assertNotIn("app-service-summary", self.html)
+
+    def test_the_catalog_is_a_cell_of_its_own(self):
+        # Dentro dos resultados ficava entre a escolha do dia e os horários,
+        # que é o que a página serve para mostrar.
+        resultados = self.html.index('class="app-agenda-results"')
         catalogo = self.html.index('class="app-agenda-feed"')
 
-        self.assertLess(fim_do_filtro, catalogo)
-
-    def test_catalog_is_not_nested_inside_the_filter(self):
-        self.assertEqual(self.html.count("<aside"), 1)
-        self.assertEqual(self.html.count("</aside>"), 1)
+        self.assertLess(catalogo, resultados)
+        self.assertEqual(self.html.count('class="app-agenda-feed"'), 1)
 
 
 class PublicScheduleStylesheetTests(TestCase):
@@ -133,7 +135,7 @@ class PublicScheduleStylesheetTests(TestCase):
 
         ordem = re.findall(r'"([^"]+)"', areas)
 
-        self.assertEqual([o.split()[0] for o in ordem], ["filter", "results", "feed"])
+        self.assertEqual([o.split()[0] for o in ordem], ["results", "feed"])
 
     def test_single_column_on_narrow_screens(self):
         for largura in [self.TELEMOVEL, self.TABLET]:
@@ -148,6 +150,26 @@ class PublicScheduleStylesheetTests(TestCase):
 
         self.assertIn("1fr", colunas)
         self.assertNotEqual(colunas, "1fr")
+
+    def test_the_hand_points_at_what_has_to_be_clicked(self):
+        # O convite a escolher o serviço aponta para o catálogo: ao lado
+        # esquerdo no computador, por baixo dos horários no telemóvel. O
+        # ícone é o mesmo do convite a escolher o dia — aponta para cima — e
+        # roda. A regra do telemóvel tem de vir depois da genérica, senão
+        # perde: uma media query não acrescenta especificidade.
+        seletor = ".app-pick-service-state .app-empty-icon i"
+
+        self.assertVence(seletor, "transform", "rotate(-90deg)", self.COMPUTADOR)
+        self.assertVence(seletor, "transform", "rotate(180deg)", self.TELEMOVEL)
+
+    def test_the_hand_that_asks_for_a_day_keeps_pointing_up(self):
+        # A faixa de dias está por cima do convite, em qualquer largura.
+        for largura in [self.TELEMOVEL, self.COMPUTADOR]:
+            self.assertIsNone(
+                self.valor(
+                    ".app-pick-day-state .app-empty-icon i", "transform", largura
+                )
+            )
 
     def test_results_header_stacks_on_a_phone(self):
         # O título e a etiqueta de estado lado a lado empurravam a página para
@@ -211,6 +233,9 @@ class DayStripServesEveryScreenTests(TestCase):
         self.hoje = timezone.localdate()
 
     def pagina(self, **params):
+        # Sem serviço a página abre à espera da escolha, e não há faixa.
+        params.setdefault("service", self.service.pk)
+
         return self.client.get(reverse("appointments:public_visual_schedule"), params)
 
     def dias(self, response):
@@ -224,7 +249,7 @@ class DayStripServesEveryScreenTests(TestCase):
     def test_the_strip_is_no_longer_desktop_only(self):
         # Era escondida no telemóvel porque a lista tratava disso lá. Sem a
         # lista, escondê-la deixava a página sem forma de escolher o dia.
-        html = self.pagina().content.decode()
+        html = self.pagina(service=self.service.pk).content.decode()
         faixa = re.search(r'<div class="app-week-strip[^>]*>', html).group(0)
 
         self.assertNotIn("data-agenda-desktop-only", faixa)
@@ -234,8 +259,10 @@ class DayStripServesEveryScreenTests(TestCase):
             self.assertGreaterEqual(dia, self.hoje)
 
     def test_a_distant_chosen_day_is_shown(self):
-        # Senão a faixa mostraria dias diferentes do que a página apresenta.
-        distante = self.hoje + timedelta(days=40)
+        # Senão a faixa mostraria dias diferentes do que a página apresenta. A
+        # faixa traz a janela de marcação inteira, por isso qualquer dia que se
+        # possa escolher está lá — basta correr o carrossel até ele.
+        distante = self.hoje + timedelta(days=15)
 
         dias = self.dias(self.pagina(date=distante.strftime("%Y-%m-%d")))
 
@@ -292,7 +319,8 @@ class MobileAgendaVisibilityTests(TestCase):
         # faixa e o catálogo passaram a ser a única forma de escolher — e uma
         # página onde não se escolhe nada não serve para marcar.
         html = self.client.get(
-            reverse("appointments:public_visual_schedule")
+            reverse("appointments:public_visual_schedule"),
+            {"service": self.service.pk},
         ).content.decode()
 
         faixa = re.search(r'<div class="app-week-strip[^>]*>', html).group(0)
@@ -307,3 +335,55 @@ class MobileAgendaVisibilityTests(TestCase):
             self.assertNotEqual(
                 self.folha.resolve(".app-slots-grid", "display", largura), "none"
             )
+
+
+class AgendaNeverWiderThanTheScreenTests(TestCase):
+    """Nada na agenda pode esticar a página para fora do ecrã.
+
+    A faixa de dias traz a janela de marcação inteira e só se vê a rolar. As
+    células da grelha são o sítio onde essa largura toda pode escapar: com
+    `min-width: auto`, uma célula nunca fica mais estreita do que aquilo que
+    tem dentro, e estica a página atrás dela — o carrossel deixa de rolar e as
+    setas saem do ecrã, uma para cada lado.
+    """
+
+    TELEMOVEL = 390
+    COMPUTADOR = 1280
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.folha = Stylesheet(CSS.read_text(encoding="utf-8"))
+
+    def test_the_agenda_cells_can_shrink_below_their_content(self):
+        celulas = [
+            ".app-agenda-feed",
+            ".app-agenda-results",
+        ]
+
+        for celula in celulas:
+            for largura in [self.TELEMOVEL, self.COMPUTADOR]:
+                with self.subTest(celula=celula, largura=largura):
+                    self.assertEqual(
+                        self.folha.resolve(celula, "min-width", largura), "0"
+                    )
+
+    def test_the_strip_is_the_only_part_of_the_carousel_that_shrinks(self):
+        # A faixa encolhe até ao que sobra e rola por dentro; as setas ficam
+        # do tamanho que têm, senão desapareciam com os dias a mais.
+        for largura in [self.TELEMOVEL, self.COMPUTADOR]:
+            with self.subTest(largura=largura):
+                self.assertEqual(
+                    self.folha.resolve(".app-week-strip", "min-width", largura), "0"
+                )
+                self.assertEqual(
+                    self.folha.resolve(".app-week-arrow", "flex", largura), "0 0 auto"
+                )
+
+    def test_the_day_cards_scroll_instead_of_being_squeezed(self):
+        # Espremidos, cabiam todos e o carrossel deixava de ter para onde ir.
+        for largura in [self.TELEMOVEL, self.COMPUTADOR]:
+            with self.subTest(largura=largura):
+                self.assertEqual(
+                    self.folha.resolve(".app-week-day", "flex", largura), "0 0 auto"
+                )
