@@ -1,12 +1,14 @@
+import re
 from decimal import Decimal
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from config.test_utils import ResetLanguageMixin
 from django.urls import reverse
 from django.utils import translation
 
 from appointments.models import Service, ServiceCategory
+from config.views import SITEMAP_ROUTES
 
 
 class LanguagePrefixRoutingTests(ResetLanguageMixin, TestCase):
@@ -37,6 +39,42 @@ class LanguagePrefixRoutingTests(ResetLanguageMixin, TestCase):
     def test_public_booking_pages_answer_in_both_languages(self):
         self.assertEqual(self.client.get("/agenda-publica/").status_code, 200)
         self.assertEqual(self.client.get("/en/agenda-publica/").status_code, 200)
+
+
+@override_settings(SITE_URL="https://exemplo.pt")
+class SitemapLanguageTests(ResetLanguageMixin, TestCase):
+    """O sitemap tem de trazer as duas versões, e sempre as mesmas.
+
+    É servido fora do `i18n_patterns`, portanto o `reverse()` lá dentro segue o
+    idioma do pedido. Sem forçar cada idioma à mão, o ficheiro mudava conforme
+    quem o pedisse — e o Google, que chega em inglês ou em português conforme o
+    robô, via metade do site de cada vez.
+    """
+
+    def enderecos(self, **extra):
+        xml = self.client.get("/sitemap.xml", **extra).content.decode()
+
+        return re.findall(r"<loc>(.*?)</loc>", xml)
+
+    def test_lista_as_duas_versoes_de_cada_pagina(self):
+        enderecos = self.enderecos()
+
+        self.assertIn("https://exemplo.pt/", enderecos)
+        self.assertIn("https://exemplo.pt/en/", enderecos)
+        self.assertIn("https://exemplo.pt/agenda-publica/", enderecos)
+        self.assertIn("https://exemplo.pt/en/agenda-publica/", enderecos)
+
+    def test_ha_uma_entrada_por_pagina_e_por_idioma(self):
+        enderecos = self.enderecos()
+
+        self.assertEqual(len(enderecos), len(SITEMAP_ROUTES) * 2)
+        self.assertEqual(len(set(enderecos)), len(enderecos))
+
+    def test_o_idioma_do_pedido_nao_muda_o_ficheiro(self):
+        em_portugues = self.enderecos(HTTP_ACCEPT_LANGUAGE="pt-pt")
+        em_ingles = self.enderecos(HTTP_ACCEPT_LANGUAGE="en")
+
+        self.assertEqual(em_portugues, em_ingles)
 
 
 class LanguageSelectorTests(ResetLanguageMixin, TestCase):

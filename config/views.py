@@ -7,7 +7,7 @@ from django.shortcuts import render
 from django.template.loader import render_to_string
 from django.templatetags.static import static
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone, translation
 from django.views.decorators.http import require_GET
 
 from config.templatetags.assets import asset_version, versioned_static
@@ -36,56 +36,47 @@ def robots_txt(request):
     return HttpResponse("\n".join(lines), content_type="text/plain; charset=utf-8")
 
 
+# As páginas públicas que valem a pena indexar, com a frequência com que mudam
+# e a importância relativa. Cada uma entra no sitemap uma vez por idioma.
+SITEMAP_ROUTES = [
+    ("home", "weekly", "1.0"),
+    ("appointments:public_service_feed", "weekly", "0.9"),
+    ("appointments:public_visual_schedule", "daily", "0.8"),
+    ("appointments:public_before_after", "monthly", "0.7"),
+    ("privacy_policy", "monthly", "0.4"),
+    ("cookie_policy", "monthly", "0.4"),
+    ("complaints_book", "yearly", "0.3"),
+]
+
+
 @require_GET
 def sitemap_xml(request):
     """Return a small XML sitemap using the canonical SITE_URL."""
 
     site_url = settings.SITE_URL.rstrip("/")
     today = timezone.localdate().isoformat()
-    sitemap_items = [
-        {
-            "loc": f"{site_url}{reverse('home')}",
-            "lastmod": today,
-            "changefreq": "weekly",
-            "priority": "1.0",
-        },
-        {
-            "loc": f"{site_url}{reverse('appointments:public_service_feed')}",
-            "lastmod": today,
-            "changefreq": "weekly",
-            "priority": "0.9",
-        },
-        {
-            "loc": f"{site_url}{reverse('appointments:public_before_after')}",
-            "lastmod": today,
-            "changefreq": "monthly",
-            "priority": "0.7",
-        },
-        {
-            "loc": f"{site_url}{reverse('appointments:public_visual_schedule')}",
-            "lastmod": today,
-            "changefreq": "daily",
-            "priority": "0.8",
-        },
-        {
-            "loc": f"{site_url}{reverse('privacy_policy')}",
-            "lastmod": today,
-            "changefreq": "monthly",
-            "priority": "0.4",
-        },
-        {
-            "loc": f"{site_url}{reverse('cookie_policy')}",
-            "lastmod": today,
-            "changefreq": "monthly",
-            "priority": "0.4",
-        },
-        {
-            "loc": f"{site_url}{reverse('complaints_book')}",
-            "lastmod": today,
-            "changefreq": "yearly",
-            "priority": "0.3",
-        },
-    ]
+
+    sitemap_items = []
+
+    # O sitemap é servido fora do `i18n_patterns`, por isso um `reverse()` sem
+    # mais nada devolveria os endereços do idioma em que o pedido calhou de
+    # chegar: o mesmo ficheiro dizia coisas diferentes conforme o
+    # `Accept-Language` de quem o pedisse, e a versão inglesa nunca aparecia.
+    #
+    # O `override` fixa cada idioma à vez. Com `prefix_default_language=False`,
+    # o português sai na raiz e o inglês sob `/en/` — que é exatamente o par
+    # que o `hreflang` das páginas já anuncia.
+    for language_code, _nome in settings.LANGUAGES:
+        with translation.override(language_code):
+            for route, changefreq, priority in SITEMAP_ROUTES:
+                sitemap_items.append(
+                    {
+                        "loc": f"{site_url}{reverse(route)}",
+                        "lastmod": today,
+                        "changefreq": changefreq,
+                        "priority": priority,
+                    }
+                )
 
     url_entries = []
 
