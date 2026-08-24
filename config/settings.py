@@ -273,6 +273,13 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # Logo a seguir ao SecurityMiddleware e antes do WhiteNoise, de propósito.
+    # A compressão corre na volta de saída, de baixo para cima: quem está mais
+    # acima na lista vê a resposta mais tarde, já completa. Aqui em cima o gzip
+    # apanha o HTML inteiro — a página inicial passa de ~73 KB para ~15 KB — e,
+    # como ignora respostas que já trazem Content-Encoding, não volta a
+    # comprimir os ficheiros que o WhiteNoise serve já comprimidos.
+    "django.middleware.gzip.GZipMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     # Precisa vir depois da sessão e antes do CommonMiddleware para resolver o
