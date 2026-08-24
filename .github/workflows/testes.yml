@@ -1,0 +1,73 @@
+# Corre a suite de testes em cada push e em cada pull request para main.
+#
+# Existe porque o deploy documentado em docs/deploy.md é `git pull` seguido de
+# `docker compose up -d --build`: sem um passo de verificação pelo meio, um
+# commit que parta a agenda chega a produção à mesma velocidade que um bom.
+
+name: Testes
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  pytest:
+    name: pytest
+    runs-on: ubuntu-latest
+
+    services:
+      # PostgreSQL 16, a mesma versão do docker-compose.prod.yml. Os testes
+      # criam e apagam uma base a sério, por isso não serve o sqlite: uma
+      # suite que passa em sqlite e falha em Postgres não prova nada sobre
+      # produção.
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: pa_test
+          POSTGRES_USER: pa
+          POSTGRES_PASSWORD: pa
+        ports:
+          - 5432:5432
+        # Sem healthcheck o job arranca antes de o Postgres aceitar ligações e
+        # o primeiro `connect` falha por corrida, não por defeito no código.
+        options: >-
+          --health-cmd "pg_isready -U pa"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      # O `config/settings.py` lê tudo por python-decouple. SECRET_KEY não tem
+      # valor por omissão: sem ela o Django nem arranca, e o erro seria um
+      # UndefinedValueError sem relação nenhuma com o teste que falhou.
+      SECRET_KEY: chave-so-para-os-testes
+      DEBUG: "True"
+      DB_ENGINE: django.db.backends.postgresql
+      DB_NAME: pa_test
+      DB_USER: pa
+      DB_PASSWORD: pa
+      DB_HOST: localhost
+      DB_PORT: "5432"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar o Python
+        uses: actions/setup-python@v5
+        with:
+          # A mesma versão do Dockerfile.
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Instalar as dependências
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Correr os testes
+        # `--create-db` anula o `--reuse-db` do pytest.ini: em CI a base é
+        # sempre nova e não há nada para reaproveitar entre execuções.
+        run: pytest -q --create-db
