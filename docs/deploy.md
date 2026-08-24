@@ -106,14 +106,16 @@ A base de dados guarda quase todo o estado da aplicação: perdê-la é perder a
 marcações, os clientes e o histórico.
 
 **Deixou de ser tudo.** Os casos "antes e depois" trazem fotografias
-carregadas na área interna, e essas vivem em ficheiros, não na base. Ficam em
-`/opt/pa/media/`, montada no contentor pelo `docker-compose.prod.yml`. Uma
-cópia da base sozinha restaura os registos com as legendas e sem as
-fotografias — os `<img>` da página apontariam para ficheiros que já não
-existem. A pasta tem de ser copiada com a base:
+carregadas na área interna, e essas vivem em ficheiros, não na base. Uma cópia
+da base sozinha restaura os registos com as legendas e sem as fotografias — os
+`<img>` da página apontariam para ficheiros que já não existem.
 
-```bash
-tar czf /opt/backups/pa-media-$(date +%F).tar.gz -C /opt/pa media
+Os scripts tratam disso: **cada cópia são dois ficheiros com o mesmo carimbo**,
+e o restauro encontra o par sozinho.
+
+```
+backups/pa_pa_2026-08-24_030000.dump        a base
+backups/pa_media_2026-08-24_030000.tar.gz   as fotografias
 ```
 
 Os dois scripts leem as credenciais do `.env.prod`, portanto não há palavras-passe
@@ -125,15 +127,21 @@ escritas em lado nenhum.
 cd /opt/pa && ./scripts/backup_db.sh
 ```
 
-Gera `backups/pa_<base>_<data>_<hora>.dump` no formato próprio do PostgreSQL,
-que já vem comprimido e permite restauro seletivo.
+Gera os dois ficheiros: o dump no formato próprio do PostgreSQL, que já vem
+comprimido e permite restauro seletivo, e o arquivo da pasta `media/`.
 
-O script **valida o dump antes de o dar como bom**: escreve para um ficheiro
-`.parcial`, confirma com `pg_restore --list` que o conteúdo é legível e só então
-lhe dá o nome definitivo. Um ficheiro truncado com o nome certo é pior do que
-não haver cópia, porque só se descobre no dia em que é precisa.
+O script **valida os dois antes de os dar como bons**: escreve para ficheiros
+`.parcial`, confirma que o dump se lê com `pg_restore --list` e que o arquivo
+se lê com `tar tzf`, e só então lhes dá o nome definitivo. Um ficheiro truncado
+com o nome certo é pior do que não haver cópia, porque só se descobre no dia em
+que é precisa.
 
-Apaga automaticamente cópias com mais de 30 dias. Para mudar:
+Se a pasta `media/` não existir, avisa e continua — a cópia leva só a base.
+
+Apaga automaticamente cópias com mais de 30 dias, **as duas metades ao mesmo
+tempo**: apagar só os dumps deixaria arquivos de fotografias órfãos a crescer
+para sempre, e apagar só as fotografias deixaria dumps que restauram registos
+sem imagens. Para mudar:
 
 ```bash
 RETENTION_DAYS=90 ./scripts/backup_db.sh
@@ -248,16 +256,26 @@ proteção real, sincronize a pasta para fora da máquina — por exemplo com
 cd /opt/pa && ./scripts/restore_db.sh backups/pa_pa_2026-08-10_030000.dump
 ```
 
+Indica-se o dump; **as fotografias vêm com ele**, pelo carimbo do nome. Se o
+arquivo do par não existir, o script diz-o antes de pedir confirmação, para a
+decisão ser tomada sabendo que as imagens vão ficar as de agora.
+
 Isto **apaga os dados atuais**. O script protege-se disso em três camadas:
 
-1. valida o ficheiro antes de mexer em nada;
+1. valida o dump e o arquivo das fotografias antes de mexer em nada;
 2. pede que escreva o nome da base de dados para confirmar — não aceita "sim"
    nem `-y`, para não ser executado por reflexo;
-3. guarda o estado atual em `backups/pre-restauro_*.dump` antes de restaurar.
+3. guarda o estado atual — base **e** fotografias — em `backups/pre-restauro_*`
+   antes de restaurar.
 
 Durante o restauro o serviço `web` é parado, para que nenhuma marcação entre a
 meio. Se o restauro falhar, o `web` volta a subir sozinho e o caminho da cópia
 de segurança é impresso no ecrã.
+
+As fotografias são extraídas para uma pasta ao lado e só depois trocadas.
+Extrair por cima da pasta a sério deixaria, se falhasse a meio, uma mistura das
+antigas com as novas — o pior dos dois estados, e sem forma de saber qual é
+qual.
 
 No fim aplica as migrations, para o caso de a cópia ser anterior a alterações de
 esquema já presentes no código.

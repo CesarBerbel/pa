@@ -8,15 +8,22 @@
 # pede confirmação escrita e cria uma cópia de segurança do estado presente,
 # para que um restauro enganado continue a ter volta.
 #
-# Sequência:
-#   1. valida o ficheiro
-#   2. pede confirmação
-#   3. copia o estado atual para backups/
-#   4. para o serviço web, para ninguém escrever a meio
-#   5. restaura
-#   6. levanta o web e aplica migrations
+# Restaura as duas metades: a base e as fotografias que lhe correspondem.
+# O arquivo das fotografias e encontrado pelo carimbo do dump — o mesmo par
+# que o backup_db.sh cria. Restaurar so a base devolveria os registos com as
+# legendas e sem as imagens.
 #
-# Variáveis de ambiente aceites: PROJECT_DIR, ENV_FILE, COMPOSE_FILE, BACKUP_DIR
+# Sequencia:
+#   1. valida o dump e procura o par das fotografias
+#   2. pede confirmacao
+#   3. copia o estado atual — base E fotografias — para backups/
+#   4. para o servico web, para ninguem escrever a meio
+#   5. restaura a base
+#   6. restaura as fotografias
+#   7. levanta o web e aplica migrations
+#
+# Variaveis de ambiente aceites: PROJECT_DIR, ENV_FILE, COMPOSE_FILE,
+# BACKUP_DIR, MEDIA_DIR
 
 set -euo pipefail
 
@@ -26,6 +33,7 @@ PROJECT_DIR="${PROJECT_DIR:-$(dirname "$SCRIPT_DIR")}"
 ENV_FILE="${ENV_FILE:-$PROJECT_DIR/.env.prod}"
 COMPOSE_FILE="${COMPOSE_FILE:-$PROJECT_DIR/docker-compose.prod.yml}"
 BACKUP_DIR="${BACKUP_DIR:-$PROJECT_DIR/backups}"
+MEDIA_DIR="${MEDIA_DIR:-$PROJECT_DIR/media}"
 
 erro() {
     echo "ERRO: $*" >&2
@@ -67,6 +75,23 @@ if ! compose exec -T db pg_restore --list /dev/stdin < "$FICHEIRO" > /dev/null 2
     erro "o ficheiro não é um dump válido do PostgreSQL"
 fi
 
+# O par das fotografias, pelo carimbo do nome do dump. Sem carimbo legivel
+# — um ficheiro renomeado a mao — nao ha par, e diz-se.
+CARIMBO_DUMP="$(basename "$FICHEIRO" | sed -n 's/.*_\([0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}_[0-9]\{6\}\)\.dump$/\1/p')"
+MEDIA_FICHEIRO=""
+
+if [ -n "$CARIMBO_DUMP" ]; then
+    CANDIDATO="$(dirname "$FICHEIRO")/pa_media_${CARIMBO_DUMP}.tar.gz"
+
+    if [ -f "$CANDIDATO" ]; then
+        if tar tzf "$CANDIDATO" > /dev/null 2>&1; then
+            MEDIA_FICHEIRO="$CANDIDATO"
+        else
+            erro "o arquivo das fotografias $CANDIDATO esta ilegivel"
+        fi
+    fi
+fi
+
 TAMANHO="$(du -h "$FICHEIRO" | cut -f1)"
 DATA="$(date -r "$FICHEIRO" '+%Y-%m-%d %H:%M' 2>/dev/null || echo 'desconhecida')"
 
@@ -82,6 +107,17 @@ cat <<AVISO
 
 AVISO
 
+if [ -n "$MEDIA_FICHEIRO" ]; then
+    echo "  As fotografias tambem sao substituidas, a partir de:"
+    echo "    $MEDIA_FICHEIRO"
+    echo
+else
+    echo "  ATENCAO: nao ha arquivo de fotografias para esta copia."
+    echo "  A base sera restaurada e as imagens ficam as de agora — os casos"
+    echo "  restaurados podem apontar para ficheiros que nao existem."
+    echo
+fi
+
 read -r -p "Escreva o nome da base de dados para confirmar: " CONFIRMACAO
 
 [ "$CONFIRMACAO" = "$DB_NAME" ] || erro "confirmação não corresponde; nada foi alterado"
@@ -89,8 +125,10 @@ read -r -p "Escreva o nome da base de dados para confirmar: " CONFIRMACAO
 mkdir -p "$BACKUP_DIR"
 SEGURANCA="$BACKUP_DIR/pre-restauro_${DB_NAME}_$(date +%Y-%m-%d_%H%M%S).dump"
 
+MEDIA_SEGURANCA="$BACKUP_DIR/pre-restauro_media_$(date +%Y-%m-%d_%H%M%S).tar.gz"
+
 echo
-echo "1/4 A guardar o estado atual em $SEGURANCA…"
+echo "1/5 A guardar o estado atual em $SEGURANCA..."
 
 if ! compose exec -T -e PGPASSWORD="$DB_PASSWORD" db \
     pg_dump -U "$DB_USER" -d "$DB_NAME" --format=custom --no-owner --no-privileges \
@@ -99,7 +137,16 @@ if ! compose exec -T -e PGPASSWORD="$DB_PASSWORD" db \
     erro "não consegui guardar o estado atual; restauro cancelado"
 fi
 
-echo "2/4 A parar o serviço web…"
+if [ -d "$MEDIA_DIR" ]; then
+    if ! tar czf "$MEDIA_SEGURANCA" -C "$(dirname "$MEDIA_DIR")" "$(basename "$MEDIA_DIR")"; then
+        rm -f "$MEDIA_SEGURANCA"
+        erro "nao consegui guardar as fotografias atuais; restauro cancelado"
+    fi
+
+    echo "     fotografias atuais em $MEDIA_SEGURANCA"
+fi
+
+echo "2/5 A parar o servico web..."
 compose stop web
 
 # A partir daqui o web volta a subir mesmo que o restauro falhe: deixar o site
@@ -110,7 +157,7 @@ levantar_web() {
 }
 trap levantar_web EXIT
 
-echo "3/4 A restaurar…"
+echo "3/5 A restaurar a base..."
 
 if ! compose exec -T -e PGPASSWORD="$DB_PASSWORD" db \
     pg_restore -U "$DB_USER" -d "$DB_NAME" \
@@ -121,12 +168,57 @@ if ! compose exec -T -e PGPASSWORD="$DB_PASSWORD" db \
     exit 1
 fi
 
+# --- As fotografias -----------------------------------------------------
+#
+# Extrai-se para uma pasta ao lado e so depois se troca. Extrair por cima da
+# pasta a serio deixaria, se falhasse a meio, uma mistura das fotografias
+# antigas com as novas — o pior dos dois estados, e sem forma de saber qual e
+# qual.
+
+if [ -n "$MEDIA_FICHEIRO" ]; then
+    echo "4/5 A restaurar as fotografias..."
+
+    TEMPORARIA="$(dirname "$MEDIA_DIR")/.media-restauro-$$"
+    rm -rf "$TEMPORARIA"
+    mkdir -p "$TEMPORARIA"
+
+    if ! tar xzf "$MEDIA_FICHEIRO" -C "$TEMPORARIA"; then
+        rm -rf "$TEMPORARIA"
+        echo "AVISO: as fotografias nao foram restauradas; a base ja foi." >&2
+        echo "       arquivo: $MEDIA_FICHEIRO" >&2
+    else
+        EXTRAIDA="$TEMPORARIA/$(basename "$MEDIA_DIR")"
+
+        if [ -d "$EXTRAIDA" ]; then
+            ANTIGA="$(dirname "$MEDIA_DIR")/.media-anterior-$$"
+            rm -rf "$ANTIGA"
+
+            [ -d "$MEDIA_DIR" ] && mv "$MEDIA_DIR" "$ANTIGA"
+            mv "$EXTRAIDA" "$MEDIA_DIR"
+            rm -rf "$ANTIGA"
+
+            QUANTAS="$(find "$MEDIA_DIR" -type f | wc -l)"
+            echo "     $QUANTAS ficheiro(s) restaurado(s) em $MEDIA_DIR"
+        else
+            echo "AVISO: o arquivo nao continha a pasta esperada." >&2
+        fi
+
+        rm -rf "$TEMPORARIA"
+    fi
+else
+    echo "4/5 Sem arquivo de fotografias — as imagens ficam como estao."
+fi
+
 trap - EXIT
 
-echo "4/4 A levantar o web e a aplicar migrations…"
+echo "5/5 A levantar o web e a aplicar migrations..."
 compose start web
 compose exec -T web python manage.py migrate --no-input
 
 echo
-echo "Restauro concluído a partir de $FICHEIRO."
-echo "Cópia do estado anterior: $SEGURANCA"
+echo "Restauro concluido a partir de $FICHEIRO."
+echo "Estado anterior da base : $SEGURANCA"
+
+if [ -f "$MEDIA_SEGURANCA" ]; then
+    echo "Fotografias anteriores  : $MEDIA_SEGURANCA"
+fi
