@@ -1,9 +1,13 @@
+import os
 import re
+import tempfile
+from pathlib import Path
 
 from django.template import Context, Template
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
+from config.templatetags import assets
 from config.templatetags.assets import asset_version, versioned_static
 from config.test_utils import ResetLanguageMixin
 
@@ -18,14 +22,44 @@ class AssetVersionTests(TestCase):
     mudar: alterava-se o CSS e não acontecia nada.
     """
 
+    def setUp(self):
+        super().setUp()
+
+        # Fora de DEBUG — e os testes correm sempre assim — a versão fica
+        # guardada em memória para poupar um stat() por página. O dicionário é
+        # do módulo e sobrevive entre testes: sem o limpar, um teste lia a
+        # versão que outro calculou.
+        assets._versoes.clear()
+
     def test_url_carries_a_version(self):
         self.assertRegex(versioned_static("css/public.css"), VERSAO)
 
     def test_version_comes_from_the_file(self):
-        self.assertNotEqual(
-            asset_version("css/public.css"),
-            asset_version("js/passkeys.js"),
-        )
+        """A versão muda quando o ficheiro muda.
+
+        Não se comparam dois ficheiros do repositório: num `git clone` — e o
+        `actions/checkout` do CI é isso — todos ficam com a data do instante do
+        checkout, e a comparação passava nesta máquina e falhava lá. O que
+        interessa provar é que a versão segue o ficheiro, e isso vê-se mexendo
+        na data de um ficheiro nosso.
+        """
+
+        with tempfile.TemporaryDirectory() as raiz:
+            estaticos = Path(raiz) / "static"
+            estaticos.mkdir()
+            ficheiro = estaticos / "teste.css"
+            ficheiro.write_text("body {}", encoding="utf-8")
+
+            with override_settings(BASE_DIR=raiz):
+                os.utime(ficheiro, (1_000_000_000, 1_000_000_000))
+                antes = asset_version("teste.css")
+
+                assets._versoes.clear()
+                os.utime(ficheiro, (1_000_000_060, 1_000_000_060))
+                depois = asset_version("teste.css")
+
+        self.assertEqual(antes, "1000000000")
+        self.assertEqual(depois, "1000000060")
 
     def test_a_missing_file_does_not_break_the_page(self):
         self.assertEqual(asset_version("css/nao-existe.css"), "0")
