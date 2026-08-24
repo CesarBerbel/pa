@@ -2,7 +2,7 @@ from datetime import time, timedelta
 
 from django.contrib.auth import get_user_model
 from django.core import mail
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -131,6 +131,11 @@ class MessagePreviewTests(TestCase):
             previa["emails"][0]["subject"], "Cuidados a ter nos próximos dias"
         )
 
+    # O fornecedor liga-se aqui, e não se deixa ao ambiente: `BAILEYS_ENABLED`
+    # vem por omissão a False e só está ligado em máquinas com um `.env` que o
+    # ligue. Sem isto, o teste passava na máquina de quem o escreveu e falhava
+    # no CI, que não tem `.env` nenhum.
+    @override_settings(BAILEYS_ENABLED=True)
     def test_the_whatsapp_message_shows_up_with_its_recipient(self):
         WhatsAppEventSetting.objects.filter(
             event_type=WhatsAppEventSetting.EVENT_APPOINTMENT_CONFIRMED,
