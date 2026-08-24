@@ -353,48 +353,12 @@
         </p>
     </div>
 
-    <div class="d-flex align-items-center gap-2 flex-wrap">
-        <div class="btn-group" role="group" aria-label="Semana">
-            <a
-                href="{% url 'appointments:weekly_schedule' %}?date={{ previous_week|date:'Y-m-d' }}"
-                class="btn btn-outline-secondary btn-sm"
-                aria-label="Semana anterior"
-            >
-                <i class="bi bi-chevron-left" aria-hidden="true"></i>
-            </a>
-
-            <a
-                href="{% url 'appointments:weekly_schedule' %}"
-                class="btn btn-outline-secondary btn-sm"
-            >
-                Hoje
-            </a>
-
-            <a
-                href="{% url 'appointments:weekly_schedule' %}?date={{ next_week|date:'Y-m-d' }}"
-                class="btn btn-outline-secondary btn-sm"
-                aria-label="Semana seguinte"
-            >
-                <i class="bi bi-chevron-right" aria-hidden="true"></i>
-            </a>
-        </div>
-
-        {# As ações sobre cada marcação e o bloqueio de horários vivem na vista #}
-        {# de dia: não cabem numa coluna de um sétimo do ecrã.                  #}
-        {# No telemóvel este botão é redundante: tocar no número do dia, no #}
-        {# cabeçalho da coluna, abre o mesmo ecrã.                          #}
-        <a
-            href="{% url 'appointments:visual_schedule' %}?date={{ today|date:'Y-m-d' }}"
-            class="btn btn-outline-secondary btn-sm d-none d-md-inline-block"
-        >
-            Ver por dia
-        </a>
-
-        <a href="{% url 'appointments:appointment_create' %}" class="btn btn-primary btn-sm">
-            Nova marcação
-        </a>
-    </div>
+    <a href="{% url 'appointments:appointment_create' %}" class="btn btn-primary btn-sm">
+        Nova marcação
+    </a>
 </div>
+
+{% include "appointments/_agenda_controls.html" with vista="semana" data_atual=selected_date anterior=previous_week seguinte=next_week %}
 
 {# A grelha da semana, de tablet para cima. Abaixo disso vem a lista do dia, #}
 {# mais abaixo neste ficheiro.                                               #}

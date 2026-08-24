@@ -13,73 +13,10 @@
             <p>{{ selected_date|date:"d/m/Y" }}</p>
         </div>
 
-        <div class="internal-calendar-actions">
-            <a
-                href="{% url 'appointments:visual_schedule' %}?date={{ previous_date|date:'Y-m-d' }}"
-                class="btn btn-outline-secondary"
-            >
-                ← Dia anterior
-            </a>
-
-            <a
-                href="{% url 'appointments:visual_schedule' %}"
-                class="btn btn-outline-secondary"
-            >
-                Hoje
-            </a>
-
-            <a
-                href="{% url 'appointments:visual_schedule' %}?date={{ next_date|date:'Y-m-d' }}"
-                class="btn btn-outline-secondary"
-            >
-                Próximo dia →
-            </a>
-
-            {# O caminho de volta: a agenda é semanal, e este ecrã é o dia #}
-            {# aberto a partir dela.                                       #}
-            <a
-                href="{% url 'appointments:weekly_schedule' %}?date={{ selected_date|date:'Y-m-d' }}"
-                class="btn btn-outline-secondary"
-            >
-                Ver a semana
-            </a>
-
-            <a
-                href="{% url 'appointments:schedule_block_create' %}"
-                class="btn btn-outline-warning"
-            >
-                Bloquear horário
-            </a>
-
-            <a
-                href="{% url 'appointments:appointment_create' %}"
-                class="btn btn-primary"
-            >
-                Nova marcação
-            </a>
-        </div>
     </div>
 
-    <div class="internal-calendar-filter mb-4">
-        <form method="get" class="row g-3 align-items-end">
-            <div class="col-12 col-md-4">
-                <label for="date" class="form-label">Selecionar data</label>
-                <input
-                    type="date"
-                    id="date"
-                    name="date"
-                    value="{{ selected_date|date:'Y-m-d' }}"
-                    class="form-control"
-                >
-            </div>
+    {% include "appointments/_agenda_controls.html" with vista="dia" data_atual=selected_date anterior=previous_date seguinte=next_date %}
 
-            <div class="col-12 col-md-auto">
-                <button type="submit" class="btn btn-primary">
-                    Ver agenda
-                </button>
-            </div>
-        </form>
-    </div>
 
     {% if business_hour %}
         <div class="internal-business-hour mb-4">
@@ -357,25 +294,32 @@
                 <input type="hidden" name="date" value="{{ selected_date|date:'Y-m-d' }}">
 
                 <div class="slot-blocking-summary">
-                    <strong data-slot-count>0 horários selecionados</strong>
-                    <small>Horários encostados são unidos num único bloqueio.</small>
+                    <span class="slot-blocking-badge" data-slot-badge>0</span>
+
+                    <span>
+                        <strong data-slot-count>0 horários selecionados</strong>
+                        <small>Horários seguidos ficam num único bloqueio.</small>
+                    </span>
                 </div>
 
-                <input
-                    type="text"
-                    name="notes"
-                    class="form-control form-control-sm"
-                    maxlength="120"
-                    placeholder="Motivo (opcional)"
-                >
+                <div class="slot-blocking-actions">
+                    <input
+                        type="text"
+                        name="notes"
+                        class="form-control"
+                        maxlength="120"
+                        placeholder="Motivo (opcional)"
+                    >
 
-                <button type="button" class="btn btn-sm btn-outline-secondary" data-slot-clear>
-                    Limpar
-                </button>
+                    <button type="button" class="btn btn-outline-secondary" data-slot-clear>
+                        Limpar
+                    </button>
 
-                <button type="submit" class="btn btn-sm btn-danger">
-                    Bloquear selecionados
-                </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-slash-circle me-1" aria-hidden="true"></i>
+                        Bloquear
+                    </button>
+                </div>
             </form>
 
             <script>
@@ -409,6 +353,12 @@
                             escolhidas.length === 1
                                 ? "1 horário selecionado"
                                 : escolhidas.length + " horários selecionados";
+
+                        var emblema = form.querySelector("[data-slot-badge]");
+
+                        if (emblema) {
+                            emblema.textContent = escolhidas.length;
+                        }
                     }
 
                     caixas.forEach(function (caixa) {

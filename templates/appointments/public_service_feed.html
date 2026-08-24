@@ -2,11 +2,11 @@
 
 {% load i18n %}
 
-{% block title %}Serviços | Podologia, manicure, pedicure e enfermagem em Coimbra{% endblock %}
-{% block meta_description %}Conheça os serviços de podologia, manicure, pedicure e enfermagem da Priscila Arantes PA em Coimbra e marque online o seu horário.{% endblock %}
-{% block meta_keywords %}serviços podologia Coimbra, manicure Coimbra, pedicure Coimbra, enfermagem Coimbra, unha em gel, pés diabéticos, troca de penso{% endblock %}
+{% block title %}Serviços | Pedicure terapêutica, manicure e enfermagem em Coimbra{% endblock %}
+{% block meta_description %}Conheça os serviços de pedicure terapêutica, manicure e enfermagem da Priscila Arantes PA em Coimbra e marque online o seu horário.{% endblock %}
+{% block meta_keywords %}pedicure terapêutica Coimbra, tratamento dos pés Coimbra, manicure Coimbra, enfermagem Coimbra, unha em gel, pé diabético, troca de penso{% endblock %}
 {% block og_title %}Serviços | Priscila Arantes PA{% endblock %}
-{% block og_description %}Serviços organizados por categoria para marcação online em Coimbra: podologia, manicure, pedicure e enfermagem.{% endblock %}
+{% block og_description %}Serviços organizados por categoria para marcação online em Coimbra: pedicure terapêutica, manicure e enfermagem.{% endblock %}
 {% block twitter_title %}Serviços | Priscila Arantes PA{% endblock %}
 {% block twitter_description %}Veja categorias e serviços disponíveis e marque online o seu horário.{% endblock %}
 
@@ -29,7 +29,7 @@
             </h1>
 
             <p class="service-feed-lead mb-0">
-                {% translate "Podologia, manicure, pedicure e enfermagem estão organizadas por categoria para facilitar a escolha do serviço e o agendamento online." %}
+                {% translate "Pedicure terapêutica, manicure, pedicure e enfermagem estão organizadas por categoria para facilitar a escolha do serviço e o agendamento online." %}
             </p>
         </div>
 
@@ -46,7 +46,7 @@
                 <article class="service-category-card">
                     <div class="service-category-card-header">
                         <div class="service-category-icon" aria-hidden="true">
-                            {% if "podologia" in category.name|lower %}
+                            {% if category.slug == "podologia" %}
                                 <i class="bi bi-heart-pulse"></i>
                             {% elif "manicure" in category.name|lower %}
                                 <i class="bi bi-gem"></i>

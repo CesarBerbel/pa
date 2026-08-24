@@ -119,73 +119,37 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
         <div class="collapse navbar-collapse" id="mainNavbar">
             {% if user.has_internal_access %}
-                {# O trabalho do dia a dia fica à vista; o que só se mexe de #}
-                {# vez em quando fica em Configurações. #}
+                {% comment %}
+                    Quatro menus por assunto, e não um "Configurações" com tudo
+                    lá dentro. O que se faz todos os dias — agenda, marcações,
+                    clientes — está a um clique; o resto agrupa-se por aquilo
+                    que é, e não por não ter outro sítio: as mensagens juntas,
+                    o conteúdo do site junto, e em Configurações só o que é
+                    mesmo configuração ou registo.
+                {% endcomment %}
                 <div class="navbar-nav ms-lg-4 mt-3 mt-lg-0">
-                    <a class="nav-link" href="{% url 'appointments:weekly_schedule' %}">Agenda</a>
-                    <a class="nav-link" href="{% url 'appointments:customer_list' %}">Clientes</a>
+
+                    {% comment %}
+                        A agenda abre sempre no dia: é a vista de trabalho, e
+                        é dela que se salta para a semana pelo botão que a
+                        própria página tem. Um menu com Semana e Dia obrigava
+                        a escolher todos os dias a mesma coisa.
+                    {% endcomment %}
+                    <a class="nav-link" href="{% url 'appointments:visual_schedule' %}">Agenda</a>
+
                     <a class="nav-link" href="{% url 'appointments:appointment_list' %}">Marcações</a>
+                    <a class="nav-link" href="{% url 'appointments:customer_list' %}">Clientes</a>
 
                     <div class="nav-item dropdown">
-                        <a
-                            class="nav-link dropdown-toggle"
-                            href="#"
-                            id="internalSettingsMenu"
-                            role="button"
-                            data-bs-toggle="dropdown"
-                            aria-expanded="false"
-                        >
-                            Configurações
+                        <a class="nav-link dropdown-toggle" href="#" id="internalMessagesMenu"
+                           role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Mensagens
                         </a>
 
-                        <ul class="dropdown-menu" aria-labelledby="internalSettingsMenu">
-                            <li>
-                                <a class="dropdown-item" href="{% url 'appointments:appointment_audit' %}">
-                                    Auditoria
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{% url 'appointments:scheduling_setting' %}">
-                                    Regras de agenda
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{% url 'appointments:business_hour_list' %}">
-                                    Horas trabalhadas
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{% url 'appointments:schedule_block_list' %}">
-                                    Bloqueios
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{% url 'appointments:service_list' %}">
-                                    Serviços
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{% url 'appointments:before_after_list' %}">
-                                    Antes e depois
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{% url 'notifications:email_template_list' %}">
-                                    Modelos de email
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{% url 'notifications:service_followup_list' %}">
-                                    Mensagens por serviço
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{% url 'notifications:whatsapp_setting_list' %}">
-                                    WhatsApp
-                                </a>
-                            </li>
+                        <ul class="dropdown-menu" aria-labelledby="internalMessagesMenu">
                             <li>
                                 <a class="dropdown-item" href="{% url 'notifications:messaging_setting' %}">
+                                    <i class="bi bi-toggles me-2" aria-hidden="true"></i>
                                     Envio de mensagens
                                 </a>
                             </li>
@@ -193,13 +157,107 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             <li><hr class="dropdown-divider"></li>
 
                             <li>
-                                <a class="dropdown-item" href="{% url 'accounts:passkey_devices' %}">
-                                    <i class="bi bi-fingerprint me-1" aria-hidden="true"></i>
-                                    Entrar com digital
+                                <a class="dropdown-item" href="{% url 'notifications:email_template_list' %}">
+                                    <i class="bi bi-envelope me-2" aria-hidden="true"></i>
+                                    Modelos de email
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'notifications:service_followup_list' %}">
+                                    <i class="bi bi-chat-left-text me-2" aria-hidden="true"></i>
+                                    Mensagens por serviço
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'notifications:whatsapp_setting_list' %}">
+                                    <i class="bi bi-whatsapp me-2" aria-hidden="true"></i>
+                                    Regras de WhatsApp
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'notifications:whatsapp_connection' %}">
+                                    <i class="bi bi-qr-code me-2" aria-hidden="true"></i>
+                                    Ligação do WhatsApp
                                 </a>
                             </li>
                         </ul>
                     </div>
+
+                    <div class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="internalSiteMenu"
+                           role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Site
+                        </a>
+
+                        <ul class="dropdown-menu" aria-labelledby="internalSiteMenu">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'appointments:service_list' %}">
+                                    <i class="bi bi-list-check me-2" aria-hidden="true"></i>
+                                    Serviços
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'appointments:before_after_list' %}">
+                                    <i class="bi bi-images me-2" aria-hidden="true"></i>
+                                    Antes e depois
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'appointments:schedule_block_list' %}">
+                                    <i class="bi bi-slash-circle me-2" aria-hidden="true"></i>
+                                    Bloqueios
+                                </a>
+                            </li>
+
+                            <li><hr class="dropdown-divider"></li>
+
+                            <li>
+                                <a class="dropdown-item" href="{% url 'home' %}" target="_blank" rel="noopener">
+                                    <i class="bi bi-box-arrow-up-right me-2" aria-hidden="true"></i>
+                                    Ver o site
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="internalSettingsMenu"
+                           role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-gear me-1" aria-hidden="true"></i>
+                            Configurações
+                        </a>
+
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="internalSettingsMenu">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'appointments:scheduling_setting' %}">
+                                    <i class="bi bi-sliders me-2" aria-hidden="true"></i>
+                                    Regras de agenda
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'appointments:business_hour_list' %}">
+                                    <i class="bi bi-clock me-2" aria-hidden="true"></i>
+                                    Horas trabalhadas
+                                </a>
+                            </li>
+
+                            <li><hr class="dropdown-divider"></li>
+
+                            <li>
+                                <a class="dropdown-item" href="{% url 'appointments:appointment_audit' %}">
+                                    <i class="bi bi-journal-text me-2" aria-hidden="true"></i>
+                                    Auditoria
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'appointments:schedule_diagnostics' %}">
+                                    <i class="bi bi-activity me-2" aria-hidden="true"></i>
+                                    Diagnóstico da agenda
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
                 </div>
             {% else %}
                 <div class="navbar-nav ms-lg-4 mt-3 mt-lg-0">
@@ -300,15 +358,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                                     {% translate "Minhas marcações" %}
                                 </a>
                             </li>
-                            <li>
-                                <a class="dropdown-item" href="{% url 'accounts:passkey_devices' %}">
-                                    <i class="bi bi-fingerprint me-2" aria-hidden="true"></i>
-                                    {% translate "Entrar com digital" %}
-                                </a>
-                            </li>
-
-                            <li><hr class="dropdown-divider"></li>
                         {% endif %}
+
+                        {# Entrar com digital é da conta de quem está a usar o #}
+                        {# sistema, e não uma configuração da clínica. Vale     #}
+                        {# para as duas, e por isso está fora do `if` acima.    #}
+                        <li>
+                            <a class="dropdown-item" href="{% url 'accounts:passkey_devices' %}">
+                                <i class="bi bi-fingerprint me-2" aria-hidden="true"></i>
+                                {% translate "Entrar com digital" %}
+                            </a>
+                        </li>
+
+                        <li><hr class="dropdown-divider"></li>
 
                         <li>
                             <form method="post" action="{% url 'accounts:logout' %}">
@@ -377,7 +439,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     >
 
                     <p>
-                        {% translate "Cuidado, bem-estar e profissionalismo em podologia." %}
+                        {% translate "Cuidado, bem-estar e profissionalismo em pedicure terapêutica." %}
                     </p>
 
                     {% if OPENING_HOURS %}

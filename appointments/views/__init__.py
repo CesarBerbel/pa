@@ -52,6 +52,7 @@ from .schedule_blocks import (
     ScheduleBlockUpdateView,
 )
 from .schedules import (
+    MonthlyScheduleView,
     DailyAgendaView,
     VisualScheduleBlockView,
     VisualScheduleView,
@@ -67,6 +68,7 @@ from .services import (
 )
 
 __all__ = [
+    "MonthlyScheduleView",
     "BeforeAfterCreateView",
     "BeforeAfterDeleteView",
     "BeforeAfterListView",

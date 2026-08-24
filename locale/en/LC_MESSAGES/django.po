@@ -279,7 +279,7 @@ msgstr "Home visits available on request."
 #: templates/home.html:143
 #: templates/home.html:171
 msgid "Atendimento especializado em podologia, manicure, pedicure e apoio de enfermagem, com marcação online simples, segura e prática. Também disponível atendimento em domicílio, mediante disponibilidade."
-msgstr "Specialist care in podiatry, manicure, pedicure and nursing support, with simple, secure and practical online booking. Home visits are also available, subject to availability."
+msgstr "Specialist care in therapeutic pedicure, manicure and nursing support, with simple, secure and practical online booking. Home visits are also available, subject to availability."
 
 #: templates/appointments/public_service_feed.html:38
 msgid "Atendimento personalizado"
@@ -287,7 +287,7 @@ msgstr "Personalised care"
 
 #: templates/home.html:5
 msgid "Atendimento profissional em podologia, manicure, pedicure e enfermagem em Coimbra. Consulte os serviços disponíveis e marque o seu horário online."
-msgstr "Professional podiatry, manicure, pedicure and nursing care in Coimbra. Browse the available services and book your appointment online."
+msgstr "Professional therapeutic pedicure, manicure and nursing care in Coimbra. Browse the available services and book your appointment online."
 
 #: templates/home.html:52
 msgid "Atendimento também com hora marcada"
@@ -455,11 +455,11 @@ msgstr "Professional care, individual attention and a commitment to the wellbein
 
 #: templates/home.html:8
 msgid "Cuidado profissional, marcação online e atendimento personalizado em podologia, estética e enfermagem em Coimbra."
-msgstr "Professional care, online booking and personalised treatment in podiatry, beauty and nursing in Coimbra."
+msgstr "Professional care, online booking and personalised treatment in therapeutic pedicure, beauty and nursing in Coimbra."
 
 #: templates/base.html:287
 msgid "Cuidado, bem-estar e profissionalismo em podologia."
-msgstr "Care, wellbeing and professionalism in podiatry."
+msgstr "Care, wellbeing and professionalism in therapeutic pedicure."
 
 #: templates/home.html:137
 #: templates/home.html:165
@@ -856,7 +856,7 @@ msgstr "No active services registered"
 
 #: templates/legal/privacy_policy.html:128
 msgid "No âmbito da prestação de cuidados de podologia é elaborado um registo clínico, composto por uma ficha de anamnese e por notas de evolução de cada consulta. Esse registo pode incluir antecedentes de saúde, alergias, medicação habitual, cirurgias anteriores e a descrição dos atos praticados."
-msgstr "As part of providing podiatry care, a clinical record is kept, consisting of a medical history form and progress notes for each appointment. That record may include health history, allergies, regular medication, previous surgery and a description of the procedures performed."
+msgstr "As part of providing therapeutic pedicure care, a clinical record is kept, consisting of a medical history form and progress notes for each appointment. That record may include health history, allergies, regular medication, previous surgery and a description of the procedures performed."
 
 #: templates/accounts/passkey_devices.html:38
 msgid "Nome do aparelho"
@@ -942,7 +942,7 @@ msgstr "Organisation, hygiene and attention to detail"
 
 #: templates/legal/privacy_policy.html:131
 msgid "Os dados de saúde são categoria especial de dados nos termos do artigo 9.º do RGPD. São tratados no contexto da prestação de cuidados de saúde, por profissional sujeito a dever de sigilo, e no cumprimento das obrigações aplicáveis ao exercício da podologia, nomeadamente a Lei n.º 65/2014, de 28 de agosto."
-msgstr "Health data is a special category of data under Article 9 of the GDPR. It is processed in the context of providing health care, by a professional bound by a duty of confidentiality, and in compliance with the obligations applicable to the practice of podiatry, in particular Portuguese Law no. 65/2014 of 28 August."
+msgstr "Health data is a special category of data under Article 9 of the GDPR. It is processed in the context of providing health care, by a professional bound by a duty of confidentiality, and in compliance with the obligations applicable to the practice of therapeutic pedicure, in particular Portuguese Law no. 65/2014 of 28 August."
 
 #: templates/legal/privacy_policy.html:89
 msgid "Os dados pessoais não são vendidos. Podem ser tratados por prestadores de serviços estritamente necessários ao funcionamento do site e do atendimento, tais como:"
@@ -1015,16 +1015,16 @@ msgstr "May be used in future to measure visits and site performance. They must 
 
 #: templates/home.html:353
 msgid "Podologia"
-msgstr "Podiatry"
+msgstr "Therapeutic pedicure"
 
 #: templates/home.html:134
 #: templates/home.html:162
 msgid "Podologia • Estética • Enfermagem"
-msgstr "Podiatry • Beauty • Nursing"
+msgstr "Therapeutic pedicure • Beauty • Nursing"
 
 #: templates/appointments/public_service_feed.html:32
 msgid "Podologia, manicure, pedicure e enfermagem estão organizadas por categoria para facilitar a escolha do serviço e o agendamento online."
-msgstr "Podiatry, manicure, pedicure and nursing are organised by category to make choosing a service and booking online easier."
+msgstr "Therapeutic pedicure, manicure, pedicure and nursing are organised by category to make choosing a service and booking online easier."
 
 #: templates/base.html:310
 #: templates/base.html:389
@@ -1046,7 +1046,7 @@ msgstr "Browsing preferences"
 #: templates/home.html:7
 #: templates/home.html:9
 msgid "Priscila Arantes PA | Podologia, estética e enfermagem em Coimbra"
-msgstr "Priscila Arantes PA | Podiatry, beauty and nursing in Coimbra"
+msgstr "Priscila Arantes PA | Therapeutic pedicure, beauty and nursing in Coimbra"
 
 #: templates/base.html:385
 msgid "Priscila Arantes. Todos os direitos reservados."
@@ -1204,7 +1204,7 @@ msgstr "Every day: 8:00 am — 8:00 pm"
 
 #: templates/home.html:354
 msgid "Tratamento de pés diabéticos, calosidades, unha encravada e avaliação podológica."
-msgstr "Diabetic foot care, callus treatment, ingrown toenails and podiatric assessment."
+msgstr "Diabetic foot care, callus treatment, ingrown toenails and foot assessment."
 
 #: templates/home.html:378
 msgid "Troca de penso, administração de medicação a idosos e avaliação de sinais vitais."
@@ -1339,7 +1339,7 @@ msgstr "allow appointments to be booked, managed, changed and cancelled;"
 
 #: templates/home.html:6
 msgid "podologia Coimbra, manicure Coimbra, pedicure Coimbra, enfermagem Coimbra, pés diabéticos, unha em gel, troca de penso"
-msgstr "podiatry Coimbra, manicure Coimbra, pedicure Coimbra, nursing Coimbra, diabetic foot care, gel nails, dressing change"
+msgstr "therapeutic pedicure Coimbra, manicure Coimbra, pedicure Coimbra, nursing Coimbra, diabetic foot care, gel nails, dressing change"
 
 #: templates/appointments/public_appointment_lookup.html:24
 msgid "por segurança, os dados da marcação não são exibidos nesta página. Se houver alguma marcação em aberto associada ao email informado, enviaremos os detalhes para esse endereço."
@@ -1411,7 +1411,7 @@ msgstr "last used"
 
 #: templates/home.html
 msgid "Podologia em Coimbra para voltar a andar"
-msgstr "Podiatry in Coimbra so you can walk"
+msgstr "Therapeutic Pedicure in Coimbra so you can walk"
 
 #: templates/home.html
 msgid "sem dor e com conforto"
@@ -1533,7 +1533,7 @@ msgstr "Who will care for your feet"
 
 #: templates/home.html
 msgid "Podologia em Coimbra, com"
-msgstr "Podiatry in Coimbra, with"
+msgstr "Therapeutic Pedicure in Coimbra, with"
 
 #: templates/home.html
 msgid "cuidado"
@@ -1567,7 +1567,7 @@ msgstr "%(total)s reviews"
 
 #: templates/home.html
 msgid "Podóloga em Coimbra | Podologia e Tratamentos dos Pés | Pri Arantes"
-msgstr "Podiatrist in Coimbra | Podiatry and Foot Treatments | Pri Arantes"
+msgstr "Therapeutic Pedicure in Coimbra | Foot Treatments | Pri Arantes"
 
 #: templates/home.html
 msgid "Marcar atendimento"
@@ -1769,11 +1769,11 @@ msgstr "Every photograph published here is of a real client, shown with their co
 
 #: templates/home.html
 msgid "Podologia em Coimbra"
-msgstr "Podiatry in Coimbra"
+msgstr "Therapeutic Pedicure in Coimbra"
 
 #: templates/home.html
 msgid "Podologia em Coimbra:"
-msgstr "Podiatry in Coimbra:"
+msgstr "Therapeutic Pedicure in Coimbra:"
 
 #: templates/home.html
 msgid "saúde dos pés"
@@ -1785,11 +1785,11 @@ msgstr "with knowledge, experience and science"
 
 #: templates/home.html
 msgid "O que a podologia trata"
-msgstr "What podiatry treats"
+msgstr "What therapeutic pedicure treats"
 
 #: templates/home.html
 msgid "Podologia e outros cuidados, em Coimbra"
-msgstr "Podiatry and other care, in Coimbra"
+msgstr "Therapeutic pedicure and other care, in Coimbra"
 
 #: templates/home.html
 msgid "Verruga plantar"
@@ -1821,4 +1821,27 @@ msgstr "Wounds and dressings"
 
 #: templates/home.html
 msgid "Feridas que demoram a fechar, pós-operatório e troca de penso. Aqui a enfermagem e a podologia trabalham juntas, com laserterapia quando ajuda a cicatrizar."
-msgstr "Wounds that are slow to close, post-operative care and dressing changes. Here nursing and podiatry work together, with laser therapy where it helps healing."
+msgstr "Wounds that are slow to close, post-operative care and dressing changes. Here nursing and therapeutic pedicure work together, with laser therapy where it helps healing."
+
+#: templates/appointments/public_visual_schedule.html
+msgid "Sem vagas"
+msgstr "No availability"
+
+#: templates/appointments/public_visual_schedule.html
+msgid "Escolha um dia acima"
+msgstr "Choose a day above"
+
+#: templates/appointments/public_visual_schedule.html
+msgid "O número em cada dia diz quantas vagas tem. Clique num deles para ver as horas livres."
+msgstr "The number on each day tells you how many slots it has. Click one to see the free times."
+
+#: templates/appointments/public_visual_schedule.html
+msgid "Próximos dias"
+msgstr "The next few days"
+
+#: templates/appointments/public_visual_schedule.html
+#, python-format
+msgid "%(vagas)s vaga"
+msgid_plural "%(vagas)s vagas"
+msgstr[0] "%(vagas)s slot"
+msgstr[1] "%(vagas)s slots"

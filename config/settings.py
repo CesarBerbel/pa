@@ -74,13 +74,13 @@ SEO_SITE_NAME = config("SEO_SITE_NAME", default="Priscila Arantes PA")
 
 SEO_DEFAULT_TITLE = config(
     "SEO_DEFAULT_TITLE",
-    default="Podóloga em Coimbra | Podologia e Tratamentos dos Pés | Pri Arantes",
+    default="Pedicure Terapêutica em Coimbra | Tratamentos dos Pés | Pri Arantes",
 )
 
 SEO_DEFAULT_DESCRIPTION = config(
     "SEO_DEFAULT_DESCRIPTION",
     default=(
-        "Atendimento profissional em podologia, manicure, pedicure e enfermagem "
+        "Atendimento profissional em pedicure terapêutica, manicure e enfermagem "
         "em Coimbra. Consulte serviços e marque o seu horário online."
     ),
 )
@@ -88,7 +88,7 @@ SEO_DEFAULT_DESCRIPTION = config(
 SEO_DEFAULT_KEYWORDS = config(
     "SEO_DEFAULT_KEYWORDS",
     default=(
-        "podologia Coimbra, manicure Coimbra, pedicure Coimbra, enfermagem Coimbra, "
+        "pedicure terapêutica Coimbra, tratamento dos pés Coimbra, manicure Coimbra, enfermagem Coimbra, "
         "tratamento pés diabéticos, unha em gel, troca de penso"
     ),
 )

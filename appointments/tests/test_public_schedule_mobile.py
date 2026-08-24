@@ -100,10 +100,15 @@ class PublicScheduleStylesheetTests(TestCase):
             f"{self.folha.declaring_rules(seletor, prop)}",
         )
 
-    def test_slots_are_a_single_column_on_a_phone(self):
-        # Em duas colunas o botão "Marcar" transbordava do cartão.
+    def test_slots_fit_three_to_a_row_on_a_phone(self):
+        # Era uma coluna só porque o cartão levava a hora, o estado e o botão
+        # "Marcar", que transbordava em duas colunas. Sem eles cabem três
+        # horas por linha, e vê-se o dia inteiro sem rolar.
         self.assertVence(
-            ".app-slots-grid", "grid-template-columns", "1fr", self.TELEMOVEL
+            ".app-slots-grid",
+            "grid-template-columns",
+            "repeat(3, 1fr)",
+            self.TELEMOVEL,
         )
 
     def test_slots_stay_in_a_grid_on_wider_screens(self):
@@ -113,8 +118,12 @@ class PublicScheduleStylesheetTests(TestCase):
                 self.valor(".app-slots-grid", "grid-template-columns", largura) or "",
             )
 
-    def test_slot_card_becomes_a_row_on_a_phone(self):
-        self.assertVence(".app-slot-card", "display", "grid", self.TELEMOVEL)
+    def test_the_slot_card_holds_only_the_hour(self):
+        # Passou a ser uma peça só, centrada, em qualquer largura: era uma
+        # linha de três colunas no telemóvel para caber a hora, o estado e o
+        # botão. Nada disso existe agora.
+        for largura in [self.TELEMOVEL, self.COMPUTADOR]:
+            self.assertVence(".app-slot-card", "display", "flex", largura)
         self.assertVence(".app-slot-card", "display", "flex", self.COMPUTADOR)
 
     def test_catalog_is_placed_last_on_narrow_screens(self):
@@ -189,8 +198,13 @@ class PublicScheduleStylesheetTests(TestCase):
         )
 
 
-class MobileDaySelectorTests(TestCase):
-    """No telemóvel a data escolhe-se por lista, não pela faixa de dias."""
+class DayStripServesEveryScreenTests(TestCase):
+    """A faixa de dias substituiu a lista que existia no telemóvel.
+
+    Havia dois controlos de data — a faixa no computador, uma lista no
+    telemóvel — e agora há um só. O que a lista garantia tem de continuar a
+    valer na faixa, senão a substituição perdeu qualidades pelo caminho.
+    """
 
     def setUp(self):
         self.service = create_test_service(duration_minutes=60)
@@ -199,77 +213,39 @@ class MobileDaySelectorTests(TestCase):
     def pagina(self, **params):
         return self.client.get(reverse("appointments:public_visual_schedule"), params)
 
-    def opcoes(self, response):
-        return list(response.context["day_options"])
+    def dias(self, response):
+        return [dia["date"] for dia in response.context["week_days"]]
 
-    def test_the_selector_offers_the_coming_days(self):
-        opcoes = self.opcoes(self.pagina())
+    def test_the_old_mobile_list_is_gone(self):
+        html = self.pagina().content.decode()
 
-        self.assertGreater(len(opcoes), 7)
-        self.assertEqual(opcoes[0], self.hoje)
-        self.assertEqual(opcoes, sorted(opcoes))
+        self.assertNotIn('id="day-select"', html)
+
+    def test_the_strip_is_no_longer_desktop_only(self):
+        # Era escondida no telemóvel porque a lista tratava disso lá. Sem a
+        # lista, escondê-la deixava a página sem forma de escolher o dia.
+        html = self.pagina().content.decode()
+        faixa = re.search(r'<div class="app-week-strip[^>]*>', html).group(0)
+
+        self.assertNotIn("data-agenda-desktop-only", faixa)
 
     def test_past_days_are_never_offered(self):
-        for dia in self.opcoes(self.pagina()):
+        for dia in self.dias(self.pagina()):
             self.assertGreaterEqual(dia, self.hoje)
 
-    def test_closed_weekdays_are_left_out(self):
-        # Uma lista com dias que aparecem sempre esgotados faria a cliente
-        # pensar que não há vaga nenhuma.
-        fechado = (self.hoje.weekday() + 2) % 7
-        ensure_test_business_hour(weekday=fechado, is_active=False)
+    def test_a_distant_chosen_day_is_shown(self):
+        # Senão a faixa mostraria dias diferentes do que a página apresenta.
+        distante = self.hoje + timedelta(days=40)
 
-        for dia in self.opcoes(self.pagina()):
-            if dia == self.hoje:
-                continue
+        dias = self.dias(self.pagina(date=distante.strftime("%Y-%m-%d")))
 
-            self.assertNotEqual(dia.weekday(), fechado)
+        self.assertIn(distante, dias)
 
-    def test_the_chosen_day_is_always_in_the_list(self):
-        # Senão a lista mostraria um dia diferente do que a página apresenta.
-        fechado = (self.hoje.weekday() + 2) % 7
-        ensure_test_business_hour(weekday=fechado, is_active=False)
-
-        alvo = self.hoje + timedelta(days=1)
-        while alvo.weekday() != fechado:
-            alvo += timedelta(days=1)
-
-        opcoes = self.opcoes(self.pagina(date=alvo.strftime("%Y-%m-%d")))
-
-        self.assertIn(alvo, opcoes)
-        self.assertEqual(opcoes, sorted(opcoes))
-
-    def test_a_distant_day_is_added_to_the_list(self):
-        distante = self.hoje + timedelta(days=200)
-
-        opcoes = self.opcoes(self.pagina(date=distante.strftime("%Y-%m-%d")))
-
-        self.assertIn(distante, opcoes)
-
-    def test_the_selector_marks_the_chosen_day(self):
-        alvo = self.hoje + timedelta(days=3)
-
-        html = self.pagina(date=alvo.strftime("%Y-%m-%d")).content.decode()
-        lista = re.search(r'<select\s+id="day-select".*?</select>', html, re.S).group(0)
-
-        escolhida = re.search(r'value="([^"]+)"[^>]*selected', lista)
-
-        self.assertIsNotNone(escolhida)
-        self.assertEqual(escolhida.group(1), alvo.strftime("%Y-%m-%d"))
-
-    def test_the_selector_never_submits_its_own_date(self):
-        # Sem name, a lista é só um controlo que escreve em #date. Com name,
-        # passariam duas datas no pedido e ganhava a última.
-        html = self.pagina().content.decode()
-        lista = re.search(r'<select\s+id="day-select"[^>]*>', html, re.S).group(0)
-
-        self.assertNotIn("name=", lista)
-
-    def test_the_date_field_is_still_the_one_that_counts(self):
-        html = self.pagina().content.decode()
-
-        self.assertIn('id="date"', html)
-        self.assertIn('name="date"', html)
+    def test_every_day_says_how_many_slots_it_has(self):
+        # É o que faz a faixa valer a pena: sem o número, escolher um dia é
+        # adivinhar.
+        for dia in self.pagina(service=self.service.pk).context["week_days"]:
+            self.assertIn("free_slots", dia)
 
 
 class MobileAgendaVisibilityTests(TestCase):
@@ -310,7 +286,11 @@ class MobileAgendaVisibilityTests(TestCase):
             "block",
         )
 
-    def test_the_week_strip_and_the_catalog_carry_the_mark(self):
+    def test_the_strip_and_the_catalog_are_on_every_screen(self):
+        # Os dois eram escondidos no telemóvel, quando havia uma lista de dias
+        # e um seletor de serviço a fazer o mesmo trabalho lá. Sem eles, a
+        # faixa e o catálogo passaram a ser a única forma de escolher — e uma
+        # página onde não se escolhe nada não serve para marcar.
         html = self.client.get(
             reverse("appointments:public_visual_schedule")
         ).content.decode()
@@ -318,8 +298,8 @@ class MobileAgendaVisibilityTests(TestCase):
         faixa = re.search(r'<div class="app-week-strip[^>]*>', html).group(0)
         catalogo = re.search(r'<section class="app-agenda-feed[^>]*>', html).group(0)
 
-        self.assertIn("data-agenda-desktop-only", faixa)
-        self.assertIn("data-agenda-desktop-only", catalogo)
+        self.assertNotIn("data-agenda-desktop-only", faixa)
+        self.assertNotIn("data-agenda-desktop-only", catalogo)
 
     def test_the_slot_cards_are_never_hidden(self):
         # É o que sobra no telemóvel: esconder isto esvaziava a página.

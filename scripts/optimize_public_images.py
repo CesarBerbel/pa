@@ -23,6 +23,8 @@ from pathlib import Path
 
 from PIL import Image
 
+from png_tools import guardar_png
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 ORIGENS = BASE_DIR / "assets" / "img"
 DESTINO = BASE_DIR / "static" / "img"
@@ -101,7 +103,7 @@ def main() -> int:
 
     if origem_marca.exists():
         cartao = DESTINO / "logo-og.png"
-        cartao_social(Image.open(origem_marca)).save(cartao, "PNG", optimize=True)
+        guardar_png(cartao_social(Image.open(origem_marca)), cartao)
         gerados.append((cartao, f"{OG_LARGURA}x{OG_ALTURA}, para pré-visualizações"))
 
     for caminho, detalhe in gerados:

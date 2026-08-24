@@ -107,15 +107,54 @@ class TemplateSyntaxNeverReachesThePageTests(ResetLanguageMixin, TestCase):
         "/livro-de-reclamacoes/",
     ]
 
-    def test_no_page_leaks_template_syntax(self):
+    # A primeira versão deste teste só via páginas públicas, e por isso deixou
+    # passar um comentário partido numa página interna. Um teste que cobre
+    # metade das páginas dá a impressão de cobrir todas.
+    PAGINAS_INTERNAS = [
+        "/dashboard/",
+        "/agenda/horarios/",
+        "/agenda/semana/",
+        "/agenda/mes/",
+        "/marcacoes/",
+        "/clientes/",
+        "/servicos/",
+        "/antes-e-depois/gerir/",
+        "/bloqueios/",
+        "/horas-trabalhadas/",
+        "/agenda/regras/",
+        "/marcacoes/auditoria/",
+        "/diagnostico/horarios/",
+        "/emails/modelos/",
+        "/emails/seguimentos/",
+        "/mensagens/whatsapp/",
+        "/mensagens/envio/",
+    ]
+
+    def verificar(self, caminho, html):
+        for resto in ["{#", "#}", "{%", "endcomment"]:
+            self.assertNotIn(resto, html, f"{caminho} serve {resto!r}")
+
+    def test_no_public_page_leaks_template_syntax(self):
         for caminho in self.PAGINAS:
             with self.subTest(caminho):
-                html = self.client.get(caminho, follow=True).content.decode()
+                self.verificar(
+                    caminho, self.client.get(caminho, follow=True).content.decode()
+                )
 
-                self.assertNotIn("{#", html)
-                self.assertNotIn("#}", html)
-                self.assertNotIn("{%", html)
-                self.assertNotIn("endcomment", html)
+    def test_no_internal_page_leaks_template_syntax(self):
+        from django.contrib.auth import get_user_model
+
+        get_user_model().objects.create_superuser(
+            email="admin@example.com", password="x", full_name="Admin"
+        )
+        self.client.login(email="admin@example.com", password="x")
+
+        for caminho in self.PAGINAS_INTERNAS:
+            with self.subTest(caminho):
+                resposta = self.client.get(caminho, follow=True)
+
+                self.assertEqual(resposta.status_code, 200, caminho)
+                self.verificar(caminho, resposta.content.decode())
 
 
 class WoundCardFollowsNursingTests(ResetLanguageMixin, TestCase):

@@ -17,7 +17,6 @@ from appointments.forms import (
 from appointments.models import (
     Appointment,
     AppointmentLog,
-    BusinessHour,
     Service,
     ServiceCategory,
 )
@@ -494,51 +493,6 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
 
     days_in_strip = 7
 
-    # No telemóvel não há faixa de dias: a escolha passa por uma lista. Quantos
-    # dias ela cobre é uma regra de agenda, e não uma decisão do código.
-    selector_search_window = 60
-
-    @property
-    def days_in_selector(self):
-        from appointments.models import SchedulingSetting
-
-        return SchedulingSetting.get_booking_horizon_days()
-
-    def get_day_options(self, selected_date):
-        """Dias oferecidos na lista de datas do telemóvel.
-
-        Só entram dias em que a clínica abre. Uma lista com domingos que depois
-        aparecem sempre esgotados faria a cliente pensar que não há vaga
-        nenhuma.
-        """
-
-        dias_abertos = set(
-            BusinessHour.objects.filter(is_active=True).values_list(
-                "weekday", flat=True
-            )
-        )
-
-        today = timezone.localdate()
-        dias = []
-
-        for index in range(self.selector_search_window):
-            if len(dias) >= self.days_in_selector:
-                break
-
-            dia = today + timedelta(days=index)
-
-            if dia.weekday() in dias_abertos:
-                dias.append(dia)
-
-        # A data escolhida tem de estar na lista, mesmo que seja um dia
-        # fechado ou esteja além do horizonte: sem isso a lista mostraria outro
-        # dia diferente do que a página está a apresentar.
-        if selected_date not in dias:
-            dias.append(selected_date)
-            dias.sort()
-
-        return dias
-
     def get_week_days(self, selected_date, selected_service=None):
         """Faixa dos próximos dias, a começar em hoje.
 
@@ -571,6 +525,17 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
                 public_safe=True,
             )
 
+            # Quantas vagas tem o dia. É o que faz a faixa valer a pena: sem
+            # o número, escolher um dia é adivinhar, e a pessoa acaba a clicar
+            # em dias esgotados até acertar. A conta é barata porque tudo isto
+            # corre dentro de `AvailabilityService.batch()`.
+            vagas = 0
+
+            if selected_service:
+                vagas = len(
+                    self.get_available_slots_for(selected_service, current_date)
+                )
+
             # A data segue inteira para o template, que a escreve com o filtro
             # `date`. `strftime` escrevia-a aqui, e escrevia-a sempre em inglês:
             # usa a língua do sistema operativo do servidor, não a da página.
@@ -579,6 +544,7 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
                     "date": current_date,
                     "is_selected": current_date == selected_date,
                     "availability_status": availability_status,
+                    "free_slots": vagas,
                 }
             )
 
@@ -703,10 +669,13 @@ class PublicVisualScheduleView(PublicBookingAvailabilityMixin, TemplateView):
 
         context["selected_service"] = selected_service
         context["selected_date"] = selected_date
+        # Sem `date` no endereço, ninguém escolheu dia nenhum: a página mostra
+        # a faixa e espera. Mostrar logo os horários de hoje dava a impressão
+        # de uma escolha já feita, e escondia os outros dias.
+        context["day_chosen"] = bool(self.request.GET.get("date"))
         context["slots"] = slots
         context["availability_status"] = availability_status
         context["week_days"] = self.get_week_days(selected_date, selected_service)
-        context["day_options"] = self.get_day_options(selected_date)
         context["today"] = timezone.localdate()
 
         return context

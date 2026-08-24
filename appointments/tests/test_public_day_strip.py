@@ -98,7 +98,22 @@ class PublicDayStripTests(TestCase):
         self.assertEqual(len(marcados), 1)
         self.assertEqual(marcados[0].isoformat(), futuro)
 
-    def test_date_input_blocks_past_dates_in_the_browser(self):
+    def test_the_strip_never_offers_a_past_day(self):
+        # A proteção estava no `min` do campo de data, que era do browser e
+        # saiu com o campo. Passou para onde já devia estar: o servidor, que
+        # nunca constrói a faixa a começar antes de hoje.
         response = self.client.get(reverse("appointments:public_visual_schedule"))
 
-        self.assertContains(response, f'min="{self.today.isoformat()}"')
+        dias = [dia["date"] for dia in response.context["week_days"]]
+
+        self.assertEqual(dias[0], self.today)
+
+    def test_a_past_date_in_the_url_falls_back_to_today(self):
+        # Sem o `min` do browser, um endereço escrito à mão é a via que sobra.
+        passado = (self.today - timedelta(days=5)).isoformat()
+
+        response = self.client.get(
+            reverse("appointments:public_visual_schedule"), {"date": passado}
+        )
+
+        self.assertEqual(response.context["selected_date"], self.today)

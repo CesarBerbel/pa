@@ -25,6 +25,8 @@ from pathlib import Path
 
 from PIL import Image, ImageChops
 
+from png_tools import guardar_png
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 # Os originais vivem em `assets/`, fora de `static/`: são ficheiros de
 # trabalho com centenas de KB e não têm de ser servidos a ninguém.
@@ -126,16 +128,12 @@ def main() -> int:
         caminho = DESTINO / nome
         # Os ícones da aplicação são opacos: o Android e o iOS não contam com
         # transparência e desenhariam o que estivesse por trás.
-        centrar(desenho, lado, ocupacao).convert("RGB").save(
-            caminho, "PNG", optimize=True
-        )
+        guardar_png(centrar(desenho, lado, ocupacao).convert("RGB"), caminho)
         gerados.append((caminho, f"{lado}x{lado}"))
 
     # A marca do menu mantém a transparência, para assentar na barra.
     marca = DESTINO / "logo-mark.png"
-    desenho.resize((LADO_MARCA, LADO_MARCA), Image.LANCZOS).save(
-        marca, "PNG", optimize=True
-    )
+    guardar_png(desenho.resize((LADO_MARCA, LADO_MARCA), Image.LANCZOS), marca)
     gerados.append((marca, f"{LADO_MARCA}x{LADO_MARCA}, com transparência"))
 
     # O conjunto com o nome, para o menu em ecrãs largos. O original tem 2172
@@ -148,8 +146,8 @@ def main() -> int:
         )
 
         conjunto = DESTINO / "logo-wordmark.png"
-        original_conjunto.resize((largura, ALTURA_CONJUNTO), Image.LANCZOS).save(
-            conjunto, "PNG", optimize=True
+        guardar_png(
+            original_conjunto.resize((largura, ALTURA_CONJUNTO), Image.LANCZOS), conjunto
         )
         gerados.append((conjunto, f"{largura}x{ALTURA_CONJUNTO}, com transparência"))
     else:

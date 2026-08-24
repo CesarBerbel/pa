@@ -154,4 +154,6 @@ class VisualSlotBlockingTests(TestCase):
 
         self.assertContains(response, 'name="slots"')
         self.assertContains(response, "slot-blocking-form")
-        self.assertContains(response, "Bloquear selecionados")
+        # O botão diz só "Bloquear": a frase ao lado já diz quantos e quais.
+        self.assertContains(response, "Bloquear")
+        self.assertContains(response, "horários selecionados")

@@ -29,7 +29,9 @@ class SeededCatalogTranslationTests(ResetLanguageMixin, TestCase):
 
     def test_known_category_translations(self):
         expected = {
-            "podologia": "Podiatry",
+            # O `slug` continua `podologia`; o nome mudou para não afirmar
+            # um título que em Portugal tem formação própria.
+            "podologia": "Therapeutic Pedicure",
             "manicure": "Manicure",
             "pedicure": "Pedicure",
             "enfermagem": "Nursing",
@@ -66,6 +68,6 @@ class SeededCatalogTranslationTests(ResetLanguageMixin, TestCase):
     def test_english_catalog_reaches_the_public_page(self):
         response = self.client.get("/en/")
 
-        self.assertContains(response, "Podiatry")
+        self.assertContains(response, "Therapeutic Pedicure")
         self.assertContains(response, "Nursing")
         self.assertNotContains(response, "Enfermagem")

@@ -65,23 +65,21 @@ def build_home_structured_data(service_categories):
 
     payload = {
         "@context": "https://schema.org",
-        # Dois tipos e não um: `HealthAndBeautyBusiness` descreve o negócio,
-        # mas é `MedicalBusiness` que aceita `medicalSpecialty` — e sem ela
-        # nada nos dados dizia qual é a especialidade da casa. Um array de
-        # tipos é JSON-LD válido e o Google lê os dois.
-        "@type": ["HealthAndBeautyBusiness", "MedicalBusiness"],
-        "medicalSpecialty": "Podiatric",
-        # O que a casa trata, em termos que um motor de busca reconhece.
+        # `medicalSpecialty: Podiatric` esteve aqui e saiu: em Portugal
+        # podologia é um título com formação própria, e declará-lo ao Google
+        # seria afirmar uma qualificação que não é a desta casa. O que fica
+        # descreve o que se faz, não um título que não se tem.
+        "@type": "HealthAndBeautyBusiness",
         "knowsAbout": [
-            "Podologia",
-            "Podiatria",
+            "Pedicure terapêutica",
+            "Saúde do pé",
             "Unha encravada",
             "Onicomicose",
             "Calosidades",
             "Risco podológico",
             "Verruga plantar",
             "Órtese ungueal",
-            "Pedicure terapêutica",
+            "Cuidados de enfermagem",
         ],
         "name": settings.SEO_SITE_NAME,
         "url": settings.SITE_URL.rstrip("/"),
@@ -140,7 +138,7 @@ def build_service_feed_structured_data(service_categories):
         "@context": "https://schema.org",
         "@type": "ItemList",
         "name": "Serviços disponíveis",
-        "description": "Serviços de podologia, manicure, pedicure e enfermagem disponíveis para marcação online.",
+        "description": "Serviços de pedicure terapêutica, manicure e enfermagem disponíveis para marcação online.",
         "itemListElement": items,
     }
 

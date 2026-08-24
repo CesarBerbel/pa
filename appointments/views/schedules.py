@@ -13,6 +13,7 @@ from appointments.forms import SchedulingSettingForm
 from appointments.models import SchedulingSetting
 from appointments.selectors import AppointmentSelectors
 from appointments.weekly_schedule import build_week, day_agenda, week_start
+from appointments.monthly_schedule import build_month
 
 
 class DailyAgendaView(InternalAreaRequiredMixin, TemplateView):
@@ -93,6 +94,40 @@ class WeeklyScheduleView(InternalAreaRequiredMixin, TemplateView):
         context["next_week"] = inicio + timedelta(days=7)
         context["today"] = timezone.localdate()
         context["selected_date"] = selected_date
+
+        return context
+
+
+class MonthlyScheduleView(InternalAreaRequiredMixin, TemplateView):
+    """O mês inteiro, com quem vem em cada dia.
+
+    A semana responde a "onde há espaço"; o mês responde a "como está o mês".
+    Por isso mostra nomes e não horas livres: numa grelha de trinta dias, o
+    que se procura é o desenho do mês — os dias cheios, os vazios, e quem
+    está marcado onde.
+    """
+
+    template_name = "appointments/monthly_schedule.html"
+
+    def get_selected_date(self):
+        date_param = self.request.GET.get("date")
+
+        if date_param:
+            try:
+                return datetime.strptime(date_param, "%Y-%m-%d").date()
+            except ValueError:
+                return timezone.localdate()
+
+        return timezone.localdate()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        selected_date = self.get_selected_date()
+
+        context["month"] = build_month(selected_date)
+        context["selected_date"] = selected_date
+        context["today"] = timezone.localdate()
 
         return context
 

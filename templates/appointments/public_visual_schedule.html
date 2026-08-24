@@ -2,8 +2,8 @@
 {% load assets static i18n %}
 
 {% block title %}Agenda disponível | Marcação online | Priscila Arantes PA{% endblock %}
-{% block meta_description %}Consulte a agenda disponível da Priscila Arantes PA em Coimbra e marque online serviços de podologia, manicure, pedicure e enfermagem.{% endblock %}
-{% block meta_keywords %}agenda podologia Coimbra, marcação online Coimbra, manicure Coimbra, pedicure Coimbra, enfermagem Coimbra{% endblock %}
+{% block meta_description %}Consulte a agenda disponível da Priscila Arantes PA em Coimbra e marque online serviços de pedicure terapêutica, manicure e enfermagem.{% endblock %}
+{% block meta_keywords %}agenda pedicure terapêutica Coimbra, marcação online Coimbra, manicure Coimbra, enfermagem Coimbra{% endblock %}
 {% block og_title %}Agenda disponível | Priscila Arantes PA{% endblock %}
 {% block og_description %}Escolha serviço, data e horário para marcação online em Coimbra.{% endblock %}
 {% block twitter_title %}Agenda disponível | Priscila Arantes PA{% endblock %}
@@ -28,90 +28,34 @@
     <div class="app-agenda-shell">
 
         <aside class="app-agenda-filter">
+            {% comment %}
+                Os dois campos ficam escondidos: são o estado da página — que
+                serviço e que dia — e é neles que o JavaScript escreve quando
+                se escolhe algo. Deixaram de ser controlos porque a escolha
+                passou para o feed de serviços e para a faixa de dias, que
+                dizem muito mais do que uma lista pendente e um campo de data.
+            {% endcomment %}
             <form method="get" id="agenda-filter-form">
-
-                <div class="mb-4">
-                    <label for="service" class="form-label">
-                        {% translate "Categoria e serviço" %}
-                    </label>
-
-                    <select id="service" name="service" class="form-select form-select-lg">
-                        {% for category in service_categories %}
-                            <optgroup label="{{ category.display_name }}">
-                                {% for service in services %}
-                                    {% if service.category_id == category.id %}
-                                        <option
-                                            value="{{ service.pk }}"
-                                            data-name="{{ service.display_name }}"
-                                            data-category="{{ category.display_name }}"
-                                            {% if selected_service and selected_service.pk == service.pk %}selected{% endif %}
-                                        >
-                                            {{ service.display_name }}
-                                        </option>
-                                    {% endif %}
-                                {% endfor %}
-                            </optgroup>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="mb-4">
-                    <label for="date" class="form-label" data-agenda-desktop-only>
-                        {% translate "Data" %}
-                    </label>
-
-                    {# min impede o browser de oferecer datas passadas, que #}
-                    {# a vista também recusa do lado do servidor. #}
-                    <input
-                        type="date"
-                        id="date"
-                        name="date"
-                        value="{{ selected_date|date:'Y-m-d' }}"
-                        min="{{ today|date:'Y-m-d' }}"
-                        class="form-control form-control-lg"
-                        data-agenda-desktop-only
-                    >
-
-                    {# No telemóvel não há faixa de dias, por isso a data #}
-                    {# escolhe-se aqui. Continua a escrever no campo acima, #}
-                    {# que é quem manda: assim não há dois estados a divergir. #}
-                    <label for="day-select" class="form-label" data-agenda-mobile-only>
-                        {% translate "Dia" %}
-                    </label>
-
-                    <select
-                        id="day-select"
-                        class="form-select form-select-lg"
-                        data-agenda-mobile-only
-                    >
-                        {% for dia in day_options %}
-                            <option
-                                value="{{ dia|date:'Y-m-d' }}"
-                                {% if dia == selected_date %}selected{% endif %}
-                            >
-                                {{ dia|date:"l, j \d\e F"|capfirst }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-
+                <input type="hidden" id="service" name="service"
+                       value="{% if selected_service %}{{ selected_service.pk }}{% endif %}">
+                <input type="hidden" id="date" name="date"
+                       value="{{ selected_date|date:'Y-m-d' }}">
             </form>
 
             {% if selected_service %}
-                <div class="app-service-summary mt-4">
+                <div class="app-service-summary">
                     <span>{% translate "Serviço selecionado" %}</span>
                     <strong id="selected-service-name">{{ selected_service.display_name }}</strong>
                     <small id="selected-service-category">{{ selected_service.category.display_name }}</small>
                 </div>
             {% endif %}
-
         </aside>
 
         {# O catálogo fica numa área própria da grelha: no telemóvel tem de vir #}
         {# depois dos horários, senão obriga a percorrer o acordeão inteiro #}
         {# antes de chegar ao que a página serve para fazer. #}
         {% if service_categories %}
-            <section class="app-agenda-feed" data-agenda-desktop-only>
+            <section class="app-agenda-feed">
                 <div class="card border-0 shadow-sm agenda-service-feed-card">
                     <div class="card-body">
                         <span class="luxury-eyebrow">{% translate "Feed de serviços" %}</span>
@@ -121,11 +65,11 @@
                                 <div class="accordion-item">
                                     <h2 class="accordion-header" id="service-category-heading-{{ category.id }}">
                                         <button
-                                            class="accordion-button {% if selected_service and selected_service.category_id == category.id %}{% else %}collapsed{% endif %}"
+                                            class="accordion-button collapsed"
                                             type="button"
                                             data-bs-toggle="collapse"
                                             data-bs-target="#service-category-{{ category.id }}"
-                                            aria-expanded="{% if selected_service and selected_service.category_id == category.id %}true{% else %}false{% endif %}"
+                                            aria-expanded="false"
                                             aria-controls="service-category-{{ category.id }}"
                                         >
                                             {{ category.display_name }}
@@ -134,7 +78,7 @@
 
                                     <div
                                         id="service-category-{{ category.id }}"
-                                        class="accordion-collapse collapse {% if selected_service and selected_service.category_id == category.id %}show{% endif %}"
+                                        class="accordion-collapse collapse"
                                         aria-labelledby="service-category-heading-{{ category.id }}"
                                         data-bs-parent="#serviceFeedAccordion"
                                     >
@@ -148,7 +92,10 @@
                                                     {% if service.category_id == category.id %}
                                                         <a
                                                             href="{% url 'appointments:public_visual_schedule' %}?service={{ service.pk }}&date={{ selected_date|date:'Y-m-d' }}"
-                                                            class="list-group-item list-group-item-action px-0 {% if selected_service and selected_service.pk == service.pk %}fw-semibold{% endif %}"
+                                                            class="list-group-item list-group-item-action px-0 {% if selected_service and selected_service.pk == service.pk %}is-selected{% endif %}"
+                                                            data-service="{{ service.pk }}"
+                                                            data-name="{{ service.display_name }}"
+                                                            data-category="{{ category.display_name }}"
                                                         >
                                                             <div class="d-flex justify-content-between gap-3">
                                                                 <span>{{ service.display_name }}</span>
@@ -169,10 +116,42 @@
 
         <main class="app-agenda-results">
             {% if selected_service %}
+                {% if week_days %}
+                    <div class="app-week-strip mb-4">
+                        {% for day in week_days %}
+                            <a
+                                href="{% url 'appointments:public_visual_schedule' %}?service={{ selected_service.pk }}&date={{ day.date|date:'Y-m-d' }}"
+                                data-date="{{ day.date|date:'Y-m-d' }}"
+                                class="app-week-day {% if day.is_selected and day_chosen %}is-active{% endif %} {% if not day.free_slots %}is-full{% endif %}"
+                                title="{{ day.availability_status.title }}"
+                            >
+                                {# `capfirst` porque em português os nomes dos #}
+                                {# dias e dos meses são minúsculos.             #}
+                                <span>{{ day.date|date:"D"|capfirst }}</span>
+                                <strong>{{ day.date|date:"d/m" }}</strong>
+
+                                {% if day.free_slots %}
+                                    <em class="app-week-vagas">
+                                        {% blocktranslate count vagas=day.free_slots %}{{ vagas }} vaga{% plural %}{{ vagas }} vagas{% endblocktranslate %}
+                                    </em>
+                                {% else %}
+                                    <em class="app-week-vagas is-empty">{% translate "Sem vagas" %}</em>
+                                {% endif %}
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
                 <div class="app-agenda-results-header mb-4">
                     <div>
                         <span class="luxury-eyebrow">{% translate "Disponibilidade" %}</span>
-                        <h2>{{ selected_date|date:"d/m/Y" }}</h2>
+                        <h2>
+                            {% if day_chosen %}
+                                {{ selected_date|date:"l, j \d\e F"|capfirst }}
+                            {% else %}
+                                {% translate "Próximos dias" %}
+                            {% endif %}
+                        </h2>
                     </div>
 
                     <div
@@ -184,28 +163,6 @@
                     </div>
                 </div>
 
-                {% if week_days %}
-                    <div class="app-week-strip mb-4" data-agenda-desktop-only>
-                        {% for day in week_days %}
-                            <a
-                                href="{% url 'appointments:public_visual_schedule' %}?service={{ selected_service.pk }}&date={{ day.date|date:'Y-m-d' }}"
-                                data-date="{{ day.date|date:'Y-m-d' }}"
-                                class="app-week-day {% if day.is_selected %}is-active{% endif %} {% if day.availability_status.is_fully_blocked %}is-fully-blocked{% endif %}"
-                                title="{{ day.availability_status.title }}"
-                            >
-                                {# `capfirst` porque em português os nomes dos #}
-                                {# dias e dos meses são minúsculos.             #}
-                                <span>{{ day.date|date:"D"|capfirst }}</span>
-                                <strong>{{ day.date|date:"d" }}</strong>
-                                <small>{{ day.date|date:"M"|capfirst }}</small>
-                                {% if day.availability_status.is_fully_blocked %}
-                                    <em>{% translate "Esgotado" %}</em>
-                                {% endif %}
-                            </a>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-
                 <div
                     id="agenda-slots-container"
                     data-slots-url="{% url 'appointments:public_available_slots' %}"
@@ -215,7 +172,19 @@
                     data-label-reserved="{% translate "Reservado" %}"
                     data-label-book="{% translate "Marcar" %}"
                 >
-                    {% if slots %}
+                    {% if not day_chosen %}
+                        <div class="app-empty-state app-pick-day-state">
+                            <div class="app-empty-icon">
+                                <i class="bi bi-hand-index-thumb"></i>
+                            </div>
+
+                            <h3>{% translate "Escolha um dia acima" %}</h3>
+
+                            <p>
+                                {% translate "O número em cada dia diz quantas vagas tem. Clique num deles para ver as horas livres." %}
+                            </p>
+                        </div>
+                    {% elif slots %}
                         <div class="app-slots-grid">
                             {% for slot in slots %}
                                 {% if slot.is_available %}
@@ -223,30 +192,21 @@
                                         href="{% url 'appointments:public_appointment_create' %}?service={{ selected_service.pk }}&date={{ selected_date|date:'Y-m-d' }}&start_time={{ slot.value }}"
                                         class="app-slot-card"
                                     >
-                                        <span class="app-slot-time">
-                                            {{ slot.label }}
-                                        </span>
-
-                                        <span class="app-slot-status">
-                                            {% translate "Disponível" %}
-                                        </span>
-
-                                        <span class="app-slot-cta">
-                                            {% translate "Marcar" %}
-                                        </span>
+                                        <span class="app-slot-time">{{ slot.label }}</span>
                                     </a>
                                 {% else %}
                                     {# Ocupado por marcação ou bloqueio: o mesmo #}
                                     {# rótulo para ambos, para não revelar de qual #}
                                     {# se trata. #}
-                                    <div class="app-slot-card is-reserved" aria-disabled="true">
-                                        <span class="app-slot-time">
-                                            {{ slot.label }}
-                                        </span>
-
-                                        <span class="app-slot-status">
-                                            {% translate "Reservado" %}
-                                        </span>
+                                    <div
+                                        class="app-slot-card is-reserved"
+                                        aria-disabled="true"
+                                        {# A hora riscada diz por si que já não está livre; o #}
+                                        {# título é para quem usa leitor de ecrã, que não vê o risco. #}
+                                        title="{% translate "Reservado" %}"
+                                    >
+                                        <span class="app-slot-time">{{ slot.label }}</span>
+                                        <span class="visually-hidden">{% translate "Reservado" %}</span>
                                     </div>
                                 {% endif %}
                             {% endfor %}

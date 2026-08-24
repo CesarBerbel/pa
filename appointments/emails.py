@@ -320,7 +320,7 @@ def send_appointment_confirmation_email(appointment):
         f"Código: {context['reference_code']}\n\n"
         f"Ver detalhes:\n{context['magic_link']}\n\n"
         f"Obrigada,\n"
-        f"Priscila Arantes - Enfermeira e Podóloga"
+        f"Priscila Arantes - Enfermeira | Pedicure Terapêutica"
     )
 
     rendered_email = render_email_for_event(
@@ -425,7 +425,7 @@ def send_appointment_completed_email(appointment):
         f"Data: {context['appointment_date']}\n"
         f"Código: {context['reference_code']}\n\n"
         "Com os melhores cumprimentos,\n"
-        "Priscila Arantes — Enfermeira e Podóloga"
+        "Priscila Arantes — Enfermeira | Pedicure Terapêutica"
     )
 
     rendered_email = render_email_for_event(

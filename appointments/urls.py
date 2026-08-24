@@ -29,6 +29,7 @@ from .views import (
     ServiceListView,
     VisualScheduleView,
     SchedulingSettingView,
+    MonthlyScheduleView,
     WeeklyScheduleView,
     VisualScheduleBlockView,
     PublicAppointmentCreateView,
@@ -69,6 +70,7 @@ urlpatterns = [
         name="public_visual_schedule",
     ),
     path("agenda/semana/", WeeklyScheduleView.as_view(), name="weekly_schedule"),
+    path("agenda/mes/", MonthlyScheduleView.as_view(), name="monthly_schedule"),
     path(
         "agenda/regras/",
         SchedulingSettingView.as_view(),

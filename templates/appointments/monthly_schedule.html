@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Agenda do mês | Priscila Arantes PA{% endblock %}
+
+{% block content %}
+
+<section class="internal-calendar-page">
+
+    <div class="internal-calendar-header mb-4">
+        <div>
+            <span class="luxury-eyebrow">Agenda interna</span>
+            <h1>Agenda do mês</h1>
+            <p>{{ month.first_day|date:"F \d\e Y"|capfirst }}</p>
+        </div>
+    </div>
+
+    {% include "appointments/_agenda_controls.html" with vista="mes" data_atual=month.first_day anterior=month.previous_month seguinte=month.next_month %}
+
+    <div class="month-grid-wrapper">
+        <table class="month-grid">
+            <thead>
+                <tr>
+                    <th>Seg</th>
+                    <th>Ter</th>
+                    <th>Qua</th>
+                    <th>Qui</th>
+                    <th>Sex</th>
+                    <th>Sáb</th>
+                    <th>Dom</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for semana in month.weeks %}
+                    <tr>
+                        {% for dia in semana %}
+                            <td class="month-cell{% if not dia.in_month %} is-outside{% endif %}{% if dia.is_today %} is-today{% endif %}{% if dia.is_blocked %} is-blocked{% endif %}">
+                                <a
+                                    class="month-cell-day"
+                                    href="{% url 'appointments:visual_schedule' %}?date={{ dia.date|date:'Y-m-d' }}"
+                                    title="Abrir {{ dia.date|date:'d/m/Y' }}"
+                                >
+                                    {{ dia.date|date:"j" }}
+                                </a>
+
+                                {% if dia.is_blocked %}
+                                    <span class="month-cell-blocked">Fechado</span>
+                                {% endif %}
+
+                                <ul class="month-cell-list">
+                                    {% for entrada in dia.visible_entries %}
+                                        <li>
+                                            <a
+                                                href="{{ entrada.url }}"
+                                                class="month-entry{% if entrada.is_cancelled %} is-cancelled{% endif %}"
+                                                title="{{ entrada.time }} — {{ entrada.name }}"
+                                            >
+                                                <span class="month-entry-time">{{ entrada.time }}</span>
+                                                <span class="month-entry-name">{{ entrada.name }}</span>
+                                            </a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+
+                                {% if dia.hidden_count %}
+                                    <a
+                                        class="month-cell-more"
+                                        href="{% url 'appointments:visual_schedule' %}?date={{ dia.date|date:'Y-m-d' }}"
+                                    >
+                                        + {{ dia.hidden_count }} mais
+                                    </a>
+                                {% endif %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% comment %}
+        Num telemóvel uma grelha de sete colunas não se lê. Aí o mês é uma
+        lista dos dias que têm alguma coisa — que é o que interessa saber.
+    {% endcomment %}
+    <div class="month-list">
+        {% for dia in month.days_with_appointments %}
+            <article class="month-list-day{% if dia.is_today %} is-today{% endif %}">
+                <a
+                    class="month-list-date"
+                    href="{% url 'appointments:visual_schedule' %}?date={{ dia.date|date:'Y-m-d' }}"
+                >
+                    <strong>{{ dia.date|date:"j" }}</strong>
+                    <small>{{ dia.date|date:"D"|capfirst }}</small>
+                </a>
+
+                <ul>
+                    {% for entrada in dia.entries %}
+                        <li>
+                            <a
+                                href="{{ entrada.url }}"
+                                class="month-entry{% if entrada.is_cancelled %} is-cancelled{% endif %}"
+                            >
+                                <span class="month-entry-time">{{ entrada.time }}</span>
+                                <span class="month-entry-name">{{ entrada.name }}</span>
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </article>
+        {% empty %}
+            <p class="text-muted">Nenhuma marcação neste mês.</p>
+        {% endfor %}
+    </div>
+
+</section>
+
+{% endblock %}

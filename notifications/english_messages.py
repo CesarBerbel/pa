@@ -14,7 +14,7 @@ número de linhas.
 
 from notifications.default_email_templates import ROTULOS_EN, _html
 
-RODAPE_EN = "Priscila Arantes — Nurse and Podologist\nCoimbra, Portugal"
+RODAPE_EN = "Priscila Arantes — Nurse | Therapeutic Pedicure\nCoimbra, Portugal"
 
 MORADA_EN = "Galeria Avenida, Av. Sá da Bandeira 33, Loja 108, 3000-351 Coimbra"
 

@@ -35,9 +35,15 @@ class BrandImageTests(TestCase):
     def test_icons_are_opaque(self):
         # O Android e o iOS não contam com transparência nos ícones de
         # aplicação: desenhariam o que estivesse por trás.
+        #
+        # A opacidade é lida depois de converter, e não pelos nomes dos canais:
+        # um PNG de paleta não tem canal alfa nenhum e ainda assim pode guardar
+        # transparência, num bloco `tRNS` que a lista de canais não mostra.
         for nome, _ in self.ICONES:
             with self.subTest(icone=nome):
-                self.assertNotIn("A", Image.open(IMG / nome).getbands())
+                alfa = Image.open(IMG / nome).convert("RGBA").getchannel("A")
+
+                self.assertEqual(alfa.getextrema(), (255, 255))
 
     def test_maskable_icon_keeps_the_safe_area_clear(self):
         # O Android recorta o ícone; o desenho tem de caber num círculo com 80%
@@ -61,10 +67,9 @@ class BrandImageTests(TestCase):
         # opaco desenharia um retângulo visível.
         for nome in ["logo-mark.png", "logo-wordmark.png"]:
             with self.subTest(imagem=nome):
-                imagem = Image.open(IMG / nome)
+                alfa = Image.open(IMG / nome).convert("RGBA").getchannel("A")
 
-                self.assertIn("A", imagem.getbands())
-                self.assertEqual(imagem.getchannel("A").getextrema()[0], 0)
+                self.assertEqual(alfa.getextrema()[0], 0, "não há pixels vazios")
 
     def test_mark_is_square(self):
         imagem = Image.open(IMG / "logo-mark.png")
@@ -97,8 +102,8 @@ class PublicImageTests(TestCase):
     ]
 
     # Nenhum ficheiro servido a partir de `static/img/` deve passar disto. O
-    # maior legítimo é o cartão social, com 220 KB.
-    TETO_KB = 250
+    # maior legítimo é o cartão social, com 115 KB desde que passou a paleta.
+    TETO_KB = 130
 
     def test_public_images_exist_and_stay_small(self):
         for nome, teto in self.PUBLICAS:

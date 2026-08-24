@@ -735,10 +735,10 @@ h1, h2, h3, .hero-title, .section-title {
     box-shadow: 0 18px 48px rgba(139, 94, 102, 0.08);
 }
 
+/* Sem `position: sticky`: preso no topo, o cartão do serviço ficava por cima
+   das categorias assim que a lista subia. Desce com elas. */
 .app-agenda-filter {
     padding: 28px;
-    position: sticky;
-    top: 96px;
 }
 
 .app-agenda-filter .form-label {
@@ -826,10 +826,13 @@ h1, h2, h3, .hero-title, .section-title {
     gap: 16px;
 }
 
+/* Um horário é só a hora: sem rótulo de estado nem botão, o que era uma
+   coluna de três peças passa a um quadrado com um número ao centro. */
 .app-slot-card {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    min-height: 64px;
     background: #fff7f9;
     border: 1px solid #f1d5db;
     border-radius: 24px;
@@ -857,21 +860,7 @@ h1, h2, h3, .hero-title, .section-title {
     color: #8b5e66;
 }
 
-.app-slot-status {
-    color: #198754;
-    font-size: 0.9rem;
-    font-weight: 600;
-}
 
-.app-slot-cta {
-    margin-top: 8px;
-    background: linear-gradient(135deg, #d8a7b1, #8b5e66);
-    color: #ffffff;
-    border-radius: 999px;
-    padding: 8px 14px;
-    text-align: center;
-    font-weight: 700;
-}
 
 .app-empty-state {
     background: #fff7f9;
@@ -3975,7 +3964,6 @@ small,
 .form-text,
 .footer-bottom,
 .public-slot-status,
-.app-slot-status,
 .service-public-main p,
 .service-public-meta span {
     font-size: 0.82rem;
@@ -4235,7 +4223,6 @@ form .btn {
     font-size: 1.36rem;
 }
 
-.app-slot-cta,
 .public-slot-action {
     font-size: 0.78rem;
     font-weight: 600;
@@ -4708,43 +4695,124 @@ textarea.form-control,
     border-color: rgba(179, 69, 79, 0.35);
 }
 
+/* A barra que aparece ao escolher horários para bloquear.
+   Era uma pastilha de raio 999px que envolvia tudo numa linha só — e quando o
+   conteúdo não cabia, quebrava para duas linhas e a pastilha deixava de fazer
+   sentido, com os cantos redondos a abraçar um retângulo alto. Agora é um
+   cartão: quebra sem estragar a forma, e as duas metades — o que está
+   escolhido, e o que fazer com isso — separam-se. */
 .slot-blocking-bar {
     align-items: center;
     background: var(--white);
-    border: 1px solid rgba(139, 94, 102, 0.2);
-    border-radius: 999px;
-    bottom: 20px;
+    border: 1px solid rgba(139, 94, 102, 0.18);
+    border-radius: 22px;
+    bottom: 24px;
     box-shadow: 0 18px 44px rgba(40, 26, 22, 0.18);
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 16px;
+    justify-content: space-between;
     left: 50%;
-    max-width: min(720px, calc(100% - 32px));
-    padding: 12px 18px;
-    position: sticky;
+    max-width: min(860px, calc(100% - 24px));
+    padding: 14px 18px;
+    /* `fixed` e não `sticky`: presa ao ecrã, fica sempre no meio e à vista.
+       Com `sticky` acompanhava o fluxo da página e afastava-se do centro
+       conforme a lista de horários crescia. */
+    position: fixed;
     transform: translateX(-50%);
     width: fit-content;
-    z-index: 20;
+    z-index: 1040;
 }
 
 .slot-blocking-summary {
+    align-items: center;
     display: flex;
-    flex-direction: column;
-    margin-right: 4px;
+    gap: 12px;
+}
+
+/* O número em destaque: diz de relance quantos vão ser bloqueados, que é a
+   única coisa que se confirma antes de carregar no botão. */
+.slot-blocking-badge {
+    align-items: center;
+    background: linear-gradient(135deg, #a9707b, #8b5e66);
+    border-radius: 50%;
+    color: #ffffff;
+    display: flex;
+    flex-shrink: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    height: 38px;
+    justify-content: center;
+    width: 38px;
 }
 
 .slot-blocking-summary strong {
     color: var(--text-dark);
-    font-size: 0.9rem;
+    display: block;
+    font-size: 0.92rem;
+    line-height: 1.3;
 }
 
 .slot-blocking-summary small {
     color: var(--text-muted);
-    font-size: 0.75rem;
+    display: block;
+    font-size: 0.76rem;
+    line-height: 1.4;
+}
+
+.slot-blocking-actions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
 .slot-blocking-bar .form-control {
-    max-width: 200px;
+    max-width: 190px;
+}
+
+.slot-blocking-bar .btn {
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+@media (max-width: 575.98px) {
+    /* No telemóvel a barra parte-se em duas metades separadas por uma linha:
+       em cima o que está escolhido, em baixo o que fazer com isso. Numa
+       largura destas, misturar as duas dava uma papa de texto e botões.
+
+       Sobe acima da barra fixa de "Agendar / WhatsApp", que também vive
+       colada ao fundo — senão uma tapava a outra. */
+    .slot-blocking-bar {
+        border-radius: 20px;
+        bottom: calc(74px + env(safe-area-inset-bottom, 0px));
+        flex-direction: column;
+        gap: 0;
+        max-width: calc(100% - 16px);
+        padding: 0;
+        width: 100%;
+    }
+
+    .slot-blocking-summary {
+        border-bottom: 1px solid rgba(139, 94, 102, 0.16);
+        padding: 14px 16px;
+        width: 100%;
+    }
+
+    .slot-blocking-actions {
+        padding: 12px 16px 14px;
+        width: 100%;
+    }
+
+    .slot-blocking-bar .form-control {
+        max-width: none;
+        width: 100%;
+    }
+
+    /* Os dois botões a meias, lado a lado, por baixo do motivo. */
+    .slot-blocking-actions .btn {
+        flex: 1 1 0;
+    }
 }
 
 @media (max-width: 767.98px) {
@@ -4989,10 +5057,6 @@ textarea.form-control,
     text-decoration: line-through;
 }
 
-.app-slot-card.is-reserved .app-slot-status {
-    color: #a8755f;
-    font-weight: 600;
-}
 
 /* =========================================================================
    Página offline da PWA
@@ -5142,39 +5206,21 @@ textarea.form-control,
         font-size: 0.68rem;
     }
 
-    /* Cada horário passa a ser uma linha: hora, estado e botão numa só
-       leitura. Em duas colunas o "Marcar" transbordava do cartão. */
+    /* Uma linha por horário era para caber a hora, o estado e o botão. Sem
+       eles cabem três horas por linha, e vê-se o dia todo sem rolar. */
     .app-slots-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(3, 1fr);
         gap: 10px;
     }
 
     .app-slot-card {
-        display: grid;
-        grid-template-columns: auto 1fr auto;
-        align-items: center;
-        column-gap: 12px;
-        min-height: 60px;
-        padding: 12px 16px;
-        border-radius: 18px;
+        min-height: 54px;
+        padding: 10px 6px;
+        border-radius: 16px;
     }
 
     .app-slot-time {
         font-size: 1.3rem;
-    }
-
-    .app-slot-status {
-        font-size: 0.82rem;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .app-slot-cta {
-        margin-top: 0;
-        padding: 7px 14px;
-        font-size: 0.85rem;
-        white-space: nowrap;
     }
 
     .app-empty-state {
@@ -6177,4 +6223,373 @@ textarea.form-control,
 
 .problem-card-head + h3 {
     margin-top: 12px;
+}
+
+/* ======================
+   AGENDA PÚBLICA: FAIXA DE DIAS COM CONTADOR
+====================== */
+
+.app-week-vagas {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.74rem;
+    font-style: normal;
+    font-weight: 600;
+    color: #5a8a63;
+    letter-spacing: 0.01em;
+}
+
+.app-week-vagas.is-empty {
+    color: #b08a8a;
+}
+
+/* Um dia sem vagas continua clicável — mostra a razão — mas não convida. */
+.app-week-day.is-full {
+    opacity: 0.62;
+}
+
+.app-week-day.is-active .app-week-vagas,
+.app-week-day.is-active .app-week-vagas.is-empty {
+    color: inherit;
+}
+
+/* O serviço escolhido, no feed. */
+.app-agenda-feed .list-group-item.is-selected {
+    font-weight: 700;
+    color: #8b5e66;
+}
+
+.app-agenda-feed .list-group-item.is-selected::before {
+    content: "•";
+    margin-right: 8px;
+    color: #a9707b;
+}
+
+/* O convite a escolher um dia, antes de haver horários para mostrar. */
+.app-pick-day-state .app-empty-icon i {
+    color: #a9707b;
+}
+
+
+/* "Agenda" no menu interno: ligação e seta lado a lado, sem espaço entre
+   elas, para se lerem como uma peça só. */
+.internal-split-item {
+    display: flex;
+    align-items: center;
+}
+
+.internal-split-item .nav-link {
+    padding-right: 4px;
+}
+
+.internal-split-caret {
+    padding-left: 2px;
+    padding-right: 10px;
+}
+
+.internal-split-caret::after {
+    margin-left: 0;
+}
+
+/* ======================
+   AGENDA INTERNA: FAIXA DE CONTROLO
+
+   Uma faixa só, partilhada pelas três vistas: navegar, saltar para uma data,
+   e trocar de vista. Antes eram duas — uma linha de botões no cabeçalho e um
+   cartão à parte com o campo de data — que faziam a mesma coisa em dois
+   sítios e partiam em duas linhas assim que o ecrã apertava.
+====================== */
+
+.agenda-controls {
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #f1d5db;
+    border-radius: 20px;
+    box-shadow: 0 10px 28px rgba(139, 94, 102, 0.06);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    justify-content: space-between;
+    padding: 14px 18px;
+}
+
+.agenda-controls-nav {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+}
+
+/* Setas redondas, só com o símbolo: "← Dia anterior" e "Próximo dia →"
+   ocupavam metade da faixa para dizer o que a seta já diz. O texto vive no
+   `title` e no `aria-label`, para quem passa o rato e para quem ouve. */
+.agenda-arrow {
+    align-items: center;
+    background: #fff7f9;
+    border: 1px solid #f1d5db;
+    border-radius: 50%;
+    color: #8b5e66;
+    display: flex;
+    flex-shrink: 0;
+    height: 40px;
+    justify-content: center;
+    text-decoration: none;
+    transition: background 0.18s ease, color 0.18s ease;
+    width: 40px;
+}
+
+.agenda-arrow:hover {
+    background: #8b5e66;
+    color: #ffffff;
+}
+
+.agenda-today {
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.agenda-controls-date {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+}
+
+.agenda-controls-date .form-control {
+    max-width: 180px;
+}
+
+.agenda-controls-date .btn {
+    border-radius: 999px;
+}
+
+/* As três vistas, como separadores de um mesmo dado. */
+.agenda-controls-views {
+    background: #fdf4f6;
+    border: 1px solid #f1d5db;
+    border-radius: 999px;
+    display: flex;
+    gap: 2px;
+    padding: 4px;
+}
+
+.agenda-view {
+    border-radius: 999px;
+    color: #8b5e66;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 7px 16px;
+    text-decoration: none;
+    transition: background 0.18s ease, color 0.18s ease;
+}
+
+.agenda-view:hover {
+    background: #ffffff;
+    color: #8b5e66;
+}
+
+.agenda-view.is-active {
+    background: linear-gradient(135deg, #a9707b, #8b5e66);
+    color: #ffffff;
+    box-shadow: 0 6px 14px rgba(139, 94, 102, 0.24);
+}
+
+@media (max-width: 575.98px) {
+    .agenda-controls {
+        justify-content: center;
+    }
+
+    .agenda-controls-date {
+        width: 100%;
+    }
+
+    .agenda-controls-date .form-control {
+        max-width: none;
+        flex: 1 1 auto;
+    }
+}
+
+/* ======================
+   AGENDA INTERNA: GRELHA DO MÊS
+====================== */
+
+.month-grid-wrapper {
+    overflow-x: auto;
+}
+
+.month-grid {
+    border-collapse: separate;
+    border-spacing: 6px;
+    table-layout: fixed;
+    width: 100%;
+}
+
+.month-grid th {
+    color: #8b5e66;
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding-bottom: 4px;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.month-cell {
+    background: #ffffff;
+    border: 1px solid #f1d5db;
+    border-radius: 14px;
+    height: 118px;
+    padding: 8px;
+    vertical-align: top;
+}
+
+/* Os dias das pontas, que pertencem aos meses vizinhos: ficam lá para a
+   grelha não ter buracos, mas não competem com o mês que se está a ver. */
+.month-cell.is-outside {
+    background: #fbf8f8;
+    opacity: 0.55;
+}
+
+.month-cell.is-today {
+    border-color: #a9707b;
+    box-shadow: 0 0 0 2px rgba(169, 112, 123, 0.18);
+}
+
+.month-cell.is-blocked {
+    background: #f6f1f2;
+}
+
+.month-cell-day {
+    color: #2b2b2b;
+    display: inline-block;
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+    text-decoration: none;
+}
+
+.month-cell.is-today .month-cell-day {
+    color: #8b5e66;
+}
+
+.month-cell-blocked {
+    color: #a8755f;
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.month-cell-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.month-entry {
+    align-items: baseline;
+    border-radius: 6px;
+    color: #4a3b38;
+    display: flex;
+    font-size: 0.74rem;
+    gap: 5px;
+    line-height: 1.35;
+    padding: 2px 4px;
+    text-decoration: none;
+}
+
+.month-entry:hover {
+    background: #fff7f9;
+    color: #8b5e66;
+}
+
+.month-entry-time {
+    color: #8b5e66;
+    flex-shrink: 0;
+    font-weight: 700;
+}
+
+.month-entry-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Uma marcação cancelada continua à vista, riscada: o dia mostra o que
+   aconteceu, e não só o que ficou. */
+.month-entry.is-cancelled .month-entry-name,
+.month-entry.is-cancelled .month-entry-time {
+    color: var(--text-muted);
+    text-decoration: line-through;
+}
+
+.month-cell-more {
+    color: #8b5e66;
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    margin-top: 2px;
+    text-decoration: none;
+}
+
+/* A lista, que substitui a grelha no telemóvel. */
+.month-list {
+    display: none;
+}
+
+.month-list-day {
+    background: #ffffff;
+    border: 1px solid #f1d5db;
+    border-radius: 16px;
+    display: flex;
+    gap: 14px;
+    margin-bottom: 10px;
+    padding: 14px 16px;
+}
+
+.month-list-day.is-today {
+    border-color: #a9707b;
+}
+
+.month-list-date {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    text-decoration: none;
+    width: 44px;
+}
+
+.month-list-date strong {
+    color: #8b5e66;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.month-list-date small {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+}
+
+.month-list-day ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex: 1 1 auto;
+}
+
+.month-list-day .month-entry {
+    font-size: 0.88rem;
+}
+
+@media (max-width: 767.98px) {
+    /* Sete colunas num telemóvel não se lêem. O mês passa a ser a lista dos
+       dias que têm alguma coisa, que é a pergunta que se faz a um mês. */
+    .month-grid-wrapper {
+        display: none;
+    }
+
+    .month-list {
+        display: block;
+    }
 }

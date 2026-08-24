@@ -105,25 +105,20 @@ $(document).ready(function () {
             return;
         }
 
-        const labelAvailable = slotsContainer.data("label-available") || "Disponível";
         const labelReserved = slotsContainer.data("label-reserved") || "Reservado";
-        const labelBook = slotsContainer.data("label-book") || "Marcar";
 
         let html = `<div class="app-slots-grid">`;
 
         slots.forEach(function (slot) {
-            // Horários ocupados continuam visíveis, mas sem ligação: a cliente
-            // vê a agenda cheia em vez de um dia aparentemente vazio.
+            // Horários ocupados continuam visíveis, mas riscados e sem ligação:
+            // a cliente vê a agenda cheia em vez de um dia aparentemente vazio.
+            // O rótulo escondido é para quem usa leitor de ecrã e não vê o risco.
             if (slot.is_available === false) {
                 html += `
-                    <div class="app-slot-card is-reserved" aria-disabled="true">
-                        <span class="app-slot-time">
-                            ${escapeHtml(slot.label)}
-                        </span>
-
-                        <span class="app-slot-status">
-                            ${escapeHtml(labelReserved)}
-                        </span>
+                    <div class="app-slot-card is-reserved" aria-disabled="true"
+                         title="${escapeHtml(labelReserved)}">
+                        <span class="app-slot-time">${escapeHtml(slot.label)}</span>
+                        <span class="visually-hidden">${escapeHtml(labelReserved)}</span>
                     </div>
                 `;
                 return;
@@ -133,17 +128,7 @@ $(document).ready(function () {
 
             html += `
                 <a href="${appointmentUrl}" class="app-slot-card">
-                    <span class="app-slot-time">
-                        ${escapeHtml(slot.label)}
-                    </span>
-
-                    <span class="app-slot-status">
-                        ${escapeHtml(labelAvailable)}
-                    </span>
-
-                    <span class="app-slot-cta">
-                        ${escapeHtml(labelBook)}
-                    </span>
+                    <span class="app-slot-time">${escapeHtml(slot.label)}</span>
                 </a>
             `;
         });
@@ -204,11 +189,9 @@ $(document).ready(function () {
     }
 
     function updateServiceSummary() {
-        // Update selected service summary without page reload.
-        const selectedOption = serviceInput.find("option:selected");
-
-        $("#selected-service-name").text(selectedOption.data("name") || selectedOption.text());
-        $("#selected-service-category").text(selectedOption.data("category") || "");
+        // O resumo é escrito por quem escolhe o serviço, no feed. Ficou aqui
+        // por o carregamento dos horários lhe chamar, e não faz nada: sem o
+        // antigo <select>, não há de onde ler o nome outra vez.
     }
 
     function loadAvailableSlots() {
@@ -267,6 +250,28 @@ $(document).ready(function () {
 
     daySelect.on("change", function () {
         dateInput.val(daySelect.val());
+        loadAvailableSlots();
+    });
+
+    // O feed de serviços passou a ser o seletor de serviço. Sem isto cada
+    // escolha recarregava a página inteira; assim troca-se só a grelha.
+    $(".app-agenda-feed .list-group-item").on("click", function (event) {
+        const alvo = $(this);
+        const servico = alvo.data("service");
+
+        if (!servico) {
+            return;
+        }
+
+        event.preventDefault();
+
+        serviceInput.val(servico);
+        $("#selected-service-name").text(alvo.data("name") || alvo.text().trim());
+        $("#selected-service-category").text(alvo.data("category") || "");
+
+        alvo.closest(".app-agenda-feed").find(".list-group-item").removeClass("is-selected");
+        alvo.addClass("is-selected");
+
         loadAvailableSlots();
     });
 

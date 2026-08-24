@@ -1,0 +1,82 @@
+{% comment %}
+    A faixa de controlo da agenda interna, partilhada pelas três vistas.
+
+    Antes havia duas: uma linha de botões no cabeçalho e um cartão à parte só
+    com o campo de data. Eram a mesma coisa — mudar de dia — em dois sítios
+    diferentes, e a linha de botões partia-se em duas assim que o ecrã
+    apertava. Agora é uma faixa só: andar para trás e para a frente, saltar
+    para uma data, e trocar de vista.
+
+    Espera:
+      vista        "dia", "semana" ou "mes"
+      data_atual   a data que a vista está a mostrar
+      anterior     para onde vai a seta da esquerda
+      seguinte     para onde vai a seta da direita
+{% endcomment %}
+
+<div class="agenda-controls mb-4">
+
+    <div class="agenda-controls-nav">
+        <a
+            href="?date={{ anterior|date:'Y-m-d' }}"
+            class="agenda-arrow"
+            title="{% if vista == 'mes' %}Mês anterior{% elif vista == 'semana' %}Semana anterior{% else %}Dia anterior{% endif %}"
+            aria-label="{% if vista == 'mes' %}Mês anterior{% elif vista == 'semana' %}Semana anterior{% else %}Dia anterior{% endif %}"
+        >
+            <i class="bi bi-chevron-left" aria-hidden="true"></i>
+        </a>
+
+        <a href="?" class="btn btn-outline-secondary agenda-today">Hoje</a>
+
+        <a
+            href="?date={{ seguinte|date:'Y-m-d' }}"
+            class="agenda-arrow"
+            title="{% if vista == 'mes' %}Mês seguinte{% elif vista == 'semana' %}Semana seguinte{% else %}Próximo dia{% endif %}"
+            aria-label="{% if vista == 'mes' %}Mês seguinte{% elif vista == 'semana' %}Semana seguinte{% else %}Próximo dia{% endif %}"
+        >
+            <i class="bi bi-chevron-right" aria-hidden="true"></i>
+        </a>
+    </div>
+
+    <form method="get" class="agenda-controls-date">
+        <label for="date" class="visually-hidden">Selecionar data</label>
+
+        <input
+            type="date"
+            id="date"
+            name="date"
+            value="{{ data_atual|date:'Y-m-d' }}"
+            class="form-control"
+        >
+
+        <button type="submit" class="btn btn-outline-primary">Ir</button>
+    </form>
+
+    {# As três vistas do mesmo dado. A atual fica marcada e sem ligação. #}
+    <div class="agenda-controls-views" role="group" aria-label="Vista da agenda">
+        <a
+            href="{% url 'appointments:visual_schedule' %}?date={{ data_atual|date:'Y-m-d' }}"
+            class="agenda-view{% if vista == 'dia' %} is-active{% endif %}"
+            {% if vista == 'dia' %}aria-current="page"{% endif %}
+        >
+            Dia
+        </a>
+
+        <a
+            href="{% url 'appointments:weekly_schedule' %}?date={{ data_atual|date:'Y-m-d' }}"
+            class="agenda-view{% if vista == 'semana' %} is-active{% endif %}"
+            {% if vista == 'semana' %}aria-current="page"{% endif %}
+        >
+            Semana
+        </a>
+
+        <a
+            href="{% url 'appointments:monthly_schedule' %}?date={{ data_atual|date:'Y-m-d' }}"
+            class="agenda-view{% if vista == 'mes' %} is-active{% endif %}"
+            {% if vista == 'mes' %}aria-current="page"{% endif %}
+        >
+            Mês
+        </a>
+    </div>
+
+</div>

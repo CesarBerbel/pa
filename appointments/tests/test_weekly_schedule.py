@@ -416,8 +416,20 @@ class WeeklyScheduleViewTests(TestCase):
 
         self.assertIn(endereco, html)
 
-    def test_the_agenda_in_the_menu_is_the_weekly_one(self):
+    def test_the_agenda_in_the_menu_is_the_daily_one(self):
+        # A agenda do menu passou a ser a do dia: é a vista de trabalho, e a
+        # semana consulta-se de vez em quando. Trocar a ordem poupa um clique
+        # a cada abertura.
         html = self.client.get(self.url).content.decode()
         navegacao = html.split("<nav", 1)[1].split("</nav>", 1)[0]
 
-        self.assertIn(reverse("appointments:weekly_schedule"), navegacao)
+        self.assertIn(reverse("appointments:visual_schedule"), navegacao)
+
+    def test_the_weekly_view_is_reachable_from_the_daily_one(self):
+        # Saiu do menu; se também não estivesse na página do dia, ficava sem
+        # forma de lá chegar.
+        html = self.client.get(
+            reverse("appointments:visual_schedule")
+        ).content.decode()
+
+        self.assertIn(reverse("appointments:weekly_schedule"), html)

@@ -20,7 +20,7 @@ Há três famílias aqui dentro:
   de ser escolhidos numa mensagem de serviço.
 """
 
-RODAPE_TEXTO = "Priscila Arantes — Enfermeira e Podóloga\nCoimbra"
+RODAPE_TEXTO = "Priscila Arantes — Enfermeira | Pedicure Terapêutica\nCoimbra"
 
 MORADA = "Galeria Avenida, Av. Sá da Bandeira 33, Loja 108, 3000-351 Coimbra"
 
@@ -32,7 +32,7 @@ ROTULOS_PT = {
     "data": "Data",
     "horario": "Horário",
     "codigo": "Código",
-    "assinatura": "Priscila Arantes — Enfermeira e Podóloga<br>Coimbra",
+    "assinatura": "Priscila Arantes — Enfermeira | Pedicure Terapêutica<br>Coimbra",
 }
 
 ROTULOS_EN = {
@@ -40,7 +40,7 @@ ROTULOS_EN = {
     "data": "Date",
     "horario": "Time",
     "codigo": "Reference",
-    "assinatura": "Priscila Arantes — Nurse and Podologist<br>Coimbra, Portugal",
+    "assinatura": "Priscila Arantes — Nurse | Therapeutic Pedicure<br>Coimbra, Portugal",
 }
 
 
