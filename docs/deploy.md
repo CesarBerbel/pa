@@ -64,6 +64,34 @@ As fotografias não estão no git (`media/` está no `.gitignore`) e vivem em
 contentor — mas uma máquina nova começa sem elas: têm de vir da cópia de
 segurança.
 
+### O contentor deixou de correr como root
+
+O `Dockerfile` cria o utilizador `pa`, com UID 1000, e o gunicorn corre com
+esse. Como `/opt/pa/media` é montada de fora, quem manda nas permissões é o
+anfitrião: se a pasta for de `root`, o carregamento de fotografias na área
+interna deixa de conseguir escrever.
+
+Uma vez, no servidor:
+
+```bash
+sudo chown -R 1000:1000 /opt/pa/media
+ls -ld /opt/pa/media          # tem de dizer 1000 ou o nome do utilizador com esse UID
+```
+
+Se o dono de `/opt/pa` tiver outro UID, passa-se na construção em vez de mudar
+a pasta:
+
+```bash
+docker compose --env-file .env.prod -f docker-compose.prod.yml build     --build-arg APP_UID=$(id -u) --build-arg APP_GID=$(id -g) web
+```
+
+Confirmar depois do deploy, carregando uma fotografia em *Antes e depois*. Um
+erro de permissões aparece nos registos como `PermissionError: [Errno 13]`:
+
+```bash
+docker compose -f docker-compose.prod.yml logs web | grep -i "permission"
+```
+
 ## Avaliações do Google
 
 A secção de avaliações da página inicial só aparece com as duas variáveis
@@ -146,6 +174,70 @@ sem imagens. Para mudar:
 ```bash
 RETENTION_DAYS=90 ./scripts/backup_db.sh
 ```
+
+## Cifrar e enviar para fora do servidor
+
+Uma cópia no mesmo disco da base que copia não é uma cópia de segurança: perder
+a máquina é perder as duas coisas no mesmo instante. E o dump traz as fichas de
+anamnese e o histórico clínico — categoria especial de dados, artigo 9.º do
+RGPD — em texto legível.
+
+O script trata das duas coisas se lhe derem as variáveis. **Sem elas continua a
+fazer a cópia local**, e avisa no stderr o que ficou por fazer: uma cópia local
+em claro é pior do que uma cifrada e enviada, mas é muito melhor do que
+nenhuma.
+
+### Cifra
+
+Duas vias, por ordem de preferência:
+
+```bash
+# preferível: chave pública, o servidor cifra mas não decifra
+age-keygen -o ~/chave-copias.txt          # numa máquina que NÃO seja o servidor
+BACKUP_AGE_RECIPIENT=age1...              # só a linha "public key" vai para o servidor
+
+# alternativa, se o age não estiver disponível
+BACKUP_PASSPHRASE=...
+```
+
+Com `age` e chave pública, quem tomar o servidor não abre as cópias — nem as
+novas nem as antigas. Com `gpg --symmetric`, o servidor tem de conhecer o
+segredo, o que já protege o ficheiro que sai mas não protege de quem entre na
+máquina.
+
+A chave privada (`~/chave-copias.txt`) **não pode viver no servidor**. Guardada
+noutro sítio, e guardada mesmo: sem ela as cópias não se restauram.
+
+Restaurar:
+
+```bash
+age --decrypt -i chave-copias.txt -o copia.dump copia.dump.age
+gpg --decrypt --output copia.dump copia.dump.gpg
+```
+
+### Envio
+
+```bash
+sudo apt install rclone
+rclone config                    # cria o destino, por exemplo "b2"
+BACKUP_REMOTE=b2:pa-backups
+```
+
+A retenção de 30 dias é só a deste disco. O que já foi enviado fica no destino
+até alguém o apagar lá, e é de propósito: a cópia de fora existe para
+sobreviver a esta máquina.
+
+### No cron
+
+As variáveis têm de estar onde o cron as veja — não basta tê-las na sessão:
+
+```cron
+0 3 * * * cd /opt/pa && BACKUP_AGE_RECIPIENT=age1... BACKUP_REMOTE=b2:pa-backups ./scripts/backup_db.sh >> /var/log/pa-backup.log 2>&1
+```
+
+Ler o `/var/log/pa-backup.log` na primeira manhã. É lá que aparecem os avisos
+de "as cópias ficam em claro" ou "ficam só neste servidor" quando falta alguma
+peça.
 
 ## Automatizar
 
@@ -540,3 +632,58 @@ curl -I https://priarantes.cloud/servicos/feed/
 
 Google Business Profile, Instagram, cartões e diretórios. Para pesquisa local, a
 consistência entre estes registos e o site é um fator de posicionamento.
+
+
+---
+
+# Por aplicar à mão no Caddy
+
+Duas coisas que este repositório não consegue fazer sozinho: o `Caddyfile` vive
+em `/etc/caddy/Caddyfile`, na máquina de produção, e não no git.
+
+**Nenhuma das duas está aplicada.**
+
+## 1. Compressão
+
+O site é servido sem compressão nenhuma — a página inicial são cerca de 73 KB
+de HTML que podiam ser 15. O Django já comprime desde que o `GZipMiddleware`
+entrou no `config/settings.py`, mas o sítio próprio para o fazer é o proxy: ali
+comprime-se uma vez à saída, com `zstd` para quem o aceite, e o Python fica de
+fora da conta.
+
+Acrescentar ao bloco do PA:
+
+```caddyfile
+priarantes.com, www.priarantes.com, priarantes.cloud, www.priarantes.cloud {
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:8001
+}
+```
+
+As duas compressões não conflituam: o `GZipMiddleware` do Django não toca em
+respostas que já tragam `Content-Encoding`, e o Caddy não recomprime o que já
+vem comprimido.
+
+Confirmar:
+
+```bash
+curl -sSI -H "Accept-Encoding: gzip, br, zstd" https://priarantes.com/ \
+    | grep -i "content-encoding\|content-length"
+```
+
+## 2. Content-Security-Policy
+
+A política, o inventário das origens externas e o bloco pronto a colar estão em
+[csp.md](csp.md). Aplicar **primeiro em `Report-Only`** e só passar a ativo
+depois de dias sem violações.
+
+## Depois de cada alteração
+
+```bash
+sudo caddy validate --config /etc/caddy/Caddyfile
+sudo systemctl reload caddy
+```
+
+O `reload` não derruba o outro site alojado na mesma máquina. O `validate`
+antes dele não é opcional: um `Caddyfile` inválido não recarrega, e descobrir
+isso depois de reiniciar o serviço é descobri-lo com os dois sites em baixo.
