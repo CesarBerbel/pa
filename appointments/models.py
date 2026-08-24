@@ -1250,8 +1250,7 @@ class Appointment(models.Model):
         # exemplo do formulário de consulta mostram.
         while True:
             random_code = "".join(
-                secrets.choice(string.ascii_uppercase + string.digits)
-                for _ in range(6)
+                secrets.choice(string.ascii_uppercase + string.digits) for _ in range(6)
             )
             code = f"AGD-{random_code}"
 

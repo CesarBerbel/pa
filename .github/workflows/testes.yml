@@ -67,7 +67,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Lint
+        # `continue-on-error` de propósito, pelo menos por agora: são mais de
+        # trinta mil linhas escritas antes de haver configuração de ruff e de
+        # black, e parar o CI por causa de formatação antiga travaria trabalho
+        # que nada tem a ver com isso. O passo serve para o número ser visível
+        # e ir descendo. Quando chegar a zero, tira-se esta linha.
+        continue-on-error: true
+        run: |
+          ruff check .
+          black --check .
+
       - name: Correr os testes
         # `--create-db` anula o `--reuse-db` do pytest.ini: em CI a base é
         # sempre nova e não há nada para reaproveitar entre execuções.
-        run: pytest -q --create-db
+        run: pytest -q --create-db --cov --cov-report=term-missing

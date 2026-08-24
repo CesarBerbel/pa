@@ -1,0 +1,65 @@
+# Configuração das ferramentas de qualidade.
+#
+# O ruff e o black já estavam no requirements.txt, mas sem configuração nenhuma:
+# corriam com os valores de fábrica, quando alguém se lembrava, e cada pessoa
+# podia obter um resultado diferente. Fixá-los aqui é o que faz o resultado ser
+# o mesmo na máquina de quem escreve e no CI.
+#
+# **Não correr `ruff --fix` nem `black` sobre o repositório inteiro.** São mais
+# de trinta mil linhas escritas antes desta configuração existir: um diff assim
+# esconderia as alterações verdadeiras e deitaria fora o `git blame`. O
+# caminho é formatar o que se toca, ficheiro a ficheiro, à medida que se lá
+# volta.
+
+[tool.black]
+line-length = 88
+target-version = ["py312"]
+extend-exclude = '''
+/(
+    \.venv
+  | migrations
+)/
+'''
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+extend-exclude = [".venv", "migrations", "baileys"]
+
+[tool.ruff.lint]
+# Para lá do que o ruff traz por omissão (erros de sintaxe e nomes por
+# resolver): avisos do pycodestyle, armadilhas do flake8-bugbear, sintaxe já
+# desatualizada para o Python 3.12, e a ordem dos imports.
+select = ["E", "F", "W", "B", "UP", "I"]
+
+# O comprimento das linhas é assunto do black, que já as parte onde consegue.
+# Deixar o ruff a queixar-se das que ele não parte — endereços longos, textos
+# de mensagens — era ruído sobre coisas que não têm arranjo.
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# As definições são um ficheiro de configuração com forma de módulo: os nomes
+# em maiúsculas e a ordem das secções são deliberados.
+"config/settings.py" = ["E402"]
+
+[tool.coverage.run]
+source = ["accounts", "appointments", "config", "notifications"]
+omit = [
+    "*/migrations/*",
+    "*/tests/*",
+    "*/test_*.py",
+    "*/tests.py",
+    "config/asgi.py",
+    "config/wsgi.py",
+    "manage.py",
+]
+
+[tool.coverage.report]
+# Linhas que existem para o caso de nunca acontecerem. Contá-las como não
+# cobertas dava um número mais baixo sem dizer nada de útil.
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]
