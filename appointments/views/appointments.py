@@ -1,3 +1,5 @@
+from datetime import time
+
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
@@ -12,6 +14,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
+from django.utils.dateparse import parse_date, parse_time
 from django.views.generic import (
     CreateView,
     DetailView,
@@ -22,14 +25,21 @@ from django.views.generic import (
 )
 
 from appointments.audit_services import AppointmentAuditService
-from appointments.message_preview import build_preview
+from appointments import address_lookup
+from appointments.message_preview import ACTION_CONFIRM, build_preview
 from appointments.cancellation_services import AppointmentCancellationService
 from appointments.forms import (
     AppointmentCancelForm,
     AppointmentForm,
     ClinicalNoteForm,
 )
-from appointments.models import Appointment, AppointmentLog, ClinicalNote, Service
+from appointments.models import (
+    Appointment,
+    AppointmentLog,
+    ClinicalNote,
+    Customer,
+    Service,
+)
 from appointments.selectors import AppointmentFilters, AppointmentSelectors
 from appointments.use_cases import (
     CompleteAppointmentUseCase,
@@ -411,6 +421,130 @@ def wants_to_notify(request):
     return request.POST.get("send_message") == "1"
 
 
+class HomeVisitAddressSuggestView(InternalAreaRequiredMixin, View):
+    """Moradas sugeridas enquanto se escreve, e a morada escolhida em campos.
+
+    Duas coisas num sítio só porque são a mesma conversa com a Google, e
+    porque partilham a sessão que a faz custar uma consulta em vez de uma por
+    tecla escrita.
+
+    Fica atrás da área interna de propósito: a chave é do servidor, e um
+    endereço aberto ao mundo seria a mesma coisa que a publicar.
+    """
+
+    def get(self, request):
+        sessao = request.GET.get("sessao", "")
+        place_id = request.GET.get("place_id", "")
+
+        if place_id:
+            return JsonResponse(address_lookup.details(place_id, session_token=sessao))
+
+        return JsonResponse(
+            {
+                "suggestions": address_lookup.suggest(
+                    request.GET.get("q", ""),
+                    session_token=sessao,
+                )
+            }
+        )
+
+
+class NewAppointmentMessagePreviewView(InternalAreaRequiredMixin, View):
+    """O que a cliente receberia por uma marcação que ainda não existe.
+
+    A janela de gravar pergunta se a cliente é avisada, e perguntava sem
+    mostrar a resposta: nos outros ecrãs há uma marcação gravada para
+    pré-visualizar, e aqui a marcação é justamente o que ainda não existe.
+
+    Por isso é montada em memória, com o que está escrito no formulário, e
+    nunca chega à base de dados. O cliente novo também não: gravá-lo para poder
+    mostrar a mensagem seria registá-lo por alguém ter aberto a janela.
+    """
+
+    def post(self, request):
+        appointment = self.montar(request.POST)
+
+        if appointment is None:
+            return JsonResponse(
+                {
+                    "emails": [],
+                    "whatsapp": [],
+                    "notes": [
+                        "Escolha o cliente, o serviço e a data para ver a mensagem."
+                    ],
+                    "is_empty": True,
+                }
+            )
+
+        preview = build_preview(appointment, action=ACTION_CONFIRM)
+
+        # O código e a ligação nascem ao gravar. Os que aqui aparecem têm a
+        # forma certa e não são os que vão sair — dizê-lo é melhor do que
+        # mostrar um código em branco ou deixar quem lê a compará-los depois.
+        preview.notes.append(
+            "O código da marcação e a ligação são criados ao gravar; "
+            "na mensagem verdadeira seguem os definitivos."
+        )
+
+        return JsonResponse(preview.as_dict())
+
+    def montar(self, dados):
+        """A marcação que o formulário está a descrever, sem a gravar."""
+
+        service = Service.objects.filter(pk=dados.get("service") or 0).first()
+        customer = self.cliente(dados)
+
+        if not service or not customer:
+            return None
+
+        appointment = Appointment(
+            customer=customer,
+            service=service,
+            date=parse_date(dados.get("date") or "") or timezone.localdate(),
+            start_time=parse_time(dados.get("start_time") or "") or time(9, 0),
+            # Uma marcação criada aqui é combinada na clínica, e o texto que a
+            # cliente recebe depende disso: `confirmation_event_for` escolhe
+            # entre a resposta a um pedido e o registo do que ficou combinado.
+            origin=Appointment.ORIGIN_INTERNAL,
+            status=Appointment.STATUS_CONFIRMED,
+            is_home_visit=bool(dados.get("is_home_visit")),
+            customer_speaks_english=bool(dados.get("customer_speaks_english")),
+        )
+
+        for campo in AppointmentForm.CAMPOS_DA_MORADA:
+            setattr(appointment, campo, (dados.get(campo) or "").strip())
+
+        if not appointment.is_home_visit:
+            for campo in AppointmentForm.CAMPOS_DA_MORADA:
+                setattr(appointment, campo, "")
+
+        # A ligação da mensagem é assinada com estes dois. Sem eles, montar a
+        # mensagem rebentava — a marcação nunca foi gravada e não tem nem
+        # código nem data de alteração.
+        appointment.reference_code = appointment.generate_reference_code()
+        appointment.updated_at = timezone.now()
+
+        return appointment
+
+    def cliente(self, dados):
+        if dados.get("customer_mode") == AppointmentForm.CUSTOMER_MODE_NEW:
+            nome = (dados.get("new_customer_name") or "").strip()
+            telefone = (dados.get("new_customer_phone") or "").strip()
+
+            if not nome:
+                return None
+
+            # Em memória e sem gravar: o registo do cliente é do formulário, e
+            # acontece quando a marcação for mesmo criada.
+            return Customer(
+                full_name=nome,
+                phone=telefone,
+                email=(dados.get("new_customer_email") or "").strip(),
+            )
+
+        return Customer.objects.filter(pk=dados.get("customer") or 0).first()
+
+
 class AppointmentMessagePreviewView(InternalAreaRequiredMixin, View):
     """O que a cliente receberia, para a janela mostrar antes de decidir.
 
@@ -580,8 +714,7 @@ class AppointmentAuditView(InternalAreaRequiredMixin, ListView):
                 "appointment__customer",
                 "appointment__service",
                 "performed_by",
-            )
-            .all()
+            ).all()
             # O `pk` desempata dois registos do mesmo instante, tal como no
             # `Meta` do modelo. Este `order_by` substitui o do modelo, por
             # isso o desempate tem de ser repetido aqui.

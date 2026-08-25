@@ -257,3 +257,164 @@ class PreviewIsWiredToTheScreensTests(TestCase):
 
         self.assertIn(self.endereco(), html)
         self.assertIn('data-preview-action="confirm"', html)
+
+    def agenda(self):
+        # A agenda mostra um dia de cada vez, e o botão de concluir só existe
+        # numa marcação confirmada.
+        self.appointment.status = Appointment.STATUS_CONFIRMED
+        self.appointment.save(update_fields=["status"])
+
+        return self.client.get(
+            reverse("appointments:visual_schedule"),
+            {"date": self.date.strftime("%Y-%m-%d")},
+        ).content.decode()
+
+    def test_the_agenda_points_at_the_preview_before_finishing(self):
+        # Concluir na agenda gravava sem perguntar nada: nem a pré-visualização
+        # aparecia, nem `send_message` ia preenchido — o atendimento fechava e a
+        # cliente nunca recebia a mensagem de fim.
+        html = self.agenda()
+
+        self.assertIn(self.endereco(), html)
+        self.assertIn('data-preview-action="complete"', html)
+
+    def test_the_agenda_carries_the_field_that_holds_the_answer(self):
+        html = self.agenda()
+
+        self.assertIn('name="send_message"', html)
+        self.assertIn("sendMessageChoiceModal", html)
+
+
+class PreviewOfAnAppointmentThatDoesNotExistYetTests(TestCase):
+    """Criar uma marcação também mostra o que a cliente vai receber.
+
+    A janela de gravar perguntava se a cliente é avisada sem mostrar a
+    resposta: nos outros ecrãs há uma marcação gravada para pré-visualizar, e
+    ao criar a marcação é justamente o que ainda não existe.
+    """
+
+    def setUp(self):
+        self.user = get_user_model().objects.create_superuser(
+            email="admin@example.com",
+            password="StrongPassword123",
+            full_name="Admin User",
+        )
+
+        self.customer = Customer.objects.create(
+            full_name="Maria Silva",
+            email="maria@exemplo.pt",
+            phone="+351910000000",
+        )
+
+        self.service = create_test_service(duration_minutes=60)
+
+        self.date = timezone.localdate() + timedelta(days=14)
+        while self.date.weekday() != 0:
+            self.date += timedelta(days=1)
+
+        ensure_test_business_hour(
+            weekday=self.date.weekday(),
+            start_time=time(9, 0),
+            end_time=time(18, 0),
+        )
+
+        self.client.force_login(self.user)
+
+    def url(self):
+        return reverse("appointments:new_appointment_message_preview")
+
+    def dados(self, **campos):
+        valores = {
+            "acao": "confirm",
+            "customer_mode": "existing",
+            "customer": self.customer.pk,
+            "service": self.service.pk,
+            "date": self.date.strftime("%Y-%m-%d"),
+            "start_time": "10:00",
+        }
+        valores.update(campos)
+
+        return valores
+
+    def previa(self, **campos):
+        return self.client.post(self.url(), self.dados(**campos)).json()
+
+    def test_the_creation_screen_points_at_it(self):
+        html = self.client.get(
+            reverse("appointments:appointment_create")
+        ).content.decode()
+
+        self.assertIn(self.url(), html)
+        self.assertIn("data-preview-with-form", html)
+
+    def test_it_shows_the_message_the_appointment_would_send(self):
+        previa = self.previa()
+
+        self.assertEqual(len(previa["emails"]), 1)
+        self.assertIn("maria@exemplo.pt", previa["emails"][0]["to"])
+
+    def test_it_is_the_message_of_an_appointment_arranged_at_the_clinic(self):
+        # E não a resposta a um pedido feito no site, que é outro texto.
+        previa = self.previa()
+
+        self.assertIn("combinámos", previa["emails"][0]["body"])
+
+    def test_it_saves_nothing(self):
+        self.previa()
+        self.previa(
+            customer_mode="new",
+            customer="",
+            new_customer_name="Ana Nova",
+            new_customer_phone="+351911111111",
+        )
+
+        self.assertEqual(Appointment.objects.count(), 0)
+        self.assertEqual(Customer.objects.count(), 1)
+        self.assertEqual(mail.outbox, [])
+
+    def test_a_customer_who_is_still_being_typed_is_enough(self):
+        # Marcar ao telefone com quem ainda não está registado é o caso mais
+        # comum deste ecrã.
+        previa = self.previa(
+            customer_mode="new",
+            customer="",
+            new_customer_name="Ana Nova",
+            new_customer_phone="+351911111111",
+            new_customer_email="ana@exemplo.pt",
+        )
+
+        self.assertIn("ana@exemplo.pt", previa["emails"][0]["to"])
+        self.assertIn("Ana Nova", previa["emails"][0]["body"])
+
+    def test_a_home_visit_says_so_before_anything_is_saved(self):
+        previa = self.previa(
+            is_home_visit="on",
+            home_street="Rua das Flores",
+            home_number="12",
+        )
+
+        self.assertIn("somos nós a ir ter consigo", previa["emails"][0]["body"])
+
+    def test_a_form_still_being_filled_in_says_what_is_missing(self):
+        # Abrir a janela com metade do formulário escrito não pode rebentar.
+        previa = self.client.post(self.url(), {"acao": "confirm"}).json()
+
+        self.assertTrue(previa["is_empty"])
+        self.assertTrue(previa["notes"])
+
+    def test_it_says_the_code_is_not_the_final_one(self):
+        # O código e a ligação nascem ao gravar. Mostrá-los sem o dizer punha
+        # quem lê a compará-los depois com os verdadeiros.
+        previa = self.previa()
+
+        self.assertTrue(
+            any("ao gravar" in nota for nota in previa["notes"]),
+            previa["notes"],
+        )
+
+    def test_it_is_closed_to_who_is_not_from_the_internal_area(self):
+        self.client.logout()
+
+        resposta = self.client.post(self.url(), self.dados())
+
+        self.assertIn(resposta.status_code, (302, 403))

@@ -717,6 +717,18 @@ class DefaultMessagesTests(TestCase):
     def test_the_two_texts_say_the_same_thing(self):
         # O texto de envio e o submetido à Meta têm de coincidir, senão o
         # cliente recebe uma coisa diferente da que foi aprovada.
+        #
+        # Os dois são comparados depois de desenhados, e não em bruto: o texto
+        # de envio passou a decidir a frase do sítio pelo que a marcação é —
+        # na clínica ou em casa da cliente — e um modelo aprovado pela Meta não
+        # tem como escolher entre duas frases. Desenhados com a mesma marcação
+        # comum, o de sempre, têm de dizer exatamente o mesmo.
+        #
+        # O que fica de fora desta garantia está dito na migração 0027: uma
+        # confirmação de domicílio enviada por modelo aprovado continua a dizer
+        # a morada da clínica, e só um modelo novo submetido à Meta resolve.
+        exemplo = twilio_whatsapp.get_sample_context()
+
         for regra in WhatsAppEventSetting.objects.all():
             posicoes = json.loads(regra.content_variables)
 
@@ -727,7 +739,7 @@ class DefaultMessagesTests(TestCase):
                 )
 
             def normalizar(texto):
-                return " ".join(texto.split())
+                return " ".join(twilio_whatsapp.render_text(texto, exemplo).split())
 
             with self.subTest(regra=str(regra)):
                 self.assertEqual(

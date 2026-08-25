@@ -217,7 +217,11 @@ DEFAULT_EMAIL_TEMPLATES = [
             "Data: {{ appointment_date }}\n"
             "Horário: {{ appointment_time }}\n"
             "Código: {{ reference_code }}\n\n"
+            "{% if is_home_visit %}"
+            "Desta vez somos nós a ir ter consigo, a {{ home_address }}.\n\n"
+            "{% else %}"
             f"Onde: {MORADA}\n\n"
+            "{% endif %}"
             "Ver os detalhes da marcação:\n{{ magic_link }}\n\n"
             "Se não puder vir, avise-nos com antecedência para o horário "
             "ficar livre para outra pessoa:\n{{ cancellation_link }}\n\n"
@@ -228,8 +232,13 @@ DEFAULT_EMAIL_TEMPLATES = [
             titulo="Marcação confirmada",
             saudacao="Olá {{ customer_name }},",
             corpo=(
+                "{% if is_home_visit %}"
+                "Está tudo tratado. Desta vez somos nós a ir ter consigo, a "
+                "{{ home_address }}, no dia e hora abaixo."
+                "{% else %}"
                 "Está tudo tratado — contamos consigo no dia e hora abaixo, "
                 f"na {MORADA}."
+                "{% endif %}"
             ),
             acao=("Ver a minha marcação", "{{ magic_link }}"),
             aviso=(
@@ -254,7 +263,11 @@ DEFAULT_EMAIL_TEMPLATES = [
             "Data: {{ appointment_date }}\n"
             "Horário: {{ appointment_time }}\n"
             "Código: {{ reference_code }}\n\n"
+            "{% if is_home_visit %}"
+            "Desta vez somos nós a ir ter consigo, a {{ home_address }}.\n\n"
+            "{% else %}"
             f"Onde: {MORADA}\n\n"
+            "{% endif %}"
             "Ver os detalhes da marcação:\n{{ magic_link }}\n\n"
             "Se precisar de alterar ou cancelar, é só responder a este email "
             "ou usar esta ligação:\n{{ cancellation_link }}\n\n"
@@ -266,7 +279,12 @@ DEFAULT_EMAIL_TEMPLATES = [
             saudacao="Olá {{ customer_name }},",
             corpo=(
                 "Fica registada a marcação que combinámos, para ter por "
-                f"escrito. Esperamos por si na {MORADA}."
+                "escrito. "
+                "{% if is_home_visit %}"
+                "Desta vez somos nós a ir ter consigo, a {{ home_address }}."
+                "{% else %}"
+                f"Esperamos por si na {MORADA}."
+                "{% endif %}"
             ),
             acao=("Ver a minha marcação", "{{ magic_link }}"),
             aviso=(

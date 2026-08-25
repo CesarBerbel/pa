@@ -31,6 +31,12 @@
                     {% if not object %}
                         data-ask-send-message
                         data-send-field="send_confirmation"
+                        {# A marcação ainda não existe: a pré-visualização é    #}
+                        {# montada com o que está escrito aqui, e por isso este #}
+                        {# formulário vai inteiro no pedido.                    #}
+                        data-preview-url="{% url 'appointments:new_appointment_message_preview' %}"
+                        data-preview-action="confirm"
+                        data-preview-with-form
                         data-choice-title="Avisar a cliente desta marcação?"
                         data-choice-text="A marcação é gravada na mesma. O que esta escolha decide é se sai já a mensagem de confirmação — por email, e por WhatsApp se o envio estiver ligado."
                         data-choice-yes="Criar e enviar confirmação"
@@ -58,12 +64,74 @@
                         {{ form.new_customer_email|as_crispy_field }}
                     </div>
 
+                    {{ form.customer_speaks_english|as_crispy_field }}
+
                     <hr class="my-4">
 
                     {{ form.service|as_crispy_field }}
                     {{ form.date|as_crispy_field }}
                     {{ form.start_time|as_crispy_field }}
                     {{ form.status|as_crispy_field }}
+
+                    {# A morada e as indicações só aparecem quando a caixa está #}
+                    {# marcada: num atendimento na clínica são dois campos que  #}
+                    {# nunca se preenchem. Escondê-las é do JavaScript, e por   #}
+                    {# isso o servidor volta a verificar em clean().            #}
+                    <div class="home-visit-switch">
+                        {{ form.is_home_visit|as_crispy_field }}
+                    </div>
+
+                    <div
+                        data-home-visit-fields
+                        data-address-url="{% url 'appointments:home_visit_address' %}"
+                        hidden
+                    >
+                        {# A caixa de procura não é um campo do formulário: só #}
+                        {# serve para encher os que estão por baixo. Não tem   #}
+                        {# `name`, e some quando não há Google configurada.    #}
+                        <div class="mb-3" data-address-search hidden>
+                            <label class="form-label" for="address-search">
+                                Procurar a morada
+                            </label>
+
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="address-search"
+                                autocomplete="off"
+                                placeholder="Comece a escrever a rua…"
+                                aria-describedby="address-search-help"
+                                aria-expanded="false"
+                                aria-controls="address-suggestions"
+                                role="combobox"
+                            >
+
+                            <span class="form-text" id="address-search-help">
+                                Escolha uma sugestão para encher os campos abaixo. Pode sempre corrigi-los à mão.
+                            </span>
+
+                            <ul
+                                class="address-suggestions"
+                                id="address-suggestions"
+                                role="listbox"
+                                hidden
+                            ></ul>
+                        </div>
+
+                        <div class="row g-2">
+                            <div class="col-12 col-md-8">{{ form.home_street|as_crispy_field }}</div>
+                            <div class="col-6 col-md-4">{{ form.home_number|as_crispy_field }}</div>
+                            <div class="col-12 col-md-6">{{ form.home_floor|as_crispy_field }}</div>
+                            <div class="col-6 col-md-3">{{ form.home_postal_code|as_crispy_field }}</div>
+                            <div class="col-6 col-md-3">{{ form.home_locality|as_crispy_field }}</div>
+                            <div class="col-6 col-md-4">{{ form.home_municipality|as_crispy_field }}</div>
+                            <div class="col-6 col-md-4">{{ form.home_district|as_crispy_field }}</div>
+                            <div class="col-12 col-md-4">{{ form.home_country|as_crispy_field }}</div>
+                        </div>
+
+                        {{ form.home_directions|as_crispy_field }}
+                    </div>
+
                     {{ form.notes|as_crispy_field }}
 
                     <div class="d-flex gap-2 mt-3">
@@ -98,6 +166,8 @@
                         var blocoExistente = form.querySelector("[data-customer-existing]");
                         var blocoNovo = form.querySelector("[data-customer-new]");
                         var opcoes = form.querySelectorAll("input[name='customer_mode']");
+                        var domicilio = form.querySelector("input[name='is_home_visit']");
+                        var blocoDomicilio = form.querySelector("[data-home-visit-fields]");
 
                         function aplicar() {
                             var escolhida = form.querySelector(
@@ -109,13 +179,199 @@
                             blocoNovo.hidden = !criarNovo;
                         }
 
+                        function aplicarDomicilio() {
+                            if (!domicilio || !blocoDomicilio) {
+                                return;
+                            }
+
+                            blocoDomicilio.hidden = !domicilio.checked;
+                        }
+
+                        // ----------------------------------------------------
+                        // Moradas sugeridas pela Google
+                        //
+                        // O pedido vai à área interna, que fala com a Google: a
+                        // chave é do servidor e não passa por aqui. Falhando —
+                        // sem chave, sem rede, ou uma morada que a Google não
+                        // conhece — os campos preenchem-se à mão, que é como era
+                        // antes de haver sugestões nenhumas.
+                        // ----------------------------------------------------
+                        (function () {
+                            if (!blocoDomicilio || !window.fetch) {
+                                return;
+                            }
+
+                            var endereco = blocoDomicilio.dataset.addressUrl;
+                            var procura = blocoDomicilio.querySelector("[data-address-search]");
+                            var caixa = form.querySelector("#address-search");
+                            var lista = form.querySelector("#address-suggestions");
+
+                            if (!endereco || !procura || !caixa || !lista) {
+                                return;
+                            }
+
+                            var CAMPOS = [
+                                "home_street",
+                                "home_number",
+                                "home_floor",
+                                "home_postal_code",
+                                "home_locality",
+                                "home_municipality",
+                                "home_district",
+                                "home_country"
+                            ];
+
+                            function novaSessao() {
+                                if (window.crypto && window.crypto.randomUUID) {
+                                    return window.crypto.randomUUID();
+                                }
+
+                                return String(Date.now()) + String(Math.random()).slice(2);
+                            }
+
+                            // A Google cobra o autocompletar por sessão: as
+                            // sugestões e os detalhes que vão com o mesmo token
+                            // contam como uma consulta, e não uma por tecla.
+                            var sessao = novaSessao();
+                            var espera = null;
+                            var pedido = 0;
+
+                            function fechar() {
+                                lista.hidden = true;
+                                lista.innerHTML = "";
+                                caixa.setAttribute("aria-expanded", "false");
+                            }
+
+                            function preencher(morada) {
+                                CAMPOS.forEach(function (nome) {
+                                    var campo = form.querySelector("[name='" + nome + "']");
+
+                                    // Um campo que a Google não soube dizer fica
+                                    // como está: apagá-lo perdia o que alguém
+                                    // tivesse escrito à mão.
+                                    if (campo && morada[nome]) {
+                                        campo.value = morada[nome];
+                                    }
+                                });
+                            }
+
+                            function escolher(placeId) {
+                                fetch(
+                                    endereco + "?place_id=" + encodeURIComponent(placeId) +
+                                        "&sessao=" + encodeURIComponent(sessao),
+                                    { credentials: "same-origin" }
+                                )
+                                    .then(function (resposta) {
+                                        return resposta.ok ? resposta.json() : {};
+                                    })
+                                    .then(function (morada) {
+                                        preencher(morada);
+                                        caixa.value = morada.formatted || caixa.value;
+                                        sessao = novaSessao();
+                                        fechar();
+                                    })
+                                    .catch(fechar);
+                            }
+
+                            function desenhar(sugestoes) {
+                                lista.innerHTML = "";
+
+                                if (!sugestoes.length) {
+                                    fechar();
+                                    return;
+                                }
+
+                                sugestoes.forEach(function (sugestao) {
+                                    var item = document.createElement("li");
+                                    var botao = document.createElement("button");
+
+                                    botao.type = "button";
+                                    botao.className = "address-suggestion";
+                                    botao.setAttribute("role", "option");
+
+                                    var principal = document.createElement("strong");
+                                    principal.textContent = sugestao.main || "";
+
+                                    var resto = document.createElement("span");
+                                    resto.textContent = sugestao.secondary || "";
+
+                                    botao.appendChild(principal);
+                                    botao.appendChild(resto);
+
+                                    botao.addEventListener("click", function () {
+                                        escolher(sugestao.place_id);
+                                    });
+
+                                    item.appendChild(botao);
+                                    lista.appendChild(item);
+                                });
+
+                                lista.hidden = false;
+                                caixa.setAttribute("aria-expanded", "true");
+                            }
+
+                            function procurar() {
+                                var texto = caixa.value.trim();
+
+                                if (texto.length < 3) {
+                                    fechar();
+                                    return;
+                                }
+
+                                // Cada resposta invalida a anterior: escrever
+                                // depressa trocava a ordem por que chegam.
+                                var meuPedido = ++pedido;
+
+                                fetch(
+                                    endereco + "?q=" + encodeURIComponent(texto) +
+                                        "&sessao=" + encodeURIComponent(sessao),
+                                    { credentials: "same-origin" }
+                                )
+                                    .then(function (resposta) {
+                                        return resposta.ok ? resposta.json() : {};
+                                    })
+                                    .then(function (conteudo) {
+                                        if (meuPedido === pedido) {
+                                            desenhar(conteudo.suggestions || []);
+                                        }
+                                    })
+                                    .catch(fechar);
+                            }
+
+                            caixa.addEventListener("input", function () {
+                                window.clearTimeout(espera);
+                                // Uma consulta por tecla seria uma consulta paga
+                                // por tecla. Espera-se que a pessoa pare.
+                                espera = window.setTimeout(procurar, 300);
+                            });
+
+                            caixa.addEventListener("keydown", function (evento) {
+                                if (evento.key === "Escape") {
+                                    fechar();
+                                }
+                            });
+
+                            document.addEventListener("click", function (evento) {
+                                if (!procura.contains(evento.target)) {
+                                    fechar();
+                                }
+                            });
+
+                            procura.hidden = false;
+                        })();
+
                         Array.prototype.forEach.call(opcoes, function (opcao) {
                             opcao.addEventListener("change", aplicar);
                         });
 
-                        // Corre também no arranque para repor o estado certo
+                        if (domicilio) {
+                            domicilio.addEventListener("change", aplicarDomicilio);
+                        }
+
+                        // Correm também no arranque para repor o estado certo
                         // quando o formulário volta com erros de validação.
                         aplicar();
+                        aplicarDomicilio();
                     })();
                 </script>
             </div>

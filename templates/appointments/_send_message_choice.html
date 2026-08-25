@@ -189,7 +189,13 @@
             corpoPrevia.innerHTML =
                 '<p class="send-message-preview-note">A preparar a mensagem…</p>';
 
-            var dados = new FormData();
+            // Uma marcação que ainda não existe não se pré-visualiza pelo
+            // que está gravado: o que a descreve é o formulário aberto, e vai
+            // inteiro. Nos outros ecrãs basta a ação — a marcação já lá está.
+            var dados = form.hasAttribute("data-preview-with-form")
+                ? new FormData(form)
+                : new FormData();
+
             dados.append("acao", form.dataset.previewAction || "");
             dados.append(
                 "csrfmiddlewaretoken",

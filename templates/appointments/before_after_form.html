@@ -78,6 +78,8 @@
                         {% endfor %}
                     </div>
 
+                    {{ form.reveal_orientation|as_crispy_field }}
+
                     {{ form.display_order|as_crispy_field }}
                     {{ form.is_active|as_crispy_field }}
 

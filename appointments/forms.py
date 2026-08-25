@@ -101,6 +101,7 @@ class BeforeAfterCaseForm(forms.ModelForm):
             "caption",
             "before_image",
             "after_image",
+            "reveal_orientation",
             "display_order",
             "is_active",
             # Escondidos: quem os mexe é o editor de enquadramento, à conta
@@ -114,6 +115,9 @@ class BeforeAfterCaseForm(forms.ModelForm):
             "after_focus_y",
         ]
         widgets = {
+            # As duas opções à vista: escondida numa lista pendente, a
+            # escolha passava despercebida a quem não soubesse que existe.
+            "reveal_orientation": forms.RadioSelect(),
             "before_zoom": forms.HiddenInput(),
             "before_focus_x": forms.HiddenInput(),
             "before_focus_y": forms.HiddenInput(),
@@ -144,12 +148,19 @@ class BeforeAfterCaseForm(forms.ModelForm):
         for campo in self.ENQUADRAMENTO:
             self.fields[campo].required = False
 
+        # Pela mesma razão: um formulário sem a direção da linha é uma
+        # direção por decidir, e vale a que a página sempre teve.
+        self.fields["reveal_orientation"].required = False
+
     def clean(self):
         dados = super().clean()
 
         for campo, omissao in self.ENQUADRAMENTO.items():
             if dados.get(campo) in (None, ""):
                 dados[campo] = omissao
+
+        if not dados.get("reveal_orientation"):
+            dados["reveal_orientation"] = BeforeAfterCase.REVEAL_VERTICAL
 
         return dados
 
@@ -227,10 +238,21 @@ class AppointmentForm(forms.ModelForm):
         "new_customer_name",
         "new_customer_phone",
         "new_customer_email",
+        "customer_speaks_english",
         "service",
         "date",
         "start_time",
         "status",
+        "is_home_visit",
+        "home_street",
+        "home_number",
+        "home_floor",
+        "home_postal_code",
+        "home_locality",
+        "home_municipality",
+        "home_district",
+        "home_country",
+        "home_directions",
         "notes",
     ]
 
@@ -238,15 +260,27 @@ class AppointmentForm(forms.ModelForm):
         model = Appointment
         fields = [
             "customer",
+            "customer_speaks_english",
             "service",
             "date",
             "start_time",
             "status",
+            "is_home_visit",
+            "home_street",
+            "home_number",
+            "home_floor",
+            "home_postal_code",
+            "home_locality",
+            "home_municipality",
+            "home_district",
+            "home_country",
+            "home_directions",
             "notes",
         ]
         widgets = {
             "date": forms.DateInput(attrs={"type": "date"}),
             "start_time": forms.TimeInput(attrs={"type": "time"}),
+            "home_directions": forms.Textarea(attrs={"rows": 2}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -276,9 +310,45 @@ class AppointmentForm(forms.ModelForm):
         elif not cleaned_data.get("customer"):
             self.add_error("customer", "Selecione o cliente ou registe um novo.")
 
+        self.resolve_home_visit(cleaned_data)
         self.resolve_schedule_override(cleaned_data)
 
         return cleaned_data
+
+    # Os campos da morada, para os limpar e os validar como um conjunto.
+    CAMPOS_DA_MORADA = [
+        "home_street",
+        "home_number",
+        "home_floor",
+        "home_postal_code",
+        "home_locality",
+        "home_municipality",
+        "home_district",
+        "home_country",
+        "home_directions",
+    ]
+
+    def resolve_home_visit(self, cleaned_data):
+        """A rua só é obrigatória quando o atendimento é em domicílio.
+
+        E o contrário também conta: desmarcar o domicílio limpa a morada e as
+        indicações, senão ficavam guardadas numa marcação que passou a ser na
+        clínica — e apareciam no ecrã do dia a mandar a profissional sair.
+        """
+
+        if not cleaned_data.get("is_home_visit"):
+            for campo in self.CAMPOS_DA_MORADA:
+                cleaned_data[campo] = ""
+
+            return
+
+        # Só a rua. Uma morada de aldeia pode não ter número nem código postal
+        # conhecido, e exigi-los impedia de marcar um atendimento que existe.
+        if not (cleaned_data.get("home_street") or "").strip():
+            self.add_error(
+                "home_street",
+                "Indique a rua: é para onde a profissional se desloca.",
+            )
 
     def resolve_schedule_override(self, cleaned_data):
         """Aceita o horário mesmo fora do funcionamento ou sobre um bloqueio.

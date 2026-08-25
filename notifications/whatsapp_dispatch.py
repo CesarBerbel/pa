@@ -139,10 +139,11 @@ def preview(appointment, event_type):
             destinatarios = resolve_recipients(regra, appointment)
             # A pré-visualização mostra o que a pessoa vai mesmo receber,
             # incluindo a língua.
+            lingua = audience_language(regra, appointment)
             texto = provider_module(regra).build_body(
                 regra,
-                build_context(appointment),
-                language=audience_language(regra, appointment),
+                build_context(appointment, lingua),
+                language=lingua,
             )
         except Exception as erro:
             logger.exception("Não foi possível pré-visualizar %s", regra)

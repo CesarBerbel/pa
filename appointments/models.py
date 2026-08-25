@@ -190,6 +190,21 @@ class Service(models.Model):
     def display_description(self):
         return get_localized_value(self.description, self.description_en)
 
+    def name_for_language(self, language):
+        """O nome do serviço na língua pedida, e não na da página.
+
+        `display_name` olha para a página onde alguém está, o que serve o site
+        e não serve as mensagens: uma confirmação em inglês é escrita a partir
+        da área interna, que está em português, e saía "Your appointment for
+        Pedicure terapêutica". A língua da mensagem é a da marcação, e é ela
+        que tem de ser pedida aqui.
+        """
+
+        if (language or "").lower().startswith("en") and self.name_en:
+            return self.name_en
+
+        return self.name
+
     def save(self, *args, **kwargs):
         # Service categories were added after the initial service model.
         # Assign a safe fallback category when legacy code/tests create a service
@@ -1152,6 +1167,96 @@ class Appointment(models.Model):
         verbose_name="Estado",
     )
 
+    # A língua desta marcação, e não a da pessoa.
+    #
+    # A língua da cliente é uma só e acompanha a última marcação: quem marcou
+    # em inglês e volta a marcar em português muda-a, e as mensagens das
+    # marcações antigas mudavam com ela. Aqui fica a desta, escrita quando ela
+    # foi feita — em /en/ nasce marcada — e a profissional pode marcá-la à mão
+    # por quem lhe telefona em inglês sem nunca ter passado pelo site.
+    customer_speaks_english = models.BooleanField(
+        default=False,
+        verbose_name="Cliente fala inglês",
+        help_text="As mensagens desta marcação saem em inglês.",
+    )
+
+    # Atendimento em casa da cliente.
+    #
+    # A morada vive na marcação e não no cliente de propósito: uma pessoa pode
+    # ser atendida em casa numa vez e na clínica na seguinte, ou em casa de um
+    # familiar de quem trata. O que interessa é onde é *este* atendimento.
+    is_home_visit = models.BooleanField(
+        default=False,
+        verbose_name="Atendimento em domicílio",
+        help_text="A profissional desloca-se a casa da cliente.",
+    )
+
+    # A morada em campos e não numa caixa de texto: escrita à mão, chegava
+    # "Rua das Flores 12" sem código postal nem localidade, e quem lá vai
+    # descobria-o à porta. Em campos, o que falta vê-se.
+    #
+    # Só a rua é obrigatória. Uma morada de aldeia pode não ter número nem
+    # código postal conhecido, e exigi-los impedia de marcar um atendimento
+    # que existe.
+    home_street = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name="Rua",
+        help_text="Obrigatória num atendimento em domicílio.",
+    )
+
+    home_number = models.CharField(
+        max_length=30,
+        blank=True,
+        verbose_name="Número",
+    )
+
+    home_floor = models.CharField(
+        max_length=60,
+        blank=True,
+        verbose_name="Andar ou fração",
+        help_text="3.º Dto, R/C esquerdo, Lote 4 — o que estiver na porta.",
+    )
+
+    home_postal_code = models.CharField(
+        max_length=20,
+        blank=True,
+        verbose_name="Código postal",
+    )
+
+    home_locality = models.CharField(
+        max_length=120,
+        blank=True,
+        verbose_name="Localidade",
+    )
+
+    home_municipality = models.CharField(
+        max_length=120,
+        blank=True,
+        verbose_name="Concelho",
+    )
+
+    home_district = models.CharField(
+        max_length=120,
+        blank=True,
+        verbose_name="Distrito",
+    )
+
+    home_country = models.CharField(
+        max_length=120,
+        blank=True,
+        verbose_name="País",
+    )
+
+    home_directions = models.TextField(
+        blank=True,
+        verbose_name="Como chegar",
+        help_text=(
+            "Opcional: andar, campainha, onde estacionar, um ponto de "
+            "referência — o que poupe uma chamada à porta do prédio."
+        ),
+    )
+
     notes = models.TextField(blank=True, verbose_name="Observações")
     cancellation_reason = models.TextField(
         blank=True,
@@ -1267,9 +1372,45 @@ class Appointment(models.Model):
             minutes=self.service.duration_minutes
         )
 
+    @property
+    def home_address(self):
+        """A morada numa linha, para quem a lê de fora.
+
+        As mensagens à cliente e os ecrãs querem a morada escrita, não oito
+        campos. Montá-la num sítio só evita que cada um a escreva à sua
+        maneira — e que um deles se esqueça do código postal.
+        """
+
+        rua = " ".join(parte for parte in [self.home_street, self.home_number] if parte)
+        localidade = " ".join(
+            parte for parte in [self.home_postal_code, self.home_locality] if parte
+        )
+
+        partes = [rua, self.home_floor, localidade, self.home_municipality]
+
+        # O concelho não se repete quando é o mesmo nome da localidade, que em
+        # Portugal é o caso mais comum: "3000-351 Coimbra, Coimbra".
+        if self.home_municipality and self.home_municipality == self.home_locality:
+            partes.remove(self.home_municipality)
+
+        return ", ".join(parte.strip() for parte in partes if parte.strip())
+
     def clean(self):
         # Keep model validation as a thin delegate to the domain availability policy.
         from appointments.availability import AvailabilityService
+
+        # Um domicílio sem morada é uma deslocação para lado nenhum, e a
+        # mensagem que sai à cliente diz que vamos ter com ela — a um sítio
+        # que ninguém escreveu. Fica aqui e não só no formulário para valer
+        # também no admin e em qualquer gravação feita por código.
+        if self.is_home_visit and not self.home_street.strip():
+            raise ValidationError(
+                {
+                    "home_street": (
+                        "Indique a rua: é para onde a profissional se desloca."
+                    )
+                }
+            )
 
         AvailabilityService.validate_appointment(self)
 

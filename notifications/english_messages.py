@@ -60,7 +60,11 @@ EMAIL_TEMPLATES_EN = {
             "Date: {{ appointment_date }}\n"
             "Time: {{ appointment_time }}\n"
             "Reference: {{ reference_code }}\n\n"
+            "{% if is_home_visit %}"
+            "This time we come to you, at {{ home_address }}.\n\n"
+            "{% else %}"
             f"Where: {MORADA_EN}\n\n"
+            "{% endif %}"
             "See the appointment details:\n{{ magic_link }}\n\n"
             "If you cannot come, please let us know in advance so the slot can "
             "go to someone else:\n{{ cancellation_link }}\n\n"
@@ -72,7 +76,12 @@ EMAIL_TEMPLATES_EN = {
             saudacao="Hello {{ customer_name }},",
             corpo="Your request is confirmed. We look forward to seeing you.",
             aviso=(
-                f"Where: {MORADA_EN}. If you cannot come, please let us know in "
+                "{% if is_home_visit %}"
+                "This time we come to you, at {{ home_address }}."
+                "{% else %}"
+                f"Where: {MORADA_EN}."
+                "{% endif %}"
+                " If you cannot come, please let us know in "
                 "advance so the slot can go to someone else."
             ),
             acao=("See the appointment", "{{ magic_link }}"),
@@ -88,7 +97,11 @@ EMAIL_TEMPLATES_EN = {
             "Date: {{ appointment_date }}\n"
             "Time: {{ appointment_time }}\n"
             "Reference: {{ reference_code }}\n\n"
+            "{% if is_home_visit %}"
+            "This time we come to you, at {{ home_address }}.\n\n"
+            "{% else %}"
             f"Where: {MORADA_EN}\n\n"
+            "{% endif %}"
             "See the appointment details:\n{{ magic_link }}\n\n"
             "If you need to change or cancel it, just reply to this email or "
             "use this link:\n{{ cancellation_link }}\n\n"
@@ -103,7 +116,12 @@ EMAIL_TEMPLATES_EN = {
                 "email as your confirmation."
             ),
             aviso=(
-                f"Where: {MORADA_EN}. To change or cancel, reply to this email "
+                "{% if is_home_visit %}"
+                "This time we come to you, at {{ home_address }}."
+                "{% else %}"
+                f"Where: {MORADA_EN}."
+                "{% endif %}"
+                " To change or cancel, reply to this email "
                 "or use the link below."
             ),
             acao=("See the appointment", "{{ magic_link }}"),
@@ -130,8 +148,7 @@ EMAIL_TEMPLATES_EN = {
             titulo="Appointment cancelled",
             saudacao="Hello {{ customer_name }},",
             corpo=(
-                "Your appointment has been cancelled and the slot is free "
-                "again."
+                "Your appointment has been cancelled and the slot is free " "again."
             ),
             aviso=(
                 "{% if cancellation_reason %}Reason: {{ cancellation_reason }}"
@@ -246,8 +263,12 @@ WHATSAPP_MESSAGES_EN = {
     ("appointment_confirmed", "customer"): (
         "Hello {{ customer_name }}, your request is confirmed: "
         "{{ service_name }} on {{ appointment_date }} at "
-        "{{ appointment_time }}. We will be waiting for you at "
-        f"{MORADA_EN}. "
+        "{{ appointment_time }}. "
+        "{% if is_home_visit %}"
+        "This time we come to you, at {{ home_address }}. "
+        "{% else %}"
+        f"We will be waiting for you at {MORADA_EN}. "
+        "{% endif %}"
         "Keep the reference {{ reference_code }}; at {{ appointment_link }} "
         "you can check or cancel the appointment. If you cannot come, please "
         "tell us in advance so the slot can go to someone else."
@@ -255,7 +276,12 @@ WHATSAPP_MESSAGES_EN = {
     ("appointment_confirmed_internal", "customer"): (
         "Hello {{ customer_name }}, your appointment for {{ service_name }} on "
         "{{ appointment_date }} at {{ appointment_time }} is booked, as we "
-        f"arranged. We will be waiting for you at {MORADA_EN}. "
+        "arranged. "
+        "{% if is_home_visit %}"
+        "This time we come to you, at {{ home_address }}. "
+        "{% else %}"
+        f"We will be waiting for you at {MORADA_EN}. "
+        "{% endif %}"
         "Keep the reference {{ reference_code }}; at {{ appointment_link }} "
         "you can check or cancel it if you need to."
     ),

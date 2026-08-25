@@ -226,7 +226,8 @@ def send_for_setting(appointment, setting, force=False):
             message=f"{setting}: nenhum número válido para enviar.",
         )
 
-    contexto = build_context(appointment)
+    lingua = audience_language(setting, appointment)
+    contexto = build_context(appointment, lingua)
     registos = []
     falhas = []
 
@@ -238,7 +239,7 @@ def send_for_setting(appointment, setting, force=False):
             setting,
             contexto,
             destinatario,
-            language=audience_language(setting, appointment),
+            language=lingua,
         )
 
         try:

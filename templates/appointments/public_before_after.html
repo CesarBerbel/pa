@@ -28,10 +28,17 @@
                 <article class="ba-case">
                     <h2 class="ba-case-title">{{ case.title }}</h2>
 
-                    <div class="ba-compare" style="--ba-position: 50%;">
+                    {% comment %} A direção da linha é escolhida caso a caso, no
+                       formulário: um pé fotografado ao comprido divide-se
+                       melhor de cima para baixo do que lado a lado. {% endcomment %}
+                    <div
+                        class="ba-compare{% if case.is_horizontal %} is-horizontal{% endif %}"
+                        style="--ba-position: 50%;"
+                    >
                         {% comment %} O "depois" é o fundo; o "antes" fica por cima, recortado
-                           da esquerda até à linha. Assim o lado esquerdo mostra
-                           sempre o antes e o direito o depois, que é como se lê. {% endcomment %}
+                           do princípio até à linha — da esquerda com a linha na
+                           vertical, de cima com ela na horizontal. Em ambos os
+                           casos o antes vem primeiro, que é como se lê. {% endcomment %}
                         {% comment %} Cada fotografia dentro da sua moldura. O recorte da
                            linha vive na moldura e não na imagem: a imagem leva
                            a aproximação, e uma imagem transformada arrastaria o

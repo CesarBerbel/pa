@@ -237,11 +237,9 @@ def send_for_setting(appointment, setting, force=False):
             message=f"{setting}: nenhum número válido para enviar.",
         )
 
-    texto = build_body(
-        setting,
-        build_context(appointment),
-        language=audience_language(setting, appointment),
-    )
+    lingua = audience_language(setting, appointment)
+
+    texto = build_body(setting, build_context(appointment, lingua), language=lingua)
 
     if not texto:
         return SendResult(

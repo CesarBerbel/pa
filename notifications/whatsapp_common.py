@@ -124,15 +124,30 @@ def audience_language(setting, appointment):
     if setting.audience != setting.AUDIENCE_CUSTOMER:
         return "pt-pt"
 
+    # A marcação vem primeiro: a língua guardada na cliente é a da última vez
+    # que ela marcou, e muda debaixo das marcações que já existem.
+    if getattr(appointment, "customer_speaks_english", False):
+        return "en"
+
     cliente = getattr(appointment, "customer", None)
 
     return getattr(cliente, "language", "") or "pt-pt"
 
-def build_context(appointment):
+
+def build_context(appointment, language=None):
+    """As variáveis da mensagem, já na língua em que ela vai ser escrita.
+
+    O nome do serviço está guardado na base de dados e não passa pelo gettext:
+    é aqui que se escolhe. Sem a língua, uma confirmação inglesa dizia "your
+    appointment for Pedicure terapêutica" — metade traduzida.
+
+    Fica a `None` — português — para os avisos à profissional.
+    """
+
     return {
         "customer_name": appointment.customer.full_name,
         "customer_phone": appointment.customer.phone,
-        "service_name": appointment.service.name,
+        "service_name": appointment.service.name_for_language(language),
         "appointment_date": appointment.date.strftime("%d/%m/%Y"),
         "appointment_time": appointment.start_time.strftime("%H:%M"),
         "reference_code": appointment.reference_code,
@@ -140,6 +155,8 @@ def build_context(appointment):
         "appointment_link": appointment_link(appointment.reference_code),
         "booking_link": booking_link(),
         "cancellation_reason": cancellation_reason(appointment),
+        "is_home_visit": appointment.is_home_visit,
+        "home_address": appointment.home_address.strip(),
     }
 
 
@@ -152,6 +169,8 @@ def get_sample_context():
         "appointment_time": "10:30",
         "reference_code": "AGD-EXEMPLO",
         "status": "Confirmada",
+        "is_home_visit": False,
+        "home_address": "",
         "appointment_link": appointment_link("AGD-EXEMPLO"),
         "booking_link": booking_link(),
         "cancellation_reason": "A cliente informou que não poderá comparecer.",

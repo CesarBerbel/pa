@@ -175,6 +175,19 @@
                 </div>
 
                 <div class="appointment-field">
+                    <span class="appointment-field-label">Idioma das mensagens</span>
+                    <strong>
+                        {% if appointment.customer_speaks_english %}
+                            <span class="badge bg-light text-dark border">
+                                <i class="bi bi-translate me-1" aria-hidden="true"></i>Inglês
+                            </span>
+                        {% else %}
+                            Português
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div class="appointment-field">
                     <span class="appointment-field-label">Encaixe fora do horário</span>
                     <strong>
                         {% if appointment.outside_schedule %}
@@ -185,6 +198,25 @@
                     </strong>
                 </div>
             </div>
+
+            {% if appointment.is_home_visit %}
+                {# Onde é o atendimento é a primeira coisa que se procura aqui #}
+                {# no dia: sem isto, a morada ficava guardada e invisível. #}
+                <div class="appointment-field mt-4">
+                    <span class="appointment-field-label">
+                        <i class="bi bi-house-door me-1" aria-hidden="true"></i>
+                        Atendimento em domicílio
+                    </span>
+                    <p class="mb-0">{{ appointment.home_address|linebreaksbr }}</p>
+                </div>
+
+                {% if appointment.home_directions %}
+                    <div class="appointment-field mt-3">
+                        <span class="appointment-field-label">Como chegar</span>
+                        <p class="mb-0">{{ appointment.home_directions|linebreaksbr }}</p>
+                    </div>
+                {% endif %}
+            {% endif %}
 
             {% if appointment.notes %}
                 <div class="appointment-field mt-4">

@@ -122,17 +122,30 @@ def booking_link():
     return build_full_url(reverse("appointments:public_visual_schedule"))
 
 
-def build_appointment_context(appointment):
-    """As variáveis que qualquer email sobre uma marcação tem à disposição."""
+def build_appointment_context(appointment, language=None):
+    """As variáveis que qualquer email sobre uma marcação tem à disposição.
+
+    A língua não é um pormenor do texto: o nome do serviço está guardado na
+    base de dados, não passa pelo gettext, e tem de ser escolhido aqui. Sem
+    isto, uma confirmação em inglês dizia "Your appointment for Pedicure
+    terapêutica" — metade traduzida.
+
+    Fica a `None` — português — para os avisos à profissional, que são sempre
+    em português mesmo quando a cliente fala inglês.
+    """
 
     return {
         "customer_name": appointment.customer.full_name,
         "customer_phone": appointment.customer.phone,
-        "service_name": appointment.service.name,
+        "service_name": appointment.service.name_for_language(language),
         "appointment_date": appointment.date.strftime("%d/%m/%Y"),
         "appointment_time": appointment.start_time.strftime("%H:%M"),
         "reference_code": appointment.reference_code,
         "booking_link": booking_link(),
+        # Onde é o atendimento. Só os factos: a frase que os envolve fica no
+        # modelo da mensagem, que é onde alguém a pode reescrever.
+        "is_home_visit": appointment.is_home_visit,
+        "home_address": appointment.home_address.strip(),
     }
 
 
@@ -209,7 +222,14 @@ def customer_language(appointment):
 
     Um único sítio a decidir isto: cada email que sai para a cliente passa
     por aqui, e os avisos à profissional não passam.
+
+    A marcação vem primeiro. A língua guardada na cliente é a da última vez
+    que ela marcou, e muda debaixo das marcações que já existem; a da marcação
+    é a de quando esta foi feita.
     """
+
+    if getattr(appointment, "customer_speaks_english", False):
+        return "en"
 
     cliente = getattr(appointment, "customer", None)
 
@@ -302,7 +322,7 @@ def send_appointment_confirmation_email(appointment):
     if not event_setting:
         return
 
-    context = build_appointment_context(appointment)
+    context = build_appointment_context(appointment, customer_language(appointment))
     context.update(
         {
             "cancellation_link": cancel_url,
@@ -357,7 +377,9 @@ def send_appointment_cancelled_email(appointment, cancellation_reason=""):
 
     context = {
         "customer_name": appointment.customer.full_name,
-        "service_name": appointment.service.name,
+        "service_name": appointment.service.name_for_language(
+            customer_language(appointment)
+        ),
         "appointment_date": appointment.date.strftime("%d/%m/%Y"),
         "appointment_time": appointment.start_time.strftime("%H:%M"),
         "reference_code": appointment.reference_code,
@@ -415,7 +437,7 @@ def send_appointment_completed_email(appointment):
     if not event_setting:
         return
 
-    context = build_appointment_context(appointment)
+    context = build_appointment_context(appointment, customer_language(appointment))
 
     fallback_body = (
         f"Olá {context['customer_name']},\n\n"
@@ -522,7 +544,7 @@ def send_service_followup_email(appointment, followup):
 
     link = generate_secure_link(appointment)
 
-    context = build_appointment_context(appointment)
+    context = build_appointment_context(appointment, customer_language(appointment))
     context.update(
         {
             "magic_link": build_full_url(link),

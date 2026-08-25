@@ -1,6 +1,7 @@
 """Os casos antes e depois: o que se carrega na área interna e o que se vê no site."""
 
 import os
+import re
 import shutil
 import tempfile
 from io import BytesIO
@@ -494,7 +495,7 @@ class BeforeAfterFramingTests(TestCase):
 
         # `data-ba-editor` aparece também no JavaScript que os procura; o
         # que conta são os dois blocos de marcação.
-        self.assertEqual(html.count('data-ba-editor data-side='), 2)
+        self.assertEqual(html.count("data-ba-editor data-side="), 2)
         self.assertIn('data-side="before"', html)
         self.assertIn('data-side="after"', html)
         self.assertIn('id="id_before_zoom"', html)
@@ -543,3 +544,101 @@ class BeforeAfterFramingTests(TestCase):
 
         caso.refresh_from_db()
         self.assertEqual(caso.before_zoom, 100)
+
+
+@override_settings(MEDIA_ROOT=MEDIA_DE_TESTE)
+class BeforeAfterRevealOrientationTests(TestCase):
+    """Por que lado se separam as duas fotografias.
+
+    A linha estava fixa na vertical, e nem todas as fotografias se leem assim:
+    um pé fotografado ao comprido divide-se melhor de cima para baixo. Quem
+    decide é a profissional, caso a caso — é do par de fotografias que
+    depende, tal como o enquadramento.
+    """
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(MEDIA_DE_TESTE, ignore_errors=True)
+        super().tearDownClass()
+
+    def setUp(self):
+        User = get_user_model()
+        User.objects.create_superuser(
+            email="admin@test.com", password="testpass123", full_name="Admin"
+        )
+        self.client.login(email="admin@test.com", password="testpass123")
+
+    def criar(self, **campos):
+        valores = {
+            "title": "Caso",
+            "before_image": imagem("antes.jpg", "red"),
+            "after_image": imagem("depois.jpg", "green"),
+        }
+        valores.update(campos)
+
+        return BeforeAfterCase.objects.create(**valores)
+
+    def comparador(self, html):
+        return re.search(r'<div\s+class="ba-compare[^"]*"', html).group(0)
+
+    def pagina(self):
+        return self.client.get(
+            reverse("appointments:public_before_after")
+        ).content.decode()
+
+    def test_a_new_case_keeps_the_line_upright(self):
+        # Quem não escolher nada fica com o que a página sempre teve.
+        caso = self.criar()
+
+        self.assertEqual(caso.reveal_orientation, BeforeAfterCase.REVEAL_VERTICAL)
+        self.assertFalse(caso.is_horizontal)
+
+    def test_the_upright_line_leaves_no_mark_on_the_page(self):
+        self.criar()
+
+        self.assertNotIn("is-horizontal", self.comparador(self.pagina()))
+
+    def test_the_chosen_direction_reaches_the_page(self):
+        self.criar(reveal_orientation=BeforeAfterCase.REVEAL_HORIZONTAL)
+
+        self.assertIn("is-horizontal", self.comparador(self.pagina()))
+
+    def test_each_case_keeps_its_own_direction(self):
+        # Sem isto, a escolha de um caso arrastava os outros atrás dela.
+        self.criar(title="De lado")
+        self.criar(
+            title="De cima",
+            reveal_orientation=BeforeAfterCase.REVEAL_HORIZONTAL,
+            display_order=1,
+        )
+
+        comparadores = re.findall(r'<div\s+class="ba-compare[^"]*"', self.pagina())
+
+        self.assertEqual(len(comparadores), 2)
+        self.assertEqual([("is-horizontal" in c) for c in comparadores], [False, True])
+
+    def test_the_professional_is_offered_the_two_directions(self):
+        html = self.client.get(
+            reverse("appointments:before_after_create")
+        ).content.decode()
+
+        self.assertIn('value="vertical"', html)
+        self.assertIn('value="horizontal"', html)
+
+    def test_the_professional_can_choose_when_creating_a_case(self):
+        self.client.post(
+            reverse("appointments:before_after_create"),
+            data={
+                "title": "Unha encravada",
+                "caption": "",
+                "before_image": imagem("antes.jpg", "red"),
+                "after_image": imagem("depois.jpg", "green"),
+                "reveal_orientation": BeforeAfterCase.REVEAL_HORIZONTAL,
+                "display_order": 0,
+                "is_active": "on",
+            },
+        )
+
+        caso = BeforeAfterCase.objects.get(title="Unha encravada")
+
+        self.assertTrue(caso.is_horizontal)

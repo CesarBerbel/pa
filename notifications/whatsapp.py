@@ -179,6 +179,10 @@ class WhatsAppAppointmentNotificationService:
 
     @staticmethod
     def build_context(appointment) -> dict[str, str]:
+        # O nome do serviço fica em português, ao contrário do que acontece nas
+        # outras mensagens: este caminho enche um modelo aprovado pela Meta, um
+        # só, e esse está escrito em português. Um nome inglês dentro de um
+        # texto português é pior do que os dois em português.
         return {
             "customer_name": appointment.customer.full_name,
             "service_name": appointment.service.name,

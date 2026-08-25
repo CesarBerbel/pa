@@ -11,6 +11,7 @@ from appointments.emails import (
     send_appointment_confirmation_email,
 )
 from appointments.audit_services import AppointmentAuditService
+from appointments.customer_services import current_language
 from appointments.models import Appointment, AppointmentLog, Service
 from notifications.models import EmailEventSetting, WhatsAppEventSetting
 from notifications.whatsapp_dispatch import notify as notify_whatsapp
@@ -89,6 +90,10 @@ class AppointmentService:
                     notes=notes or "",
                     created_by=created_by,
                     origin=origin,
+                    # A língua da página onde a marcação foi feita. Quem marcou
+                    # em /en/ recebe as mensagens desta marcação em inglês,
+                    # mesmo que mais tarde volte a marcar em português.
+                    customer_speaks_english=current_language() == "en",
                 )
 
                 AppointmentAuditService.log(

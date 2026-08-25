@@ -82,7 +82,12 @@ DEFAULT_MESSAGES = [
         "body_template": (
             "Olá {{ customer_name }}, o seu pedido está confirmado: "
             "{{ service_name }}, no dia {{ appointment_date }} às "
-            "{{ appointment_time }}. Esperamos por si na " + MORADA + ". "
+            "{{ appointment_time }}. "
+            "{% if is_home_visit %}"
+            "Desta vez somos nós a ir ter consigo, a {{ home_address }}. "
+            "{% else %}"
+            "Esperamos por si na " + MORADA + ". "
+            "{% endif %}"
             "Guarde a referência {{ reference_code }}; em "
             "{{ appointment_link }} pode consultar ou cancelar a marcação. Se "
             "não puder vir, avise-nos com antecedência — assim o horário fica "
@@ -113,9 +118,13 @@ DEFAULT_MESSAGES = [
         "body_template": (
             "Olá {{ customer_name }}, fica registada a sua marcação de "
             "{{ service_name }} para {{ appointment_date }} às "
-            "{{ appointment_time }}, como combinámos. Esperamos por si na "
-            + MORADA
-            + ". Guarde a referência {{ reference_code }}; em "
+            "{{ appointment_time }}, como combinámos. "
+            "{% if is_home_visit %}"
+            "Desta vez somos nós a ir ter consigo, a {{ home_address }}. "
+            "{% else %}"
+            "Esperamos por si na " + MORADA + ". "
+            "{% endif %}"
+            "Guarde a referência {{ reference_code }}; em "
             "{{ appointment_link }} pode consultar ou cancelar a marcação, se "
             "precisar."
         ),

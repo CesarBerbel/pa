@@ -201,6 +201,11 @@ GOOGLE_REVIEWS_LANGUAGE = config("GOOGLE_REVIEWS_LANGUAGE", default="pt-PT").str
 
 GOOGLE_REQUEST_TIMEOUT = config("GOOGLE_REQUEST_TIMEOUT", default=10, cast=int)
 
+# Onde a clínica se desloca. As moradas sugeridas no formulário da marcação
+# ficam-se por aqui: uma lista com moradas do outro lado do mundo só
+# atrapalha quem escreve. Duas letras, no formato da norma ISO 3166-1.
+HOME_VISIT_REGION_CODE = config("HOME_VISIT_REGION_CODE", default="PT").strip().upper()
+
 
 # =============================================================================
 # Instagram

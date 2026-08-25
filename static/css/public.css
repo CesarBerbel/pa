@@ -5547,6 +5547,74 @@ textarea.form-control {
     cursor: ew-resize;
 }
 
+/* =========================
+   Comparação de cima para baixo
+
+   A escolha é da profissional, caso a caso: um pé fotografado ao comprido
+   divide-se melhor assim do que lado a lado. `--ba-position` continua a
+   querer dizer o mesmo — quanto do "antes" se vê, contado do princípio —,
+   por isso o JavaScript é o mesmo nas duas direções.
+   ========================= */
+
+.ba-compare.is-horizontal {
+    /* O arrasto passa a ser vertical, e quem o recebe é o comparador. Quem
+       estiver a percorrer a página desvia-se pelas margens, como em qualquer
+       controlo que se arrasta na mesma direção em que a página corre. */
+    touch-action: pan-x;
+}
+
+/* O recorte do "antes": de cima até à linha. */
+.ba-compare.is-horizontal .ba-frame-before {
+    clip-path: inset(0 0 calc(100% - var(--ba-position)) 0);
+}
+
+.ba-compare.is-horizontal .ba-line {
+    top: var(--ba-position);
+    right: 0;
+    bottom: auto;
+    left: 0;
+    width: auto;
+    height: 2px;
+    margin-top: -1px;
+    margin-left: 0;
+}
+
+/* O punho é um círculo: rodá-lo não se nota, e as setas lá dentro passam a
+   apontar para cima e para baixo — que é para onde se arrasta. */
+.ba-compare.is-horizontal .ba-grip {
+    transform: translate(-50%, -50%) rotate(90deg);
+}
+
+/* O "depois" está por baixo da linha, e o rótulo vai com ele. */
+.ba-compare.is-horizontal .ba-tag-after {
+    top: auto;
+    right: auto;
+    bottom: 14px;
+    left: 14px;
+}
+
+/* É `writing-mode` que faz um <input type="range"> correr de cima para baixo,
+   com o mínimo em cima. Não lhe mexe na caixa: continua a cobrir o comparador
+   todo, o punho continua invisível e as setas do teclado continuam a andar
+   com a linha.
+
+   Deliberadamente sem `appearance: slider-vertical`, que era como isto se
+   fazia antes: repõe o desenho nativo do controlo, e o carril e o punho do
+   sistema apareciam por cima das fotografias. Num browser velho de mais para
+   `writing-mode`, o arrasto fica para os lados — a linha continua a andar. */
+.ba-compare.is-horizontal .ba-range {
+    writing-mode: vertical-lr;
+    cursor: ns-resize;
+}
+
+.ba-compare.is-horizontal .ba-range::-webkit-slider-thumb {
+    cursor: ns-resize;
+}
+
+.ba-compare.is-horizontal .ba-range::-moz-range-thumb {
+    cursor: ns-resize;
+}
+
 .ba-caption {
     color: #6b6b6b;
     font-size: 0.94rem;
@@ -6219,6 +6287,62 @@ textarea.form-control {
     content: "•";
     margin-right: 8px;
     color: #a9707b;
+}
+
+/* A lista de moradas sugeridas, no formulário da marcação. Solta por cima do
+   que vem a seguir: empurrar o formulário para baixo a cada tecla escrita fazia
+   a página saltar debaixo de quem escreve. */
+.address-suggestions {
+    position: absolute;
+    z-index: 5;
+    width: 100%;
+    max-width: 640px;
+    margin: 4px 0 0;
+    padding: 6px;
+    list-style: none;
+    background: #ffffff;
+    border: 1px solid #f1d5db;
+    border-radius: 16px;
+    box-shadow: 0 18px 40px rgba(139, 94, 102, 0.14);
+}
+
+[data-address-search] {
+    position: relative;
+}
+
+.address-suggestion {
+    display: block;
+    width: 100%;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+}
+
+.address-suggestion strong {
+    display: block;
+    color: #2b2b2b;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.address-suggestion span {
+    display: block;
+    color: #6b6b6b;
+    font-size: 0.82rem;
+}
+
+@media (hover: hover) {
+    .address-suggestion:hover {
+        background: #fff5f6;
+    }
+}
+
+.address-suggestion:focus-visible {
+    outline: 2px solid #8b5e66;
+    outline-offset: -2px;
 }
 
 /* O convite a escolher, antes de haver horários para mostrar. */

@@ -86,6 +86,11 @@ class EmailTemplateService:
             "customer_phone": "+351910000000",
             "internal_link": f"{settings.SITE_URL}/marcacoes/1/",
             "days_after": 15,
+            # A pré-visualização mostra o atendimento na clínica, que é
+            # o caso comum. O texto do domicílio vê-se na janela que
+            # pergunta se a cliente é avisada, com a marcação à frente.
+            "is_home_visit": False,
+            "home_address": "",
         }
 
 

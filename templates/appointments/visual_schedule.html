@@ -208,8 +208,26 @@
                                             {% endif %}
 
                                             {% if slot.appointment.status == "confirmed" %}
-                                                <form method="post" action="{% url 'appointments:appointment_complete' slot.appointment.pk %}">
+                                                {# Concluir aqui passa pela mesma janela do ecrã de #}
+                                                {# detalhe: quem conclui vê o que a cliente vai     #}
+                                                {# receber antes de decidir se recebe. Sem ela, o   #}
+                                                {# atendimento fechava daqui sem mensagem nenhuma,  #}
+                                                {# porque `send_message` ia sempre vazio.           #}
+                                                <form
+                                                    method="post"
+                                                    action="{% url 'appointments:appointment_complete' slot.appointment.pk %}"
+                                                    data-ask-send-message
+                                                    data-send-field="send_message"
+                                                    data-preview-url="{% url 'appointments:appointment_message_preview' slot.appointment.pk %}"
+                                                    data-preview-action="complete"
+                                                    data-choice-title="Enviar a mensagem de fim de atendimento a {{ slot.appointment.customer.full_name }}?"
+                                                    data-choice-text="O atendimento fica concluído de qualquer forma. Se este serviço tiver mensagens próprias para o fim do atendimento, são essas que saem; se não tiver, sai o agradecimento comum."
+                                                    data-choice-yes="Concluir e enviar"
+                                                    data-choice-no="Concluir sem enviar"
+                                                >
                                                     {% csrf_token %}
+                                                    <input type="hidden" name="send_message" value="">
+
                                                     <button type="submit" class="btn btn-sm btn-outline-dark">
                                                         Concluir
                                                     </button>
@@ -388,5 +406,7 @@
     {% endif %}
 
 </section>
+
+{% include "appointments/_send_message_choice.html" %}
 
 {% endblock %}

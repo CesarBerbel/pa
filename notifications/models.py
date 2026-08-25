@@ -495,9 +495,20 @@ class WhatsAppEventSetting(models.Model):
     def for_language(self, language):
         """O texto livre e o modelo aprovado na língua pedida.
 
-        Devolve sempre alguma coisa: sem versão inglesa configurada, o
-        português. Uma mensagem na língua errada continua a avisar a pessoa;
-        uma mensagem por enviar não avisa ninguém.
+        O texto cai para o português quando não há inglês escrito: uma
+        mensagem na língua errada continua a avisar a pessoa, e uma mensagem
+        por enviar não avisa ninguém.
+
+        **O modelo aprovado não cai.** Um modelo aprovado em português é texto
+        português: mandá-lo a quem fala inglês não é um recurso, é a mensagem
+        errada com a aparência de estar tudo bem. Sem inglês aprovado sai o
+        texto livre em inglês, e é por isso que já não é preciso um Content SID
+        para falar inglês com alguém.
+
+        O que isso custa está dito em `twilio_whatsapp.build_payload`: texto
+        livre só chega dentro das 24 horas seguintes a uma mensagem da cliente.
+        Pelo número da clínica (Baileys) não há essa regra nem modelos
+        aprovados, e o inglês sai sempre.
         """
 
         ingles = (language or "").lower().startswith("en")
@@ -507,7 +518,7 @@ class WhatsAppEventSetting(models.Model):
 
         return {
             "body": self.body_template_en or self.body_template,
-            "content_sid": self.content_sid_en or self.content_sid,
+            "content_sid": self.content_sid_en,
         }
 
     def clean(self):
@@ -907,6 +918,14 @@ class BeforeAfterCase(models.Model):
     pessoa mudar de ideias.
     """
 
+    REVEAL_VERTICAL = "vertical"
+    REVEAL_HORIZONTAL = "horizontal"
+
+    REVEAL_CHOICES = [
+        (REVEAL_VERTICAL, "Vertical — antes à esquerda, arrasta-se para os lados"),
+        (REVEAL_HORIZONTAL, "Horizontal — antes em cima, arrasta-se para baixo"),
+    ]
+
     title = models.CharField(
         "Título da foto",
         max_length=140,
@@ -976,6 +995,23 @@ class BeforeAfterCase(models.Model):
         validators=[MaxValueValidator(100)],
     )
 
+    # Por que lado se separam as duas fotografias.
+    #
+    # A linha estava fixa na vertical, e nem todas as fotografias se leem bem
+    # assim: um pé fotografado ao comprido divide-se melhor de cima para
+    # baixo, e a comparação lado a lado corta-o ao meio. Fica por caso, como
+    # já ficava o enquadramento, porque é do par de fotografias que depende.
+    reveal_orientation = models.CharField(
+        "Barra de comparação",
+        max_length=10,
+        choices=REVEAL_CHOICES,
+        default=REVEAL_VERTICAL,
+        help_text=(
+            "Por onde a linha separa as duas fotografias. Escolha a direção "
+            "que atravessa o que mudou."
+        ),
+    )
+
     display_order = models.PositiveIntegerField(
         "Ordem",
         default=0,
@@ -1008,6 +1044,12 @@ class BeforeAfterCase(models.Model):
             "x": f"{getattr(self, f'{lado}_focus_x')}%",
             "y": f"{getattr(self, f'{lado}_focus_y')}%",
         }
+
+    @property
+    def is_horizontal(self):
+        """A comparação faz-se de cima para baixo, e não lado a lado."""
+
+        return self.reveal_orientation == self.REVEAL_HORIZONTAL
 
     @property
     def before_style(self):
