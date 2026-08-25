@@ -223,11 +223,34 @@ fi
 
 # Só passa a definitivo depois de o conteúdo ser validado: um ficheiro
 # truncado com o nome certo é pior do que não ter cópia nenhuma.
-if ! pg_restore --list "$PARCIAL" > /dev/null 2>&1; then
-    if ! compose exec -T db pg_restore --list /dev/stdin < "$PARCIAL" > /dev/null 2>&1; then
-        rm -f "$PARCIAL"
-        erro "a cópia gerada não é um dump válido; foi descartada"
+#
+# Quando há pg_restore no anfitrião, valida-se logo aqui. Quando não há — que é
+# o caso deste servidor — a validação tem de ir para dentro do contentor, e aí
+# o ficheiro é COPIADO em vez de entregue por stdin: o `compose exec -T` não é
+# transparente para dados binários e entregava o dump truncado (147 KB de um
+# ficheiro de 149 KB), o que fazia esta validação recusar cópias que estavam
+# boas — e apagá-las.
+validar_dump() {
+    local ficheiro="$1"
+
+    if command -v pg_restore > /dev/null 2>&1; then
+        pg_restore --list "$ficheiro" > /dev/null 2>&1
+        return $?
     fi
+
+    local dentro="/tmp/validar_$$.dump"
+    local resultado=0
+
+    compose cp "$ficheiro" "db:$dentro" > /dev/null 2>&1 || return 1
+    compose exec -T db pg_restore --list "$dentro" > /dev/null 2>&1 || resultado=1
+    compose exec -T db rm -f "$dentro" > /dev/null 2>&1 || true
+
+    return "$resultado"
+}
+
+if ! validar_dump "$PARCIAL"; then
+    rm -f "$PARCIAL"
+    erro "a cópia gerada não é um dump válido; foi descartada"
 fi
 
 mv "$PARCIAL" "$DESTINO"
