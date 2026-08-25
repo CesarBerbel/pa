@@ -16,6 +16,11 @@ from .views import (
     BusinessHourDeleteView,
     BusinessHourCreateView,
     CustomerCreateView,
+    PatientRecordCreateView,
+    ReturnVisitCreateView,
+    ReturnVisitDismissView,
+    ReturnVisitListView,
+    PatientRecordIndexView,
     PatientRecordUpdateView,
     CustomerListView,
     DailyAgendaView,
@@ -165,6 +170,31 @@ urlpatterns = [
         "clientes/<int:pk>/editar/",
         CustomerUpdateView.as_view(),
         name="customer_update",
+    ),
+    path(
+        "retornos/",
+        ReturnVisitListView.as_view(),
+        name="return_visit_list",
+    ),
+    path(
+        "clientes/<int:pk>/retorno/",
+        ReturnVisitCreateView.as_view(),
+        name="return_visit_create",
+    ),
+    path(
+        "retornos/<int:pk>/dispensar/",
+        ReturnVisitDismissView.as_view(),
+        name="return_visit_dismiss",
+    ),
+    path(
+        "anamnese/",
+        PatientRecordIndexView.as_view(),
+        name="patient_record_index",
+    ),
+    path(
+        "clientes/<int:pk>/anamnese/criar/",
+        PatientRecordCreateView.as_view(),
+        name="patient_record_create",
     ),
     path(
         "clientes/<int:pk>/anamnese/",

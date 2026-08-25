@@ -24,6 +24,15 @@
                     {% endif %}
                 </h1>
 
+                {% if retorno %}
+                    <div class="alert alert-info small">
+                        <i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i>
+                        Retorno de <strong>{{ retorno.customer.full_name }}</strong>,
+                        previsto para {{ retorno.target_date|date:"d/m/Y" }}.
+                        Ao gravar, o retorno fica dado como marcado.
+                    </div>
+                {% endif %}
+
                 <form
                     method="post"
                     novalidate

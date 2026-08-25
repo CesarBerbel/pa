@@ -8,7 +8,131 @@
 {% block meta_robots %}noindex,nofollow{% endblock %}
 
 {% block content %}
-<div class="anamnesis-page">
+<div class="anamnesis-page anamnesis-with-list" data-anamnesis-page>
+
+    {% comment %}
+        A lista das clientes e a ficha, lado a lado: escolhe-se uma pessoa e a
+        ficha dela abre ao lado, sem passar pela lista de clientes e voltar.
+
+        A lista recolhe-se para a lateral com o botão, e fica recolhida — numa
+        mesa de trabalho, o que interessa é a ficha, e reabri-la a cada cliente
+        seria uma escolha por fazer outra vez a cada clique.
+    {% endcomment %}
+    <aside class="anamnesis-people" data-anamnesis-people>
+        <div class="anamnesis-people-head">
+            <span class="luxury-eyebrow">Clientes</span>
+
+            <button
+                type="button"
+                class="anamnesis-people-toggle"
+                data-anamnesis-toggle
+                aria-expanded="true"
+                aria-controls="anamnesis-people-body"
+                title="Esconder a lista"
+            >
+                <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                <span class="visually-hidden">Esconder ou mostrar a lista de clientes</span>
+            </button>
+        </div>
+
+        <div class="anamnesis-people-body" id="anamnesis-people-body">
+            {# A lista é toda: quem procura por nome escreve, quem passa os #}
+            {# olhos percorre-a. Duzentos nomes sem procura não se usam. #}
+            <input
+                type="search"
+                class="form-control form-control-sm anamnesis-people-search"
+                placeholder="Procurar pelo nome…"
+                aria-label="Procurar cliente pelo nome"
+                data-anamnesis-search
+            >
+
+            <ul class="anamnesis-people-list" data-anamnesis-list>
+                {% for pessoa in customers %}
+                    <li>
+                        <a
+                            class="anamnesis-person {% if customer and customer.pk == pessoa.pk %}is-open{% endif %} {% if not pessoa.patient_record %}has-no-record{% endif %}"
+                            href="{% url 'appointments:patient_record' pessoa.pk %}"
+                            data-name="{{ pessoa.full_name }}"
+                            {% if not pessoa.patient_record %}title="Ainda sem ficha de anamnese"{% endif %}
+                        >
+                            <span class="anamnesis-person-name">{{ pessoa.full_name }}</span>
+
+                            {% if pessoa.patient_record.risk_alerts %}
+                                {# Quem tem alerta clínico vê-se antes de abrir #}
+                                {# a ficha: é o que muda o atendimento. #}
+                                <span class="anamnesis-person-alert" title="Tem alertas na ficha">
+                                    <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                                </span>
+                            {% endif %}
+                        </a>
+                    </li>
+                {% empty %}
+                    <li class="anamnesis-people-empty">Ainda não há clientes registados.</li>
+                {% endfor %}
+            </ul>
+
+            <p class="anamnesis-people-none" data-anamnesis-none hidden>
+                Nenhum nome encontrado.
+            </p>
+        </div>
+    </aside>
+
+    <div class="anamnesis-record">
+
+    {% if not customer %}
+        {# O menu tem de abrir alguma coisa, e abrir a ficha da primeira da #}
+        {# lista seria mostrar dados de saúde de alguém que ninguém pediu. #}
+        <div class="app-empty-state">
+            <div class="app-empty-icon">
+                <i class="bi bi-person-vcard"></i>
+            </div>
+
+            <h3>Escolha uma cliente</h3>
+
+            <p>A ficha de anamnese abre aqui, para preencher ou corrigir.</p>
+        </div>
+    {% elif record_missing %}
+        {# Sem ficha, o que aparece é o botão que a cria — e não um #}
+        {# formulário vazio que a criava só por alguém ter passado por aqui. #}
+        <div class="anamnesis-header">
+            <div>
+                <span class="luxury-eyebrow">Ficha de anamnese</span>
+                <h1 class="h4 mt-2 mb-0">{{ customer.full_name }}</h1>
+                <small class="text-muted">
+                    {{ customer.phone }}
+                    {% if customer.email %} · {{ customer.email }}{% endif %}
+                </small>
+            </div>
+
+            <a href="{% url 'appointments:customer_list' %}" class="btn btn-outline-secondary">
+                Voltar
+            </a>
+        </div>
+
+        <div class="app-empty-state">
+            <div class="app-empty-icon">
+                <i class="bi bi-clipboard2-plus"></i>
+            </div>
+
+            <h3>{{ customer.full_name }} ainda não tem ficha</h3>
+
+            <p>
+                A ficha guarda antecedentes, medicação e avaliação clínica.
+                Criá-la abre o formulário para preencher agora ou mais tarde.
+            </p>
+
+            {# POST porque cria um registo de dados de saúde: uma ficha não #}
+            {# deve nascer de uma ligação que um browser adiantou sozinho. #}
+            <form method="post" action="{% url 'appointments:patient_record_create' customer.pk %}">
+                {% csrf_token %}
+
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-clipboard2-plus me-1" aria-hidden="true"></i>
+                    Criar ficha de anamnese
+                </button>
+            </form>
+        </div>
+    {% else %}
 
     <div class="anamnesis-header">
         <div>
@@ -132,6 +256,36 @@
         </div>
     </form>
 
+    {% if record_logs %}
+        <div class="card shadow-sm border-0 mt-4">
+            <div class="card-body p-4">
+                <h2 class="h6 text-uppercase text-muted mb-3">Histórico de alterações</h2>
+
+                <p class="text-muted small">
+                    Registo de quem alterou o quê, para garantir a integridade
+                    da informação clínica.
+                </p>
+
+                {% for registo in record_logs %}
+                    <div class="clinical-note-entry">
+                        <div class="small text-muted">
+                            {{ registo.created_at|date:"d/m/Y H:i" }}
+                            ·
+                            {{ registo.performed_by.full_name|default:registo.performed_by.email|default:"—" }}
+                        </div>
+
+                        <pre class="clinical-log-changes">{{ registo.description }}</pre>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    {% endif %}
+
+    {# As consultas anteriores são das marcações e não da ficha: quem #}
+    {# ainda não tem ficha pode já ter sido atendida, e esconder-lhe as #}
+    {# visitas seria esconder o que interessa antes de a criar. #}
     {% if clinical_notes %}
         <div class="card shadow-sm border-0 mt-4">
             <div class="card-body p-4">
@@ -161,30 +315,79 @@
         </div>
     {% endif %}
 
-    {% if record_logs %}
-        <div class="card shadow-sm border-0 mt-4">
-            <div class="card-body p-4">
-                <h2 class="h6 text-uppercase text-muted mb-3">Histórico de alterações</h2>
-
-                <p class="text-muted small">
-                    Registo de quem alterou o quê, para garantir a integridade
-                    da informação clínica.
-                </p>
-
-                {% for registo in record_logs %}
-                    <div class="clinical-note-entry">
-                        <div class="small text-muted">
-                            {{ registo.created_at|date:"d/m/Y H:i" }}
-                            ·
-                            {{ registo.performed_by.full_name|default:registo.performed_by.email|default:"—" }}
-                        </div>
-
-                        <pre class="clinical-log-changes">{{ registo.description }}</pre>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
-    {% endif %}
-
+    </div>
 </div>
+
+<script>
+    (function () {
+        var pagina = document.querySelector("[data-anamnesis-page]");
+
+        if (!pagina) {
+            return;
+        }
+
+        var botao = pagina.querySelector("[data-anamnesis-toggle]");
+        var procura = pagina.querySelector("[data-anamnesis-search]");
+        var lista = pagina.querySelector("[data-anamnesis-list]");
+        var vazio = pagina.querySelector("[data-anamnesis-none]");
+        var GUARDADO = "anamnese-lista-recolhida";
+
+        function aplicar(recolhida) {
+            pagina.classList.toggle("is-collapsed", recolhida);
+
+            if (botao) {
+                botao.setAttribute("aria-expanded", recolhida ? "false" : "true");
+                botao.title = recolhida ? "Mostrar a lista" : "Esconder a lista";
+            }
+        }
+
+        // A escolha fica guardada: recolher a lista a cada cliente aberta
+        // seria fazer a mesma escolha a cada clique.
+        try {
+            aplicar(window.localStorage.getItem(GUARDADO) === "1");
+        } catch (erro) {
+            aplicar(false);
+        }
+
+        if (botao) {
+            botao.addEventListener("click", function () {
+                var recolhida = !pagina.classList.contains("is-collapsed");
+
+                aplicar(recolhida);
+
+                try {
+                    window.localStorage.setItem(GUARDADO, recolhida ? "1" : "0");
+                } catch (erro) {
+                    // Um browser sem armazenamento não impede o botão de
+                    // funcionar; só não se lembra da escolha.
+                }
+            });
+        }
+
+        if (procura && lista) {
+            procura.addEventListener("input", function () {
+                var texto = procura.value.trim().toLowerCase();
+                var encontrados = 0;
+
+                Array.prototype.forEach.call(
+                    lista.querySelectorAll(".anamnesis-person"),
+                    function (pessoa) {
+                        var nome = (pessoa.dataset.name || "").toLowerCase();
+                        var mostra = !texto || nome.indexOf(texto) !== -1;
+
+                        pessoa.parentNode.hidden = !mostra;
+
+                        if (mostra) {
+                            encontrados += 1;
+                        }
+                    }
+                );
+
+                if (vazio) {
+                    vazio.hidden = encontrados > 0;
+                }
+            });
+        }
+    })();
+</script>
 {% endblock %}

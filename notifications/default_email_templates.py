@@ -409,6 +409,80 @@ DEFAULT_EMAIL_TEMPLATES = [
     # mensagem de serviço
     # ------------------------------------------------------------------
     {
+        # O lembrete da véspera. Não pede resposta nenhuma: quem vai, vai; e
+        # quem não pode, tem ali a ligação para libertar a vaga a tempo, que é
+        # o que esta mensagem existe para conseguir.
+        "key": "appointment_reminder",
+        "name": "Lembrete da marcação",
+        "event_type": "appointment_reminder",
+        "audience": "customer",
+        "subject": "Lembrete: {{ appointment_date }} às {{ appointment_time }}",
+        "body_text": (
+            "Olá {{ customer_name }},\n\n"
+            "É já: {{ service_name }} no dia {{ appointment_date }} às "
+            "{{ appointment_time }}.\n\n"
+            "{% if is_home_visit %}"
+            "Vamos ter consigo a {{ home_address }}.\n\n"
+            "{% else %}"
+            f"Onde: {MORADA}\n\n"
+            "{% endif %}"
+            "Se não puder vir, avise-nos com antecedência para o horário ficar "
+            "livre para outra pessoa:\n{{ cancellation_link }}\n\n"
+            "Até já,\n"
+            f"{RODAPE_TEXTO}"
+        ),
+        "body_html": _html(
+            titulo="Lembrete da sua marcação",
+            saudacao="Olá {{ customer_name }},",
+            corpo=(
+                "É já: {{ service_name }} no dia e hora abaixo. "
+                "{% if is_home_visit %}"
+                "Vamos ter consigo a {{ home_address }}."
+                "{% else %}"
+                f"Esperamos por si na {MORADA}."
+                "{% endif %}"
+            ),
+            acao=("Ver a minha marcação", "{{ magic_link }}"),
+            aviso=(
+                "Se não puder vir, "
+                '<a href="{{ cancellation_link }}" style="color:#8b5e66;">'
+                "avise-nos com antecedência</a> — assim o horário fica livre "
+                "para outra pessoa."
+            ),
+        ),
+    },
+    {
+        # A única mensagem desta casa que fala de uma marcação que ainda não
+        # existe: convida a fazê-la. Por isso não leva código nem ligação para
+        # a marcação — leva a ligação para marcar.
+        "key": "return_due",
+        "name": "Está na altura de voltar",
+        "event_type": "return_due",
+        "audience": "customer",
+        "subject": "{{ customer_name }}, está na altura de voltar",
+        "body_text": (
+            "Olá {{ customer_name }},\n\n"
+            "Da última vez ficou combinado voltar por esta altura, para "
+            "{{ service_name }}.\n\n"
+            "Escolha o horário que lhe der melhor jeito:\n{{ booking_link }}\n\n"
+            "Se preferir, responda a este email e combinamos por aqui.\n\n"
+            "Com os melhores cumprimentos,\n"
+            f"{RODAPE_TEXTO}"
+        ),
+        "body_html": _html(
+            titulo="Está na altura de voltar",
+            saudacao="Olá {{ customer_name }},",
+            corpo=(
+                "Da última vez ficou combinado voltar por esta altura, para "
+                "{{ service_name }}. Escolha o horário que lhe der melhor jeito."
+            ),
+            acao=("Escolher horário", "{{ booking_link }}"),
+            aviso=(
+                "Se preferir, responda a este email e combinamos por aqui."
+            ),
+        ),
+    },
+    {
         "key": "service_followup",
         "name": "Seguimento alguns dias depois (por serviço)",
         "event_type": None,

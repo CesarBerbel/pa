@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% load assets crispy_forms_tags %}
+
+{% block title %}Remarcação | Priscila Arantes PA{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-6">
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-2">Remarcação</h1>
+
+                <p class="text-muted mb-4">
+                    Mude o serviço, o dia, a hora ou o estado desta marcação.
+                    Para marcar outra pessoa, faça uma marcação nova.
+                </p>
+
+                {% comment %}
+                    A cliente aparece, mas apagada e sem forma de ser trocada.
+                    Trocá-la seria transformar a marcação de uma pessoa na
+                    marcação de outra, e o histórico ficava a dizer que a
+                    primeira tinha sido atendida.
+
+                    Os campos estão `disabled` de propósito e não `readonly`:
+                    um campo desativado nem sequer é submetido, e assim não há
+                    nada a fingir que veio do formulário.
+                {% endcomment %}
+                <fieldset class="reschedule-customer mb-4" disabled>
+                    <legend class="form-label">Cliente</legend>
+
+                    <div class="mb-2">
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="{{ object.customer.full_name }}"
+                            aria-label="Cliente desta marcação"
+                        >
+                    </div>
+
+                    <div class="row g-2">
+                        <div class="col-12 col-sm-6">
+                            <input
+                                type="text"
+                                class="form-control"
+                                value="{{ object.customer.phone }}"
+                                aria-label="Telefone da cliente"
+                            >
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <input
+                                type="text"
+                                class="form-control"
+                                value="{{ object.customer.email|default:'Sem email' }}"
+                                aria-label="Email da cliente"
+                            >
+                        </div>
+                    </div>
+                </fieldset>
+
+                <form method="post" novalidate id="appointment-form">
+                    {% csrf_token %}
+
+                    {{ form.non_field_errors }}
+
+                    {{ form.service|as_crispy_field }}
+                    {{ form.date|as_crispy_field }}
+                    {{ form.start_time|as_crispy_field }}
+                    {{ form.status|as_crispy_field }}
+
+                    {% if object.is_home_visit %}
+                        {# A morada não se muda aqui, mas quem remarca precisa #}
+                        {# de a ver: um domicílio noutro dia continua a ser um #}
+                        {# domicílio, e a deslocação conta para o horário. #}
+                        <div class="alert alert-info small">
+                            <i class="bi bi-house-door me-1" aria-hidden="true"></i>
+                            <strong>Atendimento em domicílio:</strong>
+                            {{ object.home_address }}
+                        </div>
+                    {% endif %}
+
+                    <div class="d-flex gap-2 mt-3">
+                        <button type="submit" class="btn btn-primary">
+                            Remarcar
+                        </button>
+
+                        <a href="{% url 'appointments:appointment_detail' object.pk %}" class="btn btn-outline-secondary">
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

@@ -2,7 +2,13 @@ from django.contrib import messages
 from appointments.mixins import ClinicalAccessRequiredMixin, InternalAreaRequiredMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
-from django.views.generic import CreateView, ListView, TemplateView, UpdateView
+from django.views.generic import (
+    CreateView,
+    ListView,
+    TemplateView,
+    UpdateView,
+    View,
+)
 
 from appointments.clinical_services import log_patient_record_change
 from appointments.forms import CustomerForm, PatientRecordForm
@@ -22,11 +28,65 @@ class CustomerListView(InternalAreaRequiredMixin, ListView):
         return super().get_queryset().select_related("patient_record")
 
 
+class PatientRecordIndexView(ClinicalAccessRequiredMixin, TemplateView):
+    """A anamnese sem cliente escolhida: a lista, à espera de um clique.
+
+    O menu tem de abrir alguma coisa, e abrir a ficha da primeira cliente da
+    lista seria escolher por quem entrou — e mostrar dados de saúde de alguém
+    que ninguém pediu para ver.
+    """
+
+    template_name = "appointments/patient_record_form.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context["customers"] = patient_record_sidebar()
+
+        return context
+
+
+def patient_record_sidebar():
+    """As clientes da lista lateral, com o que ela mostra de cada uma.
+
+    `select_related` porque a lista assinala quem tem ficha e quem não tem: sem
+    isso, era uma consulta por cliente só para desenhar a barra do lado.
+    """
+
+    return Customer.objects.select_related("patient_record").order_by("full_name")
+
+
+class PatientRecordCreateView(ClinicalAccessRequiredMixin, View):
+    """Abre a ficha de anamnese de uma cliente que ainda não tem nenhuma.
+
+    É POST e não uma ligação porque cria um registo de dados de saúde: uma
+    ficha não deve nascer por alguém ter passado o rato por cima de um link,
+    nem por um browser ter adiantado a página.
+    """
+
+    def post(self, request, pk):
+        customer = get_object_or_404(Customer, pk=pk)
+
+        _record, criada = PatientRecord.objects.get_or_create(customer=customer)
+
+        if criada:
+            messages.success(
+                request,
+                f"Ficha de anamnese criada para {customer.full_name}.",
+            )
+
+        return redirect("appointments:patient_record", pk=customer.pk)
+
+
 class PatientRecordUpdateView(ClinicalAccessRequiredMixin, UpdateView):
     """Ficha de anamnese de uma cliente.
 
-    Contém dados de saúde e vive apenas na área interna. A ficha é criada na
-    primeira abertura, para não obrigar a um passo separado de "criar ficha".
+    Contém dados de saúde e vive apenas na área interna.
+
+    A ficha já não nasce ao abrir a página. Nascia, e o resultado era que toda
+    a gente tinha ficha: bastava alguém ter carregado no ícone uma vez para
+    ficar um registo clínico vazio, indistinguível de uma ficha por preencher.
+    Quem não tem ficha vê o botão que a cria.
     """
 
     model = PatientRecord
@@ -37,11 +97,37 @@ class PatientRecordUpdateView(ClinicalAccessRequiredMixin, UpdateView):
         return get_object_or_404(Customer, pk=self.kwargs["pk"])
 
     def get_object(self, queryset=None):
-        record, _created = PatientRecord.objects.get_or_create(
-            customer=self.get_customer(),
-        )
+        return PatientRecord.objects.filter(customer=self.get_customer()).first()
 
-        return record
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+
+        if self.object is None:
+            return self.render_to_response(self.contexto_sem_ficha())
+
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+
+        # Sem ficha não há formulário na página, portanto isto só acontece a
+        # quem submeta o endereço à mão. Volta ao botão de criar.
+        if self.object is None:
+            return self.render_to_response(self.contexto_sem_ficha())
+
+        return super().post(request, *args, **kwargs)
+
+    def contexto_sem_ficha(self):
+        customer = self.get_customer()
+
+        return {
+            "customer": customer,
+            "customers": patient_record_sidebar(),
+            "record_missing": True,
+            "clinical_notes": ClinicalNote.objects.filter(
+                appointment__customer=customer
+            ).select_related("appointment", "appointment__service", "created_by"),
+        }
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -49,6 +135,7 @@ class PatientRecordUpdateView(ClinicalAccessRequiredMixin, UpdateView):
         customer = self.object.customer
 
         context["customer"] = customer
+        context["customers"] = patient_record_sidebar()
         context["record_logs"] = self.object.logs.select_related("performed_by")[:20]
         context["clinical_notes"] = ClinicalNote.objects.filter(
             appointment__customer=customer

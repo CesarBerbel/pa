@@ -59,6 +59,13 @@ class ServiceForm(forms.ModelForm):
         # the first active category or creates a safe fallback category.
         self.fields["category"].required = False
 
+        # Um serviço sem retorno sugerido é o caso normal — a maior parte não
+        # tem. Obrigar a escrever um zero seria ruído no formulário.
+        self.fields["return_days"].required = False
+
+    def clean_return_days(self):
+        return self.cleaned_data.get("return_days") or 0
+
     class Meta:
         model = Service
         fields = [
@@ -66,6 +73,10 @@ class ServiceForm(forms.ModelForm):
             "name",
             "description",
             "duration_minutes",
+            # O prazo proposto para voltar, ao concluir um atendimento deste
+            # serviço. Uma unha encravada revê-se em duas semanas, um pé
+            # diabético em três meses — quem sabe isso é quem trata.
+            "return_days",
             "price",
             "is_active",
         ]
@@ -180,7 +191,73 @@ class CustomerForm(forms.ModelForm):
         ]
 
 
-class AppointmentForm(forms.ModelForm):
+class EncaixeMixin:
+    """Aceita o horário mesmo fora do funcionamento ou sobre um bloqueio.
+
+    Quem marca a partir da área interna está com a agenda à frente e decidiu
+    encaixar a pessoa. O sistema regista que foi fora do normal em vez de
+    recusar; o que continua a ser recusado é a sobreposição com outra marcação,
+    que não é uma questão de política.
+
+    Vive aqui e não numa das duas classes porque marcar e remarcar têm de tratar
+    o encaixe da mesma maneira: escrito duas vezes, uma delas ficava para trás.
+    """
+
+    def resolve_schedule_override(self, cleaned_data):
+        """Fica em `self.instance` porque `outside_schedule` não é um campo do
+        formulário, e portanto `construct_instance` não lhe toca antes da
+        validação do modelo."""
+
+        self.schedule_override_reason = AvailabilityService.schedule_conflict(
+            cleaned_data.get("service"),
+            cleaned_data.get("date"),
+            cleaned_data.get("start_time"),
+        )
+
+        self.instance.outside_schedule = bool(self.schedule_override_reason)
+
+
+class AppointmentRescheduleForm(EncaixeMixin, forms.ModelForm):
+    """Remarcar: muda-se o serviço, o dia, a hora e o estado. Mais nada.
+
+    A cliente não se troca aqui. Trocá-la seria transformar a marcação de uma
+    pessoa na marcação de outra, e o histórico ficava a dizer que a primeira
+    tinha sido atendida — para marcar outra pessoa faz-se uma marcação nova.
+
+    A morada do domicílio e as observações também não estão neste formulário.
+    Não se perdem: um `ModelForm` só escreve os campos que tem, e o que já lá
+    estava fica como estava.
+    """
+
+    class Meta:
+        model = Appointment
+        fields = [
+            "service",
+            "date",
+            "start_time",
+            "status",
+        ]
+        widgets = {
+            "date": forms.DateInput(attrs={"type": "date"}),
+            "start_time": forms.TimeInput(attrs={"type": "time"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Preenchido em clean() quando o horário sai do funcionamento normal,
+        # para a vista o poder dizer a quem remarcou.
+        self.schedule_override_reason = None
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        self.resolve_schedule_override(cleaned_data)
+
+        return cleaned_data
+
+
+class AppointmentForm(EncaixeMixin, forms.ModelForm):
     # Form used to create and edit appointments. Permite registar um cliente
     # novo na mesma submissão, para não obrigar a sair para a página de
     # clientes a meio de uma marcação feita ao telefone.
@@ -345,27 +422,6 @@ class AppointmentForm(forms.ModelForm):
                 "home_street",
                 "Indique a rua: é para onde a profissional se desloca.",
             )
-
-    def resolve_schedule_override(self, cleaned_data):
-        """Aceita o horário mesmo fora do funcionamento ou sobre um bloqueio.
-
-        Quem marca a partir daqui está com a agenda à frente e decidiu encaixar
-        a pessoa. O sistema regista que foi fora do normal em vez de recusar; o
-        que continua a ser recusado é a sobreposição com outra marcação, que
-        não é uma questão de política.
-
-        Fica em `self.instance` porque `outside_schedule` não é um campo do
-        formulário, e portanto `construct_instance` não lhe toca antes da
-        validação do modelo.
-        """
-
-        self.schedule_override_reason = AvailabilityService.schedule_conflict(
-            cleaned_data.get("service"),
-            cleaned_data.get("date"),
-            cleaned_data.get("start_time"),
-        )
-
-        self.instance.outside_schedule = bool(self.schedule_override_reason)
 
     def resolve_new_customer(self, cleaned_data):
         # Reutiliza find_or_create_customer, que devolve o cliente existente

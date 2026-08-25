@@ -11,6 +11,7 @@ from accounts import passkey_services
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView
 from appointments.mixins import InternalAreaRequiredMixin
+from appointments import return_services
 from appointments.models import Appointment, Customer
 from .forms import EmailAuthenticationForm, CustomerSignupForm
 from django.views.generic import CreateView
@@ -123,6 +124,11 @@ class DashboardView(InternalAreaRequiredMixin, TemplateView):
         month_cancelled = month_appointments.filter(
             status=Appointment.STATUS_CANCELLED
         ).count()
+
+        # Os retornos por marcar são trabalho por fazer, como as confirmações
+        # pendentes: sem um número à vista, a lista existe e ninguém lá vai.
+        context["returns_pending"] = return_services.pending().count()
+        context["returns_late"] = return_services.late().count()
 
         context["metrics"] = {
             "today_total": today_appointments.count(),

@@ -251,26 +251,48 @@ sudo crontab -e
 0 3 * * * cd /opt/pa && ./scripts/backup_db.sh >> /var/log/pa-backup.log 2>&1
 ```
 
-### Emails de seguimento
+### Mensagens que dependem do cron
 
-Os emails de cuidados posteriores — configurados em *Configurações →
-Seguimentos por serviço* — só saem se este comando correr. **Sem esta linha no
-cron, nada é enviado automaticamente** e resta o botão de envio manual em cada
-marcação.
+Três famílias de mensagens só saem se um comando correr. **Sem estas duas
+linhas no cron, nada disto é enviado** e resta o envio manual, marcação a
+marcação:
+
+* os **seguimentos** de cuidados posteriores, configurados em *Configurações →
+  Mensagens → Mensagens por serviço*;
+* os **avisos de retorno**, a quem ficou de voltar e ainda não marcou;
+* os **lembretes** das marcações que estão a chegar.
+
+Os dois primeiros correm uma vez por dia, num comando só. Os lembretes correm
+de meia em meia hora, porque uma antecedência de duas horas não se cumpre com
+um comando que passa uma vez por dia.
 
 ```cron
-30 9 * * * cd /opt/pa && docker compose --env-file .env.prod -f docker-compose.prod.yml exec -T web python manage.py send_service_followups >> /var/log/pa-emails.log 2>&1
+15 8 * * * cd /opt/pa && docker compose --env-file .env.prod -f docker-compose.prod.yml exec -T web python manage.py send_daily_messages >> /var/log/pa-emails.log 2>&1
+*/30 * * * * cd /opt/pa && docker compose --env-file .env.prod -f docker-compose.prod.yml exec -T web python manage.py send_appointment_reminders >> /var/log/pa-lembretes.log 2>&1
 ```
 
-Uma vez por dia chega. Correr duas vezes não duplica nada: cada envio fica
-registado e é consultado antes do seguinte.
+Correr duas vezes não duplica nada: cada envio fica registado e o registo é
+consultado antes do seguinte. É por isso que os lembretes podem correr de meia
+em meia hora sem mandarem quarenta e oito mensagens por dia.
+
+A antecedência do lembrete não está aqui — está em *Configurações → Mensagens →
+Envio de mensagens*, com 24 horas por omissão. **Zero desliga-o.** Mudá-la no
+ecrã chega; o cron fica como está.
 
 Para ver o que sairia, sem enviar:
 
 ```bash
 docker compose --env-file .env.prod -f docker-compose.prod.yml exec -T web \
-    python manage.py send_service_followups --dry-run
+    python manage.py send_daily_messages --dry-run
+
+docker compose --env-file .env.prod -f docker-compose.prod.yml exec -T web \
+    python manage.py send_appointment_reminders --dry-run
 ```
+
+`exec -T` e não `run`: o `exec` entra no contentor que já está a correr, e o
+`-T` desliga o pseudo-terminal, que o cron não tem. Sem o `-T`, a linha falha
+com *"the input device is not a TTY"* — e ninguém dá por isso até estranhar as
+mensagens que não chegaram.
 
 Dois limites propositados, que valem a pena conhecer antes de estranhar um
 email que não chegou:
@@ -281,8 +303,9 @@ email que não chegou:
   o envio manual.
 * **Ignora prazos vencidos há mais de 7 dias.** Instruções "15 dias depois" que
   chegam dois meses depois confundem mais do que ajudam. Se o cron estiver
-  parado mais do que isso, esses envios dão-se por perdidos. Para alargar:
-  `--max-age-days 30`.
+  parado mais do que isso, esses envios dão-se por perdidos. Para alargar, corra
+  o comando dos seguimentos à parte — o diário não passa esta opção adiante:
+  `... exec -T web python manage.py send_service_followups --max-age-days 30`.
 
 ## Mensagens de WhatsApp pela Twilio
 

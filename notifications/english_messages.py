@@ -157,6 +157,59 @@ EMAIL_TEMPLATES_EN = {
             acao=("Book another time", "{{ booking_link }}"),
         ),
     },
+    "appointment_reminder": {
+        "subject": "Reminder: {{ appointment_date }} at {{ appointment_time }}",
+        "body_text": (
+            "Hello {{ customer_name }},\n\n"
+            "It is nearly time: {{ service_name }} on {{ appointment_date }} at "
+            "{{ appointment_time }}.\n\n"
+            "{% if is_home_visit %}"
+            "This time we come to you, at {{ home_address }}.\n\n"
+            "{% else %}"
+            f"Where: {MORADA_EN}\n\n"
+            "{% endif %}"
+            "If you cannot come, please let us know in advance so the slot can "
+            "go to someone else:\n{{ cancellation_link }}\n\n"
+            "See you soon,\n"
+            f"{RODAPE_EN}"
+        ),
+        "body_html": _html_en(
+            titulo="Your appointment is coming up",
+            saudacao="Hello {{ customer_name }},",
+            corpo=(
+                "It is nearly time: {{ service_name }}, on the date and time "
+                "below."
+            ),
+            acao=("See the appointment", "{{ magic_link }}"),
+            aviso=(
+                "If you cannot come, please let us know in advance so the slot "
+                "can go to someone else."
+            ),
+        ),
+    },
+    "return_due": {
+        "subject": "{{ customer_name }}, it is time to come back",
+        "body_text": (
+            "Hello {{ customer_name }},\n\n"
+            "Last time we agreed you would come back around now, for "
+            "{{ service_name }}.\n\n"
+            "Pick the time that suits you best:\n{{ booking_link }}\n\n"
+            "If you prefer, just reply to this email and we will sort it out "
+            "here.\n\n"
+            "Kind regards,\n"
+            f"{RODAPE_EN}"
+        ),
+        "body_html": _html_en(
+            titulo="It is time to come back",
+            saudacao="Hello {{ customer_name }},",
+            corpo=(
+                "Last time we agreed you would come back around now, for "
+                "{{ service_name }}. Pick the time that suits you best."
+            ),
+            acao=("Choose a time", "{{ booking_link }}"),
+            aviso="If you prefer, just reply to this email and we will sort it out here.",
+        ),
+    },
     "appointment_completed": {
         "subject": "Thank you for your visit",
         "body_text": (
@@ -292,6 +345,18 @@ WHATSAPP_MESSAGES_EN = {
         "reference was {{ reference_code }}. Whenever you would like to book "
         "again, choose a time at {{ booking_link }} or reply to this message — "
         "we would be glad to see you."
+    ),
+    ("appointment_reminder", "customer"): (
+        "Hello {{ customer_name }}, it is nearly time: {{ service_name }} on "
+        "{{ appointment_date }} at {{ appointment_time }}. If you cannot come, "
+        "please let us know in advance at {{ appointment_link }} so the slot "
+        "can go to someone else."
+    ),
+    ("return_due", "customer"): (
+        "Hello {{ customer_name }}, last time we agreed you would come back "
+        "around now, for {{ service_name }}. Pick a time that suits you at "
+        "{{ booking_link }}, or reply to this message and we will sort it out "
+        "here."
     ),
     ("appointment_completed", "customer"): (
         "Hello {{ customer_name }}, thank you for your visit. If anything "

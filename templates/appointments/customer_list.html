@@ -137,16 +137,41 @@
 
                     <div class="customer-card-actions">
                         {% if user.has_clinical_access %}
-                            <a
-                                href="{% url 'appointments:patient_record' customer.pk %}"
-                                class="btn btn-sm customer-action-button d-inline-flex align-items-center justify-content-center {% if customer.patient_record.is_filled %}btn-outline-success{% else %}btn-outline-secondary{% endif %}"
-                                data-bs-toggle="tooltip"
-                                data-bs-placement="top"
-                                data-bs-title="{% if customer.patient_record.is_filled %}Ver ficha de anamnese{% else %}Preencher ficha de anamnese{% endif %}"
-                                aria-label="Ficha de anamnese de {{ customer.full_name }}"
-                            >
-                                <i class="bi bi-clipboard2-pulse"></i>
-                            </a>
+                            {% if customer.patient_record %}
+                                <a
+                                    href="{% url 'appointments:patient_record' customer.pk %}"
+                                    class="btn btn-sm customer-action-button d-inline-flex align-items-center justify-content-center {% if customer.patient_record.is_filled %}btn-outline-success{% else %}btn-outline-secondary{% endif %}"
+                                    data-bs-toggle="tooltip"
+                                    data-bs-placement="top"
+                                    data-bs-title="{% if customer.patient_record.is_filled %}Ver ficha de anamnese{% else %}Preencher ficha de anamnese{% endif %}"
+                                    aria-label="Ficha de anamnese de {{ customer.full_name }}"
+                                >
+                                    <i class="bi bi-clipboard2-pulse"></i>
+                                </a>
+                            {% else %}
+                                {# Sem ficha, o ícone fica apagado e pergunta antes #}
+                                {# de criar: a ficha é um registo clínico, e nascia #}
+                                {# a cada clique distraído neste botão.             #}
+                                <form
+                                    method="post"
+                                    action="{% url 'appointments:patient_record_create' customer.pk %}"
+                                    class="d-inline"
+                                >
+                                    {% csrf_token %}
+
+                                    <button
+                                        type="submit"
+                                        class="btn btn-sm btn-outline-secondary customer-action-button is-recordless d-inline-flex align-items-center justify-content-center"
+                                        data-bs-toggle="tooltip"
+                                        data-bs-placement="top"
+                                        data-bs-title="Sem ficha de anamnese"
+                                        aria-label="Criar ficha de anamnese de {{ customer.full_name }}"
+                                        onclick="return confirm('{{ customer.full_name|escapejs }} ainda não tem ficha de anamnese. Criar agora?');"
+                                    >
+                                        <i class="bi bi-clipboard2-pulse"></i>
+                                    </button>
+                                </form>
+                            {% endif %}
                         {% endif %}
 
                         <a

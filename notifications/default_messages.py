@@ -197,6 +197,47 @@ DEFAULT_MESSAGES = [
         },
     },
     {
+        "event_type": "appointment_reminder",
+        "audience": "customer",
+        "body_template": (
+            "Olá {{ customer_name }}, é já: {{ service_name }} no dia "
+            "{{ appointment_date }} às {{ appointment_time }}. Se não puder "
+            "vir, avise-nos em {{ appointment_link }} — assim o horário fica "
+            "livre para outra pessoa."
+        ),
+        "meta_template_body": (
+            "Olá {{1}}, é já: {{2}} no dia {{3}} às {{4}}. Se não puder vir, "
+            "avise-nos em {{5}} — assim o horário fica livre para outra pessoa."
+        ),
+        "content_variables": {
+            "1": "{{ customer_name }}",
+            "2": "{{ service_name }}",
+            "3": "{{ appointment_date }}",
+            "4": "{{ appointment_time }}",
+            "5": "{{ appointment_link }}",
+        },
+    },
+    {
+        "event_type": "return_due",
+        "audience": "customer",
+        "body_template": (
+            "Olá {{ customer_name }}, da última vez ficou combinado voltar por "
+            "esta altura, para {{ service_name }}. Escolha o horário que lhe "
+            "der melhor jeito em {{ booking_link }}, ou responda a esta "
+            "mensagem e combinamos por aqui."
+        ),
+        "meta_template_body": (
+            "Olá {{1}}, da última vez ficou combinado voltar por esta altura, "
+            "para {{2}}. Escolha o horário que lhe der melhor jeito em {{3}}, "
+            "ou responda a esta mensagem e combinamos por aqui."
+        ),
+        "content_variables": {
+            "1": "{{ customer_name }}",
+            "2": "{{ service_name }}",
+            "3": "{{ booking_link }}",
+        },
+    },
+    {
         "event_type": "appointment_completed",
         "audience": "customer",
         "body_template": (

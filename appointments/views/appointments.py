@@ -1,4 +1,4 @@
-from datetime import time
+from datetime import time, timedelta
 
 from django.conf import settings
 from django.contrib import messages
@@ -28,11 +28,13 @@ from django.views.generic import (
 from appointments.audit_services import AppointmentAuditService
 from appointments import address_lookup
 from appointments.message_preview import ACTION_CONFIRM, build_preview
+from appointments import return_services
 from appointments.phone_form_field import PhoneField
 from appointments.cancellation_services import AppointmentCancellationService
 from appointments.forms import (
     AppointmentCancelForm,
     AppointmentForm,
+    AppointmentRescheduleForm,
     ClinicalNoteForm,
 )
 from appointments.models import (
@@ -40,6 +42,7 @@ from appointments.models import (
     AppointmentLog,
     ClinicalNote,
     Customer,
+    ReturnVisit,
     Service,
 )
 from appointments.selectors import AppointmentFilters, AppointmentSelectors
@@ -170,13 +173,48 @@ class AppointmentCreateView(InternalAreaRequiredMixin, CreateView):
         # acontecer, entra como concluída.
         initial["status"] = Appointment.STATUS_CONFIRMED
 
+        # Vindo da lista de retornos, a cliente e o serviço já estão decididos:
+        # o que falta é a hora. Preenchê-los aqui poupa escolhê-los outra vez.
+        retorno = self.retorno_pedido()
+
+        if retorno:
+            initial["customer"] = retorno.customer_id
+            initial["customer_mode"] = AppointmentForm.CUSTOMER_MODE_EXISTING
+
+            if retorno.service_id:
+                initial["service"] = retorno.service_id
+
+            if not self.request.GET.get("date"):
+                initial["date"] = retorno.target_date.isoformat()
+
         return initial
+
+    def retorno_pedido(self):
+        """O retorno que esta marcação vem cumprir, se vier de um."""
+
+        return ReturnVisit.objects.filter(
+            pk=self.request.GET.get("retorno") or 0,
+            status=ReturnVisit.STATUS_PENDING,
+        ).first()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["retorno"] = self.retorno_pedido()
+
+        return context
 
     def form_valid(self, form):
         form.instance.created_by = self.request.user
         form.instance.origin = Appointment.ORIGIN_INTERNAL
 
         response = super().form_valid(form)
+
+        # O retorno passa a marcado, com a marcação que o cumpriu. Sem isto, a
+        # pessoa ficava na lista de retornos depois de já ter sido marcada.
+        retorno = self.retorno_pedido()
+
+        if retorno:
+            return_services.attach_appointment(retorno, self.object)
 
         # Sem isto, uma marcação criada aqui não deixava rasto nenhum: a
         # auditoria começava na primeira alteração, como se a marcação tivesse
@@ -219,12 +257,29 @@ class AppointmentCreateView(InternalAreaRequiredMixin, CreateView):
 
 
 class AppointmentUpdateView(InternalAreaRequiredMixin, UpdateView):
-    # Edits an existing appointment only if it is not completed.
+    """Remarcar: mudar o serviço, o dia, a hora e o estado de uma marcação.
+
+    Não é uma edição de tudo. A cliente fica onde está — trocá-la seria
+    transformar a marcação de uma pessoa na marcação de outra —, e o que se faz
+    aqui é o que se faz ao telefone quando alguém não pode vir no dia
+    combinado.
+    """
 
     model = Appointment
-    form_class = AppointmentForm
-    template_name = "appointments/appointment_form.html"
+    form_class = AppointmentRescheduleForm
+    template_name = "appointments/appointment_reschedule_form.html"
     success_url = reverse_lazy("appointments:appointment_list")
+
+    def get_initial(self):
+        initial = super().get_initial()
+
+        # Quem remarca está a combinar o horário novo com a cliente, ao
+        # telefone ou ao balcão: fica confirmado. Uma marcação que voltasse a
+        # "Agendada" obrigava a confirmá-la outra vez, noutro ecrã, para dizer
+        # o que já se sabia.
+        initial["status"] = Appointment.STATUS_CONFIRMED
+
+        return initial
 
     def dispatch(self, request, *args, **kwargs):
         # Validate access before loading the appointment, otherwise anonymous
@@ -451,6 +506,97 @@ class HomeVisitAddressSuggestView(InternalAreaRequiredMixin, View):
         )
 
 
+class ReturnVisitListView(InternalAreaRequiredMixin, ListView):
+    """Os retornos por marcar. É a agenda de telefonemas.
+
+    Sem esta lista, um retorno é uma frase que ninguém volta a ler. Os
+    atrasados vêm primeiro porque são os mais antigos, e é essa a ordem por que
+    interessa ligar.
+    """
+
+    template_name = "appointments/return_visit_list.html"
+    context_object_name = "returns"
+
+    def get_queryset(self):
+        if self.request.GET.get("estado") == "todos":
+            return (
+                ReturnVisit.objects.select_related("customer", "service", "appointment")
+                .all()
+                .order_by("-target_date")
+            )
+
+        return return_services.pending()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context["late_count"] = return_services.late().count()
+        context["pending_count"] = return_services.pending().count()
+        context["showing_all"] = self.request.GET.get("estado") == "todos"
+
+        return context
+
+
+class ReturnVisitCreateView(InternalAreaRequiredMixin, View):
+    """Abre um retorno à mão, a partir da ficha ou do detalhe da marcação.
+
+    É POST porque grava. Serve o caso de quem liga depois a pedir revisão, sem
+    ter havido uma conclusão de atendimento pelo meio.
+    """
+
+    def post(self, request, pk):
+        customer = get_object_or_404(Customer, pk=pk)
+
+        try:
+            dias = int(request.POST.get("dias") or 0)
+        except ValueError:
+            dias = 0
+
+        if dias <= 0:
+            messages.error(request, "Indique dentro de quantos dias a pessoa volta.")
+
+            return redirect(self.destino(request, customer))
+
+        ReturnVisit.objects.create(
+            customer=customer,
+            service_id=request.POST.get("service") or None,
+            target_date=timezone.localdate() + timedelta(days=dias),
+            created_by=request.user,
+            notes=(request.POST.get("notas") or "").strip(),
+        )
+
+        messages.success(
+            request,
+            f"Retorno de {customer.full_name} registado. Fica na lista até ser marcado.",
+        )
+
+        return redirect(self.destino(request, customer))
+
+    def destino(self, request, customer):
+        return request.POST.get("next") or reverse(
+            "appointments:customer_list"
+        )
+
+
+class ReturnVisitDismissView(InternalAreaRequiredMixin, View):
+    """Dispensa um retorno, sem o apagar.
+
+    Apagá-lo perdia a decisão: no mês seguinte ninguém sabia se aquela pessoa
+    tinha sido dispensada ou se o retorno nunca chegou a existir.
+    """
+
+    def post(self, request, pk):
+        retorno = get_object_or_404(ReturnVisit, pk=pk)
+
+        return_services.dismiss(retorno)
+
+        messages.success(
+            request,
+            f"Retorno de {retorno.customer.full_name} dispensado.",
+        )
+
+        return redirect("appointments:return_visit_list")
+
 class NewAppointmentMessagePreviewView(InternalAreaRequiredMixin, View):
     """O que a cliente receberia por uma marcação que ainda não existe.
 
@@ -628,10 +774,43 @@ class AppointmentCompleteView(InternalAreaRequiredMixin, View):
 
         if result.success:
             messages.success(request, result.message)
+            self.abrir_retorno(request, appointment)
         else:
             messages.error(request, result.message)
 
         return redirect("appointments:appointment_list")
+
+    def abrir_retorno(self, request, appointment):
+        """Regista o retorno que a janela do "Concluir" pediu.
+
+        É aqui e não noutro sítio porque é o único momento em que quem atende
+        sabe se é preciso voltar: acabou de ver o pé. Passada essa janela, o
+        retorno passa a depender de alguém se lembrar.
+        """
+
+        try:
+            dias = int(request.POST.get("return_days") or 0)
+        except ValueError:
+            dias = 0
+
+        if dias <= 0:
+            return
+
+        retorno = return_services.create_from_appointment(
+            appointment,
+            dias,
+            user=request.user,
+        )
+
+        if retorno:
+            messages.info(
+                request,
+                (
+                    f"Retorno de {appointment.customer.full_name} previsto para "
+                    f"{retorno.target_date:%d/%m/%Y}. Fica na lista de retornos "
+                    "até ser marcado."
+                ),
+            )
 
 
 class CustomerAppointmentsView(LoginRequiredMixin, TemplateView):

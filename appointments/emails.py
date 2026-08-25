@@ -662,3 +662,131 @@ def send_open_appointments_lookup_email(recipient_email, appointments):
         body_html=body_html,
         recipient_list=[recipient_email],
     )
+
+
+def send_return_due_email(return_visit):
+    """ "Está na altura de voltar", para um retorno ainda por marcar.
+
+    É a única mensagem desta casa que fala de uma marcação que ainda não
+    existe: por isso não leva código nem ligação para a marcação — leva a
+    ligação para a fazer.
+    """
+
+    cliente = return_visit.customer
+
+    if not cliente.email:
+        return
+
+    event_setting = EmailEventSettingService.get_active_setting(
+        EmailEventSetting.EVENT_RETURN_DUE,
+    )
+
+    if not event_setting:
+        return
+
+    lingua = "en" if getattr(cliente, "prefers_english", False) else "pt-pt"
+    servico = return_visit.service
+
+    context = {
+        "customer_name": cliente.full_name,
+        "customer_phone": cliente.phone,
+        "service_name": (
+            servico.name_for_language(lingua) if servico else "a sua consulta"
+        ),
+        "booking_link": booking_link(),
+    }
+
+    fallback_subject = f"{cliente.full_name}, está na altura de voltar"
+
+    quebra = chr(10)
+
+    fallback_body = (
+        f"Olá {cliente.full_name},{quebra}{quebra}"
+        f"Da última vez ficou combinado voltar por esta altura."
+        f"{quebra}{quebra}"
+        f"Escolha o horário que lhe der melhor jeito:{quebra}"
+        f"{context['booking_link']}"
+    )
+
+    rendered = render_email_for_event(
+        event_type=EmailEventSetting.EVENT_RETURN_DUE,
+        template_key="return_due",
+        context=context,
+        fallback_subject=fallback_subject,
+        fallback_body=fallback_body,
+        email_template=event_setting.email_template,
+        language=lingua,
+    )
+
+    send_rendered_email(
+        subject=rendered["subject"],
+        body_text=rendered["body_text"],
+        body_html=rendered["body_html"],
+        recipient_list=[cliente.email],
+    )
+
+
+def send_appointment_reminder_email(appointment):
+    """O lembrete da véspera, para uma marcação que está a chegar.
+
+    Não pede resposta nenhuma: quem vai, vai. O que leva é a ligação para
+    desmarcar, que é o que esta mensagem existe para conseguir — uma vaga
+    libertada a tempo vale mais do que uma falta avisada em cima da hora.
+    """
+
+    cliente = appointment.customer
+
+    if not cliente.email:
+        return
+
+    event_setting = EmailEventSettingService.get_active_setting(
+        EmailEventSetting.EVENT_APPOINTMENT_REMINDER,
+    )
+
+    if not event_setting:
+        return
+
+    lingua = customer_language(appointment)
+
+    cancel_path = reverse(
+        "appointments:public_cancel_by_code",
+        kwargs={"reference_code": appointment.reference_code},
+    )
+
+    context = build_appointment_context(appointment, lingua)
+    context.update(
+        {
+            "magic_link": build_full_url(generate_secure_link(appointment)),
+            "cancellation_link": build_full_url(cancel_path),
+        }
+    )
+
+    quebra = chr(10)
+
+    fallback_subject = (
+        f"Lembrete: {context['appointment_date']} às {context['appointment_time']}"
+    )
+
+    fallback_body = (
+        f"Olá {context['customer_name']},{quebra}{quebra}"
+        f"É já: {context['service_name']} no dia {context['appointment_date']} "
+        f"às {context['appointment_time']}.{quebra}{quebra}"
+        f"Se não puder vir, avise-nos:{quebra}{context['cancellation_link']}"
+    )
+
+    rendered = render_email_for_event(
+        event_type=EmailEventSetting.EVENT_APPOINTMENT_REMINDER,
+        template_key="appointment_reminder",
+        context=context,
+        fallback_subject=fallback_subject,
+        fallback_body=fallback_body,
+        email_template=event_setting.email_template,
+        language=lingua,
+    )
+
+    send_rendered_email(
+        subject=rendered["subject"],
+        body_text=rendered["body_text"],
+        body_html=rendered["body_html"],
+        recipient_list=[cliente.email],
+    )

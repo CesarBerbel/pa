@@ -68,6 +68,9 @@ class PatientRecordFlowTests(TestCase):
             phone="+351910000000",
         )
 
+        # A ficha deixou de nascer ao abrir a página: quem a quer, cria-a.
+        PatientRecord.objects.create(customer=self.customer)
+
         self.client.force_login(self.admin_user)
         self.url = reverse(
             "appointments:patient_record",
@@ -89,12 +92,25 @@ class PatientRecordFlowTests(TestCase):
         data.update(overrides)
         return data
 
-    def test_opening_creates_an_empty_record(self):
-        response = self.client.get(self.url)
+    def test_opening_does_not_create_a_record(self):
+        # Criava, e o resultado era que toda a gente tinha ficha: bastava um
+        # clique no ícone para ficar um registo clínico vazio, indistinguível
+        # de uma ficha por preencher. Quem a quer, cria-a no botão.
+        PatientRecord.objects.all().delete()
 
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(PatientRecord.objects.count(), 1)
-        self.assertFalse(PatientRecord.objects.get().is_filled)
+        outra = Customer.objects.create(
+            full_name="Ana Ferreira",
+            email="ana@example.com",
+            phone="+351911111111",
+        )
+
+        resposta = self.client.get(
+            reverse("appointments:patient_record", kwargs={"pk": outra.pk})
+        )
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertEqual(PatientRecord.objects.count(), 0)
+        self.assertContains(resposta, "Criar ficha de anamnese")
 
     def test_page_is_not_indexable(self):
         response = self.client.get(self.url)
@@ -205,6 +221,8 @@ class PodiatryAnamnesisTests(TestCase):
             email="maria@example.com",
             phone="+351910000000",
         )
+
+        PatientRecord.objects.create(customer=self.customer)
 
         self.client.force_login(self.admin_user)
         self.url = reverse(

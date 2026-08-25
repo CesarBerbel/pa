@@ -9,6 +9,7 @@ from django.core.validators import MinValueValidator
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import get_language
 
 logger = logging.getLogger(__name__)
@@ -155,6 +156,15 @@ class Service(models.Model):
             MinValueValidator(1),
         ],
         verbose_name="Duração (minutos)",
+    )
+
+    return_days = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Retorno sugerido (dias)",
+        help_text=(
+            "Ao concluir um atendimento deste serviço, é este o prazo "
+            "proposto para a pessoa voltar. Zero não propõe nada."
+        ),
     )
 
     price = models.DecimalField(
@@ -1597,6 +1607,129 @@ class AppointmentReminderLog(models.Model):
     def __str__(self):
         return (
             f"{self.appointment.reference_code} - {self.reminder_type} - {self.status}"
+        )
+
+
+class ReturnVisit(models.Model):
+    """Um retorno: a intenção de voltar, antes de haver marcação nenhuma.
+
+    É a peça que faltava. Uma marcação de retorno já combinada é só uma
+    marcação — o que se perdia era o outro caso, o mais comum: "volte daqui a
+    três semanas, depois combinamos". Isso vivia numa frase nas observações
+    que ninguém voltava a ler, ou na cabeça de quem atendeu.
+
+    Por isso tem data-alvo e não data: a data é do dia em que a marcação for
+    feita, e até lá o que existe é um prazo a cumprir.
+
+    Guarda as duas pontas: `origin` é o atendimento de onde veio, `appointment`
+    é o que o cumpriu. Com as duas, sabe-se que a consulta de hoje é o retorno
+    daquela de há um mês.
+    """
+
+    STATUS_PENDING = "pending"
+    STATUS_SCHEDULED = "scheduled"
+    STATUS_DISMISSED = "dismissed"
+
+    STATUS_CHOICES = [
+        (STATUS_PENDING, "Por marcar"),
+        (STATUS_SCHEDULED, "Marcado"),
+        (STATUS_DISMISSED, "Dispensado"),
+    ]
+
+    customer = models.ForeignKey(
+        Customer,
+        on_delete=models.CASCADE,
+        related_name="return_visits",
+        verbose_name="Cliente",
+    )
+
+    # O atendimento que o originou. `SET_NULL` porque apagar uma marcação
+    # antiga não pode apagar um retorno que ainda está por marcar.
+    origin = models.ForeignKey(
+        "Appointment",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="returns_generated",
+        verbose_name="Atendimento de origem",
+    )
+
+    service = models.ForeignKey(
+        Service,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="return_visits",
+        verbose_name="Serviço previsto",
+    )
+
+    target_date = models.DateField(
+        verbose_name="Voltar por volta de",
+        help_text="A data que se combinou com a pessoa, ainda sem hora.",
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STATUS_PENDING,
+        verbose_name="Estado",
+    )
+
+    # A marcação que cumpriu este retorno. Um retorno cumpre-se uma vez só.
+    appointment = models.OneToOneField(
+        "Appointment",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="return_visit",
+        verbose_name="Marcação",
+    )
+
+    notes = models.TextField(
+        blank=True,
+        verbose_name="Notas",
+        help_text="O que fica para lembrar quando se ligar à pessoa.",
+    )
+
+    # Quando saiu a mensagem a dizer que está na altura de voltar. Serve de
+    # travão: o comando diário corre todos os dias e não pode repetir o aviso.
+    notified_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Avisada em",
+    )
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_return_visits",
+        verbose_name="Criado por",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["target_date", "customer__full_name"]
+        verbose_name = "Retorno"
+        verbose_name_plural = "Retornos"
+
+    def __str__(self):
+        return f"{self.customer.full_name} — {self.target_date:%d/%m/%Y}"
+
+    @property
+    def is_late(self):
+        """A data-alvo passou e continua por marcar.
+
+        Atrasado não é um estado guardado: seria um estado que envelhece
+        sozinho e obrigava alguém a correr atrás dele todos os dias.
+        """
+
+        return (
+            self.status == self.STATUS_PENDING
+            and self.target_date < timezone.localdate()
         )
 
 

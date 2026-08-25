@@ -109,6 +109,13 @@ class EmailEventSetting(models.Model):
     EVENT_APPOINTMENT_CONFIRMED_INTERNAL = "appointment_confirmed_internal"
     EVENT_APPOINTMENT_CANCELLED = "appointment_cancelled"
     EVENT_APPOINTMENT_COMPLETED = "appointment_completed"
+    # O aviso de que está na altura de voltar. Sai do comando diário dos
+    # retornos, e não de uma marcação: é a única mensagem desta casa que fala
+    # de uma marcação que ainda não existe.
+    EVENT_RETURN_DUE = "return_due"
+    # O lembrete da véspera. Sai do comando que corre de meia em meia hora, e
+    # não de nada que alguém faça: é a única mensagem que ninguém manda.
+    EVENT_APPOINTMENT_REMINDER = "appointment_reminder"
 
     EVENT_CHOICES = (
         (EVENT_APPOINTMENT_CREATED, "Pedido de marcação criado"),
@@ -119,6 +126,8 @@ class EmailEventSetting(models.Model):
         ),
         (EVENT_APPOINTMENT_CANCELLED, "Marcação cancelada"),
         (EVENT_APPOINTMENT_COMPLETED, "Atendimento concluído"),
+        (EVENT_APPOINTMENT_REMINDER, "Lembrete da marcação"),
+        (EVENT_RETURN_DUE, "Está na altura de voltar"),
     )
 
     AUDIENCE_CUSTOMER = "customer"
@@ -338,6 +347,8 @@ class WhatsAppEventSetting(models.Model):
     EVENT_APPOINTMENT_CONFIRMED_INTERNAL = "appointment_confirmed_internal"
     EVENT_APPOINTMENT_CANCELLED = "appointment_cancelled"
     EVENT_APPOINTMENT_COMPLETED = "appointment_completed"
+    EVENT_RETURN_DUE = "return_due"
+    EVENT_APPOINTMENT_REMINDER = "appointment_reminder"
 
     EVENT_CHOICES = (
         (EVENT_APPOINTMENT_REQUESTED, "Pedido de marcação recebido"),
@@ -348,6 +359,8 @@ class WhatsAppEventSetting(models.Model):
         ),
         (EVENT_APPOINTMENT_CANCELLED, "Marcação cancelada"),
         (EVENT_APPOINTMENT_COMPLETED, "Atendimento concluído"),
+        (EVENT_APPOINTMENT_REMINDER, "Lembrete da marcação"),
+        (EVENT_RETURN_DUE, "Está na altura de voltar"),
     )
 
     AUDIENCE_CUSTOMER = "customer"
@@ -591,6 +604,8 @@ class WhatsAppMessageLog(models.Model):
     EVENT_APPOINTMENT_CONFIRMED_INTERNAL = "appointment_confirmed_internal"
     EVENT_APPOINTMENT_CANCELLED = "appointment_cancelled"
     EVENT_APPOINTMENT_COMPLETED = "appointment_completed"
+    EVENT_RETURN_DUE = "return_due"
+    EVENT_APPOINTMENT_REMINDER = "appointment_reminder"
 
     EVENT_CHOICES = (
         (EVENT_APPOINTMENT_REQUESTED, "Pedido de marcação recebido"),
@@ -601,6 +616,8 @@ class WhatsAppMessageLog(models.Model):
         ),
         (EVENT_APPOINTMENT_CANCELLED, "Marcação cancelada"),
         (EVENT_APPOINTMENT_COMPLETED, "Atendimento concluído"),
+        (EVENT_APPOINTMENT_REMINDER, "Lembrete da marcação"),
+        (EVENT_RETURN_DUE, "Está na altura de voltar"),
     )
 
     PROVIDER_CLOUD_API = "cloud_api"
@@ -829,6 +846,21 @@ class MessagingSetting(models.Model):
         ),
     )
 
+    # Quantas horas antes da marcação sai o lembrete.
+    #
+    # Zero desliga-o. Fica aqui e não no código porque a antecedência que
+    # serve muda com o tipo de trabalho: vinte e quatro horas dão tempo de
+    # desmarcar e libertar a vaga; duas horas servem para quem já se esqueceu
+    # de que ia sair de casa.
+    reminder_hours_before = models.PositiveIntegerField(
+        default=24,
+        verbose_name="Lembrete: horas de antecedência",
+        help_text=(
+            "Quantas horas antes da marcação sai o lembrete à cliente. "
+            "Zero não envia lembrete nenhum."
+        ),
+    )
+
     # Quem desligou e quando. Uma mensagem que não chegou costuma ser
     # descoberta dias depois, por alguém que não esteve presente na decisão.
     updated_by = models.ForeignKey(
@@ -901,6 +933,24 @@ class MessagingSetting(models.Model):
         """Se as mensagens de WhatsApp podem sair agora."""
 
         return cls._canal_ligado("send_whatsapp")
+
+    @classmethod
+    def reminder_hours(cls):
+        """Horas de antecedência do lembrete. Zero é não enviar.
+
+        Lê sem escrever, como as outras definições: isto é consultado por um
+        comando que corre de meia em meia hora, e um comando que grava a cada
+        passagem sujava o histórico sem razão nenhuma.
+        """
+
+        try:
+            definicao = cls.objects.filter(pk=cls.SINGLETON_PK).first()
+
+            return definicao.reminder_hours_before if definicao else 24
+        except Exception:
+            logger.exception("Não foi possível ler as horas do lembrete.")
+
+            return 0
 
 
 class BeforeAfterCase(models.Model):

@@ -14,11 +14,11 @@ NAVBAR = re.compile(r"<nav\b.*?</nav>", re.S)
 class InternalNavigationTests(ResetLanguageMixin, TestCase):
     """O menu de quem trabalha na clínica.
 
-    Está agrupado por assunto: o dia a dia à vista, e o resto em menus que
-    dizem o que são — Mensagens, Site, Configurações. O que este ficheiro
-    guarda não é a arrumação em si, é o que ela não pode custar: o trabalho
-    diário a um clique, nenhuma ligação repetida, e nenhuma página do sistema
-    sem forma de lá chegar.
+    Está agrupado por assunto: o dia a dia à vista, e o resto em dois menus
+    que dizem o que são — Site e Configurações. O que este ficheiro guarda não
+    é a arrumação em si, é o que ela não pode custar: o trabalho diário a um
+    clique, nenhuma ligação repetida, e nenhuma página do sistema sem forma de
+    lá chegar.
     """
 
     # Um clique, sem abrir menu nenhum. A agenda abre no dia — é a vista de
@@ -27,24 +27,25 @@ class InternalNavigationTests(ResetLanguageMixin, TestCase):
         ("appointments:visual_schedule", "Agenda"),
         ("appointments:appointment_list", "Marcações"),
         ("appointments:customer_list", "Clientes"),
+        ("appointments:patient_record_index", "Anamnese"),
     ]
 
     GRUPOS = {
-        "internalMessagesMenu": [
-            "notifications:messaging_setting",
-            "notifications:email_template_list",
-            "notifications:service_followup_list",
-            "notifications:whatsapp_setting_list",
-            "notifications:whatsapp_connection",
-        ],
         "internalSiteMenu": [
             "appointments:service_list",
             "appointments:before_after_list",
             "appointments:schedule_block_list",
         ],
+        # As mensagens vivem aqui dentro, num grupo com nome: mexe-se-lhes de
+        # tempos a tempos, não todos os dias.
         "internalSettingsMenu": [
             "appointments:scheduling_setting",
             "appointments:business_hour_list",
+            "notifications:messaging_setting",
+            "notifications:email_template_list",
+            "notifications:service_followup_list",
+            "notifications:whatsapp_setting_list",
+            "notifications:whatsapp_connection",
             "appointments:appointment_audit",
             "appointments:schedule_diagnostics",
         ],
@@ -109,6 +110,35 @@ class InternalNavigationTests(ResetLanguageMixin, TestCase):
 
     def test_the_schedule_is_not_called_visual(self):
         self.assertNotIn("Agenda visual", self.navbar)
+
+    def test_the_messages_live_inside_the_settings_menu(self):
+        # Eram um menu de topo. Passaram para dentro das configurações, com um
+        # cabeçalho a dizer o que são — sem ele, "Modelos de email" ficava ao
+        # lado de "Horas trabalhadas" sem se perceber porquê.
+        self.assertNotIn("internalMessagesMenu", self.navbar)
+        self.assertIn("Mensagens", self.menu("internalSettingsMenu"))
+
+    def test_the_anamnesis_is_one_click_away_for_who_may_read_it(self):
+        self.assertIn(
+            reverse("appointments:patient_record_index"), self.ligacoes_de_topo()
+        )
+
+    def test_who_has_no_clinical_access_does_not_see_it(self):
+        # A ficha tem dados de saúde: quem não lhe pode chegar não precisa de
+        # ver a porta.
+        utilizador = get_user_model().objects.create_user(
+            email="rececao@example.com",
+            password="StrongPassword123",
+            full_name="Receção",
+            is_internal_staff=True,
+            can_access_clinical_data=False,
+        )
+
+        self.client.force_login(utilizador)
+
+        self.assertNotIn(
+            reverse("appointments:patient_record_index"), self.barra()
+        )
 
     def test_each_menu_holds_what_belongs_to_it(self):
         for identificador, paginas in self.GRUPOS.items():

@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Retornos | Priscila Arantes PA{% endblock %}
+
+{% block content %}
+<div class="app-agenda-page">
+
+    <div class="app-agenda-header mb-4">
+        <span class="luxury-eyebrow">Retornos</span>
+
+        <h1>Quem está para voltar</h1>
+
+        <p>
+            {% comment %}
+                É a agenda de telefonemas. Um retorno que não esteja aqui é uma
+                frase nas observações que ninguém volta a ler.
+            {% endcomment %}
+            {% if showing_all %}
+                Todos os retornos registados, incluindo os já marcados e os dispensados.
+            {% else %}
+                {{ pending_count }} por marcar{% if late_count %}, {{ late_count }} já passaram da data{% endif %}.
+            {% endif %}
+        </p>
+
+        <div class="d-flex gap-2 justify-content-center mt-3">
+            {% if showing_all %}
+                <a href="{% url 'appointments:return_visit_list' %}" class="btn btn-outline-secondary btn-sm">
+                    Ver só os que faltam marcar
+                </a>
+            {% else %}
+                <a href="?estado=todos" class="btn btn-outline-secondary btn-sm">
+                    Ver todos
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if returns %}
+        <div class="row g-3">
+            {% for retorno in returns %}
+                <div class="col-12 col-lg-6">
+                    <div class="customer-card h-100 {% if retorno.is_late %}return-card-late{% endif %}">
+
+                        <div class="d-flex justify-content-between align-items-start gap-2">
+                            <div>
+                                <p class="customer-card-name mb-1">
+                                    {{ retorno.customer.full_name }}
+                                </p>
+
+                                <small class="text-muted">
+                                    {{ retorno.service.name|default:"Serviço por decidir" }}
+                                </small>
+                            </div>
+
+                            {% if retorno.status == "pending" %}
+                                {% if retorno.is_late %}
+                                    <span class="badge text-bg-warning">Atrasado</span>
+                                {% else %}
+                                    <span class="badge text-bg-light border">Por marcar</span>
+                                {% endif %}
+                            {% elif retorno.status == "scheduled" %}
+                                <span class="badge text-bg-success">Marcado</span>
+                            {% else %}
+                                <span class="badge text-bg-secondary">Dispensado</span>
+                            {% endif %}
+                        </div>
+
+                        <p class="mt-3 mb-1">
+                            <i class="bi bi-calendar-event me-1" aria-hidden="true"></i>
+                            Voltar por volta de <strong>{{ retorno.target_date|date:"d/m/Y" }}</strong>
+                        </p>
+
+                        {% if retorno.origin %}
+                            <small class="text-muted d-block">
+                                Depois do atendimento de {{ retorno.origin.date|date:"d/m/Y" }}
+                            </small>
+                        {% endif %}
+
+                        {% if retorno.notes %}
+                            <p class="small text-muted mt-2 mb-0">{{ retorno.notes }}</p>
+                        {% endif %}
+
+                        {% if retorno.notified_at %}
+                            <small class="text-muted d-block mt-2">
+                                <i class="bi bi-send-check me-1" aria-hidden="true"></i>
+                                Avisada em {{ retorno.notified_at|date:"d/m/Y" }}
+                            </small>
+                        {% endif %}
+
+                        {% if retorno.status == "pending" %}
+                            <div class="d-flex flex-wrap gap-2 mt-3">
+                                {# Marcar leva ao ecrã de sempre, com a cliente e o #}
+                                {# serviço já escolhidos: o retorno fica ligado à  #}
+                                {# marcação quando ela for gravada.                #}
+                                <a
+                                    class="btn btn-primary btn-sm"
+                                    href="{% url 'appointments:appointment_create' %}?retorno={{ retorno.pk }}"
+                                >
+                                    Marcar
+                                </a>
+
+                                <a
+                                    class="btn btn-outline-secondary btn-sm"
+                                    href="{{ retorno.customer.whatsapp_url }}"
+                                    target="_blank"
+                                    rel="noopener"
+                                >
+                                    <i class="bi bi-whatsapp me-1" aria-hidden="true"></i>
+                                    Falar
+                                </a>
+
+                                <form method="post" action="{% url 'appointments:return_visit_dismiss' retorno.pk %}">
+                                    {% csrf_token %}
+
+                                    <button
+                                        type="submit"
+                                        class="btn btn-outline-secondary btn-sm"
+                                        onclick="return confirm('Dispensar o retorno de {{ retorno.customer.full_name|escapejs }}?');"
+                                    >
+                                        Dispensar
+                                    </button>
+                                </form>
+                            </div>
+                        {% elif retorno.appointment %}
+                            <a
+                                class="btn btn-outline-primary btn-sm mt-3"
+                                href="{% url 'appointments:appointment_detail' retorno.appointment.pk %}"
+                            >
+                                Ver a marcação
+                            </a>
+                        {% endif %}
+
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="app-empty-state">
+            <div class="app-empty-icon">
+                <i class="bi bi-check2-circle"></i>
+            </div>
+
+            <h3>Nada por marcar</h3>
+
+            <p>
+                Os retornos aparecem aqui quando um atendimento é concluído com
+                data para voltar.
+            </p>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

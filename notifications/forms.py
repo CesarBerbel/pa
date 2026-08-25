@@ -234,12 +234,41 @@ class WhatsAppTestForm(forms.Form):
 
 
 class MessagingSettingForm(forms.ModelForm):
+    # Os interruptores de canal. O lembrete não é um deles — é um número — e
+    # por isso é desenhado à parte no ecrã.
+    CANAIS = ["send_emails", "send_whatsapp"]
+
     class Meta:
         model = MessagingSetting
-        fields = ["send_emails", "send_whatsapp"]
+        fields = ["send_emails", "send_whatsapp", "reminder_hours_before"]
         widgets = {
-            campo: forms.CheckboxInput(
-                attrs={"class": "form-check-input", "role": "switch"}
-            )
-            for campo in ["send_emails", "send_whatsapp"]
+            **{
+                campo: forms.CheckboxInput(
+                    attrs={"class": "form-check-input", "role": "switch"}
+                )
+                for campo in ["send_emails", "send_whatsapp"]
+            },
+            "reminder_hours_before": forms.NumberInput(
+                attrs={"class": "form-control", "min": 0, "max": 168, "step": 1}
+            ),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Ausente do pedido não é o mesmo que zero: zero desliga o lembrete, e
+        # um pedido que não fale dele não pode desligá-lo por omissão.
+        self.fields["reminder_hours_before"].required = False
+
+    def canais(self):
+        """Só os interruptores, para o ecrã os desenhar como interruptores."""
+
+        return [self[campo] for campo in self.CANAIS]
+
+    def clean_reminder_hours_before(self):
+        horas = self.cleaned_data.get("reminder_hours_before")
+
+        if horas is None:
+            return self.instance.reminder_hours_before
+
+        return horas

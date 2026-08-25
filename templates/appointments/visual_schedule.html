@@ -194,7 +194,7 @@
                                                     href="{% url 'appointments:appointment_update' slot.appointment.pk %}"
                                                     class="btn btn-sm btn-outline-primary"
                                                 >
-                                                    Editar
+                                                    Remarcar
                                                 </a>
                                             {% endif %}
 
@@ -220,6 +220,8 @@
                                                     data-send-field="send_message"
                                                     data-preview-url="{% url 'appointments:appointment_message_preview' slot.appointment.pk %}"
                                                     data-preview-action="complete"
+                                                    data-ask-return
+                                                    data-return-suggested="{{ slot.appointment.service.return_days }}"
                                                     data-choice-title="Enviar a mensagem de fim de atendimento a {{ slot.appointment.customer.full_name }}?"
                                                     data-choice-text="O atendimento fica concluído de qualquer forma. Se este serviço tiver mensagens próprias para o fim do atendimento, são essas que saem; se não tiver, sai o agradecimento comum."
                                                     data-choice-yes="Concluir e enviar"
@@ -227,6 +229,7 @@
                                                 >
                                                     {% csrf_token %}
                                                     <input type="hidden" name="send_message" value="">
+                                                    <input type="hidden" name="return_days" value="">
 
                                                     <button type="submit" class="btn btn-sm btn-outline-dark">
                                                         Concluir

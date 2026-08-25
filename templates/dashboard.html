@@ -137,6 +137,26 @@
                 </a>
             </div>
 
+            {% if returns_pending %}
+                {# Trabalho por fazer, como as confirmações pendentes: sem um #}
+                {# número à vista, a lista existe e ninguém lá vai. #}
+                <div class="col-12 col-sm-4">
+                    <a href="{% url 'appointments:return_visit_list' %}" class="dashboard-action-card">
+                        <span>Retornos</span>
+                        <strong>
+                            {{ returns_pending }} por marcar
+                        </strong>
+                        <small>
+                            {% if returns_late %}
+                                {{ returns_late }} já passaram da data.
+                            {% else %}
+                                Quem ficou de voltar e ainda não marcou.
+                            {% endif %}
+                        </small>
+                    </a>
+                </div>
+            {% endif %}
+
         </div>
     </div>
 

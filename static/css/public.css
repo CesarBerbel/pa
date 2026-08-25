@@ -4877,6 +4877,197 @@ textarea.form-control {
     padding-bottom: 96px;
 }
 
+/* A anamnese com a lista de clientes ao lado: duas colunas, e a ficha com o
+   espaço que sempre teve. A página deixa de estar limitada a 900px porque
+   passou a ter duas coisas lado a lado. */
+.anamnesis-with-list {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 900px);
+    gap: 24px;
+    max-width: 1220px;
+    align-items: start;
+}
+
+/* Recolhida, a coluna fica com a largura do botão — a lista sai da frente
+   sem sair da página, e volta com um clique. */
+.anamnesis-with-list.is-collapsed {
+    grid-template-columns: 52px minmax(0, 900px);
+}
+
+.anamnesis-with-list.is-collapsed .anamnesis-people-body {
+    display: none;
+}
+
+.anamnesis-with-list.is-collapsed .anamnesis-people-head {
+    justify-content: center;
+}
+
+.anamnesis-with-list.is-collapsed .anamnesis-people-head .luxury-eyebrow {
+    display: none;
+}
+
+.anamnesis-with-list.is-collapsed .anamnesis-people-toggle i {
+    transform: rotate(180deg);
+}
+
+.anamnesis-people {
+    position: sticky;
+    top: 88px;
+    background: #ffffff;
+    border: 1px solid #f1d5db;
+    border-radius: 22px;
+    padding: 14px;
+    box-shadow: 0 10px 28px rgba(139, 94, 102, 0.055);
+}
+
+.anamnesis-people-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.anamnesis-people-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 auto;
+    border: 1px solid #f1d5db;
+    border-radius: 50%;
+    background: #ffffff;
+    color: #8b5e66;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+@media (hover: hover) {
+    .anamnesis-people-toggle:hover {
+        border-color: #d8a7b1;
+        background: #fff5f6;
+    }
+}
+
+.anamnesis-people-search {
+    margin-bottom: 8px;
+}
+
+.anamnesis-people-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    /* Rola por dentro: com duzentos nomes, a página é que rolava e a ficha
+       ficava para trás. */
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.anamnesis-person {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    color: #2b2b2b;
+    font-size: 0.92rem;
+    text-decoration: none;
+}
+
+@media (hover: hover) {
+    .anamnesis-person:hover {
+        background: #fff5f6;
+        color: #2b2b2b;
+    }
+}
+
+.anamnesis-person.is-open {
+    background: linear-gradient(135deg, #d8a7b1, #8b5e66);
+    color: #ffffff;
+    font-weight: 600;
+}
+
+/* Quem ainda não tem ficha fica em cinzento — continua a abrir, mas o que
+   abre é o botão que a cria, e isso vê-se antes de clicar. */
+.anamnesis-person.has-no-record {
+    color: #9a9a9a;
+}
+
+.anamnesis-person.has-no-record.is-open {
+    color: #ffffff;
+    opacity: 0.9;
+}
+
+/* Um retorno cuja data já passou. O cartão diz-se por si, sem obrigar a ler
+   a data e a fazer a conta. */
+.return-card-late {
+    border-color: #f0c36d;
+    background: #fffaf0;
+}
+
+/* O ícone da anamnese, na lista de clientes, quando não há ficha: apagado
+   como um botão desligado, mas continua a poder ser carregado — é ele que
+   pergunta se a ficha deve ser criada. */
+.customer-action-button.is-recordless {
+    opacity: 0.45;
+}
+
+@media (hover: hover) {
+    .customer-action-button.is-recordless:hover {
+        opacity: 1;
+    }
+}
+
+.anamnesis-person-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.anamnesis-person-alert {
+    color: #b8860b;
+    flex: 0 0 auto;
+}
+
+.anamnesis-person.is-open .anamnesis-person-alert {
+    color: #ffffff;
+}
+
+.anamnesis-people-empty,
+.anamnesis-people-none {
+    color: #6b6b6b;
+    font-size: 0.88rem;
+    margin: 8px 0 0;
+    padding: 0 10px;
+}
+
+/* Num ecrã estreito não há duas colunas: a lista fica por cima da ficha, e o
+   botão continua a tirá-la da frente. */
+@media (max-width: 992px) {
+    .anamnesis-with-list,
+    .anamnesis-with-list.is-collapsed {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .anamnesis-people {
+        position: static;
+    }
+
+    .anamnesis-people-list {
+        max-height: 40vh;
+    }
+
+    .anamnesis-with-list.is-collapsed .anamnesis-people-head {
+        justify-content: space-between;
+    }
+
+    .anamnesis-with-list.is-collapsed .anamnesis-people-head .luxury-eyebrow {
+        display: block;
+    }
+}
+
 .anamnesis-header {
     align-items: flex-start;
     display: flex;

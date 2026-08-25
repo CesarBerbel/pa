@@ -28,6 +28,43 @@
                     <div class="send-message-preview mb-3" data-preview-body></div>
                 </div>
 
+                {# O retorno pergunta-se aqui porque é aqui que se está: o fim  #}
+                {# do atendimento é o único momento em que quem atendeu sabe se #}
+                {# é preciso voltar. Passada esta janela, passa a depender de   #}
+                {# alguém se lembrar.                                           #}
+                <div class="return-choice mb-3" data-choice-return hidden>
+                    <label class="form-check-label d-flex align-items-center gap-2">
+                        <input
+                            type="checkbox"
+                            class="form-check-input mt-0"
+                            data-return-wanted
+                        >
+                        <span>Prever retorno</span>
+                    </label>
+
+                    <div class="d-flex align-items-center gap-2 mt-2" data-return-days-box hidden>
+                        <span class="text-muted small">Voltar daqui a</span>
+
+                        <input
+                            type="number"
+                            class="form-control form-control-sm"
+                            style="max-width: 90px;"
+                            min="1"
+                            max="365"
+                            step="1"
+                            value="21"
+                            data-return-days
+                            aria-label="Dias até ao retorno"
+                        >
+
+                        <span class="text-muted small">dias</span>
+                    </div>
+
+                    <p class="text-muted small mb-0 mt-2">
+                        Fica na lista de retornos até ser marcado. Não marca nada agora.
+                    </p>
+                </div>
+
                 <div class="d-grid gap-2">
                     <button type="button" class="btn btn-primary" data-send-choice="1">
                         Sim, enviar
@@ -109,6 +146,16 @@
         var botoes = janela.querySelectorAll("[data-send-choice]");
         var caixaPrevia = janela.querySelector("[data-choice-preview]");
         var corpoPrevia = janela.querySelector("[data-preview-body]");
+        var caixaRetorno = janela.querySelector("[data-choice-return]");
+        var querRetorno = janela.querySelector("[data-return-wanted]");
+        var diasRetorno = janela.querySelector("[data-return-days]");
+        var caixaDias = janela.querySelector("[data-return-days-box]");
+
+        if (querRetorno && caixaDias) {
+            querRetorno.addEventListener("change", function () {
+                caixaDias.hidden = !querRetorno.checked;
+            });
+        }
         var pendente = null;
         var pedidoPrevia = 0;
 
@@ -260,6 +307,23 @@
                 titulo.textContent = form.dataset.choiceTitle || "Avisar a cliente?";
                 texto.textContent = form.dataset.choiceText || "";
 
+                // O retorno só se pergunta a quem o pediu — hoje, o Concluir.
+                if (caixaRetorno) {
+                    var pedeRetorno = form.hasAttribute("data-ask-return");
+
+                    caixaRetorno.hidden = !pedeRetorno;
+
+                    if (pedeRetorno && diasRetorno) {
+                        var sugerido = parseInt(form.dataset.returnSuggested || "0", 10);
+
+                        // O serviço propõe o prazo. Sem proposta, a caixa nasce
+                        // desmarcada e com um valor de partida qualquer.
+                        querRetorno.checked = sugerido > 0;
+                        diasRetorno.value = sugerido > 0 ? sugerido : 21;
+                        caixaDias.hidden = !querRetorno.checked;
+                    }
+                }
+
                 Array.prototype.forEach.call(botoes, function (botao) {
                     botao.disabled = false;
 
@@ -275,6 +339,21 @@
             });
         });
 
+        function guardarRetorno(form) {
+            // A janela vive fora do formulário, portanto o que se escolhe aqui
+            // não é submetido: passa para o campo escondido que o formulário
+            // já traz, como acontece com a resposta sobre a mensagem.
+            var campo = form.querySelector("[name='return_days']");
+
+            if (!campo) {
+                return;
+            }
+
+            var quer = querRetorno && querRetorno.checked;
+
+            campo.value = quer && diasRetorno ? diasRetorno.value : "";
+        }
+
         Array.prototype.forEach.call(botoes, function (botao) {
             botao.addEventListener("click", function () {
                 if (!pendente) {
@@ -288,6 +367,8 @@
                 if (campo) {
                     campo.value = botao.dataset.sendChoice;
                 }
+
+                guardarRetorno(pendente);
 
                 Array.prototype.forEach.call(botoes, function (outro) {
                     outro.disabled = true;

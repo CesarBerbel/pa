@@ -163,6 +163,10 @@ class PatientRecordHistoryTests(TestCase):
             phone="+351910000000",
         )
 
+        # A ficha deixou de nascer ao abrir a página: quem a quer, cria-a. Aqui
+        # cria-se à mão porque o que se testa é o histórico dela.
+        PatientRecord.objects.create(customer=self.customer)
+
         self.client.force_login(self.owner)
         self.url = reverse(
             "appointments:patient_record", kwargs={"pk": self.customer.pk}
