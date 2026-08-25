@@ -6289,6 +6289,99 @@ textarea.form-control {
     color: #a9707b;
 }
 
+/* O telefone: o seletor de indicativo e o número, lado a lado. O indicativo
+   fica estreito porque o que se lê nele é um nome de país, e o número precisa
+   do espaço todo. Num ecrã estreito passam a duas linhas. */
+.phone-field {
+    display: flex;
+    gap: 8px;
+}
+
+.phone-field-country {
+    flex: 0 1 42%;
+    min-width: 0;
+}
+
+.phone-field-number {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+@media (max-width: 480px) {
+    .phone-field {
+        flex-wrap: wrap;
+    }
+
+    .phone-field-country,
+    .phone-field-number {
+        flex: 1 1 100%;
+    }
+}
+
+/* A lista de países que a procura desenha. Solta por cima do que vem a
+   seguir, como a das moradas: empurrar o formulário para baixo a cada tecla
+   escrita fazia a página saltar debaixo de quem escreve. */
+.phone-country-picker {
+    position: relative;
+}
+
+.phone-country-list {
+    position: absolute;
+    z-index: 5;
+    width: 100%;
+    min-width: 240px;
+    max-height: 260px;
+    overflow-y: auto;
+    margin: 4px 0 0;
+    padding: 6px;
+    list-style: none;
+    background: #ffffff;
+    border: 1px solid #f1d5db;
+    border-radius: 16px;
+    box-shadow: 0 18px 40px rgba(139, 94, 102, 0.14);
+}
+
+.phone-country-option {
+    display: block;
+    width: 100%;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: #2b2b2b;
+    font-size: 0.92rem;
+    text-align: left;
+    cursor: pointer;
+}
+
+@media (hover: hover) {
+    .phone-country-option:hover {
+        background: #fff5f6;
+    }
+}
+
+.phone-country-option:focus-visible {
+    outline: 2px solid #8b5e66;
+    outline-offset: -2px;
+}
+
+/* O que está escolhido, assinalado como num <select> aberto. */
+.phone-country-option.is-chosen {
+    background: #fff0f3;
+    font-weight: 600;
+}
+
+/* A seta de uma lista pendente, porque é o que isto é. Sem ela, a caixa
+   parece só um campo de texto e ninguém lhe carrega para ver as opções. */
+.phone-country-search {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%238b5e66' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 14px 10px;
+    padding-right: 2.25rem;
+    cursor: pointer;
+}
+
 /* A lista de moradas sugeridas, no formulário da marcação. Solta por cima do
    que vem a seguir: empurrar o formulário para baixo a cada tecla escrita fazia
    a página saltar debaixo de quem escreve. */

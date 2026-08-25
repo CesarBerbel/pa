@@ -379,12 +379,48 @@ class PreviewOfAnAppointmentThatDoesNotExistYetTests(TestCase):
             customer_mode="new",
             customer="",
             new_customer_name="Ana Nova",
-            new_customer_phone="+351911111111",
+            new_customer_phone_0="PT",
+            new_customer_phone_1="911111111",
             new_customer_email="ana@exemplo.pt",
         )
 
         self.assertIn("ana@exemplo.pt", previa["emails"][0]["to"])
         self.assertIn("Ana Nova", previa["emails"][0]["body"])
+
+    def test_the_number_being_typed_reaches_the_whatsapp_preview(self):
+        # O telefone passou a ter duas caixas, e a pré-visualização continuava
+        # a ler o nome antigo: dizia "nenhum número válido para enviar" para
+        # uma cliente que tinha o número escrito à frente de quem marcava.
+        from appointments.views.appointments import NewAppointmentMessagePreviewView
+
+        marcacao = NewAppointmentMessagePreviewView().montar(
+            self.dados(
+                customer_mode="new",
+                customer="",
+                new_customer_name="Ana Nova",
+                new_customer_phone_0="GB",
+                new_customer_phone_1="7700900123",
+            )
+        )
+
+        self.assertEqual(marcacao.customer.phone, "+447700900123")
+
+    def test_a_number_still_being_typed_does_not_break_the_window(self):
+        # Quem está a meio do formulário vê a mensagem sem o WhatsApp, e não
+        # uma janela partida.
+        from appointments.views.appointments import NewAppointmentMessagePreviewView
+
+        marcacao = NewAppointmentMessagePreviewView().montar(
+            self.dados(
+                customer_mode="new",
+                customer="",
+                new_customer_name="Ana Nova",
+                new_customer_phone_0="PT",
+                new_customer_phone_1="91",
+            )
+        )
+
+        self.assertEqual(marcacao.customer.phone, "")
 
     def test_a_home_visit_says_so_before_anything_is_saved(self):
         previa = self.previa(

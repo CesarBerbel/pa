@@ -1,0 +1,22 @@
+{% comment %}
+    O seletor de indicativo e a caixa do número.
+
+    O <select> é a peça verdadeira: sem JavaScript continua a escolher-se um
+    país e o formulário funciona. A caixa de procura por cima é acrescentada
+    pelo JavaScript, que esconde o <select> e o passa a escrever — duzentos
+    países numa lista pendente encontram-se a escrever, mas só se o teclado
+    ajudar, e num telemóvel não ajuda.
+{% endcomment %}
+<div class="phone-field" data-phone-field>
+    <div class="phone-field-country">
+        {% with pais=widget.subwidgets.0 %}
+            {% include pais.template_name with widget=pais %}
+        {% endwith %}
+    </div>
+
+    <div class="phone-field-number">
+        {% with numero=widget.subwidgets.1 %}
+            {% include numero.template_name with widget=numero %}
+        {% endwith %}
+    </div>
+</div>

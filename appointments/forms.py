@@ -2,10 +2,8 @@ from django import forms
 from django.core.exceptions import ValidationError
 
 from appointments.availability import AvailabilityService
-from appointments.customer_services import (
-    find_or_create_customer,
-    validate_phone_for_brazil_or_portugal,
-)
+from appointments.customer_services import find_or_create_customer
+from appointments.phone_form_field import PhoneField
 from notifications.models import BeforeAfterCase
 
 from .models import (
@@ -168,6 +166,11 @@ class BeforeAfterCaseForm(forms.ModelForm):
 class CustomerForm(forms.ModelForm):
     # Form used to create and edit customers.
 
+    # O indicativo deixa de ser escrito: vem de uma lista, e o que sai daqui
+    # é sempre E.164. `clean_phone` fazia esse trabalho a adivinhar o país
+    # pelo número de dígitos, e só sabia adivinhar dois.
+    phone = PhoneField(label="Telefone")
+
     class Meta:
         model = Customer
         fields = [
@@ -175,12 +178,6 @@ class CustomerForm(forms.ModelForm):
             "email",
             "phone",
         ]
-
-    def clean_phone(self):
-        # Validate and normalize customer phone before saving.
-        phone = self.cleaned_data["phone"]
-
-        return validate_phone_for_brazil_or_portugal(phone)
 
 
 class AppointmentForm(forms.ModelForm):
@@ -209,9 +206,8 @@ class AppointmentForm(forms.ModelForm):
         required=False,
     )
 
-    new_customer_phone = forms.CharField(
+    new_customer_phone = PhoneField(
         label="Telefone do cliente novo",
-        max_length=30,
         required=False,
     )
 
@@ -382,14 +378,10 @@ class AppointmentForm(forms.ModelForm):
         if not name:
             self.add_error("new_customer_name", "Indique o nome do cliente novo.")
 
+        # O campo do telefone já devolve E.164 ou levanta o erro dele: aqui
+        # só falta o caso de ninguém ter escrito nada.
         if not phone:
             self.add_error("new_customer_phone", "Indique o telefone do cliente novo.")
-        else:
-            try:
-                phone = validate_phone_for_brazil_or_portugal(phone)
-            except ValidationError as error:
-                self.add_error("new_customer_phone", error.messages[0])
-                phone = ""
 
         if not name or not phone:
             return None
@@ -613,11 +605,7 @@ class PublicAppointmentForm(forms.Form):
         required=True,
     )
 
-    customer_phone = forms.CharField(
-        label="Telefone",
-        max_length=30,
-        required=True,
-    )
+    customer_phone = PhoneField(label="Telefone")
 
     customer_email = forms.EmailField(
         label="Email",
@@ -639,12 +627,6 @@ class PublicAppointmentForm(forms.Form):
             ),
         },
     )
-
-    def clean_customer_phone(self):
-        # Validate and normalize public customer phone before booking.
-        phone = self.cleaned_data["customer_phone"]
-
-        return validate_phone_for_brazil_or_portugal(phone)
 
 
 class ScheduleBlockForm(forms.ModelForm):

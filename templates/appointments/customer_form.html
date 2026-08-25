@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% load crispy_forms_tags %}
+{% load assets crispy_forms_tags %}
 
 {% block title %}Novo cliente | Priscila Arantes PA{% endblock %}
 
@@ -32,4 +32,6 @@
 
     </div>
 </div>
+<script src="{% versioned_static 'js/phone_country_search.js' %}"></script>
+
 {% endblock %}

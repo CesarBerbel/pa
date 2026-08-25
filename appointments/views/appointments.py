@@ -3,6 +3,7 @@ from datetime import time
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.db.models import Q
 from appointments.mixins import (
     ClinicalAccessRequiredMixin,
@@ -27,6 +28,7 @@ from django.views.generic import (
 from appointments.audit_services import AppointmentAuditService
 from appointments import address_lookup
 from appointments.message_preview import ACTION_CONFIRM, build_preview
+from appointments.phone_form_field import PhoneField
 from appointments.cancellation_services import AppointmentCancellationService
 from appointments.forms import (
     AppointmentCancelForm,
@@ -529,7 +531,7 @@ class NewAppointmentMessagePreviewView(InternalAreaRequiredMixin, View):
     def cliente(self, dados):
         if dados.get("customer_mode") == AppointmentForm.CUSTOMER_MODE_NEW:
             nome = (dados.get("new_customer_name") or "").strip()
-            telefone = (dados.get("new_customer_phone") or "").strip()
+            telefone = self.telefone(dados, "new_customer_phone")
 
             if not nome:
                 return None
@@ -543,6 +545,28 @@ class NewAppointmentMessagePreviewView(InternalAreaRequiredMixin, View):
             )
 
         return Customer.objects.filter(pk=dados.get("customer") or 0).first()
+
+    def telefone(self, dados, nome_do_campo):
+        """O número que está a ser escrito, pelo mesmo caminho do formulário.
+
+        O telefone tem duas caixas — o indicativo e o número —, e lê-las à mão
+        aqui era escrever a mesma regra duas vezes. Uma delas ficaria para trás
+        na primeira alteração, que foi exatamente o que aconteceu quando o
+        campo deixou de ser uma caixa só: a pré-visualização passou a dizer
+        "nenhum número válido para enviar" para uma cliente que tinha o número
+        escrito à frente de quem estava a marcar.
+
+        Um número por acabar não é um erro: quem está a meio do formulário vê a
+        mensagem sem o WhatsApp, e não uma janela partida.
+        """
+
+        campo = PhoneField(required=False)
+        partes = campo.widget.value_from_datadict(dados, {}, nome_do_campo)
+
+        try:
+            return campo.clean(partes) or ""
+        except ValidationError:
+            return ""
 
 
 class AppointmentMessagePreviewView(InternalAreaRequiredMixin, View):

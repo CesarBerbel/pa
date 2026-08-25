@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% load crispy_forms_tags %}
+{% load assets crispy_forms_tags %}
 
 {% block title %}
     {% if object %}
@@ -383,4 +383,6 @@
 {% if not object %}
     {% include "appointments/_send_message_choice.html" %}
 {% endif %}
+<script src="{% versioned_static 'js/phone_country_search.js' %}"></script>
+
 {% endblock %}

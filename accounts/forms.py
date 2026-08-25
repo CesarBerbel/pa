@@ -5,8 +5,8 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from appointments.customer_services import (
     find_customer_by_email_or_phone,
     find_or_create_customer,
-    validate_phone_for_brazil_or_portugal,
 )
+from appointments.phone_form_field import PhoneField
 
 User = get_user_model()
 
@@ -22,7 +22,7 @@ class EmailAuthenticationForm(AuthenticationForm):
 
 class CustomerSignupForm(UserCreationForm):
     full_name = forms.CharField(label="Nome completo", max_length=255)
-    phone = forms.CharField(label="Telefone", max_length=30)
+    phone = PhoneField(label="Telefone")
     email = forms.EmailField(label="Email", required=True)
 
     class Meta:
@@ -36,10 +36,6 @@ class CustomerSignupForm(UserCreationForm):
             raise forms.ValidationError("Já existe uma conta com este email.")
 
         return email
-
-    def clean_phone(self):
-        phone = self.cleaned_data["phone"]
-        return validate_phone_for_brazil_or_portugal(phone)
 
     def clean(self):
         cleaned_data = super().clean()

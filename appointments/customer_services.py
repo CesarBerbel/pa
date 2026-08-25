@@ -14,44 +14,74 @@ def normalize_email(email):
     return email.strip().lower()
 
 
+# Os limites da norma E.164: o número inteiro, indicativo incluído, tem entre
+# oito e quinze dígitos. É o que se pode verificar sem uma lista de regras por
+# país — que muda todos os meses e que ninguém aqui vai manter. O indicativo,
+# esse, vem de uma lista e é sempre real.
+MINIMO_DE_DIGITOS = 8
+MAXIMO_DE_DIGITOS = 15
+
+
 def normalize_phone(phone):
-    # Normalize phone numbers for Brazil and Portugal.
+    """O número em E.164: `+`, indicativo do país, e o resto.
+
+    É a forma que a Meta e a Twilio esperam, e a única em que dois números
+    iguais se parecem. Aceita o mundo inteiro: antes, um número que não fosse
+    de Portugal nem do Brasil não passava daqui.
+
+    Um número sem indicativo é lido como português — é a clínica onde está, e
+    era assim que os números guardados antes disto foram escritos. Quem tem um
+    número de outro sítio escolhe o país no formulário, e nesse caso o
+    indicativo já vem no que chega aqui.
+    """
+
     if not phone:
         return ""
 
-    digits = re.sub(r"\D", "", phone)
+    texto = phone.strip()
+    digitos = re.sub(r"\D", "", texto)
 
-    if digits.startswith("55") and len(digits) in [12, 13]:
-        return f"+{digits}"
+    if not digitos:
+        return ""
 
-    if digits.startswith("351") and len(digits) == 12:
-        return f"+{digits}"
+    # `00` é como se marca o internacional a partir de quase toda a Europa, e é
+    # como muita gente escreve o próprio número.
+    if not texto.startswith("+") and digitos.startswith("00"):
+        digitos = digitos[2:]
+        texto = f"+{digitos}"
 
-    if len(digits) == 9:
-        return f"+351{digits}"
+    if texto.startswith("+"):
+        if not MINIMO_DE_DIGITOS <= len(digitos) <= MAXIMO_DE_DIGITOS:
+            return ""
 
-    if len(digits) in [10, 11]:
-        return f"+55{digits}"
+        return f"+{digitos}"
+
+    # Sem indicativo: os formatos antigos, que continuam a chegar de código
+    # escrito antes de haver seletor de país.
+    if len(digitos) == 9:
+        return f"+351{digitos}"
+
+    if len(digitos) in (10, 11):
+        return f"+55{digitos}"
 
     return ""
 
 
-def validate_phone_for_brazil_or_portugal(phone):
-    # Validate phone numbers accepted for Brazil and Portugal.
-    normalized_phone = normalize_phone(phone)
+def validate_phone(phone):
+    """Recusa o que não é telefone nenhum, e aceita o resto do mundo.
 
-    if not normalized_phone:
-        raise ValidationError("Indique um telefone válido do Brasil ou de Portugal.")
+    O que se verifica é a forma, não a existência: sem uma lista de regras por
+    país não há como saber se um número de Nairobi existe, e uma lista dessas
+    envelhece sozinha. O indicativo é que é garantido — vem da lista de países
+    do seletor.
+    """
 
-    digits = re.sub(r"\D", "", normalized_phone)
+    numero = normalize_phone(phone)
 
-    is_brazil_phone = digits.startswith("55") and len(digits) in [12, 13]
-    is_portugal_phone = digits.startswith("351") and len(digits) == 12
+    if not numero:
+        raise ValidationError("Indique um telefone válido, com o indicativo do país.")
 
-    if not is_brazil_phone and not is_portugal_phone:
-        raise ValidationError("O telefone deve ser válido para Brasil ou Portugal.")
-
-    return normalized_phone
+    return numero
 
 
 def find_customer_by_email_or_phone(email="", phone=""):
