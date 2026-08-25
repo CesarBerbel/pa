@@ -96,6 +96,7 @@ class PublicImageTests(TestCase):
 
     # (ficheiro, KB no máximo)
     PUBLICAS = [
+        ("hero-new.webp", 150),
         ("hero-photo.webp", 150),
         ("logo.webp", 60),
         ("logo-transparent.webp", 120),
@@ -127,6 +128,20 @@ class PublicImageTests(TestCase):
         self.assertLess(cartao.stat().st_size, 600 * 1024)
 
         self.assertTrue(settings.SEO_DEFAULT_IMAGE_PATH.endswith("logo-og.png"))
+
+    def test_the_hero_uses_a_generated_image(self):
+        # O fundo do hero é a imagem mais pesada da página inicial e a
+        # primeira a ser pedida. Apontar o template ao original — que vive em
+        # `assets/` com 163 KB — passava despercebido até alguém medir.
+        html = self.client.get(reverse("home")).content.decode()
+        fundo = re.search(r"--hero-bg: url\('([^']+)'\)", html).group(1)
+
+        self.assertIn("hero-new.webp", fundo)
+
+        ficheiro = IMG / "hero-new.webp"
+
+        self.assertEqual(Image.open(ficheiro).format, "WEBP")
+        self.assertLessEqual(ficheiro.stat().st_size // 1024, self.TETO_KB)
 
     def test_no_source_image_is_served(self):
         # `static/` é o que vai para produção. Um original deixado aqui é

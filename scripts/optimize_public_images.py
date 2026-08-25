@@ -37,6 +37,11 @@ FUNDO = (255, 247, 249)  # --bg-soft
 # - o fundo do hero é servido tal como está (o original só tem 1024);
 # - os logótipos aparecem no máximo a 560 px (`.luxury-logo-transparent`).
 WEBP = [
+    # O fundo do hero. Qualidade mais baixa do que a das outras: o
+    # original já é um JPEG, e a 82 o WebP gastava bits a preservar os
+    # defeitos da compressão anterior — 119 KB para o mesmo que se vê a
+    # 74 em 88 KB.
+    ("hero-new.jpeg", "hero-new.webp", 1024, 74),
     ("hero-photo.png", "hero-photo.webp", 1024, 82),
     ("logo.png", "logo.webp", 1120, 85),
     ("logo-transparent.png", "logo-transparent.webp", 1120, 85),
