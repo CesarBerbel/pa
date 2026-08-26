@@ -143,7 +143,6 @@ class MessagingSettingWhatsAppTests(TestCase):
             event_type=WhatsAppEventSetting.EVENT_APPOINTMENT_CONFIRMED,
             audience=WhatsAppEventSetting.AUDIENCE_CUSTOMER,
             defaults={
-                "provider": WhatsAppEventSetting.PROVIDER_BAILEYS,
                 "is_active": True,
                 "body_template": "Olá",
             },
@@ -193,9 +192,9 @@ class MessagingSettingWhatsAppTests(TestCase):
     def test_notify_sends_again_once_the_channel_is_back_on(self):
         definir(send_whatsapp=True)
 
-        # O fornecedor é forçado a ligado: o que está a ser medido é o
-        # interruptor do canal, não o TWILIO_ENABLED/BAILEYS_ENABLED do servidor
-        # onde os testes correm.
+        # O envio é forçado a ligado: o que está a ser medido é o
+        # interruptor do canal, não o BAILEYS_ENABLED do servidor onde os
+        # testes correm.
         with patch.object(whatsapp_dispatch, "provider_enabled", return_value=True):
             with patch.object(whatsapp_dispatch, "provider_module") as fornecedor:
                 fornecedor.return_value.validate_settings.return_value = ""

@@ -12,7 +12,6 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from appointments.appointment_services import AppointmentService
 from appointments.models import Appointment, Customer
 from appointments.tests.factories import create_test_service, ensure_test_business_hour
 from notifications import baileys_whatsapp, whatsapp_dispatch
@@ -23,14 +22,6 @@ BAILEYS_LIGADO = {
     "BAILEYS_API_URL": "http://baileys:3000",
     "BAILEYS_API_TOKEN": "token-de-teste",
     "BAILEYS_PROFESSIONAL_WHATSAPP": "+351938594367",
-}
-
-TWILIO_LIGADA = {
-    "TWILIO_ENABLED": True,
-    "TWILIO_ACCOUNT_SID": "ACtestesid",
-    "TWILIO_AUTH_TOKEN": "token-de-teste",
-    "TWILIO_WHATSAPP_FROM": "whatsapp:+14155238886",
-    "TWILIO_PROFESSIONAL_WHATSAPP": "+351938594367",
 }
 
 
@@ -62,8 +53,9 @@ class BaileysBase(TestCase):
             end_time=time(18, 0),
         )
 
-        # As regras semeadas pela migração saem pela Twilio. Os testes daqui
-        # criam as suas, e estas ficariam a disparar por cima.
+        # As regras semeadas pelas migrações nascem desligadas, mas nem todas:
+        # os testes daqui criam as suas, e as outras ficariam a disparar por
+        # cima.
         WhatsAppEventSetting.objects.update(is_active=False)
 
         self.enviados = []
@@ -80,11 +72,7 @@ class BaileysBase(TestCase):
 
     def regra(self, event_type, audience, **extra):
         dados = {
-            "provider": WhatsAppEventSetting.PROVIDER_BAILEYS,
             "body_template": "Olá {{ customer_name }}, {{ appointment_date }}.",
-            "meta_template_body": "",
-            "content_sid": "",
-            "content_variables": "",
             "is_active": True,
         }
         dados.update(extra)
@@ -157,14 +145,10 @@ class MessageBodyTests(BaileysBase):
         self.assertEqual(len(self.enviados), 1)
         self.assertIn("Maria Silva", self.enviados[0]["text"])
 
-    def test_the_approved_template_of_twilio_is_ignored(self):
-        # O Content SID é da Twilio. Pelo Baileys o que conta é o texto, e uma
-        # regra que só tivesse o SID não teria nada para dizer.
-        self.regra(
-            "appointment_requested",
-            "customer",
-            content_sid="HX0000000000000000000000000000000",
-        )
+    def test_the_message_is_the_free_text(self):
+        # O que sai é o que está escrito na regra, com as variáveis
+        # preenchidas — não há modelo aprovado nenhum pelo meio.
+        self.regra("appointment_requested", "customer")
 
         whatsapp_dispatch.notify(self.marcacao(), "appointment_requested")
 
@@ -292,80 +276,6 @@ class FailureTests(BaileysBase):
         self.assertIn("inacessível", estado["lastError"])
 
 
-class ProviderRoutingTests(BaileysBase):
-    """A escolha do caminho é por regra, e cada regra segue só o seu."""
-
-    @override_settings(**{**BAILEYS_LIGADO, **TWILIO_LIGADA})
-    def test_each_rule_uses_the_provider_it_chose(self):
-        self.regra("appointment_requested", "customer", provider="baileys")
-        self.regra("appointment_requested", "professional", provider="twilio")
-
-        with patch(
-            "notifications.twilio_whatsapp.post_message", return_value={"sid": "SM1"}
-        ) as twilio:
-            whatsapp_dispatch.notify(self.marcacao(), "appointment_requested")
-
-        # O cliente pelo Baileys, a profissional pela Twilio: uma mensagem por
-        # cada caminho, e não a mesma pelos dois.
-        self.assertEqual([envio["to"] for envio in self.enviados], ["+351910000000"])
-        self.assertEqual(twilio.call_count, 1)
-        self.assertEqual(twilio.call_args[0][0]["To"], "whatsapp:+351938594367")
-
-    @override_settings(**{**BAILEYS_LIGADO, "TWILIO_ENABLED": False})
-    def test_a_rule_waits_when_its_provider_is_off(self):
-        self.regra("appointment_requested", "customer", provider="baileys")
-        self.regra("appointment_requested", "professional", provider="twilio")
-
-        with patch("notifications.twilio_whatsapp.post_message") as twilio:
-            whatsapp_dispatch.notify(self.marcacao(), "appointment_requested")
-
-        self.assertEqual(len(self.enviados), 1)
-        self.assertEqual(twilio.call_count, 0)
-
-    @override_settings(**{**BAILEYS_LIGADO, **TWILIO_LIGADA})
-    def test_the_two_providers_do_not_collide_in_the_log(self):
-        # Provider faz parte da restrição de unicidade: a mesma mensagem pelos
-        # dois caminhos são dois envios, não um repetido.
-        self.regra("appointment_requested", "customer", provider="baileys")
-        marcacao = self.marcacao()
-
-        whatsapp_dispatch.notify(marcacao, "appointment_requested")
-
-        WhatsAppEventSetting.objects.filter(
-            event_type="appointment_requested", audience="customer"
-        ).update(provider="twilio", content_sid="HX123")
-
-        with patch(
-            "notifications.twilio_whatsapp.post_message", return_value={"sid": "SM1"}
-        ):
-            whatsapp_dispatch.notify(marcacao, "appointment_requested")
-
-        self.assertEqual(
-            WhatsAppMessageLog.objects.filter(
-                appointment=marcacao,
-                status=WhatsAppMessageLog.STATUS_SUCCESS,
-            ).count(),
-            2,
-        )
-
-    @override_settings(**BAILEYS_LIGADO)
-    def test_a_booking_sends_through_the_rule_provider(self):
-        # O caminho completo: a marcação dispara, o despachante encaminha.
-        self.regra("appointment_requested", "customer", provider="baileys")
-
-        with self.captureOnCommitCallbacks(execute=True):
-            AppointmentService.create_appointment(
-                customer=self.customer,
-                service=self.service,
-                date=self.date,
-                start_time=time(11, 0),
-                created_by=self.user,
-            )
-
-        self.assertEqual(len(self.enviados), 1)
-
-
-@override_settings(**BAILEYS_LIGADO)
 class ConnectionScreenTests(BaileysBase):
     ESTADO_LIGADO = {
         "state": "connected",
@@ -412,15 +322,6 @@ class ConnectionScreenTests(BaileysBase):
 
         self.assertIn(resposta.status_code, (302, 403))
 
-    def test_switching_every_rule_to_baileys(self):
-        WhatsAppEventSetting.objects.update(provider="twilio")
-
-        self.client.post(reverse("notifications:whatsapp_use_baileys_for_all"))
-
-        self.assertFalse(
-            WhatsAppEventSetting.objects.exclude(provider="baileys").exists()
-        )
-
     def test_logging_out_reports_a_service_that_does_not_answer(self):
         with patch.object(
             baileys_whatsapp,
@@ -436,7 +337,8 @@ class ConnectionScreenTests(BaileysBase):
 
 @override_settings(**BAILEYS_LIGADO)
 class RuleValidationTests(BaileysBase):
-    def test_a_baileys_rule_without_text_is_refused(self):
+    def test_a_rule_without_text_is_refused(self):
+        # Sem texto não há nada para enviar.
         WhatsAppEventSetting.objects.all().delete()
 
         self.client.post(
@@ -445,18 +347,14 @@ class RuleValidationTests(BaileysBase):
                 "event_type": "appointment_requested",
                 "audience": "professional",
                 "custom_recipients": "",
-                "provider": "baileys",
                 "body_template": "",
-                "meta_template_body": "",
-                "content_sid": "HX0000000000000000000000000000000",
-                "content_variables": "",
                 "is_active": "on",
             },
         )
 
         self.assertEqual(WhatsAppEventSetting.objects.count(), 0)
 
-    def test_a_baileys_rule_with_text_is_accepted(self):
+    def test_a_rule_with_text_is_accepted(self):
         WhatsAppEventSetting.objects.all().delete()
 
         self.client.post(
@@ -465,11 +363,7 @@ class RuleValidationTests(BaileysBase):
                 "event_type": "appointment_requested",
                 "audience": "professional",
                 "custom_recipients": "",
-                "provider": "baileys",
                 "body_template": "Novo pedido de {{ customer_name }}.",
-                "meta_template_body": "",
-                "content_sid": "",
-                "content_variables": "",
                 "is_active": "on",
             },
         )

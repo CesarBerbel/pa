@@ -84,9 +84,9 @@ def semear_whatsapp(apps):
     for entrada in DEFAULT_MESSAGES:
         campos = {
             "body_template": entrada["body_template"],
-            "meta_template_body": entrada["meta_template_body"],
+            "meta_template_body": entrada.get("meta_template_body", ""),
             "content_variables": json.dumps(
-                entrada["content_variables"], ensure_ascii=False, indent=2
+                entrada.get("content_variables", {}), ensure_ascii=False, indent=2
             ),
         }
 

@@ -40,6 +40,31 @@ def opening_hours_specification():
         }
     ]
 
+
+def google_business_profile():
+    """A ficha do Google, ligada ao site — se houver uma configurada.
+
+    O site já se descrevia ao Google com nome, morada, telefone e horário, mas
+    não dizia *qual* é a ficha dele. São duas coisas que o Google pode tratar
+    como não sendo a mesma casa, e é o que faz um negócio aparecer com uma
+    ficha sem site e um site sem ficha.
+
+    `sameAs` é a afirmação de identidade e `hasMap` é o sítio no mapa. Vão os
+    dois com o mesmo endereço porque é o mesmo endereço: o link de partilha do
+    Perfil de Empresa serve para ambos.
+
+    Sem nada configurado devolve um dicionário vazio, e o JSON-LD sai como
+    saía. Um `sameAs` a apontar para lado nenhum é pior do que não o ter.
+    """
+
+    endereco = (settings.SEO_GOOGLE_BUSINESS_URL or "").strip()
+
+    if not endereco:
+        return {}
+
+    return {"sameAs": [endereco], "hasMap": endereco}
+
+
 def build_home_structured_data(service_categories):
     """Build JSON-LD for the public homepage."""
 
@@ -99,6 +124,8 @@ def build_home_structured_data(service_categories):
         "openingHoursSpecification": opening_hours_specification(),
         "makesOffer": services,
     }
+
+    payload.update(google_business_profile())
 
     return json.dumps(payload, ensure_ascii=False, indent=2)
 

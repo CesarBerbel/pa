@@ -25,7 +25,7 @@ MAXIMO_DE_DIGITOS = 15
 def normalize_phone(phone):
     """O número em E.164: `+`, indicativo do país, e o resto.
 
-    É a forma que a Meta e a Twilio esperam, e a única em que dois números
+    É a forma que o WhatsApp espera, e a única em que dois números
     iguais se parecem. Aceita o mundo inteiro: antes, um número que não fosse
     de Portugal nem do Brasil não passava daqui.
 

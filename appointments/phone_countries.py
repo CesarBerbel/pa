@@ -9,8 +9,8 @@ exatamente isso.
 **O indicativo vem de uma lista e não do que a pessoa escreve.** Escrito à mão,
 o mesmo número chegava de cinco maneiras — com `00`, com `+`, com o zero do
 trunk à frente — e o WhatsApp não perdoa nenhuma delas. Escolhido numa lista,
-só há uma forma de o guardar: E.164, `+` e dígitos, que é o que a Meta e a
-Twilio esperam.
+só há uma forma de o guardar: E.164, `+` e dígitos, que é o que o WhatsApp
+espera.
 
 Os nomes estão em português porque é a língua da área interna, que é de onde a
 maior parte dos cadastros é feita.

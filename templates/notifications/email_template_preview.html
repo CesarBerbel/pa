@@ -30,7 +30,11 @@
         <div class="card shadow-sm border-0 mb-4">
             <div class="card-body p-4">
                 <h2 class="h6 text-uppercase text-muted">Texto</h2>
-                <pre class="email-preview-text">{{ preview.body_text }}</pre>
+
+                {# force_escape porque o que sai do motor de templates vem #}
+                {# marcado como seguro: sem isto, uma etiqueta escrita na #}
+                {# versão em texto era interpretada em vez de mostrada. #}
+                <pre class="email-preview-text">{{ preview.body_text|force_escape }}</pre>
             </div>
         </div>
 
@@ -42,11 +46,18 @@
                     {# Dentro de um iframe isolado: os estilos do modelo não #}
                     {# podem afetar a área interna, e o sandbox impede que um #}
                     {# script colado no modelo corra aqui dentro. #}
+                    {# #}
+                    {# `force_escape` é o que faz isto funcionar. O motor de #}
+                    {# templates devolve o HTML já marcado como seguro, e o #}
+                    {# atributo ficava a terminar nas primeiras aspas do #}
+                    {# modelo — `<table role="` e o resto virava lixo. Escapado, #}
+                    {# o navegador desfaz as entidades ao ler o atributo e o #}
+                    {# email aparece desenhado. #}
                     <iframe
                         class="email-preview-frame"
                         title="Pré-visualização do email em HTML"
                         sandbox=""
-                        srcdoc="{{ preview.body_html }}"
+                        srcdoc="{{ preview.body_html|force_escape }}"
                     ></iframe>
                 </div>
             </div>

@@ -101,8 +101,8 @@
                         <h3>Nenhum seguimento para este serviço</h3>
                         <p>
                             Configure em
-                            <a href="{% url 'notifications:service_followup_list' %}">
-                                Mensagens por serviço
+                            <a href="{% url 'notifications:email_template_list' %}">
+                                Modelos de email
                             </a>.
                         </p>
                     </div>
@@ -112,10 +112,10 @@
 
         <h2 class="h6 text-uppercase text-muted mt-5 mb-2">Mensagens de WhatsApp</h2>
 
-        {% if not twilio_enabled %}
+        {% if not whatsapp_enabled %}
             <div class="alert alert-warning small">
-                A Twilio está desligada nas definições do servidor, por isso
-                nada é enviado. As mensagens abaixo ficam à espera.
+                O envio de WhatsApp está desligado nas definições do servidor,
+                por isso nada é enviado. As mensagens abaixo ficam à espera.
             </div>
         {% endif %}
 
@@ -243,10 +243,8 @@
         </div>
 
         <p class="text-muted small mt-3">
-            O envio manual ignora o interruptor do envio automático, mas não as
-            regras de quem transporta a mensagem. Pela Twilio, sem modelo
-            aprovado ela só chega dentro das 24 horas seguintes a uma mensagem
-            do destinatário; pelo Baileys, só chega com a
+            O envio manual ignora o interruptor do envio automático, mas não a
+            ligação: a mensagem só chega com a
             <a href="{% url 'notifications:whatsapp_connection' %}">ligação</a>
             de pé.
         </p>

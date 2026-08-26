@@ -423,6 +423,102 @@ class EmailTemplateAdminAreaTests(FollowUpBase):
         self.assertIn(self.template, opcoes)
         self.assertNotIn(inativo, opcoes)
 
+    def test_the_html_preview_is_drawn_and_not_shown_as_source(self):
+        # O motor de templates devolve o HTML marcado como seguro, e assim ele
+        # entrava cru no atributo `srcdoc` — que terminava nas primeiras aspas
+        # do modelo. O resultado era um email meio desenhado e meio em pedaços.
+        self.template.body_html = '<p style="color:red">Olá {{ customer_name }}</p>'
+        self.template.save()
+
+        resposta = self.client.get(
+            reverse("notifications:email_template_preview", args=[self.template.pk])
+        )
+        pagina = resposta.content.decode()
+
+        self.assertIn("&lt;p style=&quot;color:red&quot;&gt;", pagina)
+        self.assertNotIn('srcdoc="<p', pagina)
+
+        # E as variáveis continuam preenchidas lá dentro.
+        self.assertIn("Maria Silva", pagina)
+
+    def test_the_text_preview_shows_a_tag_instead_of_obeying_it(self):
+        self.template.body_text = "Olá <b>Maria</b>"
+        self.template.save()
+
+        resposta = self.client.get(
+            reverse("notifications:email_template_preview", args=[self.template.pk])
+        )
+
+        self.assertContains(resposta, "&lt;b&gt;Maria&lt;/b&gt;")
+
+    def test_automatic_and_follow_up_templates_are_listed_apart(self):
+        # Os nomes são parecidos e o que os separa não está no nome: um sai de
+        # um acontecimento, o outro sai de um serviço. Juntos, editava-se o
+        # que não era.
+        automatico, _ = EmailTemplate.objects.get_or_create(
+            key="appointment_created",
+            defaults={
+                "name": "Pedido recebido",
+                "subject": "Olá",
+                "body_text": "Recebemos o seu pedido.",
+            },
+        )
+
+        resposta = self.client.get(reverse("notifications:email_template_list"))
+
+        self.assertIn(automatico, resposta.context["automatic_templates"])
+        self.assertNotIn(automatico, resposta.context["followup_templates"])
+
+        self.assertIn(self.template, resposta.context["followup_templates"])
+        self.assertNotIn(self.template, resposta.context["automatic_templates"])
+
+    def test_the_per_service_messages_live_on_the_same_page(self):
+        # Tinham ecrã próprio no menu. Um seguimento é um modelo mais um
+        # serviço mais uma altura, e configurá-lo obrigava a saltar entre dois
+        # menus para ver as duas metades da mesma coisa.
+        resposta = self.client.get(reverse("notifications:email_template_list"))
+
+        self.assertIn(self.followup, resposta.context["followups"])
+        self.assertContains(resposta, "Mensagens por serviço")
+        self.assertContains(resposta, reverse("notifications:service_followup_create"))
+
+    def test_saving_a_follow_up_comes_back_to_the_templates(self):
+        # O ecrã de onde se saiu deixou de existir.
+        resposta = self.client.post(
+            reverse("notifications:service_followup_create"),
+            data={
+                "service": self.service.pk,
+                "email_template": self.template.pk,
+                "trigger": ServiceFollowUp.TRIGGER_DELAYED,
+                "days_after": 7,
+                "is_active": "on",
+            },
+        )
+
+        self.assertRedirects(resposta, reverse("notifications:email_template_list"))
+
+    def test_an_empty_section_is_not_drawn(self):
+        # Sem nenhum modelo ligado a um serviço, a secção de acompanhamento
+        # não tem nada para mostrar — e uma secção sempre lá, vazia, só ensina
+        # a passar os olhos por cima dela.
+        self.followup.delete()
+
+        resposta = self.client.get(reverse("notifications:email_template_list"))
+
+        self.assertEqual(resposta.context["followup_templates"], [])
+        self.assertNotContains(resposta, "Acompanhamento</h2>")
+
+    def test_a_template_nothing_sends_yet_is_kept_to_one_side(self):
+        # Escrito mas por ligar. Não é um envio automático nem um
+        # acompanhamento: dizê-lo é mais útil do que escondê-lo numa das duas.
+        rascunho = EmailTemplate.objects.create(
+            key="rascunho", name="Rascunho", subject="a", body_text="b"
+        )
+
+        resposta = self.client.get(reverse("notifications:email_template_list"))
+
+        self.assertIn(rascunho, resposta.context["unused_templates"])
+
 
 class FollowUpAccessTests(TestCase):
     """Configuração de emails e envios são da área interna."""
@@ -438,7 +534,6 @@ class FollowUpAccessTests(TestCase):
         return [
             reverse("notifications:email_template_list"),
             reverse("notifications:email_template_create"),
-            reverse("notifications:service_followup_list"),
             reverse("notifications:service_followup_create"),
         ]
 

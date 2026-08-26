@@ -1,9 +1,7 @@
 from django.conf import settings as django_settings
 from django.contrib import messages
-from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.generic import (
@@ -36,7 +34,6 @@ from .models import (
 )
 from . import baileys_whatsapp
 from .services import EmailTemplateService
-from .twilio_callbacks import record_status, signature_is_valid
 from .whatsapp_dispatch import (
     provider_error,
     resolve_recipients,
@@ -47,12 +44,51 @@ from .whatsapp_dispatch import (
 
 
 class EmailTemplateListView(InternalAreaRequiredMixin, ListView):
+    """Os modelos de email, separados por quem os manda.
+
+    Numa lista só, os textos automáticos e os de acompanhamento ficavam
+    misturados e com nomes parecidos — e o que se abria para editar era o
+    outro. Separados, a lista responde à pergunta certa: não "que modelos
+    existem", mas "o que é que sai daqui sozinho e o que é que sai por causa
+    de um serviço".
+
+    As mensagens por serviço vivem aqui em baixo, e não num ecrã à parte: um
+    seguimento é um modelo mais um serviço mais uma altura, e configurá-lo
+    obrigava a saltar entre dois menus para ver as duas metades da mesma
+    coisa.
+    """
+
     model = EmailTemplate
     template_name = "notifications/email_template_list.html"
     context_object_name = "templates"
 
     def get_queryset(self):
-        return EmailTemplate.objects.prefetch_related("follow_ups__service")
+        return EmailTemplate.objects.prefetch_related(
+            "follow_ups__service",
+            "event_settings",
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        grupos = {
+            EmailTemplate.USE_AUTOMATIC: [],
+            EmailTemplate.USE_FOLLOWUP: [],
+            EmailTemplate.USE_UNUSED: [],
+        }
+
+        for modelo in context["templates"]:
+            grupos[modelo.usage()].append(modelo)
+
+        context["automatic_templates"] = grupos[EmailTemplate.USE_AUTOMATIC]
+        context["followup_templates"] = grupos[EmailTemplate.USE_FOLLOWUP]
+        context["unused_templates"] = grupos[EmailTemplate.USE_UNUSED]
+
+        context["followups"] = ServiceFollowUp.objects.select_related(
+            "service", "email_template"
+        )
+
+        return context
 
 
 class EmailTemplateCreateView(InternalAreaRequiredMixin, CreateView):
@@ -125,20 +161,11 @@ class EmailTemplatePreviewView(InternalAreaRequiredMixin, TemplateView):
         return context
 
 
-class ServiceFollowUpListView(InternalAreaRequiredMixin, ListView):
-    model = ServiceFollowUp
-    template_name = "notifications/service_followup_list.html"
-    context_object_name = "followups"
-
-    def get_queryset(self):
-        return ServiceFollowUp.objects.select_related("service", "email_template")
-
-
 class ServiceFollowUpCreateView(InternalAreaRequiredMixin, CreateView):
     model = ServiceFollowUp
     form_class = ServiceFollowUpForm
     template_name = "notifications/service_followup_form.html"
-    success_url = reverse_lazy("notifications:service_followup_list")
+    success_url = reverse_lazy("notifications:email_template_list")
 
     def form_valid(self, form):
         messages.success(self.request, "Mensagem criada.")
@@ -149,7 +176,7 @@ class ServiceFollowUpUpdateView(InternalAreaRequiredMixin, UpdateView):
     model = ServiceFollowUp
     form_class = ServiceFollowUpForm
     template_name = "notifications/service_followup_form.html"
-    success_url = reverse_lazy("notifications:service_followup_list")
+    success_url = reverse_lazy("notifications:email_template_list")
 
     def form_valid(self, form):
         messages.success(self.request, "Mensagem atualizada.")
@@ -159,7 +186,7 @@ class ServiceFollowUpUpdateView(InternalAreaRequiredMixin, UpdateView):
 class ServiceFollowUpDeleteView(InternalAreaRequiredMixin, DeleteView):
     model = ServiceFollowUp
     template_name = "notifications/service_followup_confirm_delete.html"
-    success_url = reverse_lazy("notifications:service_followup_list")
+    success_url = reverse_lazy("notifications:email_template_list")
 
     def post(self, request, *args, **kwargs):
         messages.success(request, "Mensagem removida.")
@@ -206,9 +233,7 @@ class AppointmentFollowUpView(InternalAreaRequiredMixin, TemplateView):
         context["rows"] = linhas
         context["has_email"] = bool(appointment.customer.email)
         context["whatsapp_rows"] = self.get_whatsapp_rows(appointment)
-        context["twilio_enabled"] = (
-            django_settings.TWILIO_ENABLED or django_settings.BAILEYS_ENABLED
-        )
+        context["whatsapp_enabled"] = django_settings.BAILEYS_ENABLED
 
         return context
 
@@ -231,8 +256,7 @@ class AppointmentFollowUpView(InternalAreaRequiredMixin, TemplateView):
                     "recipients": resolve_recipients(setting, appointment),
                     "last_log": ultimo,
                     "sent_at": ultimo.sent_at if ultimo else None,
-                    # O que falta depende do caminho: pela Twilio é o modelo
-                    # aprovado, pelo Baileys é o texto.
+                    # O que falta é o texto da mensagem.
                     "needs_template": not setting.is_ready_to_send(),
                     "blocked_reason": provider_error(setting),
                 }
@@ -271,25 +295,22 @@ class WhatsAppSettingListView(InternalAreaRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
 
         context["active_tab"] = "messages"
-        context["twilio_enabled"] = django_settings.TWILIO_ENABLED
         context["baileys_enabled"] = django_settings.BAILEYS_ENABLED
-        context["twilio_from"] = django_settings.TWILIO_WHATSAPP_FROM
-        context["professional_number"] = django_settings.TWILIO_PROFESSIONAL_WHATSAPP
+        context["professional_number"] = django_settings.BAILEYS_PROFESSIONAL_WHATSAPP
 
-        # Uma regra pode estar ligada e mesmo assim não enviar, porque o
-        # fornecedor dela está desligado no servidor. Sem isto explicado na
-        # tabela, o ecrã diz "A enviar" para uma mensagem que não sai.
+        # Uma regra pode estar ligada e mesmo assim não enviar, porque o envio
+        # está desligado no servidor. Sem isto explicado na tabela, o ecrã diz
+        # "A enviar" para uma mensagem que não sai.
         context["rows"] = [
             {"setting": regra, "blocked_reason": provider_error(regra)}
             for regra in context["settings_list"]
         ]
 
-        context["recent_logs"] = WhatsAppMessageLog.objects.filter(
-            provider__in=[
-                WhatsAppMessageLog.PROVIDER_TWILIO,
-                WhatsAppMessageLog.PROVIDER_BAILEYS,
-            ]
-        ).select_related("appointment")[:15]
+        # Os envios antigos pela Twilio continuam a aparecer: o histórico é
+        # para se poder olhar para trás, e para trás ela ainda lá está.
+        context["recent_logs"] = WhatsAppMessageLog.objects.select_related(
+            "appointment"
+        )[:15]
 
         return context
 
@@ -315,8 +336,10 @@ class WhatsAppConnectionView(InternalAreaRequiredMixin, TemplateView):
         # partir daí é o JavaScript que o vai refrescando.
         context["status"] = baileys_whatsapp.get_status()
 
-        context["baileys_rules"] = WhatsAppEventSetting.objects.filter(
-            provider=WhatsAppEventSetting.PROVIDER_BAILEYS
+        # Quantas regras dependem desta ligação: com ela em baixo, é este o
+        # número de mensagens que deixa de sair.
+        context["active_rules"] = WhatsAppEventSetting.objects.filter(
+            is_active=True
         ).count()
 
         context["total_rules"] = WhatsAppEventSetting.objects.count()
@@ -389,43 +412,6 @@ class WhatsAppConnectionRestartView(InternalAreaRequiredMixin, View):
             messages.error(request, str(erro))
 
         return redirect("notifications:whatsapp_connection")
-
-
-class WhatsAppUseBaileysForAllView(InternalAreaRequiredMixin, View):
-    """Passa todas as regras para o Baileys de uma vez.
-
-    Quem acabou de ligar o número quer usá-lo; abrir seis regras uma a uma
-    para mudar a mesma caixa é trabalho sem conteúdo.
-    """
-
-    def post(self, request):
-        alteradas = WhatsAppEventSetting.objects.exclude(
-            provider=WhatsAppEventSetting.PROVIDER_BAILEYS
-        ).update(provider=WhatsAppEventSetting.PROVIDER_BAILEYS)
-
-        # O Baileys envia texto livre. Uma regra que só tinha Content SID fica
-        # sem nada para dizer, e é melhor avisar já do que descobrir no envio.
-        sem_texto = [
-            str(regra)
-            for regra in WhatsAppEventSetting.objects.filter(
-                provider=WhatsAppEventSetting.PROVIDER_BAILEYS
-            )
-            if not regra.body_template.strip()
-        ]
-
-        if alteradas:
-            messages.success(request, f"{alteradas} regra(s) passaram para o Baileys.")
-        else:
-            messages.info(request, "Todas as regras já estavam no Baileys.")
-
-        if sem_texto:
-            messages.warning(
-                request,
-                "Sem texto preenchido, e por isso sem nada para enviar: "
-                + "; ".join(sem_texto),
-            )
-
-        return redirect("notifications:whatsapp_setting_list")
 
 
 class WhatsAppSettingCreateView(InternalAreaRequiredMixin, CreateView):
@@ -503,29 +489,6 @@ class AppointmentWhatsAppSendView(InternalAreaRequiredMixin, View):
             messages.error(request, f"{setting}: {resultado.message}")
 
         return redirect("notifications:appointment_followups", pk=pk)
-
-
-@method_decorator(csrf_exempt, name="dispatch")
-class TwilioStatusWebhookView(View):
-    """Recebe da Twilio o estado final de cada mensagem.
-
-    Sem autenticação de sessão — quem chama é a Twilio, não um browser — mas
-    com verificação de assinatura: o endereço é público e sem ela qualquer
-    pessoa podia marcar mensagens como entregues.
-    """
-
-    def post(self, request):
-        if not signature_is_valid(request):
-            return HttpResponseForbidden("Assinatura inválida.")
-
-        record_status(
-            message_sid=request.POST.get("MessageSid", ""),
-            message_status=request.POST.get("MessageStatus", ""),
-            error_code=request.POST.get("ErrorCode", ""),
-        )
-
-        # A Twilio só quer saber que recebemos; o corpo é ignorado.
-        return HttpResponse(status=204)
 
 
 class MessagingSettingView(InternalAreaRequiredMixin, UpdateView):

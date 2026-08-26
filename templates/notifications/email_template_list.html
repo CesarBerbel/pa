@@ -14,83 +14,167 @@
     </a>
 </div>
 
-<div class="card shadow-sm border-0">
-    <div class="card-body">
-        {% if templates %}
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead>
-                        <tr>
-                            <th>Nome</th>
-                            <th>Assunto</th>
-                            <th>Usado em</th>
-                            <th>Estado</th>
-                            <th class="text-end">Ações</th>
-                        </tr>
-                    </thead>
+{% if templates %}
 
-                    <tbody>
-                        {% for modelo in templates %}
-                            <tr>
-                                <td>
-                                    <strong>{{ modelo.name }}</strong>
-                                    <br>
-                                    <small class="text-muted">{{ modelo.key }}</small>
-                                </td>
-
-                                <td>{{ modelo.subject }}</td>
-
-                                <td>
-                                    {% for seguimento in modelo.follow_ups.all %}
-                                        <span class="badge bg-light text-dark border">
-                                            {{ seguimento.service.name }} · {{ seguimento.get_delay_label }}
-                                        </span>
-                                    {% empty %}
-                                        <span class="text-muted">—</span>
-                                    {% endfor %}
-                                </td>
-
-                                <td>
-                                    {% if modelo.is_active %}
-                                        <span class="badge bg-success">Ativo</span>
-                                    {% else %}
-                                        <span class="badge bg-secondary">Inativo</span>
-                                    {% endif %}
-                                </td>
-
-                                <td class="text-end text-nowrap">
-                                    <a
-                                        href="{% url 'notifications:email_template_preview' modelo.pk %}"
-                                        class="btn btn-sm btn-outline-secondary"
-                                    >
-                                        Pré-visualizar
-                                    </a>
-
-                                    <a
-                                        href="{% url 'notifications:email_template_update' modelo.pk %}"
-                                        class="btn btn-sm btn-outline-primary"
-                                    >
-                                        Editar
-                                    </a>
-
-                                    <a
-                                        href="{% url 'notifications:email_template_delete' modelo.pk %}"
-                                        class="btn btn-sm btn-outline-danger"
-                                    >
-                                        Apagar
-                                    </a>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+    {# Duas famílias, e não uma lista só: o que sai de um acontecimento e o #}
+    {# que sai de um serviço. Misturados, os nomes parecidos faziam abrir o #}
+    {# modelo errado para editar. #}
+    {# #}
+    {# Cada secção só existe quando tem linhas. Uma secção sempre lá, vazia, #}
+    {# só ensinava a passar os olhos por cima dela — e a de acompanhamento #}
+    {# está vazia enquanto não houver serviço nenhum ligado a um modelo, que #}
+    {# é o estado normal de quem ainda não os configurou. #}
+    {% if automatic_templates %}
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h2 class="h6 text-uppercase text-muted mb-1">Envio automático</h2>
+                <p class="text-muted small mb-0">
+                    Saem sozinhos, quando a marcação é criada, confirmada,
+                    cancelada ou está a chegar.
+                </p>
             </div>
-        {% else %}
+
+            <div class="card-body pt-3">
+                {% include "notifications/_email_template_table.html" with modelos=automatic_templates vazio="Pelo identificador" %}
+            </div>
+        </div>
+    {% endif %}
+
+    {% if followup_templates %}
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h2 class="h6 text-uppercase text-muted mb-1">Acompanhamento</h2>
+                <p class="text-muted small mb-0">
+                    Saem por causa de um serviço — no fim do atendimento, uns
+                    dias depois, ou quando forem enviados à mão.
+                </p>
+            </div>
+
+            <div class="card-body pt-3">
+                {% include "notifications/_email_template_table.html" with modelos=followup_templates vazio="—" %}
+            </div>
+        </div>
+    {% endif %}
+
+    {# As mensagens por serviço: o que liga um modelo a um serviço e a uma #}
+    {# altura. Viviam num ecrã à parte, e configurar um seguimento era saltar #}
+    {# entre dois menus para ver as duas metades da mesma coisa. #}
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-start">
+            <div>
+                <h2 class="h6 text-uppercase text-muted mb-1">Mensagens por serviço</h2>
+                <p class="text-muted small mb-0">
+                    Que modelo sai por causa de que serviço, e quando.
+                </p>
+            </div>
+
+            <a
+                href="{% url 'notifications:service_followup_create' %}"
+                class="btn btn-sm btn-outline-primary text-nowrap"
+            >
+                Novo seguimento
+            </a>
+        </div>
+
+        <div class="card-body pt-3">
+            {% if followups %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Serviço</th>
+                                <th>Modelo de email</th>
+                                <th>Quando</th>
+                                <th>Estado</th>
+                                <th class="text-end">Ações</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for seguimento in followups %}
+                                <tr>
+                                    <td>{{ seguimento.service.name }}</td>
+
+                                    <td>
+                                        <a href="{% url 'notifications:email_template_preview' seguimento.email_template.pk %}">
+                                            {{ seguimento.email_template.name }}
+                                        </a>
+                                    </td>
+
+                                    <td>{{ seguimento.get_delay_label|capfirst }}</td>
+
+                                    <td>
+                                        {% if seguimento.is_active %}
+                                            <span class="badge bg-success">Automático</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Só manual</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="text-end text-nowrap">
+                                        <a
+                                            href="{% url 'notifications:service_followup_update' seguimento.pk %}"
+                                            class="btn btn-sm btn-outline-primary"
+                                        >
+                                            Editar
+                                        </a>
+
+                                        <a
+                                            href="{% url 'notifications:service_followup_delete' seguimento.pk %}"
+                                            class="btn btn-sm btn-outline-danger"
+                                        >
+                                            Apagar
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {# Fica ao pé da tabela e não no fundo da página: é a #}
+                {# surpresa que espera quem cria um seguimento e depois #}
+                {# não percebe porque é que ninguém o recebeu. #}
+                <p class="text-muted small mb-0 mt-3">
+                    <i class="bi bi-info-circle me-1"></i>
+                    O envio automático só apanha marcações feitas
+                    <strong>depois</strong> de o seguimento ser criado. Para as
+                    anteriores, use o botão de envio manual na marcação.
+                </p>
+            {% else %}
+                <p class="text-muted mb-0">
+                    Nenhum seguimento configurado. Exemplo: o manual de cuidados
+                    para os calos não voltarem, 15 dias depois da remoção.
+                </p>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if unused_templates %}
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h2 class="h6 text-uppercase text-muted mb-1">Por ligar</h2>
+                <p class="text-muted small mb-0">
+                    Escritos, mas ainda sem nada que os mande. Ligue-os a um
+                    serviço em Acompanhamentos, ou dê-lhes o identificador de um
+                    acontecimento.
+                </p>
+            </div>
+
+            <div class="card-body pt-3">
+                {% include "notifications/_email_template_table.html" with modelos=unused_templates vazio="—" %}
+            </div>
+        </div>
+    {% endif %}
+
+{% else %}
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
             <div class="app-empty-state">
                 <h3>Ainda não há modelos</h3>
                 <p>Crie um modelo para configurar os emails enviados aos clientes.</p>
             </div>
-        {% endif %}
+        </div>
     </div>
-</div>
+{% endif %}
 {% endblock %}

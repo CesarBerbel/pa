@@ -110,7 +110,7 @@ class AppointmentService:
                         appointment,
                     )
 
-                # Depois do commit, como os emails: uma falha da Twilio não
+                # Depois do commit, como os emails: uma falha do WhatsApp não
                 # pode desfazer uma marcação que já está gravada.
                 deliver_after_commit(
                     notify_whatsapp,

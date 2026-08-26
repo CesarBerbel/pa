@@ -1,15 +1,13 @@
 """Envio de WhatsApp pelo Baileys.
 
 O Baileys liga-se ao WhatsApp como um dispositivo emparelhado, à maneira do
-WhatsApp Web. A diferença face à Twilio não é de detalhe:
+WhatsApp Web. É por aqui que sai todo o WhatsApp desta casa, e o que isso quer
+dizer:
 
 - **não há modelos para aprovar** nem janela de 24 horas — texto livre sempre;
 - **não há custo por mensagem**;
 - **não há garantia de serviço**: quem envia é o número da clínica, e um uso
   abusivo pode dar-lhe um bloqueio.
-
-Por isso a escolha do fornecedor é por regra, e não global: as mensagens que
-não podem falhar podem continuar a sair pela Twilio.
 
 Do lado de cá isto é só um cliente HTTP. A ligação vive no serviço Node em
 `baileys/`, que a mantém aberta e guarda a sessão em disco.
@@ -177,9 +175,8 @@ def resolve_recipients(setting, appointment):
 def build_body(setting, context, language=None):
     """O texto que vai sair, na língua de quem o vai ler.
 
-    O Baileys não conhece modelos aprovados: o `content_sid` da regra não lhe
-    serve de nada e o que conta é o texto livre. Sem versão inglesa
-    configurada, sai o português.
+    O Baileys não conhece modelos aprovados: o que sai é o texto escrito na
+    regra. Sem versão inglesa configurada, sai o português.
     """
 
     return render_text(setting.for_language(language)["body"], context).strip()

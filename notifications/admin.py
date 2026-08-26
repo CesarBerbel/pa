@@ -374,15 +374,12 @@ class WhatsAppEventSettingAdmin(admin.ModelAdmin):
     list_display = (
         "event_type",
         "audience",
-        "provider",
         "is_active",
-        "content_sid",
     )
 
     list_filter = (
         "event_type",
         "audience",
-        "provider",
         "is_active",
     )
 

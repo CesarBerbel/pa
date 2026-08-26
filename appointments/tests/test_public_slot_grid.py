@@ -1,4 +1,4 @@
-from datetime import time, timedelta
+from datetime import datetime, time, timedelta
 
 from django.test import TestCase
 from django.urls import reverse
@@ -117,7 +117,13 @@ class PublicSlotGridTests(TestCase):
             end_time=time(23, 30),
         )
 
-        with freeze_time(timezone.now().replace(hour=12, minute=0)):
+        # Meio-dia **local** do dia que está a ser pedido, e não do relógio
+        # UTC: entre as 23h e a meia-noite em Lisboa, `timezone.now()` já é do
+        # dia seguinte, e o teste congelava a véspera de `hoje` — nenhum
+        # horário ficava no passado, e a lista vinha desde as 00:00.
+        meio_dia = timezone.make_aware(datetime.combine(hoje, time(12, 0)))
+
+        with freeze_time(meio_dia):
             grelha = AvailabilityService.build_public_slots(self.service, hoje)
 
         # Nenhum horário anterior ao momento atual, mesmo estando livre.

@@ -1,12 +1,13 @@
-"""Encaminha cada regra de WhatsApp para o fornecedor que ela escolheu.
+"""Encaminha as regras de WhatsApp para quem as envia.
 
-Este é o único ponto por onde as marcações disparam mensagens. O que muda de
-regra para regra é o transporte — Twilio ou Baileys — e é isso que aqui se
-decide, para as marcações não terem de saber que existe mais do que um.
+Este é o único ponto por onde as marcações disparam mensagens de WhatsApp, e é
+por isso que continua a existir mesmo depois de o transporte ter passado a ser
+um só: as marcações não têm de saber qual é, e trocá-lo — ou voltar a ter
+dois — é uma alteração deste ficheiro e de mais nenhum.
 
-Cada fornecedor pode estar desligado nas definições (`TWILIO_ENABLED`,
-`BAILEYS_ENABLED`). Uma regra que aponte para um fornecedor desligado não é
-erro: é uma regra à espera, e o ecrã de configuração mostra-a como tal.
+O envio pode estar desligado nas definições (`BAILEYS_ENABLED`). Uma regra
+ligada com o envio desligado não é erro: é uma regra à espera, e o ecrã de
+configuração mostra-a como tal.
 """
 
 from __future__ import annotations
@@ -15,7 +16,7 @@ import logging
 
 from django.conf import settings
 
-from notifications import baileys_whatsapp, twilio_whatsapp
+from notifications import baileys_whatsapp
 from notifications.models import MessagingSetting, WhatsAppEventSetting
 from notifications.whatsapp_common import (
     SendResult,
@@ -41,21 +42,20 @@ def messaging_off_result():
     return SendResult(True, MESSAGING_OFF, skipped=True)
 
 
-PROVIDERS = {
-    WhatsAppEventSetting.PROVIDER_TWILIO: twilio_whatsapp,
-    WhatsAppEventSetting.PROVIDER_BAILEYS: baileys_whatsapp,
-}
+def provider_module(setting=None):
+    """Por onde as mensagens de WhatsApp saem.
+
+    Houve dois caminhos — um serviço contratado e o número da clínica — e por
+    isso havia aqui uma escolha por regra. Ficou um: o Baileys. A função fica,
+    e as chamadas também, porque é ela que diz num sítio só qual é o caminho —
+    e é aqui que se acrescenta outro, se algum dia voltar a haver.
+    """
+
+    return baileys_whatsapp
 
 
-def provider_module(setting):
-    return PROVIDERS.get(setting.provider, twilio_whatsapp)
-
-
-def provider_enabled(provider):
-    if provider == WhatsAppEventSetting.PROVIDER_BAILEYS:
-        return settings.BAILEYS_ENABLED
-
-    return settings.TWILIO_ENABLED
+def provider_enabled(provider=None):
+    return settings.BAILEYS_ENABLED
 
 
 def provider_error(setting):
@@ -65,23 +65,20 @@ def provider_error(setting):
     configuração para explicar o que falta a uma regra que parece ligada.
     """
 
-    if not provider_enabled(setting.provider):
-        return (
-            f"{setting.get_provider_display()} está desligado nas definições "
-            "do servidor."
-        )
+    if not provider_enabled():
+        return "O envio pelo número da clínica está desligado no servidor."
 
-    return provider_module(setting).validate_settings()
+    return provider_module().validate_settings()
 
 
 def resolve_recipients(setting, appointment):
     """Números desta regra, normalizados como o fornecedor dela precisa."""
 
-    return provider_module(setting).resolve_recipients(setting, appointment)
+    return provider_module().resolve_recipients(setting, appointment)
 
 
 def sent_logs(appointment, setting):
-    return provider_module(setting).sent_logs(appointment, setting)
+    return provider_module().sent_logs(appointment, setting)
 
 
 def send_manual(appointment, setting):
@@ -90,7 +87,7 @@ def send_manual(appointment, setting):
     if not MessagingSetting.whatsapp_enabled():
         return messaging_off_result()
 
-    return provider_module(setting).send_manual(appointment, setting)
+    return provider_module().send_manual(appointment, setting)
 
 
 def send_test(setting, recipient):
@@ -101,7 +98,7 @@ def send_test(setting, recipient):
     if not MessagingSetting.whatsapp_enabled():
         return messaging_off_result()
 
-    return provider_module(setting).send_test(setting, recipient)
+    return provider_module().send_test(setting, recipient)
 
 
 def preview(appointment, event_type):
@@ -131,8 +128,8 @@ def preview(appointment, event_type):
         return [], ["Nenhuma regra de WhatsApp ativa para este acontecimento."]
 
     for regra in regras:
-        if not provider_enabled(regra.provider):
-            avisos.append(f"{regra.get_provider_display()} está desligado no servidor.")
+        if not provider_enabled():
+            avisos.append("O envio pelo número da clínica está desligado no servidor.")
             continue
 
         try:
@@ -140,7 +137,7 @@ def preview(appointment, event_type):
             # A pré-visualização mostra o que a pessoa vai mesmo receber,
             # incluindo a língua.
             lingua = audience_language(regra, appointment)
-            texto = provider_module(regra).build_body(
+            texto = provider_module().build_body(
                 regra,
                 build_context(appointment, lingua),
                 language=lingua,
@@ -161,7 +158,7 @@ def preview(appointment, event_type):
         mensagens.append(
             {
                 "audience": regra.get_audience_display(),
-                "provider": regra.get_provider_display(),
+                "provider": "WhatsApp da clínica",
                 "to": destinatarios,
                 "body": texto,
             }
@@ -198,24 +195,22 @@ def notify(appointment, event_type):
     for regra in regras:
         # Desligado é uma decisão de quem administra: nada a enviar, nada a
         # reportar.
-        if not provider_enabled(regra.provider):
+        if not provider_enabled():
             ignoradas += 1
             continue
 
         # Ligado mas mal configurado é outra coisa. Uma credencial em falta
         # calada é uma mensagem que ninguém percebe que não saiu.
-        erro_config = provider_module(regra).validate_settings()
+        erro_config = provider_module().validate_settings()
 
         if erro_config:
-            logger.warning(
-                "%s mal configurado: %s", regra.get_provider_display(), erro_config
-            )
+            logger.warning("WhatsApp mal configurado: %s", erro_config)
             houve_falha = True
             mensagens.append(erro_config)
             continue
 
         try:
-            resultado = provider_module(regra).send_for_setting(appointment, regra)
+            resultado = provider_module().send_for_setting(appointment, regra)
         except Exception as erro:
             logger.exception("Erro inesperado a enviar %s", regra)
             houve_falha = True

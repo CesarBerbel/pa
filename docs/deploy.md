@@ -275,9 +275,10 @@ Correr duas vezes não duplica nada: cada envio fica registado e o registo é
 consultado antes do seguinte. É por isso que os lembretes podem correr de meia
 em meia hora sem mandarem quarenta e oito mensagens por dia.
 
-A antecedência do lembrete não está aqui — está em *Configurações → Mensagens →
-Envio de mensagens*, com 24 horas por omissão. **Zero desliga-o.** Mudá-la no
-ecrã chega; o cron fica como está.
+A antecedência do lembrete não está aqui — está no próprio modelo da mensagem,
+em *Configurações → Mensagens → Modelos de email → Lembrete da marcação*, com
+24 horas por omissão. **Zero desliga-o.** Mudá-la no ecrã chega; o cron fica
+como está.
 
 Para ver o que sairia, sem enviar:
 
@@ -307,45 +308,32 @@ email que não chegou:
   o comando dos seguimentos à parte — o diário não passa esta opção adiante:
   `... exec -T web python manage.py send_service_followups --max-age-days 30`.
 
-## Mensagens de WhatsApp pela Twilio
+## Mensagens de WhatsApp
 
-Configuradas em *Configurações → Mensagens de WhatsApp*: uma linha por
-acontecimento e destinatário. Ao contrário dos emails de seguimento, **não
-precisam de cron** — saem no momento em que a marcação é criada, confirmada ou
-cancelada.
+Configuradas em *Configurações → Mensagens → Regras de WhatsApp*: uma linha por
+acontecimento e destinatário. Ao contrário dos seguimentos, **não precisam de
+cron** — saem no momento em que a marcação é criada, confirmada ou cancelada.
+As exceções são o lembrete e o aviso de retorno, que saem pelos comandos
+descritos acima.
+
+Saem pelo número da clínica, ligado como um dispositivo à maneira do WhatsApp
+Web: texto livre sempre, sem modelos para aprovar e sem custo por mensagem, mas
+sem garantia de serviço. Como se liga está em
+[baileys_whatsapp.md](baileys_whatsapp.md).
 
 No `.env.prod`:
 
 ```env
-TWILIO_ENABLED=True
-TWILIO_ACCOUNT_SID=AC...
-TWILIO_AUTH_TOKEN=...
-TWILIO_WHATSAPP_FROM=whatsapp:+351...
-TWILIO_PROFESSIONAL_WHATSAPP=+351938594367
+BAILEYS_ENABLED=True
+BAILEYS_API_URL=http://baileys:3000
+BAILEYS_API_TOKEN=...
+BAILEYS_PROFESSIONAL_WHATSAPP=+351938594367
 ```
 
-### O modelo aprovado não é opcional
-
-Tudo o que este sistema envia parte da clínica, não é resposta a uma mensagem
-do cliente. A Twilio só aceita **texto livre** nas 24 horas seguintes a uma
-mensagem do destinatário; fora disso recusa com o código **63016** e a mensagem
-não chega a ninguém.
-
-Na prática:
-
-* **Sandbox** — texto livre funciona, desde que o destinatário tenha aderido ao
-  sandbox com o código `join <palavra>`. Serve para testar.
-* **Produção** — cada mensagem precisa de um *template* aprovado na consola da
-  Twilio. Copie o **Content SID** (começa por `HX`) para a regra e preencha as
-  posições em *Variáveis do modelo*:
-
-  ```json
-  {"1": "{{ customer_name }}", "2": "{{ appointment_date }}", "3": "{{ appointment_time }}"}
-  ```
-
-A aprovação de um template pela Meta demora normalmente algumas horas. Enquanto
-não estiver aprovado, a regra fica configurada mas as mensagens falham — e o
-erro aparece em *Últimos envios*, na mesma página.
+Houve aqui um segundo caminho — um serviço contratado, com modelos aprovados
+pela Meta e um Content SID por mensagem. Saiu do projeto: o que sobra dele são
+as linhas antigas no histórico de envios, que continuam a dizer por onde
+saíram.
 
 ### Antes de apontar a clientes reais
 
@@ -655,6 +643,39 @@ curl -I https://priarantes.cloud/servicos/feed/
 
 Google Business Profile, Instagram, cartões e diretórios. Para pesquisa local, a
 consistência entre estes registos e o site é um fator de posicionamento.
+
+### 8. O botão de marcação na Pesquisa e no Maps
+
+No **Perfil de Empresa do Google**, no campo de marcações, pôr:
+
+```
+https://priarantes.com/agenda-publica/?utm_source=google&utm_medium=organic&utm_campaign=perfil-empresa
+```
+
+Passa a aparecer um botão *Agendar* na ficha, na Pesquisa e no Maps. O cliente
+sai do Google e cai na agenda pública desta casa, com os pagamentos, as listas
+de espera e as regras de agenda todas do lado de cá.
+
+O `utm_source` é lido pelo GA4 que já está no `base.html`, e diz depois quantas
+marcações vieram dali — **para quem aceitar os cookies de análise**. Quem
+recusar não é contado, portanto o número é um mínimo e não um total.
+
+E no `.env.prod`:
+
+```env
+SEO_GOOGLE_BUSINESS_URL=https://g.page/...
+```
+
+O link de partilha da ficha. Entra no JSON-LD da página inicial como `sameAs` e
+`hasMap`, e é o que diz ao Google que a ficha e o site são a mesma casa — sem
+ele, ficam a ser duas coisas que por acaso se parecem. Vazio não escreve nada.
+
+> **O que isto não é.** O *Reserve with Google* — marcar sem sair do Google —
+> exige entrar no programa de parceiros e implementar a Maps Booking API:
+> feeds de comerciante, serviços e disponibilidade, mais um servidor de
+> reservas em tempo real, com certificação. O Google integra plataformas de
+> marcações, não negócios individuais. O que está descrito acima é o caminho
+> aberto a quem tem uma ficha.
 
 
 ---

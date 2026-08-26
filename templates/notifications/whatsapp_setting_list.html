@@ -18,13 +18,13 @@
 
 {% include "notifications/_whatsapp_tabs.html" %}
 
-{% if not twilio_enabled and not baileys_enabled %}
+{% if not baileys_enabled %}
     <div class="alert alert-warning">
         <i class="bi bi-exclamation-triangle me-1"></i>
-        <strong>Não há nenhum caminho de envio ligado.</strong>
+        <strong>O envio de WhatsApp está desligado.</strong>
         As regras abaixo podem ser configuradas, mas nada sai enquanto
-        <code>TWILIO_ENABLED</code> ou <code>BAILEYS_ENABLED</code> não
-        estiverem a <code>True</code> no ficheiro de ambiente do servidor.
+        <code>BAILEYS_ENABLED</code> não estiver a <code>True</code> no
+        ficheiro de ambiente do servidor.
     </div>
 {% endif %}
 
@@ -37,8 +37,7 @@
                         <tr>
                             <th>Quando</th>
                             <th>Quem recebe</th>
-                            <th>Enviar por</th>
-                            <th>Como</th>
+                            <th>Mensagem</th>
                             <th>Estado</th>
                             <th class="text-end">Ações</th>
                         </tr>
@@ -60,35 +59,13 @@
                                 </td>
 
                                 <td>
-                                    {% if regra.provider == "baileys" %}
-                                        <span class="badge bg-success-subtle text-success-emphasis">
-                                            <i class="bi bi-whatsapp me-1"></i>Baileys
-                                        </span>
+                                    {# O que conta é haver texto escrito: é ele #}
+                                    {# que vai ser enviado. #}
+                                    {% if regra.body_template %}
+                                        <span class="badge bg-success">Texto pronto</span>
                                     {% else %}
-                                        <span class="badge bg-primary-subtle text-primary-emphasis">
-                                            <i class="bi bi-cloud me-1"></i>Twilio
-                                        </span>
-                                    {% endif %}
-                                </td>
-
-                                <td>
-                                    {% if regra.provider == "baileys" %}
-                                        {# Pelo Baileys não há modelos: o que #}
-                                        {# conta é haver texto escrito. #}
-                                        {% if regra.body_template %}
-                                            <span class="badge bg-success">Texto pronto</span>
-                                        {% else %}
-                                            <span class="badge bg-danger">Sem texto</span>
-                                            <br><small class="text-muted">preencha a mensagem</small>
-                                        {% endif %}
-                                    {% elif regra.content_sid %}
-                                        <span class="badge bg-success">Modelo aprovado</span>
-                                        <br><small class="text-muted">{{ regra.content_sid }}</small>
-                                    {% elif regra.meta_template_body %}
-                                        <span class="badge bg-warning text-dark">Por submeter</span>
-                                        <br><small class="text-muted">texto pronto, falta o SID</small>
-                                    {% else %}
-                                        <span class="badge bg-warning text-dark">Texto livre</span>
+                                        <span class="badge bg-danger">Sem texto</span>
+                                        <br><small class="text-muted">preencha a mensagem</small>
                                     {% endif %}
                                 </td>
 
@@ -103,10 +80,8 @@
                                         <br><small class="text-muted">{{ linha.blocked_reason }}</small>
                                     {% elif regra.is_ready_to_send %}
                                         <span class="badge bg-success">A enviar</span>
-                                    {% elif regra.provider == "baileys" %}
-                                        <span class="badge bg-danger">Sem texto</span>
                                     {% else %}
-                                        <span class="badge bg-warning text-dark">Só no sandbox</span>
+                                        <span class="badge bg-danger">Sem texto</span>
                                     {% endif %}
                                 </td>
 
@@ -145,51 +120,20 @@
 
 <div class="card shadow-sm border-0 mb-4">
     <div class="card-body">
-        <h2 class="h6 text-uppercase text-muted mb-3">Os dois caminhos</h2>
+        <h2 class="h6 text-uppercase text-muted mb-3">Como as mensagens saem</h2>
 
-        <div class="row g-3 small">
-            <div class="col-md-6">
-                <div class="border rounded p-3 h-100">
-                    <h3 class="h6 mb-2">
-                        <i class="bi bi-whatsapp text-success me-1"></i>
-                        Baileys
-                    </h3>
+        <div class="small">
+            <p class="text-muted mb-2">
+                Pelo número da clínica, ligado como um dispositivo à maneira do
+                WhatsApp Web. Texto livre sempre, sem modelos para aprovar e sem
+                custo por mensagem.
+            </p>
 
-                    <p class="text-muted mb-2">
-                        O número da clínica ligado como um dispositivo, à
-                        maneira do WhatsApp Web. Texto livre sempre, sem
-                        modelos para aprovar e sem custo por mensagem.
-                    </p>
-
-                    <p class="text-muted mb-0">
-                        Em troca não há garantia de serviço: depende da
-                        <a href="{% url 'notifications:whatsapp_connection' %}">ligação</a>
-                        estar de pé, e um uso abusivo pode dar um bloqueio ao
-                        número.
-                    </p>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <div class="border rounded p-3 h-100">
-                    <h3 class="h6 mb-2">
-                        <i class="bi bi-cloud text-primary me-1"></i>
-                        Twilio
-                    </h3>
-
-                    <p class="text-muted mb-2">
-                        Serviço contratado, com entrega confirmada por webhook.
-                        Custa por mensagem.
-                    </p>
-
-                    <p class="text-muted mb-0">
-                        Tudo o que sai daqui parte da clínica, não é resposta a
-                        um cliente. Fora das 24 horas seguintes a uma mensagem
-                        do destinatário, a Twilio recusa texto livre com o erro
-                        63016 — é preciso um modelo aprovado (Content SID).
-                    </p>
-                </div>
-            </div>
+            <p class="text-muted mb-0">
+                Em troca não há garantia de serviço: depende da
+                <a href="{% url 'notifications:whatsapp_connection' %}">ligação</a>
+                estar de pé, e um uso abusivo pode dar um bloqueio ao número.
+            </p>
         </div>
     </div>
 </div>

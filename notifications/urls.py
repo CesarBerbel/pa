@@ -12,9 +12,7 @@ from .views import (
     MessagingSettingView,
     ServiceFollowUpCreateView,
     ServiceFollowUpDeleteView,
-    ServiceFollowUpListView,
     ServiceFollowUpUpdateView,
-    TwilioStatusWebhookView,
     WhatsAppConnectionLogoutView,
     WhatsAppConnectionRestartView,
     WhatsAppConnectionStatusView,
@@ -24,7 +22,6 @@ from .views import (
     WhatsAppSettingListView,
     WhatsAppSettingTestView,
     WhatsAppSettingUpdateView,
-    WhatsAppUseBaileysForAllView,
 )
 
 app_name = "notifications"
@@ -61,11 +58,6 @@ urlpatterns = [
         name="email_template_preview",
     ),
     path(
-        "emails/seguimentos/",
-        ServiceFollowUpListView.as_view(),
-        name="service_followup_list",
-    ),
-    path(
         "emails/seguimentos/novo/",
         ServiceFollowUpCreateView.as_view(),
         name="service_followup_create",
@@ -79,11 +71,6 @@ urlpatterns = [
         "emails/seguimentos/<int:pk>/apagar/",
         ServiceFollowUpDeleteView.as_view(),
         name="service_followup_delete",
-    ),
-    path(
-        "webhooks/twilio/estado/",
-        TwilioStatusWebhookView.as_view(),
-        name="twilio_status",
     ),
     path(
         "mensagens/whatsapp/",
@@ -129,11 +116,6 @@ urlpatterns = [
         "mensagens/whatsapp/ligacao/reiniciar/",
         WhatsAppConnectionRestartView.as_view(),
         name="whatsapp_connection_restart",
-    ),
-    path(
-        "mensagens/whatsapp/usar-baileys/",
-        WhatsAppUseBaileysForAllView.as_view(),
-        name="whatsapp_use_baileys_for_all",
     ),
     path(
         "marcacoes/<int:pk>/seguimentos/",

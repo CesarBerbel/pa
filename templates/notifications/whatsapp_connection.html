@@ -120,31 +120,17 @@
 
         <div class="card shadow-sm border-0">
             <div class="card-body p-4">
-                <h2 class="h6 text-uppercase text-muted mb-3">Regras a usar o Baileys</h2>
+                <h2 class="h6 text-uppercase text-muted mb-3">Mensagens a depender desta ligação</h2>
 
                 <p class="mb-3">
-                    <span class="display-6">{{ baileys_rules }}</span>
-                    <span class="text-muted">de {{ total_rules }}</span>
+                    <span class="display-6">{{ active_rules }}</span>
+                    <span class="text-muted">de {{ total_rules }} regras ligadas</span>
                 </p>
 
-                {% if baileys_rules < total_rules %}
-                    <form method="post" action="{% url 'notifications:whatsapp_use_baileys_for_all' %}">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-primary w-100">
-                            Passar todas para o Baileys
-                        </button>
-                    </form>
-
-                    <p class="text-muted small mt-2 mb-0">
-                        As restantes continuam a sair pela Twilio. Cada regra
-                        pode ser mudada à parte no separador
-                        <a href="{% url 'notifications:whatsapp_setting_list' %}">Mensagens</a>.
-                    </p>
-                {% else %}
-                    <p class="text-muted small mb-0">
-                        Todas as mensagens saem pelo Baileys.
-                    </p>
-                {% endif %}
+                <p class="text-muted small mb-0">
+                    Todas as mensagens de WhatsApp saem por aqui, pelo número
+                    da clínica. Com a ligação em baixo, nenhuma sai.
+                </p>
             </div>
         </div>
     </div>

@@ -68,9 +68,8 @@ falhadas (`test_login_lockout.py`).
 ### Notificações
 
 Emails, catálogo de mensagens, versões inglesas, definições por evento,
-seguimentos por serviço, e os dois fornecedores de WhatsApp — Twilio
-(`test_twilio.py`) e Baileys (`test_baileys.py`), ambos com o exterior
-simulado.
+seguimentos por serviço, e o envio de WhatsApp (`test_baileys.py`), com o
+exterior simulado.
 
 ### Site público e infraestrutura
 

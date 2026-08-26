@@ -1,7 +1,8 @@
+import json
 import re
 
 from django.conf import settings
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from config.test_utils import ResetLanguageMixin
 from django.urls import reverse
@@ -125,7 +126,6 @@ class TemplateSyntaxNeverReachesThePageTests(ResetLanguageMixin, TestCase):
         "/marcacoes/auditoria/",
         "/diagnostico/horarios/",
         "/emails/modelos/",
-        "/emails/seguimentos/",
         "/mensagens/whatsapp/",
         "/mensagens/envio/",
     ]
@@ -170,7 +170,11 @@ class WoundCardFollowsNursingTests(ResetLanguageMixin, TestCase):
 
         ServiceCategory.objects.update_or_create(
             slug="enfermagem",
-            defaults={"name": "Enfermagem", "is_active": True, "is_coming_soon": em_breve},
+            defaults={
+                "name": "Enfermagem",
+                "is_active": True,
+                "is_coming_soon": em_breve,
+            },
         )
 
     def cartao(self):
@@ -198,3 +202,50 @@ class WoundCardFollowsNursingTests(ResetLanguageMixin, TestCase):
         ServiceCategory.objects.filter(slug="enfermagem").delete()
 
         self.assertNotIn("coming-soon-badge", self.cartao())
+
+
+class GoogleBusinessProfileTests(TestCase):
+    """A ligação entre o site e a ficha do negócio no Google.
+
+    O site descrevia-se — nome, morada, telefone, horário — mas não dizia qual
+    é a ficha dele. Sem isso, o Google pode ficar com uma ficha sem site e um
+    site sem ficha, e o botão de marcação da ficha nunca é uma continuação
+    desta casa.
+    """
+
+    FICHA = "https://g.page/priscila-arantes-pa"
+
+    def json_ld(self):
+        html = self.client.get(reverse("home")).content.decode()
+
+        bloco = re.search(
+            r'<script type="application/ld\+json">(.*?)</script>',
+            html,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(bloco, "A página inicial ficou sem JSON-LD.")
+
+        return json.loads(bloco.group(1))
+
+    @override_settings(SEO_GOOGLE_BUSINESS_URL=FICHA)
+    def test_the_profile_is_declared_as_the_same_business(self):
+        dados = self.json_ld()
+
+        self.assertEqual(dados["sameAs"], [self.FICHA])
+        self.assertEqual(dados["hasMap"], self.FICHA)
+
+    @override_settings(SEO_GOOGLE_BUSINESS_URL="")
+    def test_without_a_profile_nothing_is_declared(self):
+        # Um `sameAs` a apontar para lado nenhum é pior do que não o ter.
+        dados = self.json_ld()
+
+        self.assertNotIn("sameAs", dados)
+        self.assertNotIn("hasMap", dados)
+
+    @override_settings(SEO_GOOGLE_BUSINESS_URL=f"  {FICHA}  ")
+    def test_spaces_around_a_pasted_link_do_not_become_the_link(self):
+        # Copiado do Google, o endereço vem quase sempre com espaços atrás.
+        dados = self.json_ld()
+
+        self.assertEqual(dados["hasMap"], self.FICHA)

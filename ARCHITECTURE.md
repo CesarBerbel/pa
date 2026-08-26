@@ -86,17 +86,23 @@ campo custa pesquisa e filtragem e continua por decidir.
 
 ## WhatsApp
 
-O sistema fala com as clientes por WhatsApp, e há **três** vias possíveis:
+O sistema fala com as clientes por WhatsApp, e há **duas** vias possíveis:
 
 | Via | O que é |
 | --- | --- |
-| Cloud API | a oficial da Meta: modelos aprovados, janela de 24 horas |
-| Twilio | intermediário para a mesma Cloud API, com o mesmo modelo aprovado |
 | Baileys | liga-se como dispositivo emparelhado, tal como o WhatsApp Web |
+| Cloud API | a oficial da Meta: modelos aprovados, janela de 24 horas |
+
+As regras de mensagem saem todas pelo Baileys. A Cloud API sobrevive num
+caminho antigo — um modelo aprovado, configurado no ambiente — e não é
+escolhida por regra nenhuma.
+
+Houve uma terceira, um intermediário contratado com modelos aprovados por
+mensagem. Saiu do projeto.
 
 `notifications/whatsapp_dispatch.py` é o único ponto por onde as marcações
-disparam mensagens: cada regra escolhe o seu fornecedor e as marcações não têm
-de saber que existe mais do que um.
+disparam mensagens: é ele que sabe por onde saem, e é a alteração de um
+ficheiro só voltar a haver mais do que um caminho.
 
 O **Baileys corre num container à parte** (`baileys/`, Node) porque é uma
 biblioteca Node. O Django só lhe fala por HTTP, pela rede interna do Docker, com

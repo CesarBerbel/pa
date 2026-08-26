@@ -123,51 +123,35 @@ class WhatsAppTemplateLanguageTests(TestCase):
         regra = WhatsAppEventSetting(
             body_template="Olá",
             body_template_en="Hello",
-            content_sid="HX1",
-            content_sid_en="HX2",
         )
 
         self.assertEqual(regra.for_language("en")["body"], "Hello")
-        self.assertEqual(regra.for_language("en")["content_sid"], "HX2")
 
     def test_without_an_english_text_the_portuguese_goes_out(self):
         # Uma mensagem na língua errada continua a avisar a pessoa; uma
         # mensagem por enviar não avisa ninguém.
-        regra = WhatsAppEventSetting(body_template="Olá", content_sid="HX1")
+        regra = WhatsAppEventSetting(body_template="Olá")
 
         self.assertEqual(regra.for_language("en")["body"], "Olá")
 
-    def test_the_portuguese_approved_template_is_not_used_for_english(self):
-        # Um modelo aprovado em português é texto português. Mandá-lo a quem
-        # fala inglês não é um recurso: é a mensagem errada com a aparência de
-        # estar tudo bem.
-        regra = WhatsAppEventSetting(
-            body_template="Olá",
-            body_template_en="Hello",
-            content_sid="HX1",
-        )
-
-        self.assertEqual(regra.for_language("en")["content_sid"], "")
-
-    def test_without_an_approved_english_template_the_free_text_goes_out(self):
-        # É isto que tira a necessidade de um Content SID para falar inglês.
-        from notifications import twilio_whatsapp
+    def test_the_english_text_is_what_goes_out(self):
+        # Houve um tempo em que uma mensagem em inglês precisava de um modelo
+        # aprovado à parte, e sem ele saía a portuguesa. Hoje o que sai é o
+        # texto, e o texto tem as duas versões.
+        from notifications import baileys_whatsapp
 
         regra = WhatsAppEventSetting(
             body_template="Olá {{ customer_name }}",
             body_template_en="Hello {{ customer_name }}",
-            content_sid="HX1",
         )
 
-        payload = twilio_whatsapp.build_payload(
+        texto = baileys_whatsapp.build_body(
             regra,
             {"customer_name": "Jane"},
-            "whatsapp:+351910000000",
             language="en",
         )
 
-        self.assertEqual(payload["Body"], "Hello Jane")
-        self.assertNotIn("ContentSid", payload)
+        self.assertEqual(texto, "Hello Jane")
 
     def test_the_professional_always_reads_portuguese(self):
         from notifications.whatsapp_common import audience_language

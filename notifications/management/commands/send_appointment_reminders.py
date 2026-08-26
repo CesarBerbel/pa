@@ -13,7 +13,7 @@ from django.core.management.base import BaseCommand
 
 from appointments import reminder_services
 from appointments.emails import send_appointment_reminder_email
-from notifications.models import MessagingSetting, WhatsAppEventSetting
+from notifications.models import EmailTemplate, WhatsAppEventSetting
 from notifications.whatsapp_dispatch import notify as notify_whatsapp
 
 
@@ -26,8 +26,8 @@ class Command(BaseCommand):
             type=int,
             default=None,
             help=(
-                "Antecedência, em horas. Por omissão usa a das definições — "
-                "que é onde ela deve ser mudada, e não aqui."
+                "Antecedência, em horas. Por omissão usa a do modelo do "
+                "lembrete — que é onde ela deve ser mudada, e não aqui."
             ),
         )
 
@@ -41,12 +41,12 @@ class Command(BaseCommand):
         horas = options["horas"]
 
         if horas is None:
-            horas = MessagingSetting.reminder_hours()
+            horas = EmailTemplate.reminder_hours()
 
         if horas <= 0:
             self.stdout.write(
                 self.style.WARNING(
-                    "Lembretes desligados nas definições (antecedência a zero)."
+                    "Lembretes desligados: a antecedência do modelo está a zero."
                 )
             )
 

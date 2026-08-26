@@ -5,8 +5,7 @@ convida a fazê-la. Por isso não leva código de marcação nem ligação para 
 leva a ligação para marcar.
 
 A regra de WhatsApp nasce **desligada**, como todas as outras: o texto fica
-pronto, mas nada sai antes de alguém o rever e, se for pela Twilio, submeter o
-modelo à Meta.
+pronto, mas nada sai antes de alguém o rever.
 """
 
 from django.db import migrations
@@ -66,9 +65,9 @@ def semear(apps, schema_editor):
                 "body_template_en": WHATSAPP_MESSAGES_EN.get(
                     (mensagem["event_type"], mensagem["audience"]), ""
                 ),
-                "meta_template_body": mensagem["meta_template_body"],
+                "meta_template_body": mensagem.get("meta_template_body", ""),
                 "content_variables": json.dumps(
-                    mensagem["content_variables"], ensure_ascii=False, indent=2
+                    mensagem.get("content_variables", {}), ensure_ascii=False, indent=2
                 ),
                 "is_active": False,
             },

@@ -1,5 +1,3 @@
-import re
-
 from django import forms
 from django.core.exceptions import ValidationError
 from django.template import Template, TemplateSyntaxError
@@ -15,11 +13,24 @@ from .models import (
 
 
 class EmailTemplateForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # A antecedência só faz sentido no lembrete: é a única mensagem que
+        # sai a contar do relógio. Nas outras seria um campo a pedir um número
+        # que nunca ia ser usado.
+        if self.instance.key != EmailTemplate.REMINDER_KEY:
+            del self.fields["reminder_hours_before"]
+
+    def clean_reminder_hours_before(self):
+        return self.cleaned_data.get("reminder_hours_before") or 0
+
     class Meta:
         model = EmailTemplate
         fields = [
             "name",
             "key",
+            "reminder_hours_before",
             "subject",
             "body_text",
             "body_html",
@@ -38,9 +49,15 @@ class EmailTemplateForm(forms.ModelForm):
             "body_text_en": "Texto (inglês)",
             "body_html_en": "HTML (inglês)",
             "is_active": "Ativo",
+            "reminder_hours_before": "Antecedência (horas)",
         }
         help_texts = {
             "key": ("Identificador interno, sem espaços. Exemplo: cuidados_pos_calos."),
+            "reminder_hours_before": (
+                "Quantas horas antes da marcação sai este lembrete. Zero "
+                "desliga-o. O comando dos lembretes corre de meia em meia "
+                "hora e vem cá buscar este número."
+            ),
             "body_html": (
                 "Deixe vazio para enviar só texto. Se preencher, o cliente vê "
                 "esta versão e o texto acima serve de alternativa."
@@ -143,32 +160,14 @@ class WhatsAppEventSettingForm(forms.ModelForm):
             "event_type",
             "audience",
             "custom_recipients",
-            "provider",
             "body_template",
             "body_template_en",
-            "meta_template_body",
-            "content_sid",
-            "content_sid_en",
-            "content_variables",
             "is_active",
         ]
         widgets = {
             "body_template": forms.Textarea(attrs={"rows": 5}),
             "body_template_en": forms.Textarea(attrs={"rows": 5}),
-            "meta_template_body": forms.Textarea(attrs={"rows": 5}),
-            "content_variables": forms.Textarea(attrs={"rows": 5}),
         }
-
-    def clean_content_sid(self):
-        sid = (self.cleaned_data.get("content_sid") or "").strip()
-
-        if sid and not sid.startswith("HX"):
-            raise ValidationError(
-                "O Content SID da Twilio começa por HX. Confirme que não colou "
-                "outro identificador."
-            )
-
-        return sid
 
     def clean_body_template(self):
         # Um erro de sintaxe só apareceria no momento do envio, quando já não
@@ -182,48 +181,6 @@ class WhatsAppEventSettingForm(forms.ModelForm):
 
         return corpo
 
-    def clean_meta_template_body(self):
-        """As regras que mais rejeições causam na revisão da Meta.
-
-        Descobri-las por um email de recusa, dias depois de submeter, custa
-        muito mais do que apanhá-las aqui.
-        """
-
-        corpo = (self.cleaned_data.get("meta_template_body") or "").strip()
-
-        if not corpo:
-            return corpo
-
-        posicoes = re.findall(r"\{\{\s*(\d+)\s*\}\}", corpo)
-
-        if re.match(r"^\{\{\s*\d+\s*\}\}", corpo):
-            raise ValidationError(
-                "O texto não pode começar por uma posição. A Meta rejeita."
-            )
-
-        if re.search(r"\{\{\s*\d+\s*\}\}$", corpo):
-            raise ValidationError(
-                "O texto não pode terminar numa posição. A Meta rejeita."
-            )
-
-        if re.search(r"\}\}\s*\{\{", corpo):
-            raise ValidationError(
-                "Duas posições seguidas sem texto entre elas. A Meta rejeita."
-            )
-
-        if posicoes:
-            numeros = [int(n) for n in posicoes]
-
-            if sorted(set(numeros)) != list(range(1, max(numeros) + 1)):
-                raise ValidationError(
-                    "As posições têm de ser seguidas a partir de 1, sem saltos."
-                )
-
-        if len(corpo) > 1024:
-            raise ValidationError("A Meta limita o corpo a 1024 caracteres.")
-
-        return corpo
-
 
 class WhatsAppTestForm(forms.Form):
     recipient = forms.CharField(
@@ -234,41 +191,12 @@ class WhatsAppTestForm(forms.Form):
 
 
 class MessagingSettingForm(forms.ModelForm):
-    # Os interruptores de canal. O lembrete não é um deles — é um número — e
-    # por isso é desenhado à parte no ecrã.
-    CANAIS = ["send_emails", "send_whatsapp"]
-
     class Meta:
         model = MessagingSetting
-        fields = ["send_emails", "send_whatsapp", "reminder_hours_before"]
+        fields = ["send_emails", "send_whatsapp"]
         widgets = {
-            **{
-                campo: forms.CheckboxInput(
-                    attrs={"class": "form-check-input", "role": "switch"}
-                )
-                for campo in ["send_emails", "send_whatsapp"]
-            },
-            "reminder_hours_before": forms.NumberInput(
-                attrs={"class": "form-control", "min": 0, "max": 168, "step": 1}
-            ),
+            campo: forms.CheckboxInput(
+                attrs={"class": "form-check-input", "role": "switch"}
+            )
+            for campo in ["send_emails", "send_whatsapp"]
         }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        # Ausente do pedido não é o mesmo que zero: zero desliga o lembrete, e
-        # um pedido que não fale dele não pode desligá-lo por omissão.
-        self.fields["reminder_hours_before"].required = False
-
-    def canais(self):
-        """Só os interruptores, para o ecrã os desenhar como interruptores."""
-
-        return [self[campo] for campo in self.CANAIS]
-
-    def clean_reminder_hours_before(self):
-        horas = self.cleaned_data.get("reminder_hours_before")
-
-        if horas is None:
-            return self.instance.reminder_hours_before
-
-        return horas

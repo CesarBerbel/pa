@@ -1,4 +1,3 @@
-import json
 import logging
 import re
 
@@ -61,10 +60,54 @@ class EmailTemplate(models.Model):
         verbose_name="HTML (inglês)",
     )
 
+    # Quantas horas antes da marcação sai esta mensagem.
+    #
+    # Só o lembrete é enviado a contar do relógio, e por isso só nele é que
+    # este número tem efeito — o formulário nem sequer o mostra nos outros.
+    # Fica no modelo, ao pé do texto, porque é a mesma decisão: o que se diz e
+    # quando se diz. Vinte e quatro horas dão tempo de desmarcar e libertar a
+    # vaga; duas horas servem para quem já se esqueceu de que ia sair de casa.
+    reminder_hours_before = models.PositiveIntegerField(
+        default=24,
+        verbose_name="Antecedência (horas)",
+        help_text=(
+            "Quantas horas antes da marcação sai o lembrete. Zero desliga-o. "
+            "Só tem efeito no modelo do lembrete."
+        ),
+    )
+
     is_active = models.BooleanField(default=True, verbose_name="Ativo")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    # A chave do modelo que o comando dos lembretes usa.
+    REMINDER_KEY = "appointment_reminder"
+
+    # Para que serve um modelo. Não é um campo: é uma leitura do que está
+    # ligado a ele, e por isso não pode ficar a dizer o contrário da verdade.
+    USE_AUTOMATIC = "automatic"
+    USE_FOLLOWUP = "followup"
+    USE_UNUSED = "unused"
+
+    # As chaves que os envios automáticos pedem pelo nome, quando a regra do
+    # acontecimento não aponta para modelo nenhum. Não se derivam das escolhas
+    # de EmailEventSetting: três delas não são acontecimentos à parte — são o
+    # mesmo acontecimento visto do lado da profissional, ou a confirmação de
+    # uma marcação combinada ao balcão.
+    AUTOMATIC_KEYS = frozenset(
+        {
+            "appointment_created",
+            "appointment_created_professional",
+            "appointment_confirmed",
+            "appointment_confirmed_internal",
+            "appointment_cancelled",
+            "appointment_cancelled_professional",
+            "appointment_completed",
+            "appointment_reminder",
+            "return_due",
+        }
+    )
 
     class Meta:
         ordering = ["name"]
@@ -94,8 +137,55 @@ class EmailTemplate(models.Model):
             "body_html": self.body_html_en or self.body_html,
         }
 
+    def usage(self):
+        """Para que serve este modelo: envio automático ou acompanhamento.
+
+        São duas famílias que só se parecem por serem ambas emails. Um envio
+        automático sai de um acontecimento — a marcação foi criada, a hora
+        está a chegar — e o texto dele é do sistema. Um acompanhamento sai de
+        um serviço, dias depois, e o texto é da profissional.
+
+        Misturados na mesma lista, editava-se o errado: os nomes são
+        parecidos, e a diferença entre eles não está no nome, está em quem os
+        manda.
+
+        Lê-se pelas relações e não por um campo escolhido à mão, para não
+        haver um modelo marcado como acompanhamento a sair, todos os dias, de
+        um acontecimento. O `.all()` é de propósito: com o prefetch da lista
+        não custa consulta nenhuma, ao contrário de um `.exists()`.
+        """
+
+        if self.key in self.AUTOMATIC_KEYS or self.event_settings.all():
+            return self.USE_AUTOMATIC
+
+        if self.follow_ups.all():
+            return self.USE_FOLLOWUP
+
+        return self.USE_UNUSED
+
     def __str__(self):
         return self.name
+
+    @classmethod
+    def reminder_hours(cls):
+        """Horas de antecedência do lembrete. Zero é não enviar.
+
+        Lê sem escrever: isto é consultado por um comando que corre de meia em
+        meia hora, e um comando que grava a cada passagem sujava o histórico
+        sem razão nenhuma.
+
+        Sem o modelo — apagado, ou uma base ainda por semear — devolve zero, e
+        o comando não envia nada: sem texto não há mensagem para mandar.
+        """
+
+        try:
+            modelo = cls.objects.filter(key=cls.REMINDER_KEY).first()
+
+            return modelo.reminder_hours_before if modelo else 0
+        except Exception:
+            logger.exception("Não foi possível ler a antecedência do lembrete.")
+
+            return 0
 
 
 class EmailEventSetting(models.Model):
@@ -373,36 +463,10 @@ class WhatsAppEventSetting(models.Model):
         (AUDIENCE_CUSTOM, "Outros números"),
     )
 
-    PROVIDER_TWILIO = "twilio"
-    PROVIDER_BAILEYS = "baileys"
-
-    PROVIDER_CHOICES = (
-        (PROVIDER_TWILIO, "Twilio"),
-        (PROVIDER_BAILEYS, "Baileys (número da clínica)"),
-    )
-
     event_type = models.CharField(
         max_length=50,
         choices=EVENT_CHOICES,
         verbose_name="Acontecimento",
-    )
-
-    # A escolha é por regra, e não global, porque os dois caminhos têm feitios
-    # diferentes: a Twilio custa dinheiro e exige modelos aprovados, mas é um
-    # serviço contratado; o Baileys é o número da clínica ligado como um
-    # dispositivo, sem custo nem aprovações e sem garantia nenhuma. Um aviso
-    # interno à profissional e uma confirmação a um cliente não têm por que
-    # sair pelo mesmo sítio.
-    provider = models.CharField(
-        max_length=20,
-        choices=PROVIDER_CHOICES,
-        default=PROVIDER_TWILIO,
-        verbose_name="Enviar por",
-        help_text=(
-            "Twilio: precisa de modelo aprovado, mas é um serviço contratado. "
-            "Baileys: texto livre pelo número da clínica, sem custo, mas "
-            "depende da ligação por QR code estar de pé."
-        ),
     )
 
     audience = models.CharField(
@@ -427,11 +491,7 @@ class WhatsAppEventSetting(models.Model):
     body_template = models.TextField(
         blank=True,
         verbose_name="Mensagem",
-        help_text=(
-            "Texto livre, com as mesmas variáveis dos emails. A Twilio só o "
-            "aceita nas 24 horas seguintes a uma mensagem do destinatário — "
-            "fora disso é preciso um modelo aprovado."
-        ),
+        help_text="Texto livre, com as mesmas variáveis dos emails.",
     )
 
     # A versão inglesa do texto livre, para quem marcou na versão inglesa do
@@ -443,48 +503,6 @@ class WhatsAppEventSetting(models.Model):
         help_text=(
             "Deixe vazio para enviar a mensagem em português também a quem "
             "marcou na versão inglesa do site."
-        ),
-    )
-
-    content_sid = models.CharField(
-        max_length=64,
-        blank=True,
-        verbose_name="Modelo aprovado (Content SID)",
-        help_text=(
-            "Começa por HX. Necessário para mensagens iniciadas pela clínica, "
-            "que é o caso de tudo o que sai daqui."
-        ),
-    )
-
-    # A Meta aprova um modelo por língua, cada um com o seu identificador. Não
-    # há como traduzir um modelo aprovado no momento do envio: ou existe um
-    # inglês aprovado à parte, ou vai o português.
-    content_sid_en = models.CharField(
-        max_length=64,
-        blank=True,
-        verbose_name="Modelo aprovado em inglês (Content SID)",
-        help_text=(
-            "O modelo equivalente, aprovado em inglês. Vazio envia o modelo "
-            "português também a quem marcou na versão inglesa."
-        ),
-    )
-
-    meta_template_body = models.TextField(
-        blank=True,
-        verbose_name="Texto para aprovação (Meta)",
-        help_text=(
-            "O mesmo texto com as posições numeradas — {{1}}, {{2}} — para "
-            "colar no Content Template Builder da Twilio. É este que a Meta "
-            "revê; o campo acima é o que o sistema envia."
-        ),
-    )
-
-    content_variables = models.TextField(
-        blank=True,
-        verbose_name="Variáveis do modelo",
-        help_text=(
-            "JSON com as posições do modelo aprovado. Exemplo: "
-            '{"1": "{{ customer_name }}", "2": "{{ appointment_date }}"}'
         ),
     )
 
@@ -506,33 +524,19 @@ class WhatsAppEventSetting(models.Model):
         return f"{self.get_event_type_display()} → {self.get_audience_display()}"
 
     def for_language(self, language):
-        """O texto livre e o modelo aprovado na língua pedida.
+        """O texto na língua pedida, com o português como recurso.
 
-        O texto cai para o português quando não há inglês escrito: uma
-        mensagem na língua errada continua a avisar a pessoa, e uma mensagem
-        por enviar não avisa ninguém.
-
-        **O modelo aprovado não cai.** Um modelo aprovado em português é texto
-        português: mandá-lo a quem fala inglês não é um recurso, é a mensagem
-        errada com a aparência de estar tudo bem. Sem inglês aprovado sai o
-        texto livre em inglês, e é por isso que já não é preciso um Content SID
-        para falar inglês com alguém.
-
-        O que isso custa está dito em `twilio_whatsapp.build_payload`: texto
-        livre só chega dentro das 24 horas seguintes a uma mensagem da cliente.
-        Pelo número da clínica (Baileys) não há essa regra nem modelos
-        aprovados, e o inglês sai sempre.
+        Um campo inglês vazio não é uma mensagem vazia: é uma mensagem por
+        traduzir, e aí vale mais o português. Uma mensagem na língua errada
+        continua a avisar a pessoa; uma mensagem por enviar não avisa ninguém.
         """
 
         ingles = (language or "").lower().startswith("en")
 
         if not ingles:
-            return {"body": self.body_template, "content_sid": self.content_sid}
+            return {"body": self.body_template}
 
-        return {
-            "body": self.body_template_en or self.body_template,
-            "content_sid": self.content_sid_en,
-        }
+        return {"body": self.body_template_en or self.body_template}
 
     def clean(self):
         if self.audience == self.AUDIENCE_CUSTOM and not self.custom_recipients.strip():
@@ -540,60 +544,26 @@ class WhatsAppEventSetting(models.Model):
                 {"custom_recipients": "Indique pelo menos um número."}
             )
 
-        if self.provider == self.PROVIDER_BAILEYS:
-            # O Baileys não conhece modelos aprovados. Um Content SID preenchido
-            # aqui não seria usado, e a regra parecia configurada sem ter texto
-            # nenhum para enviar.
-            if not self.body_template.strip():
-                raise ValidationError(
-                    {
-                        "body_template": (
-                            "O Baileys envia texto livre. Preencha a mensagem — "
-                            "o modelo aprovado da Twilio não se aplica aqui."
-                        )
-                    }
-                )
-
-        elif not self.body_template.strip() and not self.content_sid.strip():
+        # Sem texto não há nada para enviar. Era uma de duas condições —
+        # texto ou modelo aprovado — enquanto houve um segundo caminho.
+        if not self.body_template.strip():
             raise ValidationError(
-                "Preencha a mensagem ou indique um modelo aprovado; sem um dos "
-                "dois não há nada para enviar."
+                {"body_template": "Preencha a mensagem: é o que vai ser enviado."}
             )
 
-        if self.content_variables.strip():
-            try:
-                dados = json.loads(self.content_variables)
-            except ValueError as erro:
-                raise ValidationError(
-                    {"content_variables": f"JSON inválido: {erro}"}
-                ) from erro
-
-            if not isinstance(dados, dict):
-                raise ValidationError(
-                    {"content_variables": "Deve ser um objeto JSON com as posições."}
-                )
-
     def get_template_label(self):
-        # Identifica no histórico se a mensagem saiu por modelo aprovado ou
-        # como texto livre. Pelo Baileys é sempre texto livre, mesmo que a
-        # regra tenha um Content SID guardado de quando saía pela Twilio.
-        if self.provider == self.PROVIDER_BAILEYS:
-            return "texto-livre"
-
-        return self.content_sid.strip() or "texto-livre"
+        # Fica no histórico de envios. Houve um tempo em que podia ser o
+        # identificador de um modelo aprovado; hoje é sempre texto livre.
+        return "texto-livre"
 
     def is_ready_to_send(self):
         """Se esta regra tem o que precisa para a mensagem chegar mesmo.
 
         Uma regra ligada mas incompleta é o pior dos casos: parece que está a
-        funcionar e não está. Pela Twilio falta o modelo aprovado; pelo
-        Baileys falta o texto.
+        funcionar e não está. O que falta é sempre o texto.
         """
 
-        if self.provider == self.PROVIDER_BAILEYS:
-            return bool(self.body_template.strip())
-
-        return bool(self.content_sid.strip())
+        return bool(self.body_template.strip())
 
 
 class WhatsAppMessageLog(models.Model):
@@ -620,13 +590,16 @@ class WhatsAppMessageLog(models.Model):
         (EVENT_RETURN_DUE, "Está na altura de voltar"),
     )
 
+    # O registo guarda por onde a mensagem saiu. A Twilio saiu do projeto, mas
+    # o valor fica na lista: há linhas antigas com ele, e um histórico que
+    # deixa de saber ler o que lá está não é um histórico.
     PROVIDER_CLOUD_API = "cloud_api"
     PROVIDER_TWILIO = "twilio"
     PROVIDER_BAILEYS = "baileys"
 
     PROVIDER_CHOICES = (
         (PROVIDER_CLOUD_API, "WhatsApp Cloud API"),
-        (PROVIDER_TWILIO, "Twilio"),
+        (PROVIDER_TWILIO, "Twilio (retirado)"),
         (PROVIDER_BAILEYS, "Baileys"),
     )
 
@@ -695,13 +668,14 @@ class WhatsAppMessageLog(models.Model):
         blank=True,
     )
 
-    # `status` diz se a Twilio **aceitou** a mensagem. Não diz se ela chegou:
-    # a entrega acontece depois, e falha em silêncio se ninguém a for buscar.
-    # Estes três campos são preenchidos pelo webhook de estado da Twilio.
+    # `status` diz se o fornecedor **aceitou** a mensagem. Não diz se ela
+    # chegou: a entrega acontece depois. Estes três campos vinham do webhook
+    # de estado da Twilio e ficam por preencher desde que ela saiu do projeto —
+    # continuam aqui pelas linhas antigas que os têm.
     delivery_status = models.CharField(
         max_length=20,
         blank=True,
-        help_text="Estado final devolvido pela Twilio: delivered, undelivered, failed.",
+        help_text="Estado final da entrega, quando o fornecedor o devolve.",
     )
 
     delivery_error_code = models.CharField(max_length=20, blank=True)
@@ -722,13 +696,13 @@ class WhatsAppMessageLog(models.Model):
 
     def get_delivery_label(self):
         if not self.delivery_status:
-            # O Baileys entrega a mensagem ao WhatsApp na própria chamada; não
-            # há webhook de estado a chegar depois, como na Twilio, por isso
-            # não faz sentido prometer uma confirmação que nunca vem.
+            # O Baileys entrega a mensagem ao WhatsApp na própria chamada: não
+            # há webhook de estado a chegar depois, e por isso não faz sentido
+            # prometer uma confirmação que nunca vem.
             if self.provider == self.PROVIDER_BAILEYS:
                 return "Entregue ao WhatsApp"
 
-            return "Aceite pela Twilio"
+            return "Aceite pelo fornecedor"
 
         return self.DELIVERY_LABELS.get(self.delivery_status, self.delivery_status)
 
@@ -846,21 +820,6 @@ class MessagingSetting(models.Model):
         ),
     )
 
-    # Quantas horas antes da marcação sai o lembrete.
-    #
-    # Zero desliga-o. Fica aqui e não no código porque a antecedência que
-    # serve muda com o tipo de trabalho: vinte e quatro horas dão tempo de
-    # desmarcar e libertar a vaga; duas horas servem para quem já se esqueceu
-    # de que ia sair de casa.
-    reminder_hours_before = models.PositiveIntegerField(
-        default=24,
-        verbose_name="Lembrete: horas de antecedência",
-        help_text=(
-            "Quantas horas antes da marcação sai o lembrete à cliente. "
-            "Zero não envia lembrete nenhum."
-        ),
-    )
-
     # Quem desligou e quando. Uma mensagem que não chegou costuma ser
     # descoberta dias depois, por alguém que não esteve presente na decisão.
     updated_by = models.ForeignKey(
@@ -933,24 +892,6 @@ class MessagingSetting(models.Model):
         """Se as mensagens de WhatsApp podem sair agora."""
 
         return cls._canal_ligado("send_whatsapp")
-
-    @classmethod
-    def reminder_hours(cls):
-        """Horas de antecedência do lembrete. Zero é não enviar.
-
-        Lê sem escrever, como as outras definições: isto é consultado por um
-        comando que corre de meia em meia hora, e um comando que grava a cada
-        passagem sujava o histórico sem razão nenhuma.
-        """
-
-        try:
-            definicao = cls.objects.filter(pk=cls.SINGLETON_PK).first()
-
-            return definicao.reminder_hours_before if definicao else 24
-        except Exception:
-            logger.exception("Não foi possível ler as horas do lembrete.")
-
-            return 0
 
 
 class BeforeAfterCase(models.Model):

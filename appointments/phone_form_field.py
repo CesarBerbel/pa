@@ -7,8 +7,8 @@ dessas diferenças.
 
 Em duas peças, o indicativo deixa de ser escrito: vem de uma lista, e o que
 sobra para a pessoa escrever é só o número dela. O que sai daqui é sempre
-E.164 — `+`, indicativo, número — que é o que a Meta e a Twilio esperam e a
-única forma em que dois números iguais se parecem.
+E.164 — `+`, indicativo, número — que é o que o WhatsApp espera e a única
+forma em que dois números iguais se parecem.
 
 O que é guardado continua a ser um campo de texto só, com o número inteiro:
 o país não é um dado à parte, é o princípio do número.

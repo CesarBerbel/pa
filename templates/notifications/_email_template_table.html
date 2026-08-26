@@ -1,0 +1,77 @@
+{# A tabela dos modelos, repetida por cada família de envio. #}
+{# `vazio` é o que aparece na coluna "Usado em" quando não há nada ligado: #}
+{# num modelo automático isso quer dizer que sai pela chave, num de #}
+{# acompanhamento quer dizer que ainda não está ligado a serviço nenhum. #}
+<div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Usado em</th>
+                <th>Estado</th>
+                <th class="text-end">Ações</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for modelo in modelos %}
+                <tr>
+                    <td>
+                        <strong>{{ modelo.name }}</strong>
+                        <br>
+                        <small class="text-muted">{{ modelo.key }}</small>
+                    </td>
+
+                    <td>
+                        {% for regra in modelo.event_settings.all %}
+                            <span class="badge bg-light text-dark border">
+                                {{ regra.get_event_type_display }} · {{ regra.get_audience_display }}
+                            </span>
+                        {% endfor %}
+
+                        {% for seguimento in modelo.follow_ups.all %}
+                            <span class="badge bg-light text-dark border">
+                                {{ seguimento.service.name }} · {{ seguimento.get_delay_label }}
+                            </span>
+                        {% endfor %}
+
+                        {% if not modelo.event_settings.all and not modelo.follow_ups.all %}
+                            <span class="text-muted">{{ vazio }}</span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if modelo.is_active %}
+                            <span class="badge bg-success">Ativo</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Inativo</span>
+                        {% endif %}
+                    </td>
+
+                    <td class="text-end text-nowrap">
+                        <a
+                            href="{% url 'notifications:email_template_preview' modelo.pk %}"
+                            class="btn btn-sm btn-outline-secondary"
+                        >
+                            Pré-visualizar
+                        </a>
+
+                        <a
+                            href="{% url 'notifications:email_template_update' modelo.pk %}"
+                            class="btn btn-sm btn-outline-primary"
+                        >
+                            Editar
+                        </a>
+
+                        <a
+                            href="{% url 'notifications:email_template_delete' modelo.pk %}"
+                            class="btn btn-sm btn-outline-danger"
+                        >
+                            Apagar
+                        </a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

@@ -65,7 +65,7 @@
                         </div>
                     {% endif %}
 
-                    {% for campo in form.canais %}
+                    {% for campo in form %}
                         <div class="form-check form-switch fs-5 mb-1">
                             {{ campo }}
                             <label class="form-check-label" for="{{ campo.id_for_label }}">
@@ -77,24 +77,6 @@
                             {{ campo.help_text }}
                         </p>
                     {% endfor %}
-
-                    {# O lembrete não é um canal, é um número: quantas horas #}
-                    {# antes. Desenhado à parte, senão saía como interruptor. #}
-                    <hr class="my-4">
-
-                    <label class="form-label" for="{{ form.reminder_hours_before.id_for_label }}">
-                        {{ form.reminder_hours_before.label }}
-                    </label>
-
-                    <div style="max-width: 140px;">
-                        {{ form.reminder_hours_before }}
-                    </div>
-
-                    <p class="text-muted small ms-1 mt-2 mb-4">
-                        {{ form.reminder_hours_before.help_text }}
-                    </p>
-
-                    {{ form.reminder_hours_before.errors }}
 
                     <button type="submit" class="btn btn-primary">
                         Guardar

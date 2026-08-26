@@ -125,6 +125,18 @@ SEO_BUSINESS_COUNTRY = config("SEO_BUSINESS_COUNTRY", default="PT")
 
 SEO_BUSINESS_AREA_SERVED = config("SEO_BUSINESS_AREA_SERVED", default="Coimbra")
 
+# A ficha do negócio no Google, tal como o link de partilha a dá.
+#
+# O site já se descreve ao Google — nome, morada, telefone, horário — mas não
+# dizia qual é a ficha dele. São duas coisas que o Google trata como podendo
+# não ser a mesma, e é este endereço que as junta: o `sameAs` diz "esta ficha
+# sou eu", e é o que torna o botão de marcação da ficha uma continuação do
+# site em vez de um resultado à parte.
+#
+# Vazio não escreve nada: um `sameAs` a apontar para lado nenhum é pior do que
+# não o ter.
+SEO_GOOGLE_BUSINESS_URL = config("SEO_GOOGLE_BUSINESS_URL", default="")
+
 SEO_BUSINESS_OPENS_AT = config("SEO_BUSINESS_OPENS_AT", default="08:00")
 
 SEO_BUSINESS_CLOSES_AT = config("SEO_BUSINESS_CLOSES_AT", default="20:00")
@@ -828,40 +840,6 @@ WHATSAPP_REQUEST_TIMEOUT = config(
 
 
 # =============================================================================
-# Twilio (WhatsApp)
-# =============================================================================
-#
-# Alternativa ao WhatsApp Cloud API acima. As duas podem coexistir: cada envio
-# regista o fornecedor que usou, para não se confundirem no histórico.
-
-TWILIO_ENABLED = config(
-    "TWILIO_ENABLED",
-    default=False,
-    cast=bool,
-)
-
-TWILIO_ACCOUNT_SID = config("TWILIO_ACCOUNT_SID", default="").strip()
-
-TWILIO_AUTH_TOKEN = config("TWILIO_AUTH_TOKEN", default="").strip()
-
-# Número emissor, no formato que a Twilio espera: whatsapp:+14155238886. O
-# número do sandbox serve para testar; em produção é o número aprovado.
-TWILIO_WHATSAPP_FROM = config("TWILIO_WHATSAPP_FROM", default="").strip()
-
-# Para onde vão os avisos dirigidos à profissional.
-TWILIO_PROFESSIONAL_WHATSAPP = config(
-    "TWILIO_PROFESSIONAL_WHATSAPP",
-    default=SEO_WHATSAPP_NUMBER,
-).strip()
-
-TWILIO_REQUEST_TIMEOUT = config(
-    "TWILIO_REQUEST_TIMEOUT",
-    default=15,
-    cast=int,
-)
-
-
-# =============================================================================
 # Baileys (WhatsApp)
 # =============================================================================
 #
@@ -887,12 +865,12 @@ BAILEYS_API_URL = config(
 # rede interna podia enviar mensagens em nome da clínica.
 BAILEYS_API_TOKEN = config("BAILEYS_API_TOKEN", default="").strip()
 
-# Para onde vão os avisos dirigidos à profissional. Por omissão segue o mesmo
-# número que a Twilio usa, para não haver dois sítios a dizer coisas
-# diferentes sobre o mesmo destinatário.
+# Para onde vão os avisos dirigidos à profissional. Por omissão segue o número
+# que o site já publica, para não haver dois sítios a dizer coisas diferentes
+# sobre o mesmo destinatário.
 BAILEYS_PROFESSIONAL_WHATSAPP = config(
     "BAILEYS_PROFESSIONAL_WHATSAPP",
-    default=TWILIO_PROFESSIONAL_WHATSAPP,
+    default=SEO_WHATSAPP_NUMBER,
 ).strip()
 
 BAILEYS_REQUEST_TIMEOUT = config(

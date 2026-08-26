@@ -140,7 +140,7 @@ class MessagePreviewTests(TestCase):
         WhatsAppEventSetting.objects.filter(
             event_type=WhatsAppEventSetting.EVENT_APPOINTMENT_CONFIRMED,
             audience=WhatsAppEventSetting.AUDIENCE_CUSTOMER,
-        ).update(is_active=True, provider=WhatsAppEventSetting.PROVIDER_BAILEYS)
+        ).update(is_active=True)
 
         previa = self.previsualizar("confirm")
 

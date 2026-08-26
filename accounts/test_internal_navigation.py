@@ -43,7 +43,6 @@ class InternalNavigationTests(ResetLanguageMixin, TestCase):
             "appointments:business_hour_list",
             "notifications:messaging_setting",
             "notifications:email_template_list",
-            "notifications:service_followup_list",
             "notifications:whatsapp_setting_list",
             "notifications:whatsapp_connection",
             "appointments:appointment_audit",
@@ -136,9 +135,7 @@ class InternalNavigationTests(ResetLanguageMixin, TestCase):
 
         self.client.force_login(utilizador)
 
-        self.assertNotIn(
-            reverse("appointments:patient_record_index"), self.barra()
-        )
+        self.assertNotIn(reverse("appointments:patient_record_index"), self.barra())
 
     def test_each_menu_holds_what_belongs_to_it(self):
         for identificador, paginas in self.GRUPOS.items():

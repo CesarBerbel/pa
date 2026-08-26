@@ -1,10 +1,9 @@
-"""Peças partilhadas pelos fornecedores de WhatsApp.
+"""Peças partilhadas pelo envio de WhatsApp.
 
-A Twilio e o Baileys diferem no transporte — uma é uma API REST com modelos
-aprovados, o outro é uma sessão emparelhada — mas concordam no resto: o mesmo
-texto, as mesmas variáveis, os mesmos números. Este módulo guarda essa parte
-comum, para uma correção no formato de um número não ter de ser feita duas
-vezes.
+O texto, as variáveis e o formato dos números não pertencem a nenhum
+transporte em particular: uma correção no formato de um número não deve ter de
+ser feita em dois sítios. Este módulo guarda essa parte comum, e é o que
+sobrevive a uma troca de transporte — já houve dois, e hoje há um.
 """
 
 from __future__ import annotations

@@ -16,7 +16,7 @@ from django.utils import timezone
 from appointments import reminder_services
 from appointments.models import Appointment, AppointmentReminderLog, Customer
 from appointments.tests.factories import create_test_service, ensure_test_business_hour
-from notifications.models import MessagingSetting
+from notifications.models import EmailTemplate
 
 
 class ReminderBase(TestCase):
@@ -62,6 +62,11 @@ class ReminderBase(TestCase):
             outside_schedule=True,
         )
 
+    def definir_horas(self, horas):
+        EmailTemplate.objects.filter(key=EmailTemplate.REMINDER_KEY).update(
+            reminder_hours_before=horas
+        )
+
     def correr(self, **opcoes):
         saida = StringIO()
         call_command("send_appointment_reminders", stdout=saida, stderr=saida, **opcoes)
@@ -70,17 +75,15 @@ class ReminderBase(TestCase):
 
 
 class WhenAReminderIsDueTests(ReminderBase):
-    def test_the_hours_come_from_the_settings(self):
-        definicao = MessagingSetting.load()
-        definicao.reminder_hours_before = 6
-        definicao.save()
+    def test_the_hours_come_from_the_message_itself(self):
+        # Quem vai afinar o lembrete vai ao lembrete: a antecedência vive no
+        # modelo da mensagem, ao pé do texto.
+        self.definir_horas(6)
 
-        self.assertEqual(MessagingSetting.reminder_hours(), 6)
+        self.assertEqual(EmailTemplate.reminder_hours(), 6)
 
     def test_zero_hours_sends_nothing(self):
-        definicao = MessagingSetting.load()
-        definicao.reminder_hours_before = 0
-        definicao.save()
+        self.definir_horas(0)
 
         self.daqui_a(hours=2)
 
@@ -88,6 +91,17 @@ class WhenAReminderIsDueTests(ReminderBase):
 
         self.assertEqual(mail.outbox, [])
         self.assertIn("desligados", saida)
+
+    def test_without_the_template_there_is_no_antecedence(self):
+        # Sem texto não há mensagem para mandar, e sem mensagem não há
+        # antecedência nenhuma a cumprir. (Apagar o modelo é impedido pela
+        # regra que aponta para ele; o que se simula aqui é a chave trocada,
+        # ou uma base ainda por semear.)
+        EmailTemplate.objects.filter(key=EmailTemplate.REMINDER_KEY).update(
+            key="outro_qualquer"
+        )
+
+        self.assertEqual(EmailTemplate.reminder_hours(), 0)
 
     def test_an_appointment_at_the_right_distance_is_reminded(self):
         self.daqui_a(hours=23, minutes=30)

@@ -10,25 +10,22 @@ O Baileys liga o **número da clínica** ao servidor como um dispositivo
 emparelhado, exatamente como o WhatsApp Web. Emparelha-se uma vez, lendo um QR
 code com o telemóvel, e a sessão fica válida até alguém a terminar.
 
-Face à Twilio, a diferença não é de detalhe:
+É por aqui que sai **todo** o WhatsApp desta casa. Houve um segundo caminho —
+um serviço contratado, com modelos aprovados pela Meta e um identificador por
+mensagem — mas saiu do projeto; do que sobra, o que interessa é a comparação,
+porque explica o que se ganhou e o que se perdeu:
 
-| | Baileys | Twilio |
+| | Baileys | serviço contratado |
 |---|---|---|
 | Modelos aprovados pela Meta | não precisa | obrigatórios fora das 24h |
 | Custo por mensagem | nenhum | sim |
 | Confirmação de entrega | não | sim, por webhook |
 | Garantia de serviço | nenhuma | contratada |
-| Quem envia | o número da clínica | um número da Twilio |
+| Quem envia | o número da clínica | um número alugado |
 
-**A escolha é por regra, não global.** Cada mensagem configurada em
-*Configurações → WhatsApp → Mensagens* tem um campo **Enviar por**. As duas
-podem estar ligadas ao mesmo tempo sem duplicar envios: cada regra sai por um
-caminho só.
-
-Depois da atualização, **todas as regras existentes continuam na Twilio**. Nada
-muda de comportamento até alguém as passar para o Baileys — à mão, regra a
-regra, ou de uma vez no botão *Passar todas para o Baileys* no separador
-Ligação.
+As regras configuram-se em *Configurações → Mensagens → Regras de WhatsApp*:
+uma linha por acontecimento e destinatário, com o texto que sai. Não há
+fornecedor a escolher — só o texto.
 
 ---
 
@@ -96,9 +93,6 @@ O comando é o mesmo de sempre — o serviço novo vem no compose:
 cd /opt/pa && git pull && docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
 ```
 
-A migração `0011` corre sozinha no arranque do `web` e acrescenta o campo
-**Enviar por** às regras, com `twilio` em todas.
-
 ### 3. Confirmar que o serviço arrancou
 
 ```bash
@@ -127,16 +121,11 @@ telemóvel da clínica:
 O estado passa a **Ligado** e mostra o número, sem ser preciso recarregar a
 página.
 
-### 5. Passar as mensagens para o Baileys
+### 5. Confirmar que as regras têm texto
 
-Ainda no separador Ligação, o botão **Passar todas para o Baileys** muda todas
-as regras de uma vez. Para escolher regra a regra, use o separador
-**Mensagens** → Editar → campo **Enviar por**.
-
-> **Atenção ao texto.** O Baileys envia texto livre, por isso cada regra
-> precisa do campo **Mensagem** preenchido. Uma regra que só tivesse o Content
-> SID da Twilio fica sem nada para dizer — o ecrã marca-a com *Sem texto* e o
-> botão avisa quais são.
+O Baileys envia texto livre, por isso cada regra precisa do campo **Mensagem**
+preenchido. Uma regra sem texto não tem nada para dizer — o ecrã da lista
+marca-a com *Sem texto*.
 
 ### 6. Testar antes de apanhar um cliente
 
@@ -194,10 +183,9 @@ A sessão não se perde: está no volume, não no container.
 
 ### Voltar atrás
 
-Basta pôr `BAILEYS_ENABLED=False` no `.env.prod` e subir. As regras que
-apontam para o Baileys ficam bloqueadas — não enviam, e dizem porquê. Para
-retomar os envios pela Twilio, mude o campo **Enviar por** de volta em cada
-regra.
+Basta pôr `BAILEYS_ENABLED=False` no `.env.prod` e subir. As regras ficam
+bloqueadas — não enviam, e dizem porquê no ecrã. O e-mail continua a sair: são
+canais separados, e desligar um não cala o outro.
 
 ---
 
@@ -212,9 +200,8 @@ dispositivo, e o WhatsApp não tem obrigação nenhuma de o aceitar.
   versão nova.
 - Não há suporte, SLA, nem confirmação de entrega.
 
-Por isso é que a escolha é por regra. Uma recomendação sensata: avisos internos
-à profissional pelo Baileys, e as mensagens a clientes que não podem falhar
-pela Twilio, com modelo aprovado.
+É um risco assumido, e a razão de o e-mail continuar ligado a par: as
+mensagens que não podem falhar têm sempre um segundo caminho até à pessoa.
 
 ---
 
