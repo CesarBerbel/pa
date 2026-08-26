@@ -173,7 +173,7 @@ class NavbarLogoTests(ResetLanguageMixin, TestCase):
 
     def test_logo_still_links_home_and_has_a_text_alternative(self):
         self.assertIn(reverse("home"), self.navbar)
-        self.assertIn('alt="Priscila Arantes PA"', self.navbar)
+        self.assertIn('alt="Priscila Arantes Pedicure Terapêutica"', self.navbar)
 
     def test_navbar_images_are_versioned(self):
         for nome in ["logo-mark.png", "logo-wordmark.png"]:

@@ -419,8 +419,8 @@ msgid "Consulte os horários disponíveis, escolha a categoria e o serviço dese
 msgstr "Check the available times, choose the category and service you want, and confirm your booking in a few steps."
 
 #: templates/home.html:10
-msgid "Consulte serviços e marque online o seu horário com Priscila Arantes PA em Coimbra."
-msgstr "Browse services and book your appointment online with Priscila Arantes PA in Coimbra."
+msgid "Consulte serviços e marque online o seu horário com Priscila Arantes Pedicure Terapêutica em Coimbra."
+msgstr "Browse services and book your appointment online with Priscila Arantes Pedicure Terapêutica in Coimbra."
 
 #: templates/base.html:182
 #: templates/base.html:322
@@ -1057,8 +1057,8 @@ msgstr "Browsing preferences"
 #: templates/home.html:4
 #: templates/home.html:7
 #: templates/home.html:9
-msgid "Priscila Arantes PA | Podologia, estética e enfermagem em Coimbra"
-msgstr "Priscila Arantes PA | Therapeutic pedicure, beauty and nursing in Coimbra"
+msgid "Priscila Arantes Pedicure Terapêutica | Podologia, estética e enfermagem em Coimbra"
+msgstr "Priscila Arantes Pedicure Terapêutica | Therapeutic pedicure, beauty and nursing in Coimbra"
 
 #: templates/base.html:385
 msgid "Priscila Arantes. Todos os direitos reservados."

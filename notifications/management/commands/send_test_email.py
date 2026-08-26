@@ -117,7 +117,7 @@ class Command(BaseCommand):
         )
 
         mensagem = EmailMultiAlternatives(
-            subject="Teste de envio — Priscila Arantes PA",
+            subject="Teste de envio — Priscila Arantes Pedicure Terapêutica",
             body=(
                 "Se está a ler isto, o envio de email do site funciona.\n\n"
                 "Mensagem gerada por: python manage.py send_test_email"

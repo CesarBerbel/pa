@@ -71,7 +71,7 @@ INTERNAL_IPS = env_list("INTERNAL_IPS", default="127.0.0.1") if DEBUG else []
 # SEO / public search configuration
 # =============================================================================
 
-SEO_SITE_NAME = config("SEO_SITE_NAME", default="Priscila Arantes PA")
+SEO_SITE_NAME = config("SEO_SITE_NAME", default="Priscila Arantes Pedicure Terapêutica")
 
 SEO_DEFAULT_TITLE = config(
     "SEO_DEFAULT_TITLE",

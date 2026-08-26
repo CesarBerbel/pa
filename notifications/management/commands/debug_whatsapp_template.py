@@ -28,7 +28,7 @@ class Command(BaseCommand):
         "appointment_date": "31/12/2026",
         "appointment_time": "10:00",
         "reference_code": "AGD-DEBUG",
-        "business_name": "Priscila Arantes PA",
+        "business_name": "Priscila Arantes Pedicure Terapêutica",
         "business_phone": "+351938594367",
     }
 

@@ -340,7 +340,7 @@ def send_appointment_confirmation_email(appointment):
         f"Código: {context['reference_code']}\n\n"
         f"Ver detalhes:\n{context['magic_link']}\n\n"
         f"Obrigada,\n"
-        f"Priscila Arantes - Enfermeira | Pedicure Terapêutica"
+        f"Priscila Arantes — Enfermeira | Pedicure Terapêutica"
     )
 
     rendered_email = render_email_for_event(
@@ -397,7 +397,7 @@ def send_appointment_cancelled_email(appointment, cancellation_reason=""):
         f"Código: {context['reference_code']}\n\n"
         f"Motivo:\n{context['cancellation_reason']}\n\n"
         f"Obrigada,\n"
-        f"Priscila Arantes PA"
+        f"Priscila Arantes — Enfermeira | Pedicure Terapêutica"
     )
 
     rendered_email = render_email_for_event(
@@ -641,7 +641,7 @@ def send_open_appointments_lookup_email(recipient_email, appointments):
             "Se não foi você que solicitou esta consulta, ignore este email.",
             "",
             "Obrigada,",
-            "Priscila Arantes PA",
+            "Priscila Arantes — Enfermeira | Pedicure Terapêutica",
         ]
     )
 
@@ -653,7 +653,7 @@ def send_open_appointments_lookup_email(recipient_email, appointments):
         f"<p>{escape(intro)}</p>"
         f"<ul>{''.join(html_items)}</ul>"
         "<p>Se não foi você que solicitou esta consulta, ignore este email.</p>"
-        "<p>Obrigada,<br>Priscila Arantes PA</p>"
+        "<p>Obrigada,<br>Priscila Arantes — Enfermeira | Pedicure Terapêutica</p>"
     )
 
     send_rendered_email(
