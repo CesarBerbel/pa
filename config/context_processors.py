@@ -3,6 +3,7 @@ from urllib.parse import quote, urljoin
 from django.conf import settings
 from django.urls import translate_url
 
+from appointments.models import TreatedCondition
 from notifications.models import BeforeAfterCase
 
 
@@ -109,6 +110,35 @@ def before_after_gallery(request):
 
     return {
         "HAS_BEFORE_AFTER": BeforeAfterCase.objects.filter(is_active=True).exists(),
+    }
+
+
+def treated_conditions(request):
+    """Onde fica a página de cada problema publicado, para quem lhe queira ligar.
+
+    Os cards da página inicial existiam antes destas páginas e não vão deixar
+    de existir: têm o ícone, o texto escrito à mão e a tradução inglesa no
+    catálogo. O que lhes falta é o passo seguinte, e é isto que lho dá — mas
+    só para os que já estão publicados. Um card a ligar para um rascunho
+    seria um 404 na página mais visitada do site.
+
+    **As chaves vêm com underscores e não com hífens.** A linguagem de
+    templates do Django não sabe indexar um dicionário por uma chave com
+    hífen — `{{ d.unha-encravada }}` é lido como uma subtração. Trocar o
+    caráter aqui evita um filtro novo só para isto.
+
+    `HAS_TREATED_CONDITIONS` é o mesmo dicionário visto como sim ou não, para
+    a ligação do rodapé aparecer sozinha quando a primeira for publicada.
+    """
+
+    ligacoes = {
+        condicao.slug.replace("-", "_"): condicao.get_absolute_url()
+        for condicao in TreatedCondition.objects.filter(is_published=True)
+    }
+
+    return {
+        "CONDITION_LINKS": ligacoes,
+        "HAS_TREATED_CONDITIONS": bool(ligacoes),
     }
 
 

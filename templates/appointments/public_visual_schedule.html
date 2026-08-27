@@ -1,13 +1,15 @@
 {% extends "base.html" %}
+
+{% load i18n %}
 {% load assets static i18n %}
 
-{% block title %}Agenda disponível | Marcação online | Priscila Arantes Pedicure Terapêutica{% endblock %}
-{% block meta_description %}Consulte a agenda disponível da Priscila Arantes Pedicure Terapêutica em Coimbra e marque online serviços de pedicure terapêutica, manicure e enfermagem.{% endblock %}
-{% block meta_keywords %}agenda pedicure terapêutica Coimbra, marcação online Coimbra, manicure Coimbra, enfermagem Coimbra{% endblock %}
-{% block og_title %}Agenda disponível | Priscila Arantes Pedicure Terapêutica{% endblock %}
-{% block og_description %}Escolha serviço, data e horário para marcação online em Coimbra.{% endblock %}
-{% block twitter_title %}Agenda disponível | Priscila Arantes Pedicure Terapêutica{% endblock %}
-{% block twitter_description %}Consulte horários disponíveis e marque online.{% endblock %}
+{% block title %}{% translate "Agenda disponível | Marcação online" %} | {{ SEO_SITE_NAME }}{% endblock %}
+{% block meta_description %}{% translate "Consulte a agenda disponível em Coimbra e marque online serviços de pedicure terapêutica, manicure e enfermagem." %}{% endblock %}
+{% block meta_keywords %}{% translate "agenda pedicure terapêutica Coimbra, marcação online Coimbra, manicure Coimbra, enfermagem Coimbra" %}{% endblock %}
+{% block og_title %}{% translate "Agenda disponível" %} | {{ SEO_SITE_NAME }}{% endblock %}
+{% block og_description %}{% translate "Escolha serviço, data e horário para marcação online em Coimbra." %}{% endblock %}
+{% block twitter_title %}{% translate "Agenda disponível" %} | {{ SEO_SITE_NAME }}{% endblock %}
+{% block twitter_description %}{% translate "Consulte horários disponíveis e marque online." %}{% endblock %}
 
 {% block content %}
 

@@ -126,6 +126,7 @@ class TemplateSyntaxNeverReachesThePageTests(ResetLanguageMixin, TestCase):
         "/marcacoes/auditoria/",
         "/diagnostico/horarios/",
         "/emails/modelos/",
+        "/paginas/o-que-tratamos/",
         "/mensagens/whatsapp/",
         "/mensagens/envio/",
     ]

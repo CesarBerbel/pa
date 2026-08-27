@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Apagar página | Priscila Arantes Pedicure Terapêutica{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-6">
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-3">Apagar «{{ object.name }}»?</h1>
+
+                {% if object.is_published %}
+                    {# A diferença entre apagar um rascunho e apagar uma página no #}
+                    {# ar é toda: uma é deitar fora um texto, a outra é deixar um  #}
+                    {# 404 onde o Google mandava gente.                            #}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>
+                        Esta página <strong>está publicada</strong>. O endereço
+                        <code>/o-que-tratamos/{{ object.slug }}/</code> pode já estar
+                        indexado e nos resultados de pesquisa — quem lá chegar passa a
+                        encontrar um erro.
+                        <br><br>
+                        Se o que quer é tirá-la do site sem a perder,
+                        <a href="{% url 'appointments:condition_admin_list' %}">despublique-a</a>
+                        em vez de a apagar.
+                    </div>
+                {% else %}
+                    <p class="text-muted">
+                        É um rascunho: não está no site nem no sitemap. Apagar
+                        deita fora o texto escrito.
+                    </p>
+                {% endif %}
+
+                <p class="text-muted">
+                    As perguntas frequentes desta página são apagadas com ela.
+                </p>
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-danger">Apagar</button>
+
+                        <a href="{% url 'appointments:condition_admin_list' %}" class="btn btn-outline-secondary">
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

@@ -170,3 +170,102 @@ def build_service_feed_structured_data(service_categories):
     }
 
     return json.dumps(payload, ensure_ascii=False, indent=2)
+
+
+def build_condition_structured_data(condition, page_url):
+    """O JSON-LD da página de um problema.
+
+    Três peças, e cada uma responde a uma pergunta diferente do Google:
+
+    * `BreadcrumbList` diz onde a página fica dentro do site, e é o que faz
+      aparecer o caminho em vez do endereço cru no resultado da pesquisa;
+    * `FAQPage` é a única aqui que muda o aspeto do resultado — as perguntas
+      aparecem abertas por baixo do link. Só entra se houver perguntas: um
+      `FAQPage` sem perguntas é uma promessa por cumprir;
+    * `WebPage` diz de que trata a página e quem a publica.
+
+    Fica deliberadamente fora `MedicalWebPage`. É um tipo legítimo e o site
+    tem quem o assine, mas declarar conteúdo médico é assumir uma revisão
+    clínica de cada frase — e isso é uma decisão da profissional, tomada
+    depois de ler o texto, não um efeito lateral de uma migração.
+    """
+
+    negocio = {
+        "@type": "HealthAndBeautyBusiness",
+        "name": settings.SEO_SITE_NAME,
+        "url": settings.SITE_URL.rstrip("/"),
+    }
+
+    grafo = [
+        {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                {
+                    "@type": "ListItem",
+                    "position": 1,
+                    "name": "Início",
+                    "item": settings.SITE_URL.rstrip("/"),
+                },
+                {
+                    "@type": "ListItem",
+                    "position": 2,
+                    "name": "O que tratamos",
+                    "item": absolute_url(
+                        reverse("appointments:treated_condition_list")
+                    ),
+                },
+                {
+                    "@type": "ListItem",
+                    "position": 3,
+                    "name": condition.display_name,
+                    "item": page_url,
+                },
+            ],
+        },
+        {
+            "@type": "WebPage",
+            "@id": page_url,
+            "url": page_url,
+            "name": condition.seo_title(),
+            "description": condition.seo_description(),
+            "inLanguage": "pt-PT",
+            "about": {"@type": "Thing", "name": condition.display_name},
+            "publisher": negocio,
+        },
+    ]
+
+    # A imagem de abertura, se houver. Em endereço absoluto: um `/media/...`
+    # dentro de um JSON-LD é lido por um robô que não sabe de que site veio, e
+    # uma imagem declarada que não carrega é pior do que nenhuma.
+    if condition.display_hero:
+        grafo[-1]["primaryImageOfPage"] = {
+            "@type": "ImageObject",
+            "url": absolute_url(condition.display_hero.url),
+            "caption": condition.hero_description,
+        }
+
+    perguntas = list(condition.questions.all())
+
+    if perguntas:
+        grafo.append(
+            {
+                "@type": "FAQPage",
+                "mainEntity": [
+                    {
+                        "@type": "Question",
+                        "name": pergunta.display_question,
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": pergunta.display_answer,
+                        },
+                    }
+                    for pergunta in perguntas
+                ],
+            }
+        )
+
+    return json.dumps(
+        {"@context": "https://schema.org", "@graph": grafo},
+        ensure_ascii=False,
+        indent=2,
+    )

@@ -34,6 +34,14 @@ from .views import (
     PublicBeforeAfterView,
     ServiceCreateView,
     ServiceListView,
+    ConditionAdminListView,
+    ConditionCreateView,
+    ConditionDeleteView,
+    ConditionImageUploadView,
+    ConditionPublishToggleView,
+    ConditionUpdateView,
+    TreatedConditionDetailView,
+    TreatedConditionListView,
     VisualScheduleView,
     SchedulingSettingView,
     MonthlyScheduleView,
@@ -156,6 +164,52 @@ urlpatterns = [
         name="before_after_delete",
     ),
     path("servicos/", ServiceListView.as_view(), name="service_list"),
+    # As páginas dos problemas. O endereço é o que a pessoa procura e não o
+    # que nós vendemos: "o que tratamos" e o nome do problema, e não
+    # "servicos/patologias".
+    path(
+        "o-que-tratamos/",
+        TreatedConditionListView.as_view(),
+        name="treated_condition_list",
+    ),
+    # A área interna fica sob "paginas/" e não sob "o-que-tratamos/": o
+    # endereço público é para quem lê, e um `<slug>` público a competir com
+    # `/novo/` é uma página chamada "novo" à espera de acontecer.
+    path(
+        "paginas/o-que-tratamos/",
+        ConditionAdminListView.as_view(),
+        name="condition_admin_list",
+    ),
+    path(
+        "paginas/o-que-tratamos/nova/",
+        ConditionCreateView.as_view(),
+        name="condition_admin_create",
+    ),
+    path(
+        "paginas/o-que-tratamos/<int:pk>/editar/",
+        ConditionUpdateView.as_view(),
+        name="condition_admin_update",
+    ),
+    path(
+        "paginas/o-que-tratamos/<int:pk>/apagar/",
+        ConditionDeleteView.as_view(),
+        name="condition_admin_delete",
+    ),
+    path(
+        "paginas/o-que-tratamos/imagem/",
+        ConditionImageUploadView.as_view(),
+        name="condition_image_upload",
+    ),
+    path(
+        "paginas/o-que-tratamos/<int:pk>/publicar/",
+        ConditionPublishToggleView.as_view(),
+        name="condition_admin_publish",
+    ),
+    path(
+        "o-que-tratamos/<slug:slug>/",
+        TreatedConditionDetailView.as_view(),
+        name="treated_condition_detail",
+    ),
     path("servicos/feed/", PublicServiceFeedView.as_view(), name="public_service_feed"),
     path("servicos/novo/", ServiceCreateView.as_view(), name="service_create"),
     path(

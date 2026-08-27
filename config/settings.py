@@ -349,6 +349,7 @@ TEMPLATES = [
                 "config.context_processors.language_alternates",
                 "config.context_processors.clinical_settings",
                 "config.context_processors.before_after_gallery",
+                "config.context_processors.treated_conditions",
                 "config.context_processors.opening_hours",
             ],
             "libraries": {

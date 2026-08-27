@@ -12,7 +12,32 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import get_language
 
+from appointments.rich_text import esta_vazio, limpar
+
 logger = logging.getLogger(__name__)
+
+
+def campo_da_lingua(default_value, english_value):
+    """O campo desta língua, e só desta — sem cair para a outra.
+
+    O `get_localized_value` cai para o português quando o inglês está vazio, e
+    para um corpo de texto isso é o que se quer: uma página meio traduzida vale
+    mais do que meia página em branco.
+
+    Para o título e a descrição que vão para o Google, não. Numa página com o
+    nome já traduzido, um `meta_title` vazio em inglês fazia sair o título
+    português — "Unha encravada: tratamento em Coimbra" por cima de uma página
+    escrita em inglês de alto a baixo. Vale mais o nome inglês, que existe.
+
+    Quem chama isto trata do recurso a seguir, e escolhe-o na mesma língua.
+    """
+
+    language = get_language() or ""
+
+    if language.lower().startswith("en"):
+        return english_value
+
+    return default_value
 
 
 def get_localized_value(default_value, english_value):
@@ -1789,3 +1814,356 @@ class ClinicalNote(models.Model):
             raise ValidationError(
                 {"procedures": "Descreva os atos praticados nesta consulta."}
             )
+
+
+class TreatedCondition(models.Model):
+    """Um problema que a pedicure terapêutica trata, com página própria.
+
+    Quem procura no Google não escreve "pedicure terapêutica": escreve "unha
+    encravada dói muito" ou "micose na unha do pé tratamento". Uma página só de
+    serviços responde à pergunta errada — diz o que se vende, não o que a
+    pessoa tem. Cada linha desta tabela é uma página que responde à pergunta
+    que a pessoa fez, e só no fim propõe marcar.
+
+    As secções são fixas e não um campo de texto livre porque é a repetição
+    que faz isto funcionar: a mesma ordem em todas as páginas dá ao leitor um
+    sítio previsível para procurar, e ao Google uma estrutura para ler.
+
+    **Nasce por publicar.** É texto sobre saúde assinado por uma enfermeira, e
+    o custo de publicar uma frase errada não se compara ao de ela esperar uma
+    leitura.
+    """
+
+    slug = models.SlugField(
+        max_length=140,
+        unique=True,
+        verbose_name="Endereço",
+        help_text="A parte final do endereço: /o-que-tratamos/unha-encravada/",
+    )
+
+    name = models.CharField(
+        max_length=120,
+        verbose_name="Nome",
+        help_text="Como a pessoa lhe chama. É o título da página.",
+    )
+
+    name_en = models.CharField(max_length=120, blank=True, verbose_name="Nome (inglês)")
+
+    summary = models.TextField(
+        verbose_name="Resumo",
+        help_text=(
+            "Duas ou três linhas, logo abaixo do título. Serve também de "
+            "descrição para o Google quando não houver uma escrita à mão."
+        ),
+    )
+
+    summary_en = models.TextField(blank=True, verbose_name="Resumo (inglês)")
+
+    # A imagem que abre a página. Opcional: uma página sem fotografia continua
+    # a responder à pergunta de quem chegou, e uma fotografia escolhida à
+    # pressa só para preencher o espaço vale menos do que nenhuma.
+    hero_image = models.ImageField(
+        blank=True,
+        upload_to="o-que-tratamos/",
+        verbose_name="Imagem de abertura",
+        help_text=(
+            "Aparece no topo da página e no card do índice. Larga e não alta "
+            "— é recortada ao meio, e uma fotografia vertical perde as pontas."
+        ),
+    )
+
+    # O texto alternativo não é um extra de acessibilidade que se acrescenta
+    # depois: é o que descreve a imagem a quem não a vê e ao Google, que
+    # também não a vê. Vazio, a página usa o nome do problema — pior do que
+    # uma frase escrita, melhor do que um atributo em branco.
+    hero_alt = models.CharField(
+        max_length=180,
+        blank=True,
+        verbose_name="Descrição da imagem",
+        help_text=(
+            "O que se vê na fotografia, para quem não a consegue ver. Sem "
+            "isto, a página usa o nome do problema."
+        ),
+    )
+
+    # O texto da página, em HTML, escrito num editor.
+    #
+    # Eram cinco campos de texto — o que é, porque acontece, sinais de alerta,
+    # como se trata, cuidados em casa — e a ordem era fixa. Isso dava páginas
+    # consistentes e tirava-lhe a possibilidade de escrever uma tabela de
+    # sintomas, uma fotografia a meio ou uma ligação para outra página. Quem
+    # escreve estas páginas sabe o que cada uma precisa; a estrutura passou a
+    # ser dela.
+    #
+    # **O que está aqui já vem limpo.** É `save()` que o garante, e é por isso
+    # que a página o pode mostrar como HTML sem o escapar.
+    body = models.TextField(
+        blank=True,
+        verbose_name="Texto da página",
+        help_text=(
+            "Escreva como escreveria num documento. Pode usar títulos, "
+            "listas, tabelas, ligações e imagens."
+        ),
+    )
+
+    body_en = models.TextField(blank=True, verbose_name="Texto da página (inglês)")
+
+    # O título e a descrição que vão para o Google. Ficam à parte do nome e do
+    # resumo porque respondem a outra coisa: o nome é para quem já está na
+    # página, isto é para quem ainda está na lista de resultados a decidir se
+    # clica. Vazios, a página usa o nome e o resumo, que é melhor do que uma
+    # etiqueta em branco.
+    meta_title = models.CharField(
+        max_length=70,
+        blank=True,
+        verbose_name="Título para o Google",
+        help_text="Até 60 caracteres é o que costuma aparecer inteiro.",
+    )
+
+    meta_description = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name="Descrição para o Google",
+        help_text="Entre 120 e 155 caracteres é o que costuma aparecer inteiro.",
+    )
+
+    keywords = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name="Palavras-chave",
+        help_text="Separadas por vírgulas.",
+    )
+
+    # As mesmas três, em inglês. Sem elas, uma página traduzida de alto a
+    # baixo continuava a mostrar o separador do browser e o resultado da
+    # pesquisa em português — que é onde quem procura em inglês a vê primeiro.
+    # Uma imagem própria para a versão inglesa. Só faz falta quando o banner
+    # tem texto escrito nele — e como tem, faz.
+    hero_image_en = models.ImageField(
+        blank=True,
+        upload_to="o-que-tratamos/",
+        verbose_name="Imagem de abertura (inglês)",
+        help_text=(
+            "Vazio usa a imagem portuguesa. Só vale a pena se o banner "
+            "tiver texto escrito."
+        ),
+    )
+
+    hero_alt_en = models.CharField(
+        max_length=180, blank=True, verbose_name="Descrição da imagem (inglês)"
+    )
+
+    meta_title_en = models.CharField(
+        max_length=70, blank=True, verbose_name="Título para o Google (inglês)"
+    )
+
+    meta_description_en = models.CharField(
+        max_length=200, blank=True, verbose_name="Descrição para o Google (inglês)"
+    )
+
+    keywords_en = models.CharField(
+        max_length=255, blank=True, verbose_name="Palavras-chave (inglês)"
+    )
+
+    # O serviço que se marca no fim da página. Opcional: há problemas que se
+    # explicam antes de haver um serviço com nome próprio para eles, e uma
+    # página sem serviço continua a valer — leva a pessoa à agenda geral.
+    service = models.ForeignKey(
+        Service,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="treated_conditions",
+        verbose_name="Serviço a propor",
+    )
+
+    display_order = models.PositiveIntegerField(default=0, verbose_name="Ordem")
+
+    is_published = models.BooleanField(
+        default=False,
+        verbose_name="Publicado",
+        help_text=(
+            "Enquanto estiver desligado, a página não existe para ninguém — "
+            "nem no site, nem no sitemap."
+        ),
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["display_order", "name"]
+        verbose_name = "Problema tratado"
+        verbose_name_plural = "Problemas tratados"
+
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        from django.urls import reverse
+
+        return reverse(
+            "appointments:treated_condition_detail",
+            kwargs={"slug": self.slug},
+        )
+
+    @property
+    def display_name(self):
+        return get_localized_value(self.name, self.name_en)
+
+    @property
+    def display_summary(self):
+        return get_localized_value(self.summary, self.summary_en)
+
+    @property
+    def display_hero(self):
+        """A imagem de abertura desta língua, com a portuguesa como recurso.
+
+        Uma página sem imagem é pior do que uma com a imagem da outra língua —
+        e é por isso que cai. O que a queda custa está no `hero_carries_title`
+        logo abaixo.
+        """
+
+        if get_language() and get_language().lower().startswith("en"):
+            return self.hero_image_en or self.hero_image
+
+        return self.hero_image
+
+    @property
+    def hero_carries_title(self):
+        """Se o banner desta página traz o título escrito nele.
+
+        O `<h1>` esconde-se quando há banner, porque o nome já vai lá escrito.
+        Mas se a página inglesa estiver a usar o banner português, o nome que
+        lá está escrito está em português — e esconder o `<h1>` inglês deixava
+        o leitor inglês sem um título que conseguisse ler.
+
+        Por isso é a imagem **desta** língua que decide, e não a que aparece.
+        """
+
+        if get_language() and get_language().lower().startswith("en"):
+            return bool(self.hero_image_en)
+
+        return bool(self.hero_image)
+
+    @property
+    def hero_description(self):
+        """O texto alternativo da imagem, com o nome do problema como recurso.
+
+        Um `alt` vazio numa imagem que carrega conteúdo diz a quem usa leitor
+        de ecrã que ali não há nada — e ali há. O nome do problema não é uma
+        boa descrição, mas é verdadeira.
+        """
+
+        return campo_da_lingua(self.hero_alt, self.hero_alt_en).strip() or (
+            self.display_name
+        )
+
+    @property
+    def display_body(self):
+        """O texto da página, na língua dela, pronto a mostrar como HTML.
+
+        Pode ir para o template com `|safe` porque o que está guardado já
+        passou pelo `save()`: a limpeza é à entrada, e é a única forma de o
+        que está na base de dados ser seguro em todos os sítios para onde for.
+        """
+
+        return get_localized_value(self.body, self.body_en)
+
+    def has_body(self):
+        """Se há texto a sério, e não um parágrafo vazio deixado pelo editor.
+
+        Um editor por preencher devolve `<p><br></p>`, que passa por
+        preenchido em qualquer verificação ingénua. É isto que impede publicar
+        uma página em branco.
+        """
+
+        return not esta_vazio(self.display_body)
+
+    def save(self, *args, **kwargs):
+        """Limpa o HTML antes de ele chegar à base de dados.
+
+        Aqui e não no formulário: um `loaddata`, uma migração ou uma sessão de
+        `shell` também gravam, e nenhum deles passa por um formulário. O que
+        fica guardado é seguro venha de onde vier.
+        """
+
+        self.body = limpar(self.body)
+        self.body_en = limpar(self.body_en)
+
+        super().save(*args, **kwargs)
+
+    @property
+    def display_keywords(self):
+        return get_localized_value(self.keywords, self.keywords_en)
+
+    def seo_title(self):
+        return (
+            campo_da_lingua(self.meta_title, self.meta_title_en).strip()
+            or self.display_name
+        )
+
+    def seo_description(self):
+        """A descrição para os resultados de pesquisa, na língua da página.
+
+        Sem uma escrita à mão vale o resumo, cortado à palavra e não a meio
+        dela: o Google corta o que passa dos ~155 caracteres, e um corte a
+        meio de uma palavra é o que faz uma descrição parecer partida.
+        """
+
+        escrita = campo_da_lingua(
+            self.meta_description, self.meta_description_en
+        ).strip()
+
+        if escrita:
+            return escrita
+
+        resumo = " ".join(self.display_summary.split())
+
+        if len(resumo) <= 155:
+            return resumo
+
+        return resumo[:152].rsplit(" ", 1)[0] + "…"
+
+
+class ConditionQuestion(models.Model):
+    """Uma pergunta e a resposta dela, no fim da página do problema.
+
+    Não é enfeite: é a parte da página que o Google mostra aberta nos
+    resultados, e são as perguntas que as pessoas escrevem à letra na
+    pesquisa. Uma pergunta sem resposta não vai para lado nenhum, por isso as
+    duas são obrigatórias.
+    """
+
+    condition = models.ForeignKey(
+        TreatedCondition,
+        on_delete=models.CASCADE,
+        related_name="questions",
+        verbose_name="Problema",
+    )
+
+    question = models.CharField(max_length=200, verbose_name="Pergunta")
+    question_en = models.CharField(
+        max_length=200, blank=True, verbose_name="Pergunta (inglês)"
+    )
+
+    answer = models.TextField(verbose_name="Resposta")
+    answer_en = models.TextField(blank=True, verbose_name="Resposta (inglês)")
+
+    display_order = models.PositiveIntegerField(default=0, verbose_name="Ordem")
+
+    class Meta:
+        ordering = ["display_order", "id"]
+        verbose_name = "Pergunta frequente"
+        verbose_name_plural = "Perguntas frequentes"
+
+    def __str__(self):
+        return self.question
+
+    @property
+    def display_question(self):
+        return get_localized_value(self.question, self.question_en)
+
+    @property
+    def display_answer(self):
+        return get_localized_value(self.answer, self.answer_en)

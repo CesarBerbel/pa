@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.utils import timezone, translation
 from django.views.decorators.http import require_GET
 
+from appointments.models import TreatedCondition
 from config.templatetags.assets import asset_version, versioned_static
 
 
@@ -41,6 +42,7 @@ def robots_txt(request):
 SITEMAP_ROUTES = [
     ("home", "weekly", "1.0"),
     ("appointments:public_service_feed", "weekly", "0.9"),
+    ("appointments:treated_condition_list", "weekly", "0.8"),
     ("appointments:public_visual_schedule", "daily", "0.8"),
     ("appointments:public_before_after", "monthly", "0.7"),
     ("privacy_policy", "monthly", "0.4"),
@@ -75,6 +77,26 @@ def sitemap_xml(request):
                         "lastmod": today,
                         "changefreq": changefreq,
                         "priority": priority,
+                    }
+                )
+
+            # As páginas dos problemas não são uma rota fixa: cada uma é uma
+            # linha na base de dados, e só entram aqui as publicadas. Um
+            # rascunho no sitemap seria convidar o Google a indexar uma página
+            # que responde 404.
+            #
+            # O `lastmod` é o `updated_at` de cada uma e não a data de hoje:
+            # dizer que tudo mudou hoje, todos os dias, é ensinar o Google a
+            # não acreditar no campo.
+            for condicao in TreatedCondition.objects.filter(
+                is_published=True
+            ).order_by("display_order", "name"):
+                sitemap_items.append(
+                    {
+                        "loc": f"{site_url}{condicao.get_absolute_url()}",
+                        "lastmod": condicao.updated_at.date().isoformat(),
+                        "changefreq": "monthly",
+                        "priority": "0.7",
                     }
                 )
 

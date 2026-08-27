@@ -175,58 +175,177 @@
     <div class="problem-grid">
         <article class="problem-card">
             <svg class="problem-icon" aria-hidden="true" focusable="false"><use href="#icone-pegada"></use></svg>
-            <h3>{% translate "Unha encravada" %}</h3>
+            <h3>
+                {# Sem página publicada não há para onde ir, e um #}
+                {# href vazio recarrega a home em vez de não fazer nada. #}
+                {% if CONDITION_LINKS.unha_encravada %}
+                    <a class="stretched-link" href="{{ CONDITION_LINKS.unha_encravada }}">
+                        {% translate "Unha encravada" %}
+                    </a>
+                {% else %}
+                    {% translate "Unha encravada" %}
+                {% endif %}
+            </h3>
             <p>
                 {% translate "Dor ao calçar, inchaço ou vermelhidão à volta da unha. Trata-se sem cirurgia na maioria dos casos, e pode ser corrigido com órtese para não voltar." %}
             </p>
+        
+            {% if CONDITION_LINKS.unha_encravada %}
+                <span class="problem-card-link" aria-hidden="true">
+                    {% translate "Saber mais" %}
+                    <i class="bi bi-arrow-right ms-1"></i>
+                </span>
+            {% endif %}
         </article>
 
         <article class="problem-card">
             <svg class="problem-icon" aria-hidden="true" focusable="false"><use href="#icone-pegada"></use></svg>
-            <h3>{% translate "Calos e calosidades" %}</h3>
+            <h3>
+                {# Sem página publicada não há para onde ir, e um #}
+                {# href vazio recarrega a home em vez de não fazer nada. #}
+                {% if CONDITION_LINKS.calos_e_calosidades %}
+                    <a class="stretched-link" href="{{ CONDITION_LINKS.calos_e_calosidades }}">
+                        {% translate "Calos e calosidades" %}
+                    </a>
+                {% else %}
+                    {% translate "Calos e calosidades" %}
+                {% endif %}
+            </h3>
             <p>
                 {% translate "Pele espessa que dói ao pisar. O desbaste alivia logo, mas o que interessa é perceber o que está a causar a pressão." %}
             </p>
+        
+            {% if CONDITION_LINKS.calos_e_calosidades %}
+                <span class="problem-card-link" aria-hidden="true">
+                    {% translate "Saber mais" %}
+                    <i class="bi bi-arrow-right ms-1"></i>
+                </span>
+            {% endif %}
         </article>
 
         <article class="problem-card">
             <svg class="problem-icon" aria-hidden="true" focusable="false"><use href="#icone-pegada"></use></svg>
-            <h3>{% translate "Fungos nas unhas" %}</h3>
+            <h3>
+                {# Sem página publicada não há para onde ir, e um #}
+                {# href vazio recarrega a home em vez de não fazer nada. #}
+                {% if CONDITION_LINKS.micose_na_unha_do_pe %}
+                    <a class="stretched-link" href="{{ CONDITION_LINKS.micose_na_unha_do_pe }}">
+                        {% translate "Fungos nas unhas" %}
+                    </a>
+                {% else %}
+                    {% translate "Fungos nas unhas" %}
+                {% endif %}
+            </h3>
             <p>
                 {% translate "Unhas amareladas, espessas ou quebradiças. Avaliação, tratamento e, quando indicado, laserterapia para onicomicose." %}
             </p>
+        
+            {% if CONDITION_LINKS.micose_na_unha_do_pe %}
+                <span class="problem-card-link" aria-hidden="true">
+                    {% translate "Saber mais" %}
+                    <i class="bi bi-arrow-right ms-1"></i>
+                </span>
+            {% endif %}
         </article>
 
         <article class="problem-card">
             <svg class="problem-icon" aria-hidden="true" focusable="false"><use href="#icone-pegada"></use></svg>
-            <h3>{% translate "Verruga plantar" %}</h3>
+            <h3>
+                {# Sem página publicada não há para onde ir, e um #}
+                {# href vazio recarrega a home em vez de não fazer nada. #}
+                {% if CONDITION_LINKS.verruga_plantar %}
+                    <a class="stretched-link" href="{{ CONDITION_LINKS.verruga_plantar }}">
+                        {% translate "Verruga plantar" %}
+                    </a>
+                {% else %}
+                    {% translate "Verruga plantar" %}
+                {% endif %}
+            </h3>
             <p>
                 {% translate "Lesão dolorosa na planta do pé, de origem viral, que se confunde facilmente com um calo. O tratamento é outro — por isso se avalia antes de tratar." %}
             </p>
+        
+            {% if CONDITION_LINKS.verruga_plantar %}
+                <span class="problem-card-link" aria-hidden="true">
+                    {% translate "Saber mais" %}
+                    <i class="bi bi-arrow-right ms-1"></i>
+                </span>
+            {% endif %}
         </article>
 
         <article class="problem-card">
             <svg class="problem-icon" aria-hidden="true" focusable="false"><use href="#icone-pegada"></use></svg>
-            <h3>{% translate "Fissuras e gretas" %}</h3>
+            <h3>
+                {# Sem página publicada não há para onde ir, e um #}
+                {# href vazio recarrega a home em vez de não fazer nada. #}
+                {% if CONDITION_LINKS.fissuras_nos_calcanhares %}
+                    <a class="stretched-link" href="{{ CONDITION_LINKS.fissuras_nos_calcanhares }}">
+                        {% translate "Fissuras e gretas" %}
+                    </a>
+                {% else %}
+                    {% translate "Fissuras e gretas" %}
+                {% endif %}
+            </h3>
             <p>
                 {% translate "Gretas nos calcanhares que chegam a abrir e a infetar. Trata-se a pele e procura-se a causa: calçado, secura ou apoio desequilibrado." %}
             </p>
+
+            {% if CONDITION_LINKS.fissuras_nos_calcanhares %}
+                <span class="problem-card-link" aria-hidden="true">
+                    {% translate "Saber mais" %}
+                    <i class="bi bi-arrow-right ms-1"></i>
+                </span>
+            {% endif %}
         </article>
 
         <article class="problem-card">
             <svg class="problem-icon" aria-hidden="true" focusable="false"><use href="#icone-pegada"></use></svg>
-            <h3>{% translate "Unhas espessas ou deformadas" %}</h3>
+            <h3>
+                {# Sem página publicada não há para onde ir, e um #}
+                {# href vazio recarrega a home em vez de não fazer nada. #}
+                {% if CONDITION_LINKS.unhas_grossas_e_deformadas %}
+                    <a class="stretched-link" href="{{ CONDITION_LINKS.unhas_grossas_e_deformadas }}">
+                        {% translate "Unhas espessas ou deformadas" %}
+                    </a>
+                {% else %}
+                    {% translate "Unhas espessas ou deformadas" %}
+                {% endif %}
+            </h3>
             <p>
                 {% translate "Unhas que engrossam, mudam de forma ou magoam ao cortar. Corte técnico e, quando é preciso endireitar a unha, colocação de órtese ungueal." %}
             </p>
+        
+            {% if CONDITION_LINKS.unhas_grossas_e_deformadas %}
+                <span class="problem-card-link" aria-hidden="true">
+                    {% translate "Saber mais" %}
+                    <i class="bi bi-arrow-right ms-1"></i>
+                </span>
+            {% endif %}
         </article>
 
         <article class="problem-card">
             <svg class="problem-icon" aria-hidden="true" focusable="false"><use href="#icone-pegada"></use></svg>
-            <h3>{% translate "Risco Podológico" %}</h3>
+            <h3>
+                {# Sem página publicada não há para onde ir, e um #}
+                {# href vazio recarrega a home em vez de não fazer nada. #}
+                {% if CONDITION_LINKS.pe_diabetico %}
+                    <a class="stretched-link" href="{{ CONDITION_LINKS.pe_diabetico }}">
+                        {% translate "Risco Podológico" %}
+                    </a>
+                {% else %}
+                    {% translate "Risco Podológico" %}
+                {% endif %}
+            </h3>
             <p>
                 {% translate "Avaliação do risco e cuidado adaptado a quem tem diabetes, problemas de circulação ou sensibilidade alterada nos pés — situações em que se deve vigiar mesmo sem queixas." %}
             </p>
+
+            {% if CONDITION_LINKS.pe_diabetico %}
+                <span class="problem-card-link" aria-hidden="true">
+                    {% translate "Saber mais" %}
+                    <i class="bi bi-arrow-right ms-1"></i>
+                </span>
+            {% endif %}
         </article>
 
         <article class="problem-card">

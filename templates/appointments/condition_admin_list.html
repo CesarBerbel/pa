@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}O que tratamos | Priscila Arantes Pedicure Terapêutica{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h4 mb-1">O que tratamos</h1>
+        <p class="text-muted mb-0">
+            As páginas que explicam cada problema. São a porta de entrada de
+            quem procura no Google pelo que sente.
+        </p>
+    </div>
+
+    <a href="{% url 'appointments:condition_admin_create' %}" class="btn btn-primary">
+        Nova página
+    </a>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        {% if conditions %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Página</th>
+                            <th>Perguntas</th>
+                            <th>Serviço</th>
+                            <th>Estado</th>
+                            <th class="text-end">Ações</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for condition in conditions %}
+                            <tr>
+                                <td>
+                                    <strong>{{ condition.name }}</strong>
+                                    <br>
+                                    <small class="text-muted">/o-que-tratamos/{{ condition.slug }}/</small>
+                                </td>
+
+                                <td>
+                                    {% with total=condition.questions.all|length %}
+                                        {% if total %}
+                                            {{ total }}
+                                        {% else %}
+                                            {# Sem perguntas a página perde a única peça que muda #}
+                                            {# o aspeto do resultado no Google. Vale um aviso.    #}
+                                            <span class="text-warning-emphasis" title="Sem perguntas frequentes">
+                                                <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                                                nenhuma
+                                            </span>
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
+
+                                <td>
+                                    {% if condition.service %}
+                                        {{ condition.service.name }}
+                                    {% else %}
+                                        <span class="text-muted">agenda geral</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if condition.is_published %}
+                                        <span class="badge bg-success">Publicada</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Rascunho</span>
+                                    {% endif %}
+                                </td>
+
+                                <td class="text-end text-nowrap">
+                                    {# Por POST e não por link: um endereço que muda o estado #}
+                                    {# do site num GET é um endereço que qualquer rastreador  #}
+                                    {# dispara sozinho.                                       #}
+                                    <form
+                                        method="post"
+                                        action="{% url 'appointments:condition_admin_publish' condition.pk %}"
+                                        class="d-inline"
+                                    >
+                                        {% csrf_token %}
+
+                                        <button
+                                            type="submit"
+                                            class="btn btn-sm {% if condition.is_published %}btn-outline-secondary{% else %}btn-outline-success{% endif %}"
+                                        >
+                                            {% if condition.is_published %}Despublicar{% else %}Publicar{% endif %}
+                                        </button>
+                                    </form>
+
+                                    {% if condition.is_published %}
+                                        <a
+                                            href="{{ condition.get_absolute_url }}"
+                                            class="btn btn-sm btn-outline-secondary"
+                                            target="_blank"
+                                            rel="noopener"
+                                        >
+                                            Ver
+                                        </a>
+                                    {% endif %}
+
+                                    <a
+                                        href="{% url 'appointments:condition_admin_update' condition.pk %}"
+                                        class="btn btn-sm btn-outline-primary"
+                                    >
+                                        Editar
+                                    </a>
+
+                                    <a
+                                        href="{% url 'appointments:condition_admin_delete' condition.pk %}"
+                                        class="btn btn-sm btn-outline-danger"
+                                    >
+                                        Apagar
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="app-empty-state">
+                <h3>Ainda não há páginas</h3>
+                <p>
+                    Crie uma página por cada problema que trata. Quem tem uma
+                    unha encravada procura «unha encravada dói», e não
+                    «pedicure terapêutica».
+                </p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

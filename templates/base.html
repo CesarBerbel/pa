@@ -160,6 +160,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                                 </a>
                             </li>
                             <li>
+                                <a class="dropdown-item" href="{% url 'appointments:condition_admin_list' %}">
+                                    <i class="bi bi-file-earmark-text me-2" aria-hidden="true"></i>
+                                    O que tratamos
+                                </a>
+                            </li>
+                            <li>
                                 <a class="dropdown-item" href="{% url 'appointments:before_after_list' %}">
                                     <i class="bi bi-images me-2" aria-hidden="true"></i>
                                     Antes e depois
@@ -460,6 +466,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             <a href="{% url 'home' %}#marcacao">{% translate "Marcação" %}</a>
                             <a href="{% url 'home' %}#sobre">{% translate "Sobre" %}</a>
                             <a href="{% url 'home' %}#servicos">{% translate "Serviços" %}</a>
+                            {# No rodapé e não no menu de cima: a barra já tem #}
+                            {# seis entradas e não aguenta a sétima em ecrã #}
+                            {# pequeno. Mas continua a ser uma ligação em #}
+                            {# todas as páginas, que é o que faz o índice ser #}
+                            {# encontrado a partir de qualquer sítio. #}
+                            {% if HAS_TREATED_CONDITIONS %}
+                                <a href="{% url 'appointments:treated_condition_list' %}">{% translate "O que tratamos" %}</a>
+                            {% endif %}
                             {% if HAS_BEFORE_AFTER %}
                                 <a href="{% url 'appointments:public_before_after' %}">{% translate "Antes e depois" %}</a>
                             {% endif %}

@@ -1,8 +1,10 @@
 {% extends "base.html" %}
+
+{% load i18n %}
 {% load assets static %}
 {% load crispy_forms_tags i18n %}
 
-{% block title %}Marcar horário | Priscila Arantes Pedicure Terapêutica{% endblock %}
+{% block title %}{% translate "Marcar horário" %} | {{ SEO_SITE_NAME }}{% endblock %}
 {% block meta_robots %}noindex,nofollow{% endblock %}
 
 {% block content %}

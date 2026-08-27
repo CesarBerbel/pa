@@ -1,20 +1,24 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.forms import inlineformset_factory
 
 from appointments.availability import AvailabilityService
 from appointments.customer_services import find_or_create_customer
 from appointments.phone_form_field import PhoneField
+from appointments.rich_text import esta_vazio
 from notifications.models import BeforeAfterCase
 
 from .models import (
     Appointment,
     BusinessHour,
     ClinicalNote,
+    ConditionQuestion,
     Customer,
     PatientRecord,
     SchedulingSetting,
     ScheduleBlock,
     Service,
+    TreatedCondition,
     get_default_service_category,
 )
 
@@ -915,3 +919,122 @@ class SchedulingSettingForm(forms.ModelForm):
             )
 
         return dias
+
+
+class TreatedConditionForm(forms.ModelForm):
+    """A página de um problema, editada na área interna.
+
+    O que este formulário tem de diferente dos outros é a ordem: primeiro o
+    que a pessoa lê, depois o que o Google lê. Postos ao contrário, quem
+    escreve começa por preencher etiquetas antes de saber o que a página vai
+    dizer.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # O endereço escreve-se uma vez. Mudá-lo depois de a página estar
+        # indexada é começar do zero aos olhos do Google, e por isso ele avisa
+        # em vez de se deixar mudar sem uma palavra.
+        if self.instance.pk:
+            self.fields["slug"].help_text = (
+                "Já está a ser usado. Mudá-lo agora quebra as ligações que "
+                "existirem para esta página e faz o Google recomeçar."
+            )
+
+        # O texto não é obrigatório: uma página escreve-se aos bocados, e um
+        # formulário que recusa guardar meio texto obriga a escrever tudo de
+        # uma vez. O que não se pode é publicá-la vazia — isso é o `clean()`.
+        self.fields["body"].required = False
+
+        self.fields["service"].help_text = (
+            "O serviço que o botão do fim da página propõe. Sem serviço, o "
+            "botão leva à agenda geral."
+        )
+
+    def clean(self):
+        dados = super().clean()
+
+        # Publicar uma página vazia é publicar um resultado de pesquisa que
+        # não responde a nada. O interruptor só liga quando há o que ler.
+        #
+        # `esta_vazio` e não `.strip()`: um editor deixado por preencher
+        # devolve `<p><br></p>`, que passa por preenchido em qualquer
+        # verificação ingénua.
+        if dados.get("is_published") and esta_vazio(dados.get("body", "")):
+            raise ValidationError(
+                {
+                    "is_published": (
+                        "Esta página ainda não tem texto escrito. "
+                        "Escreva-o antes de a publicar."
+                    )
+                }
+            )
+
+        return dados
+
+    class Meta:
+        model = TreatedCondition
+        fields = [
+            "name",
+            "slug",
+            "summary",
+            "hero_image",
+            "hero_alt",
+            "body",
+            "service",
+            "meta_title",
+            "meta_description",
+            "keywords",
+            # A versão inglesa. Cada campo cai para o português quando fica
+            # vazio, e isso vale campo a campo: uma tradução feita a meio não
+            # deixa a página meio em branco, deixa-a meio traduzida.
+            "name_en",
+            "summary_en",
+            "hero_image_en",
+            "hero_alt_en",
+            "body_en",
+            "meta_title_en",
+            "meta_description_en",
+            "keywords_en",
+            "display_order",
+            "is_published",
+        ]
+
+        widgets = {
+            "summary": forms.Textarea(attrs={"rows": 3}),
+            # A classe é o que o JavaScript da página procura para trocar
+            # esta caixa pelo editor. Sem ele — sem JavaScript, ou se o
+            # editor não carregar — continua a ser uma caixa de texto que
+            # grava HTML: estraga-se o conforto, não o trabalho.
+            "body": forms.Textarea(attrs={"rows": 20, "class": "editor-rico"}),
+            "meta_description": forms.Textarea(attrs={"rows": 2}),
+            "summary_en": forms.Textarea(attrs={"rows": 3}),
+            "body_en": forms.Textarea(attrs={"rows": 20, "class": "editor-rico"}),
+            "meta_description_en": forms.Textarea(attrs={"rows": 2}),
+        }
+
+
+class ConditionQuestionForm(forms.ModelForm):
+    """Uma pergunta frequente. Vazia, não conta.
+
+    É o que permite ter linhas em branco no fim do formulário sem obrigar a
+    preenchê-las: quem tem duas perguntas guarda duas.
+    """
+
+    class Meta:
+        model = ConditionQuestion
+        fields = ["display_order", "question", "answer"]
+
+        widgets = {
+            "answer": forms.Textarea(attrs={"rows": 3}),
+        }
+
+
+ConditionQuestionFormSet = inlineformset_factory(
+    TreatedCondition,
+    ConditionQuestion,
+    form=ConditionQuestionForm,
+    extra=2,
+    can_delete=True,
+)

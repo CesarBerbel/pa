@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{# O título e a descrição vêm do que a profissional escreveu no ecrã de #}
+{# edição, com o nome e o resumo como recurso. Uma página cuja etiqueta no #}
+{# Google depende de um deploy é uma página que nunca é afinada. #}
+{% block title %}{{ condition.seo_title }}{% endblock %}
+{% block meta_description %}{{ condition.seo_description }}{% endblock %}
+{% block meta_keywords %}{{ condition.display_keywords }}{% endblock %}
+{% block og_title %}{{ condition.seo_title }}{% endblock %}
+{% block og_description %}{{ condition.seo_description }}{% endblock %}
+{% block twitter_title %}{{ condition.seo_title }}{% endblock %}
+{% block twitter_description %}{{ condition.seo_description }}{% endblock %}
+
+{# Partilhada no WhatsApp ou no Facebook, a página mostra a sua imagem e não #}
+{# o logótipo genérico. #}
+{# #}
+{# A condição vai DENTRO do bloco e não à volta dele: o Django regista os #}
+{# blocos ao analisar o ficheiro, sem olhar aos `{% if %}` que os rodeiam. #}
+{# Envolvido por fora, este bloco substituía sempre o do base.html — e as #}
+{# páginas sem imagem ficavam com um og:image vazio. #}
+{% block og_image %}{% if condition.display_hero %}{{ request.scheme }}://{{ request.get_host }}{{ condition.display_hero.url }}{% else %}{{ SEO_DEFAULT_IMAGE_URL }}{% endif %}{% endblock %}
+
+{% block structured_data %}
+    {% if structured_data %}
+        <script type="application/ld+json">
+            {{ structured_data|safe }}
+        </script>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<article class="one-page-section condition-page mb-5">
+
+    {# O caminho de volta, e o mesmo que o BreadcrumbList do JSON-LD declara. #}
+    {# Os dois têm de dizer o mesmo: um caminho estruturado que a página não #}
+    {# mostra é uma afirmação que ninguém pode verificar. #}
+    <nav aria-label="{% translate 'Caminho' %}" class="condition-breadcrumb mb-3">
+        <a href="{% url 'home' %}">{% translate "Início" %}</a>
+        <span aria-hidden="true">/</span>
+        <a href="{% url 'appointments:treated_condition_list' %}">{% translate "O que tratamos" %}</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">{{ condition.display_name }}</span>
+    </nav>
+
+    {% if condition.display_hero %}
+        {# Antes do <h1> na página e depois dele na leitura: o título continua #}
+        {# a ser o primeiro texto do artigo. `fetchpriority` porque esta é a #}
+        {# imagem que o visitante vê primeiro e a que decide o tempo até a #}
+        {# página parecer pronta. #}
+        <figure class="condition-hero mb-4">
+            <img
+                src="{{ condition.display_hero.url }}"
+                alt="{{ condition.hero_description }}"
+                loading="eager"
+                fetchpriority="high"
+            >
+        </figure>
+    {% endif %}
+
+    <header class="condition-header mb-5">
+        {# Com banner, o título deixa de se ver — vai lá escrito — mas não sai #}
+        {# da página: um <h1> é o sinal mais forte que uma página dá sobre o #}
+        {# que trata, e texto dentro de uma imagem é invisível para o Google e #}
+        {# para quem usa leitor de ecrã. Escondido continua a ser lido pelos #}
+        {# dois; apagado não é lido por ninguém. #}
+        {# `hero_carries_title` e não `display_hero`: uma página inglesa a #}
+        {# usar o banner português tem lá um título escrito em português, e #}
+        {# esconder o <h1> inglês deixava o leitor sem título que soubesse ler. #}
+        <h1 class="{% if condition.hero_carries_title %}visually-hidden{% else %}section-title mb-3{% endif %}">
+            {{ condition.display_name }}
+        </h1>
+
+        <p class="section-lead">{{ condition.display_summary }}</p>
+    </header>
+
+    {# |safe, e a razão está no modelo: o HTML é limpo no `save()`, à #}
+    {# entrada. Escapá-lo aqui mostrava as etiquetas em vez do texto; #}
+    {# limpá-lo aqui esquecia-se no sítio seguinte que reaproveitasse o #}
+    {# campo. O que está guardado é o que pode ir para a página. #}
+    <div class="condition-section-body condition-rich-text mb-4">
+        {{ condition.display_body|safe }}
+    </div>
+
+    <section class="condition-cta my-5">
+        <h2 class="h5 mb-2">
+            {% blocktranslate with nome=condition.display_name %}Tem este problema?{% endblocktranslate %}
+        </h2>
+
+        <p class="mb-3">
+            {% blocktranslate %}A avaliação começa por perceber o seu caso. Escolha o horário que lhe der jeito — na clínica, em Coimbra, ou em sua casa.{% endblocktranslate %}
+        </p>
+
+        {% if condition.service %}
+            <a
+                href="{% url 'appointments:public_visual_schedule' %}?service={{ condition.service.pk }}"
+                class="btn btn-primary btn-lg"
+            >
+                {% blocktranslate with servico=condition.service.display_name %}Marcar {{ servico }}{% endblocktranslate %}
+            </a>
+        {% else %}
+            <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary btn-lg">
+                {% translate "Marcar avaliação" %}
+            </a>
+        {% endif %}
+    </section>
+
+    {% if condition.questions.all %}
+        <section class="condition-faq mb-5">
+            <h2 class="condition-section-title mb-3">{% translate "Perguntas frequentes" %}</h2>
+
+            <div class="accordion" id="condition-faq">
+                {% for question in condition.questions.all %}
+                    <div class="accordion-item">
+                        <h3 class="accordion-header" id="faq-heading-{{ question.pk }}">
+                            <button
+                                class="accordion-button collapsed"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#faq-body-{{ question.pk }}"
+                                aria-expanded="false"
+                                aria-controls="faq-body-{{ question.pk }}"
+                            >
+                                {{ question.display_question }}
+                            </button>
+                        </h3>
+
+                        <div
+                            id="faq-body-{{ question.pk }}"
+                            class="accordion-collapse collapse"
+                            aria-labelledby="faq-heading-{{ question.pk }}"
+                            data-bs-parent="#condition-faq"
+                        >
+                            <div class="accordion-body">{{ question.display_answer|linebreaks }}</div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+
+    {% if related %}
+        <section class="condition-related">
+            <h2 class="condition-section-title mb-3">{% translate "Também tratamos" %}</h2>
+
+            <ul class="condition-related-list">
+                {% for outra in related %}
+                    <li>
+                        <a href="{{ outra.get_absolute_url }}">{{ outra.display_name }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </section>
+    {% endif %}
+
+    {# Dito uma vez, no fim, e em letra pequena: uma página que explica um #}
+    {# problema de saúde não substitui alguém olhar para o pé de quem a lê. #}
+    <p class="condition-disclaimer mt-5">
+        {% blocktranslate %}Esta página é informação geral e não substitui uma avaliação presencial. Cada pé é um pé, e o tratamento depende do que se observa na consulta.{% endblocktranslate %}
+    </p>
+
+</article>
+{% endblock %}

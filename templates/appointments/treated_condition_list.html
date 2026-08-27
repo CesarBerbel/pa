@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block title %}{% translate "O que tratamos: unhas, calos e cuidados dos pés em Coimbra" %}{% endblock %}
+{% block meta_description %}{% translate "Unha encravada, micose, calos, verrugas plantares e pé diabético. Veja o que a pedicure terapêutica trata em Coimbra e marque online." %}{% endblock %}
+{% block meta_keywords %}{% translate "unha encravada Coimbra, micose na unha do pé, calos nos pés, pé diabético, verruga plantar, pedicure terapêutica Coimbra" %}{% endblock %}
+{% block og_title %}{% translate "O que tratamos" %} | {{ SEO_SITE_NAME }}{% endblock %}
+{% block og_description %}{% translate "Os problemas dos pés que tratamos em Coimbra, explicados um a um." %}{% endblock %}
+{% block twitter_title %}{% translate "O que tratamos" %} | {{ SEO_SITE_NAME }}{% endblock %}
+{% block twitter_description %}{% translate "Unha encravada, micose, calos, verrugas e pé diabético — o que são e como se tratam." %}{% endblock %}
+
+{% block content %}
+<section class="one-page-section condition-index mb-5">
+
+    <div class="condition-index-hero mb-5">
+        <span class="luxury-eyebrow">{% translate "Problemas tratados" %}</span>
+
+        <h1 class="section-title mt-2 mb-3">
+            {% translate "O que tratamos" %}
+        </h1>
+
+        <p class="section-lead">
+            {% blocktranslate %}Cada problema dos pés tem a sua explicação, os seus sinais de alerta e o seu tratamento. Aqui estão os que aparecem mais vezes nesta clínica, explicados um a um.{% endblocktranslate %}
+        </p>
+    </div>
+
+    {% if conditions %}
+        <div class="row g-4">
+            {% for condition in conditions %}
+                <div class="col-12 col-md-6">
+                    <article class="condition-card h-100">
+                        {% if condition.display_hero %}
+                            {# alt vazio de propósito: o título logo abaixo diz #}
+                            {# o mesmo, e repeti-lo faz um leitor de ecrã ler o #}
+                            {# nome do problema duas vezes por card. #}
+                            <img
+                                class="condition-card-image"
+                                src="{{ condition.display_hero.url }}"
+                                alt=""
+                                loading="lazy"
+                            >
+                        {% endif %}
+
+                        {# `stretched-link` faz o cartão inteiro clicável sem #}
+                        {# o transformar num link gigante: o texto do link #}
+                        {# continua a ser o nome do problema, e não o cartão #}
+                        {# todo lido de uma ponta à outra. #}
+                        <h2 class="condition-card-title">
+                            <a class="stretched-link" href="{{ condition.get_absolute_url }}">
+                                {{ condition.display_name }}
+                            </a>
+                        </h2>
+
+                        <p class="condition-card-summary">{{ condition.display_summary }}</p>
+
+                        {# Sinal visual, não segundo link: dois links para o #}
+                        {# mesmo sítio no mesmo cartão é uma paragem a mais #}
+                        {# para quem navega por teclado. #}
+                        <span class="condition-card-link" aria-hidden="true">
+                            {% translate "Saber mais" %}
+                            <i class="bi bi-arrow-right ms-1"></i>
+                        </span>
+                    </article>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="condition-cta mt-5">
+            <h2 class="h5 mb-2">{% translate "Não encontrou o seu caso?" %}</h2>
+
+            <p class="mb-3">
+                {% blocktranslate %}Estas páginas cobrem os motivos mais frequentes, mas não todos. Marque uma avaliação e falamos sobre o seu caso.{% endblocktranslate %}
+            </p>
+
+            <a href="{% url 'appointments:public_visual_schedule' %}" class="btn btn-primary btn-lg">
+                {% translate "Marcar avaliação" %}
+            </a>
+        </div>
+    {% else %}
+        {# Enquanto nenhuma página estiver publicada, esta não finge que há #}
+        {# conteúdo: manda a pessoa para onde há alguma coisa. #}
+        <div class="app-empty-state">
+            <h2 class="h5">{% translate "Ainda não há páginas publicadas" %}</h2>
+
+            <p>
+                {% blocktranslate %}Consulte entretanto os serviços disponíveis para marcação.{% endblocktranslate %}
+            </p>
+
+            <a href="{% url 'appointments:public_service_feed' %}" class="btn btn-primary">
+                {% translate "Ver serviços" %}
+            </a>
+        </div>
+    {% endif %}
+
+</section>
+{% endblock %}

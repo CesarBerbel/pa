@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% load crispy_forms_tags %}
+{% load assets %}
+
+{% block title %}Página do problema | Priscila Arantes Pedicure Terapêutica{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-9">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h4 mb-1">
+                    {% if form.instance.pk %}{{ form.instance.name }}{% else %}Nova página{% endif %}
+                </h1>
+
+                <p class="text-muted mb-0">
+                    Primeiro o que a pessoa lê, depois o que o Google lê.
+                </p>
+            </div>
+
+            {% if form.instance.pk and form.instance.is_published %}
+                <a
+                    href="{{ form.instance.get_absolute_url }}"
+                    class="btn btn-outline-secondary"
+                    target="_blank"
+                    rel="noopener"
+                >
+                    Ver no site
+                </a>
+            {% endif %}
+        </div>
+
+        {# enctype, senão o ficheiro nunca chega ao servidor e o formulário #}
+        {# grava-se em silêncio sem a imagem. #}
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h2 class="h6 text-uppercase text-muted mb-0">A página</h2>
+                </div>
+
+                <div class="card-body pt-3">
+                    {{ form.name|as_crispy_field }}
+                    {{ form.slug|as_crispy_field }}
+                    {{ form.summary|as_crispy_field }}
+                    {{ form.hero_image|as_crispy_field }}
+                    {{ form.hero_alt|as_crispy_field }}
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h2 class="h6 text-uppercase text-muted mb-1">O texto</h2>
+                    <p class="text-muted small mb-0">
+                        Escreva como escreveria num documento. Os títulos que
+                        puser aqui organizam a página — e são também o que o
+                        Google lê para perceber do que ela trata.
+                    </p>
+                </div>
+
+                <div class="card-body pt-3">
+                    {# O endereço de envio e o token vêm daqui e não escritos #}
+                    {# dentro do JavaScript: um `{% url %}` num ficheiro .js #}
+                    {# estático não é resolvido, e o token muda a cada sessão. #}
+                    <span
+                        id="editor-rico-config"
+                        data-upload-url="{% url 'appointments:condition_image_upload' %}"
+                        data-csrf="{{ csrf_token }}"
+                        hidden
+                    ></span>
+
+                    {{ form.body|as_crispy_field }}
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h2 class="h6 text-uppercase text-muted mb-1">Perguntas frequentes</h2>
+                    <p class="text-muted small mb-0">
+                        É a única parte que muda o aspeto do resultado no
+                        Google: as perguntas aparecem abertas por baixo do
+                        link. Escreva-as como as pessoas as fazem.
+                    </p>
+                </div>
+
+                <div class="card-body pt-3">
+                    {{ questions.management_form }}
+
+                    {% for pergunta in questions %}
+                        <div class="border rounded-3 p-3 mb-3">
+                            {{ pergunta.id }}
+
+                            {{ pergunta.question|as_crispy_field }}
+                            {{ pergunta.answer|as_crispy_field }}
+
+                            <div class="row g-3">
+                                <div class="col-6">{{ pergunta.display_order|as_crispy_field }}</div>
+
+                                {% if pergunta.instance.pk %}
+                                    <div class="col-6 d-flex align-items-end pb-3">
+                                        {{ pergunta.DELETE|as_crispy_field }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+
+                    <p class="text-muted small mb-0">
+                        Guarde para ficar com mais duas linhas em branco. As que
+                        ficarem vazias não são gravadas.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h2 class="h6 text-uppercase text-muted mb-1">O que o Google mostra</h2>
+                    <p class="text-muted small mb-0">
+                        Em branco, a página usa o nome e o resumo acima. Isto é
+                        para quem ainda está na lista de resultados a decidir
+                        se clica.
+                    </p>
+                </div>
+
+                <div class="card-body pt-3">
+                    {{ form.meta_title|as_crispy_field }}
+                    {{ form.meta_description|as_crispy_field }}
+                    {{ form.keywords|as_crispy_field }}
+                </div>
+            </div>
+
+            {# Fechado por omissão: a maior parte das visitas a este ecrã é #}
+            {# para mexer no português, e sete campos abertos que ninguém vai #}
+            {# usar empurram o botão de guardar para fora do ecrã. #}
+            <details class="card shadow-sm border-0 mb-4">
+                <summary class="card-header bg-white border-0 pt-4 px-4" style="cursor: pointer;">
+                    <h2 class="h6 text-uppercase text-muted mb-1 d-inline">Versão inglesa</h2>
+                    <p class="text-muted small mb-0">
+                        Servida em <code>/en/</code>. Cada campo que ficar vazio
+                        mostra o português — uma tradução feita a meio deixa a
+                        página meio traduzida, não meio em branco.
+                    </p>
+                </summary>
+
+                <div class="card-body pt-3">
+                    {{ form.name_en|as_crispy_field }}
+                    {{ form.summary_en|as_crispy_field }}
+                    {{ form.hero_image_en|as_crispy_field }}
+                    {{ form.hero_alt_en|as_crispy_field }}
+                    {{ form.body_en|as_crispy_field }}
+                    {{ form.meta_title_en|as_crispy_field }}
+                    {{ form.meta_description_en|as_crispy_field }}
+                    {{ form.keywords_en|as_crispy_field }}
+                </div>
+            </details>
+
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h2 class="h6 text-uppercase text-muted mb-0">Publicação</h2>
+                </div>
+
+                <div class="card-body pt-3">
+                    {{ form.service|as_crispy_field }}
+                    {{ form.display_order|as_crispy_field }}
+                    {{ form.is_published|as_crispy_field }}
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Guardar</button>
+
+                <a href="{% url 'appointments:condition_admin_list' %}" class="btn btn-outline-secondary">
+                    Cancelar
+                </a>
+            </div>
+        </form>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+    {# O TinyMCE auto-alojado, servido pelo jsDelivr — a mesma origem de onde #}
+    {# o Bootstrap já vem. `defer` para não segurar o desenho da página: o #}
+    {# editor entra em cima de uma caixa de texto que já lá está. #}
+    <script defer src="https://cdn.jsdelivr.net/npm/tinymce@7.6.1/tinymce.min.js"></script>
+    <script defer src="{% versioned_static 'js/editor_rico.js' %}"></script>
+{% endblock %}

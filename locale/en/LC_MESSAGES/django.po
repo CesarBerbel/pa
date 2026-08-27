@@ -1857,3 +1857,207 @@ msgid "%(vagas)s vaga"
 msgid_plural "%(vagas)s vagas"
 msgstr[0] "%(vagas)s slot"
 msgstr[1] "%(vagas)s slots"
+
+msgid "%(total)s avaliações no Google"
+msgstr "%(total)s Google reviews"
+
+msgid "A avaliação começa por perceber o seu caso. Escolha o horário que lhe der jeito — na clínica, em Coimbra, ou em sua casa."
+msgstr "The assessment starts by understanding your case. Pick a time that suits you — at the clinic in Coimbra, or at your home."
+
+msgid "Aceda ao Livro de Reclamações Eletrónico e saiba como apresentar uma reclamação, sugestão ou elogio."
+msgstr "Access the electronic Complaints Book (Livro de Reclamações) and find out how to submit a complaint, a suggestion or a compliment."
+
+msgid "Aceda ao Livro de Reclamações Eletrónico, saiba como apresentar uma reclamação e que prazos e entidades se aplicam."
+msgstr "Access the electronic Complaints Book (Livro de Reclamações), find out how to submit a complaint, and which deadlines and authorities apply."
+
+msgid "Agenda disponível"
+msgstr "Available times"
+
+msgid "Agenda disponível | Marcação online"
+msgstr "Available times | Book online"
+
+msgid "Ainda não há páginas publicadas"
+msgstr "No pages published yet"
+
+msgid "Antes — %(titulo)s"
+msgstr "Before — %(titulo)s"
+
+msgid "Atendimento profissional em pedicure terapêutica, manicure e enfermagem em Coimbra. Consulte os serviços disponíveis e marque o seu horário online."
+msgstr "Professional therapeutic pedicure, manicure and nursing care in Coimbra. Browse the services available and book your appointment online."
+
+msgid "Av. Sá da Bandeira 33, Loja 108"
+msgstr "Av. Sá da Bandeira 33, Loja 108"
+
+msgid "Cada problema dos pés tem a sua explicação, os seus sinais de alerta e o seu tratamento. Aqui estão os que aparecem mais vezes nesta clínica, explicados um a um."
+msgstr "Every foot problem has its own explanation, its own warning signs and its own treatment. Here are the ones we see most often at this clinic, explained one by one."
+
+msgid "Conheça os serviços de pedicure terapêutica, manicure e enfermagem em Coimbra e marque online o seu horário."
+msgstr "Browse the therapeutic pedicure, manicure and nursing services in Coimbra and book your appointment online."
+
+msgid "Consulte a agenda disponível em Coimbra e marque online serviços de pedicure terapêutica, manicure e enfermagem."
+msgstr "See the available times in Coimbra and book therapeutic pedicure, manicure and nursing appointments online."
+
+msgid "Consulte entretanto os serviços disponíveis para marcação."
+msgstr "In the meantime, see the services available to book."
+
+msgid "Consulte horários disponíveis e marque online."
+msgstr "See available times and book online."
+
+msgid "Contactos: WhatsApp <a href=\"%(link)s\" target=\"_blank\" rel=\"noopener noreferrer\"><strong>%(numero)s</strong></a> e email <a href=\"mailto:atendimento@priarantes.com\">atendimento@priarantes.com</a>."
+msgstr "Contact: WhatsApp <a href=\"%(link)s\" target=\"_blank\" rel=\"noopener noreferrer\"><strong>%(numero)s</strong></a> and email <a href=\"mailto:atendimento@priarantes.com\">atendimento@priarantes.com</a>."
+
+msgid "Cuidado profissional, marcação online e atendimento personalizado em pedicure terapêutica, estética e enfermagem em Coimbra."
+msgstr "Professional care, online booking and personal attention in therapeutic pedicure, beauty and nursing in Coimbra."
+
+msgid "Cuidado, bem-estar e profissionalismo em pedicure terapêutica."
+msgstr "Care, wellbeing and professionalism in therapeutic pedicure."
+
+msgid "Demasiadas tentativas"
+msgstr "Too many attempts"
+
+msgid "Demasiadas tentativas seguidas"
+msgstr "Too many attempts in a row"
+
+msgid "Depois — %(titulo)s"
+msgstr "After — %(titulo)s"
+
+msgid "Escolha serviço, data e horário para marcação online em Coimbra."
+msgstr "Choose a service, a date and a time to book online in Coimbra."
+
+msgid "Espere alguns minutos e tente outra vez. Se for urgente, ligue ou escreva pelo WhatsApp — atendemos por lá."
+msgstr "Wait a few minutes and try again. If it is urgent, call or message on WhatsApp — we answer there."
+
+msgid "Esta página é informação geral e não substitui uma avaliação presencial. Cada pé é um pé, e o tratamento depende do que se observa na consulta."
+msgstr "This page is general information and does not replace an in-person assessment. Every foot is its own, and treatment depends on what is seen at the appointment."
+
+msgid "Estas páginas cobrem os motivos mais frequentes, mas não todos. Marque uma avaliação e falamos sobre o seu caso."
+msgstr "These pages cover the most common reasons, but not all of them. Book an assessment and we will talk about your case."
+
+msgid "Feridas que demoram a fechar, pós-operatório e troca de penso. Aqui a enfermagem e a pedicure terapêutica trabalham juntas, com laserterapia quando ajuda a cicatrizar."
+msgstr "Wounds that are slow to close, post-operative care and dressing changes. Here nursing and therapeutic pedicure work together, with laser therapy where it helps healing."
+
+msgid "Formato eletrónico e formato físico, prazos de resposta e entidades competentes."
+msgstr "Electronic and paper formats, response deadlines and the authorities involved."
+
+msgid "Informação sobre cookies necessários, funcionais, analíticos, marketing e gestão de consentimento."
+msgstr "Information on necessary, functional, analytics and marketing cookies, and how consent is managed."
+
+msgid "Informação sobre tratamento de dados pessoais, finalidades, conservação, segurança e direitos RGPD."
+msgstr "Information on personal data processing, purposes, retention, security and GDPR rights."
+
+msgid "Li e aceito a <a href=\"%(privacidade)s\" target=\"_blank\" rel=\"noopener noreferrer\">Política de Privacidade</a> e a <a href=\"%(cookies)s\" target=\"_blank\" rel=\"noopener noreferrer\">Política de Cookies</a>."
+msgstr "I have read and accept the <a href=\"%(privacidade)s\" target=\"_blank\" rel=\"noopener noreferrer\">Privacy Policy</a> and the <a href=\"%(cookies)s\" target=\"_blank\" rel=\"noopener noreferrer\">Cookie Policy</a>."
+
+msgid "Marcar %(servico)s"
+msgstr "Book %(servico)s"
+
+msgid "Marcar avaliação"
+msgstr "Book an assessment"
+
+msgid "Não encontrou o seu caso?"
+msgstr "Did not find your case?"
+
+msgid "O que a pedicure terapêutica trata"
+msgstr "What therapeutic pedicure treats"
+
+msgid "O que tratamos"
+msgstr "What we treat"
+
+msgid "O que tratamos: unhas, calos e cuidados dos pés em Coimbra"
+msgstr "What we treat: nails, corns and foot care in Coimbra"
+
+msgid "O registo clínico é conservado durante <strong>%(anos)s ano(s)</strong> após o último contacto, findos os quais é eliminado de forma segura ou anonimizado, salvo se existir fundamento legal ou clínico para a sua conservação por período superior."
+msgstr "Clinical records are kept for <strong>%(anos)s year(s)</strong> after the last contact, after which they are securely deleted or anonymised, unless there is a legal or clinical basis for keeping them longer."
+
+msgid "Os problemas dos pés que tratamos em Coimbra, explicados um a um."
+msgstr "The foot problems we treat in Coimbra, explained one by one."
+
+msgid "Para informação sobre tratamento de dados pessoais, finalidades, conservação e direitos dos titulares, consulte a <a href=\"%(privacidade)s\">Política de Privacidade</a>."
+msgstr "For information on personal data processing, purposes, retention and your rights, see the <a href=\"%(privacidade)s\">Privacy Policy</a>."
+
+msgid "Pedicure Terapêutica"
+msgstr "Therapeutic Pedicure"
+
+msgid "Pedicure Terapêutica em Coimbra"
+msgstr "Therapeutic Pedicure in Coimbra"
+
+msgid "Pedicure Terapêutica em Coimbra | Tratamentos dos Pés | Pri Arantes"
+msgstr "Therapeutic Pedicure in Coimbra | Foot Treatments | Pri Arantes"
+
+msgid "Pedicure Terapêutica em Coimbra:"
+msgstr "Therapeutic Pedicure in Coimbra:"
+
+msgid "Pedicure terapêutica e outros cuidados, em Coimbra"
+msgstr "Therapeutic pedicure and other care, in Coimbra"
+
+msgid "Pedicure terapêutica, manicure, pedicure e enfermagem estão organizadas por categoria para facilitar a escolha do serviço e o agendamento online."
+msgstr "Therapeutic pedicure, manicure, pedicure and nursing are grouped by category to make choosing a service and booking online easier."
+
+msgid "Política de Cookies deste site, com categorias de cookies, finalidades e gestão de consentimento."
+msgstr "This site's Cookie Policy, with cookie categories, purposes and how consent is managed."
+
+msgid "Política de Privacidade deste site, com informação sobre recolha, utilização, conservação e direitos dos titulares dos dados."
+msgstr "This site's Privacy Policy, with information on the collection, use and retention of personal data and on data subjects' rights."
+
+msgid "Problemas tratados"
+msgstr "Conditions treated"
+
+msgid "Saber mais"
+msgstr "Read more"
+
+msgid "Saiba como tratamos os dados pessoais recolhidos através do site e do sistema de marcações."
+msgstr "Find out how we handle the personal data collected through the site and the booking system."
+
+msgid "Saiba que cookies podem ser utilizados neste site e como gerir as suas preferências."
+msgstr "Find out which cookies this site may use and how to manage your preferences."
+
+msgid "Serviços organizados por categoria para marcação online em Coimbra: pedicure terapêutica, manicure e enfermagem."
+msgstr "Services grouped by category for online booking in Coimbra: therapeutic pedicure, manicure and nursing."
+
+msgid "Serviços | Pedicure terapêutica, manicure e enfermagem em Coimbra"
+msgstr "Services | Therapeutic pedicure, manicure and nursing in Coimbra"
+
+msgid "Também tratamos"
+msgstr "We also treat"
+
+msgid "Tem este problema?"
+msgstr "Do you have this problem?"
+
+msgid "Tratamento do pé diabético, calosidades, unha encravada e avaliação do pé."
+msgstr "Diabetic foot care, calluses, ingrown toenails and foot assessment."
+
+msgid "Unha encravada, micose, calos, verrugas e pé diabético — o que são e como se tratam."
+msgstr "Ingrown toenails, fungal nails, corns, warts and diabetic foot — what they are and how they are treated."
+
+msgid "Unha encravada, micose, calos, verrugas plantares e pé diabético. Veja o que a pedicure terapêutica trata em Coimbra e marque online."
+msgstr "Ingrown toenails, fungal nails, corns, plantar warts and diabetic foot. See what therapeutic pedicure treats in Coimbra and book online."
+
+msgid "Veja categorias e serviços disponíveis e marque online o seu horário."
+msgstr "Browse the categories and services available and book your appointment online."
+
+msgid "Ver dias anteriores"
+msgstr "See earlier days"
+
+msgid "Ver dias seguintes"
+msgstr "See later days"
+
+msgid "agenda pedicure terapêutica Coimbra, marcação online Coimbra, manicure Coimbra, enfermagem Coimbra"
+msgstr "foot clinic Coimbra, book podiatry Coimbra, chiropody Coimbra, manicure Coimbra, nursing care Coimbra"
+
+msgid "livro de reclamações, livro de reclamações eletrónico, reclamação, direitos do consumidor"
+msgstr "complaints book, electronic complaints book, complaint, consumer rights Portugal"
+
+msgid "pedicure terapêutica Coimbra, tratamento dos pés Coimbra, manicure Coimbra, enfermagem Coimbra, unha em gel, pé diabético, troca de penso"
+msgstr "foot care Coimbra, chiropody Coimbra, therapeutic pedicure Coimbra, manicure Coimbra, nursing care Coimbra, gel nails, diabetic foot, dressing change"
+
+msgid "pedicure terapêutica Coimbra, tratamento dos pés Coimbra, manicure Coimbra, enfermagem Coimbra, unha encravada, pé diabético, troca de penso"
+msgstr "foot care Coimbra, chiropody Coimbra, therapeutic pedicure Coimbra, manicure Coimbra, nursing care Coimbra, ingrown toenail, diabetic foot, dressing change"
+
+msgid "política de cookies, consentimento de cookies, RGPD"
+msgstr "cookie policy, cookie consent, GDPR"
+
+msgid "política de privacidade, proteção de dados, RGPD"
+msgstr "privacy policy, data protection, GDPR"
+
+msgid "unha encravada Coimbra, micose na unha do pé, calos nos pés, pé diabético, verruga plantar, pedicure terapêutica Coimbra"
+msgstr "ingrown toenail Coimbra, toenail fungus, corns on feet, diabetic foot, plantar wart, foot care Coimbra"

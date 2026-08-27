@@ -6022,6 +6022,25 @@ textarea.form-control {
     margin-bottom: 8px;
 }
 
+/* O passo seguinte do card, quando existe uma página para onde ir. Só
+   aparece nos que estão publicados, por isso o espaço acima é dele e não do
+   parágrafo: um card sem ligação não fica com uma folga por baixo à espera
+   de nada. */
+.problem-card-link {
+    align-items: center;
+    color: #8b5e66;
+    display: inline-flex;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-top: 12px;
+    text-decoration: none;
+}
+
+.problem-card-link:hover {
+    color: #2b2b2b;
+    text-decoration: underline;
+}
+
 .problem-card p {
     color: #6b6b6b;
     font-size: 0.95rem;
@@ -6977,4 +6996,365 @@ textarea.form-control {
     .month-list {
         display: block;
     }
+}
+
+/* =========================================================================
+   Páginas dos problemas tratados
+
+   São páginas para ler, não para percorrer: a largura é limitada a uma
+   medida de leitura confortável em vez de acompanhar o ecrã. Uma linha de
+   texto com 1400px de largura obriga o olho a procurar o princípio da linha
+   seguinte, e quem procura duas vezes fecha a página.
+   ========================================================================= */
+
+.condition-index-hero,
+.condition-header {
+    max-width: 760px;
+}
+
+.condition-card {
+    background: var(--white);
+    border: 1px solid var(--primary-light);
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    padding: 26px;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.condition-card:hover {
+    box-shadow: 0 14px 34px rgba(139, 94, 102, 0.12);
+    transform: translateY(-2px);
+}
+
+.condition-card-title {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.condition-card-title a {
+    color: var(--text-dark);
+    text-decoration: none;
+}
+
+.condition-card-title a:hover {
+    color: var(--primary-dark);
+}
+
+.condition-card-summary {
+    color: var(--text-muted);
+    flex-grow: 1;
+    font-size: 0.95rem;
+    margin-bottom: 16px;
+}
+
+.condition-card-link {
+    align-items: center;
+    color: var(--primary-dark);
+    display: inline-flex;
+    font-weight: 600;
+    font-size: 0.92rem;
+    text-decoration: none;
+}
+
+.condition-breadcrumb {
+    color: var(--text-muted);
+    font-size: 0.86rem;
+}
+
+.condition-breadcrumb a {
+    color: var(--text-muted);
+    text-decoration: none;
+}
+
+.condition-breadcrumb a:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+.condition-breadcrumb span {
+    margin: 0 6px;
+}
+
+.condition-breadcrumb span[aria-current] {
+    color: var(--text-dark);
+    margin-left: 0;
+}
+
+/* A medida de leitura. Vale para o corpo do texto e não para os títulos das
+   secções, que ganham em ficar alinhados com a margem da página. */
+.condition-section-body,
+.condition-faq .accordion-body {
+    color: var(--text-dark);
+    font-size: 1.02rem;
+    line-height: 1.75;
+    max-width: 68ch;
+}
+
+.condition-section-title {
+    color: var(--text-dark);
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.condition-cta {
+    background: var(--bg-soft);
+    border: 1px solid var(--primary-light);
+    border-radius: 22px;
+    padding: 30px;
+}
+
+.condition-faq .accordion-item {
+    border: 1px solid var(--primary-light);
+    border-radius: 16px !important;
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+
+.condition-faq .accordion-button {
+    font-weight: 600;
+}
+
+.condition-faq .accordion-button:not(.collapsed) {
+    background: var(--bg-soft);
+    color: var(--primary-dark);
+}
+
+/* O anel de foco do Bootstrap desenha-se em azul, que não é uma cor desta
+   casa. Só a cor muda: o anel fica, porque é como quem navega por teclado
+   sabe onde está. */
+.condition-faq .accordion-button:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.2rem rgba(216, 167, 177, 0.4);
+}
+
+.condition-related-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    list-style: none;
+    padding: 0;
+}
+
+.condition-related-list a {
+    background: var(--bg-soft);
+    border: 1px solid var(--primary-light);
+    border-radius: 999px;
+    color: var(--primary-dark);
+    display: inline-block;
+    font-size: 0.9rem;
+    padding: 7px 16px;
+    text-decoration: none;
+}
+
+.condition-related-list a:hover {
+    background: var(--primary-light);
+}
+
+.condition-disclaimer {
+    border-top: 1px solid var(--primary-light);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    max-width: 68ch;
+    padding-top: 18px;
+}
+
+/* Depois das regras genéricas e não antes: uma media query não acrescenta
+   especificidade nenhuma, e a última a aparecer é a que ganha. */
+@media (max-width: 575.98px) {
+    .condition-card,
+    .condition-cta {
+        padding: 20px;
+    }
+
+    .condition-section-body,
+    .condition-faq .accordion-body {
+        font-size: 0.98rem;
+    }
+}
+
+/* A imagem de abertura das páginas dos problemas.
+
+   Proporção fixa e `object-fit: cover`: as fotografias que entram aqui vêm de
+   um telemóvel e não têm todas a mesma forma, e uma altura livre fazia a
+   página saltar à medida que cada imagem carregava. O `aspect-ratio` reserva
+   o espaço antes de a imagem chegar. */
+.condition-hero {
+    border-radius: 22px;
+    margin: 0;
+    overflow: hidden;
+}
+
+.condition-hero img {
+    aspect-ratio: 21 / 9;
+    display: block;
+    height: auto;
+    object-fit: cover;
+    width: 100%;
+}
+
+.condition-card-image {
+    aspect-ratio: 16 / 9;
+    border-radius: 14px;
+    display: block;
+    margin-bottom: 16px;
+    object-fit: cover;
+    /* Corta pela direita: o `cover` sozinho tira de igual dos dois lados, e o
+       que interessa nestas fotografias está do lado esquerdo. Prender a
+       imagem à esquerda faz o recorte cair todo no lado que sobra. */
+    object-position: left center;
+    width: 100%;
+}
+
+/* Depois das regras genéricas: uma media query não acrescenta especificidade,
+   e a última a aparecer é a que ganha. Num ecrã estreito, 21:9 deixa uma
+   faixa fina demais para se perceber o que lá está. */
+@media (max-width: 575.98px) {
+    .condition-hero img {
+        aspect-ratio: 16 / 9;
+    }
+}
+
+/* O texto escrito no editor, já na página pública.
+
+   A folha do site não estilava tabelas nem imagens dentro de texto corrido
+   porque até agora não havia texto corrido com essas coisas lá dentro. Estas
+   regras vivem sob `.condition-rich-text` e não soltas: o que a profissional
+   escrever não deve poder mudar o aspeto do resto do site. */
+.condition-rich-text h2 {
+    color: #2b2b2b;
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    margin-top: 32px;
+}
+
+.condition-rich-text h2:first-child {
+    margin-top: 0;
+}
+
+.condition-rich-text h3 {
+    color: #2b2b2b;
+    font-size: 1.12rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    margin-top: 24px;
+}
+
+.condition-rich-text h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    margin-top: 20px;
+}
+
+.condition-rich-text ul,
+.condition-rich-text ol {
+    margin-bottom: 16px;
+    padding-left: 22px;
+}
+
+.condition-rich-text li {
+    margin-bottom: 6px;
+}
+
+.condition-rich-text a {
+    color: #8b5e66;
+}
+
+.condition-rich-text blockquote {
+    border-left: 3px solid #d8a7b1;
+    color: #6b6b6b;
+    margin: 20px 0;
+    padding: 4px 0 4px 18px;
+}
+
+/* Uma imagem colada dentro do texto pode vir com a largura de um telemóvel
+   moderno — 4000px — e sem isto empurra a página inteira para fora do ecrã. */
+.condition-rich-text img {
+    border-radius: 14px;
+    height: auto;
+    max-width: 100%;
+}
+
+/* A tabela não encolhe para caber: desliza dentro do seu próprio espaço. Uma
+   tabela de três colunas espremida num telemóvel deixa de se conseguir ler, e
+   uma página que desliza para o lado toda inteira é pior ainda. */
+.condition-rich-text table {
+    border-collapse: collapse;
+    display: block;
+    margin-bottom: 20px;
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+.condition-rich-text th,
+.condition-rich-text td {
+    border: 1px solid #f1d5db;
+    padding: 9px 14px;
+    text-align: left;
+}
+
+.condition-rich-text th {
+    background: #fff7f9;
+    font-weight: 600;
+}
+
+.condition-rich-text caption {
+    caption-side: bottom;
+    color: #6b6b6b;
+    font-size: 0.86rem;
+    padding-top: 8px;
+    text-align: left;
+}
+
+/* Cartões inteiros clicáveis, no índice e na página inicial.
+
+   O `stretched-link` do Bootstrap estica um pseudo-elemento do link até aos
+   limites do antepassado posicionado mais próximo — e é por isso que o cartão
+   precisa de `position: relative`. Sem isto, o pseudo-elemento procura mais
+   acima e cobre meia página.
+
+   Fica aqui e não junto de cada cartão porque é a mesma regra para os dois. */
+.condition-card,
+.problem-card {
+    position: relative;
+}
+
+/* O título deixa de se distinguir do resto do cartão: quem clica não está a
+   clicar num link, está a clicar no cartão, e um sublinhado a meio dele
+   sugere que só ali é que funciona. */
+.condition-card-title a,
+.problem-card h3 a {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* O cartão inteiro responde ao rato, e não só ao passar por cima do texto. */
+.problem-card:hover {
+    box-shadow: 0 14px 34px rgba(139, 94, 102, 0.12);
+    transform: translateY(-2px);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.condition-card:hover .condition-card-title a,
+.problem-card:hover h3 a {
+    color: #8b5e66;
+}
+
+/* O anel de foco tem de aparecer à volta do cartão e não à volta do texto:
+   com o link esticado, é o cartão que a pessoa está a escolher. O `:has` é
+   suportado em todos os browsers que este site já exige para o resto. */
+.condition-card:has(.stretched-link:focus-visible),
+.problem-card:has(.stretched-link:focus-visible) {
+    outline: 2px solid #8b5e66;
+    outline-offset: 3px;
+}
+
+.condition-card .stretched-link:focus-visible,
+.problem-card .stretched-link:focus-visible {
+    outline: none;
 }
