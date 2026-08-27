@@ -1,7 +1,7 @@
 import re
 
 from django.conf import settings
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from PIL import Image
 
@@ -129,14 +129,24 @@ class PublicImageTests(TestCase):
 
         self.assertTrue(settings.SEO_DEFAULT_IMAGE_PATH.endswith("logo-og.png"))
 
+    # A fotografia de fundo só existe no desenho `logo_top`. O `.env` desta
+    # casa, o `.env.example` e a produção usam-no, mas a omissão do
+    # `settings.py` é `classic` — e o CI não tem `.env` nenhum. O teste passava
+    # em qualquer máquina com o ficheiro e rebentava no CI, num `.group(1)`
+    # sobre um `None` que não dizia nada sobre a imagem.
+    #
+    # Fixar o desenho é o que faz o teste medir a imagem, e não a configuração
+    # da máquina onde corre.
+    @override_settings(HOME_HERO_LAYOUT="logo_top")
     def test_the_hero_uses_a_generated_image(self):
         # O fundo do hero é a imagem mais pesada da página inicial e a
         # primeira a ser pedida. Apontar o template ao original — que vive em
         # `assets/` com 163 KB — passava despercebido até alguém medir.
         html = self.client.get(reverse("home")).content.decode()
-        fundo = re.search(r"--hero-bg: url\('([^']+)'\)", html).group(1)
+        fundo = re.search(r"--hero-bg: url\('([^']+)'\)", html)
 
-        self.assertIn("hero-new.webp", fundo)
+        self.assertIsNotNone(fundo, "A página inicial não desenhou o fundo do hero.")
+        self.assertIn("hero-new.webp", fundo.group(1))
 
         ficheiro = IMG / "hero-new.webp"
 
