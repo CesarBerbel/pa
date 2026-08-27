@@ -5,8 +5,17 @@ Comandos para atualizar e subir os projetos em produção via Docker Compose.
 ## PA (este projeto)
 
 ```bash
-cd /opt/pa && git pull && docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
+cd /opt/pa && git pull && sudo chown -R 1000:1000 media && docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
 ```
+
+O `chown` vai no meio de propósito. O contentor corre como UID 1000 e a pasta
+`media/` é montada do anfitrião, por isso quem manda nas permissões é o
+anfitrião — e se ela ficar a pertencer a `root`, o carregamento de fotografias
+na área interna responde 500. Já aconteceu: a pasta esteve de `root` durante
+três dias sem ninguém dar por isso, porque nada no site falha até alguém tentar
+guardar uma imagem. Estava documentado mais abaixo como passo avulso, e foi por
+ser avulso que se perdeu. Aqui não se perde, e não custa nada quando as
+permissões já estão certas.
 
 ## Pocket
 
@@ -18,7 +27,8 @@ cd /opt/pocket && git pull && docker compose -f docker-compose.prod.yml up -d --
 
 1. `cd` até a pasta do projeto no servidor.
 2. `git pull` — traz as últimas alterações da branch atual.
-3. `docker compose ... up -d --build` — reconstrói as imagens alteradas e sobe os containers atualizados em background (`-d`).
+3. `chown -R 1000:1000 media` — devolve a pasta das fotografias ao utilizador com que o contentor corre. Só o PA precisa disto, e só porque o `media/` é montado do anfitrião.
+4. `docker compose ... up -d --build` — reconstrói as imagens alteradas e sobe os containers atualizados em background (`-d`).
 
 No caso do PA, `--env-file .env.prod` aponta explicitamente para o arquivo de variáveis de ambiente de produção (diferente do `.env` local de desenvolvimento).
 
@@ -71,7 +81,9 @@ esse. Como `/opt/pa/media` é montada de fora, quem manda nas permissões é o
 anfitrião: se a pasta for de `root`, o carregamento de fotografias na área
 interna deixa de conseguir escrever.
 
-Uma vez, no servidor:
+O comando de deploy no topo deste ficheiro já corre este `chown` a cada subida,
+por isso em condições normais não há nada a fazer à mão. Para confirmar, ou para
+corrigir sem esperar pelo próximo deploy:
 
 ```bash
 sudo chown -R 1000:1000 /opt/pa/media
