@@ -250,3 +250,31 @@ class ScheduleBlockSelectors:
                 )
             )
         )
+
+
+def por_concluir(ate=None):
+    """Marcações confirmadas cuja data já passou.
+
+    São atendimentos que aconteceram e que ninguém marcou como concluídos — e
+    enquanto não o forem, não geram retorno, não entram no que está por
+    receber e não contam para a receita. É trabalho parado que não aparecia em
+    lado nenhum.
+
+    É a irmã de `pending_confirmations`, no mesmo ecrã: uma olha para as
+    marcações futuras que falta confirmar, esta para as passadas que falta
+    concluir. Juntas, cobrem as duas pontas por onde uma marcação fica presa.
+
+    **Só as confirmadas**, e não as agendadas. Uma marcação por confirmar cuja
+    data passou é outra coisa: provavelmente não aconteceu — um pedido a que
+    ninguém respondeu, ou uma falta. Dá-la por concluída seria inventar um
+    atendimento.
+    """
+
+    return (
+        Appointment.objects.filter(
+            status=Appointment.STATUS_CONFIRMED,
+            date__lt=ate or timezone.localdate(),
+        )
+        .select_related("customer", "service")
+        .order_by("date", "start_time")
+    )

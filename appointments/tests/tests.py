@@ -1101,14 +1101,18 @@ class DashboardMetricsTests(AppointmentTestSetupMixin, TestCase):
         self.assertEqual(response.context["metrics"]["month_completed"], 1)
         self.assertEqual(response.context["metrics"]["month_cancelled"], 1)
 
-    def test_dashboard_calculates_month_revenue_only_from_completed_appointments(self):
-        # Ensure monthly revenue includes only completed appointments.
-        second_service = Service.objects.create(
-            name="Tratamento Especial",
-            duration_minutes=60,
-            price="75.00",
-            is_active=True,
-        )
+    def test_the_dashboard_does_not_talk_about_money(self):
+        """O dinheiro mudou de sítio, e com ele o teste que o guardava.
+
+        Havia aqui uma receita mensal somada pelo preço de tabela das
+        marcações concluídas. O financeiro conta-a pelo dinheiro que entrou —
+        outro número, com o mesmo nome, no mesmo sistema. Dois assim é pior do
+        que um: quem os visse diferentes não saberia qual acreditar, e quem
+        visse só um acreditaria no errado.
+
+        O que aquele teste protegia — que só as concluídas contam — passou a
+        ser protegido em `finance/tests.py`, sobre os números que hoje valem.
+        """
 
         Appointment.objects.create(
             customer=self.customer,
@@ -1119,28 +1123,12 @@ class DashboardMetricsTests(AppointmentTestSetupMixin, TestCase):
             created_by=self.admin_user,
         )
 
-        Appointment.objects.create(
-            customer=self.customer,
-            service=second_service,
-            date=self.appointment_date,
-            start_time=time(11, 0),
-            status=Appointment.STATUS_COMPLETED,
-            created_by=self.admin_user,
-        )
+        resposta = self.client.get(reverse("accounts:dashboard"))
+        corpo = resposta.content.decode()
 
-        Appointment.objects.create(
-            customer=self.customer,
-            service=second_service,
-            date=self.appointment_date,
-            start_time=time(13, 0),
-            status=Appointment.STATUS_CANCELLED,
-            created_by=self.admin_user,
-        )
-
-        response = self.client.get(reverse("accounts:dashboard"))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context["metrics"]["month_revenue"], 125)
+        self.assertNotIn("month_revenue", resposta.context["metrics"])
+        self.assertNotIn("Receita mensal", corpo)
+        self.assertNotIn("€", corpo)
 
 
 class CustomerIdentityAndAccessTests(AppointmentTestSetupMixin, TestCase):

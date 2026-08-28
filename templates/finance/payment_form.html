@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Pagamento | Priscila Arantes Pedicure Terapêutica{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-6">
+
+        <div class="mb-4">
+            <h1 class="h4 mb-1">
+                {% if form.instance.pk %}Editar pagamento{% else %}Registar pagamento{% endif %}
+            </h1>
+
+            <p class="text-muted mb-0">
+                {{ appointment.customer.full_name }} ·
+                {{ appointment.service.name }} ·
+                {{ appointment.date|date:"d/m/Y" }}
+            </p>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    {{ form|crispy }}
+
+                    <input type="hidden" name="next" value="{{ request.GET.next }}">
+
+                    <div class="d-flex gap-2 mt-3">
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+
+                        <a href="{% url 'appointments:appointment_detail' appointment.pk %}"
+                           class="btn btn-outline-secondary">
+                            Cancelar
+                        </a>
+
+                        {% if form.instance.pk %}
+                            <a href="{% url 'finance:payment_delete' form.instance.pk %}"
+                               class="btn btn-outline-danger ms-auto">
+                                Apagar
+                            </a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

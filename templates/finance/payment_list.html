@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Recebimentos | Priscila Arantes Pedicure Terapêutica{% endblock %}
+
+{% block content %}
+<div class="app-agenda-page">
+
+    <div class="app-agenda-header mb-4">
+        <span class="luxury-eyebrow">Financeiro</span>
+        <h1>O que entrou em {{ nome_do_mes }} de {{ ano }}</h1>
+        <p><strong>{{ total }} €</strong></p>
+
+        <div class="d-flex gap-2 justify-content-center mt-3">
+            <a class="btn btn-outline-secondary btn-sm"
+               href="{% url 'finance:dashboard' %}?ano={{ ano }}&amp;mes={{ mes }}">
+                Voltar ao resumo
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            {% if payments %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Quem</th>
+                                <th>Serviço</th>
+                                <th>Como</th>
+                                <th class="text-end">Valor</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for pagamento in payments %}
+                                <tr>
+                                    <td>{{ pagamento.paid_on|date:"d/m/Y" }}</td>
+                                    <td>{{ pagamento.appointment.customer.full_name }}</td>
+                                    <td class="text-muted">{{ pagamento.appointment.service.name }}</td>
+                                    <td class="text-muted">{{ pagamento.get_method_display }}</td>
+                                    <td class="text-end"><strong>{{ pagamento.amount }} €</strong></td>
+                                    <td class="text-end">
+                                        <a class="btn btn-sm btn-outline-secondary"
+                                           href="{% url 'finance:payment_update' pagamento.pk %}">
+                                            Editar
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="app-empty-state">
+                    <h3>Nada recebido neste mês</h3>
+                    <p>Os pagamentos registam-se a partir de cada marcação.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

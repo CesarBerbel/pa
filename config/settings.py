@@ -283,6 +283,7 @@ INSTALLED_APPS = [
     "accounts",
     "appointments",
     "notifications",
+    "finance",
 ]
 
 

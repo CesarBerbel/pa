@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Financeiro | Priscila Arantes Pedicure Terapêutica{% endblock %}
+
+{% block content %}
+<div class="app-agenda-page finance-page">
+
+    <div class="app-agenda-header mb-4">
+        <span class="luxury-eyebrow">Financeiro</span>
+        <h1>{{ nome_do_mes|capfirst }} de {{ ano }}</h1>
+
+        <div class="d-flex flex-wrap gap-2 justify-content-center mt-3">
+            <a class="btn btn-outline-secondary btn-sm"
+               href="?ano={{ mes_anterior.0 }}&amp;mes={{ mes_anterior.1 }}">
+                <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                Mês anterior
+            </a>
+
+            <a class="btn btn-outline-secondary btn-sm" href="{% url 'finance:dashboard' %}">
+                Este mês
+            </a>
+
+            <a class="btn btn-outline-secondary btn-sm"
+               href="?ano={{ mes_seguinte.0 }}&amp;mes={{ mes_seguinte.1 }}">
+                Mês seguinte
+                <i class="bi bi-chevron-right" aria-hidden="true"></i>
+            </a>
+        </div>
+    </div>
+
+    {# O previsto vem primeiro porque é o único que olha para a frente: no #}
+    {# dia 3 do mês, é o que há para saber. Os outros três só ficam cheios #}
+    {# com o mês a andar. #}
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg">
+            <div class="finance-tile finance-tile-expected">
+                <span class="finance-tile-label">Previsto</span>
+                <strong class="finance-tile-value">{{ previsto }} €</strong>
+            </div>
+        </div>
+
+        <div class="col-6 col-lg">
+            <a class="finance-tile finance-tile-in" href="{% url 'finance:payment_list' %}?ano={{ ano }}&amp;mes={{ mes }}">
+                <span class="finance-tile-label">Entrou</span>
+                <strong class="finance-tile-value">{{ receita }} €</strong>
+            </a>
+        </div>
+
+        <div class="col-6 col-lg">
+            <a class="finance-tile finance-tile-owed" href="{% url 'finance:unpaid_list' %}">
+                <span class="finance-tile-label">Por receber</span>
+                <strong class="finance-tile-value">{{ por_pagar_total }} €</strong>
+            </a>
+        </div>
+
+        <div class="col-6 col-lg">
+            <a class="finance-tile finance-tile-out" href="{% url 'finance:expense_list' %}?ano={{ ano }}&amp;mes={{ mes }}">
+                <span class="finance-tile-label">Saiu</span>
+                <strong class="finance-tile-value">{{ despesa }} €</strong>
+            </a>
+        </div>
+
+        <div class="col-6 col-lg">
+            {# Um resultado negativo tem de se ver que é negativo: a cor faz #}
+            {# isso antes de alguém ler o sinal de menos. #}
+            <div class="finance-tile {% if resultado < 0 %}finance-tile-negative{% else %}finance-tile-result{% endif %}">
+                <span class="finance-tile-label">Sobrou</span>
+                <strong class="finance-tile-value">{{ resultado }} €</strong>
+            </div>
+        </div>
+    </div>
+
+    {% if por_pagar_quantas %}
+        {# O número sobre o qual ainda se pode agir hoje, e o que costuma #}
+        {# faltar nestes resumos. #}
+        <div class="finance-unpaid mb-4">
+            <div>
+                <strong>{{ por_pagar_quantas }} atendimento{{ por_pagar_quantas|pluralize }} por receber</strong>
+                <p class="mb-0">
+                    Cerca de {{ por_pagar_total }} € — estimado pelo preço de
+                    tabela, porque o valor cobrado só existe depois de haver
+                    pagamento.
+                </p>
+            </div>
+
+            <a class="btn btn-outline-secondary btn-sm" href="{% url 'finance:unpaid_list' %}">
+                Ver todos
+            </a>
+        </div>
+    {% endif %}
+
+    <div class="row g-3">
+        <div class="col-12 col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h2 class="h6 text-uppercase text-muted mb-3">O que rendeu</h2>
+
+                    {% if por_servico %}
+                        <table class="table table-sm align-middle mb-0">
+                            <tbody>
+                                {% for linha in por_servico %}
+                                    <tr>
+                                        <td>{{ linha.appointment__service__name|default:"Sem serviço" }}</td>
+                                        <td class="text-muted text-end">{{ linha.quantas }}×</td>
+                                        <td class="text-end"><strong>{{ linha.total }} €</strong></td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p class="text-muted mb-0">Nada recebido neste mês.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h2 class="h6 text-uppercase text-muted mb-0">Onde foi</h2>
+
+                        <a class="btn btn-sm btn-outline-primary" href="{% url 'finance:expense_create' %}">
+                            Nova despesa
+                        </a>
+                    </div>
+
+                    {% if por_categoria %}
+                        <table class="table table-sm align-middle mb-0">
+                            <tbody>
+                                {% for linha in por_categoria %}
+                                    <tr>
+                                        <td>{{ linha.nome }}</td>
+                                        <td class="text-muted text-end">{{ linha.quantas }}×</td>
+                                        <td class="text-end"><strong>{{ linha.total }} €</strong></td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p class="text-muted mb-0">Nenhuma despesa neste mês.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mt-3">
+        <div class="card-body">
+            <h2 class="h6 text-uppercase text-muted mb-3">
+                Semana a semana em {{ nome_do_mes }}
+            </h2>
+
+            {# Semanas civis, de segunda a domingo. A primeira e a última do #}
+            {# mês vêm cortadas — é o que elas são, e cortá-las é mais #}
+            {# honesto do que ir buscar receita de outro mês para as encher. #}
+            <div class="finance-weeks">
+                {% for semana in semanas %}
+                    <div class="finance-week" title="{{ semana.inicio|date:'d/m' }} a {{ semana.fim|date:'d/m' }}">
+                        <span class="finance-week-total">{{ semana.total }} €</span>
+
+                        <div class="finance-week-bar-slot">
+                            <div class="finance-week-bar" data-total="{{ semana.total }}"></div>
+                        </div>
+
+                        <span class="finance-week-name">{{ semana.rotulo }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    {# As duas contas, debaixo do gráfico. Do mês que se está a ver, como #}
+    {# tudo o resto neste ecrã. #}
+    <div class="row g-3 mt-1">
+        <div class="col-12 col-md-6">
+            <div class="finance-account finance-account-invest">
+                <span class="finance-account-label">Para investir</span>
+                <strong class="finance-account-value">{{ investimento }} €</strong>
+
+                <a class="finance-account-link" href="{% url 'finance:setting' %}">
+                    {{ percentagem }}% de cada pagamento
+                </a>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <div class="finance-account {% if disponivel < 0 %}finance-account-negative{% else %}finance-account-free{% endif %}">
+                <span class="finance-account-label">Disponível</span>
+                <strong class="finance-account-value">{{ disponivel }} €</strong>
+
+                <span class="finance-account-note">
+                    o que sobra depois de separar o investimento e pagar as despesas
+                </span>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+    {% load assets %}
+    <script defer src="{% versioned_static 'js/finance_weeks.js' %}"></script>
+{% endblock %}

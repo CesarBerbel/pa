@@ -11,7 +11,7 @@ from accounts import passkey_services
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView
 from appointments.mixins import InternalAreaRequiredMixin
-from appointments import return_services
+from appointments import return_services, selectors
 from appointments.models import Appointment, Customer
 from .forms import EmailAuthenticationForm, CustomerSignupForm
 from django.views.generic import CreateView
@@ -21,9 +21,6 @@ from django.shortcuts import redirect
 
 from .services import CustomerSignupService
 from datetime import timedelta
-from decimal import Decimal
-from django.db.models import DecimalField, Sum
-from django.db.models.functions import Coalesce
 
 
 class UserLoginView(LoginView):
@@ -153,17 +150,6 @@ class DashboardView(InternalAreaRequiredMixin, TemplateView):
             "month_cancellation_rate": self.get_percentage(
                 month_cancelled, month_total
             ),
-            "month_revenue": month_appointments.filter(
-                status=Appointment.STATUS_COMPLETED
-            ).aggregate(
-                total=Coalesce(
-                    Sum("service__price"),
-                    Decimal("0.00"),
-                    output_field=DecimalField(max_digits=10, decimal_places=2),
-                )
-            )[
-                "total"
-            ],
             "customers_total": Customer.objects.count(),
             "customers_with_email": Customer.objects.exclude(email="").count(),
             "reminders_today_total": 0,
@@ -189,6 +175,13 @@ class DashboardView(InternalAreaRequiredMixin, TemplateView):
         context["pending_confirmations"] = por_confirmar[
             : self.pending_confirmations_shown
         ]
+
+        # A outra ponta por onde uma marcação fica presa: passou a data,
+        # ninguém a concluiu, e por isso não gera retorno nem entra nas contas.
+        por_concluir = selectors.por_concluir()
+
+        context["pending_completion_total"] = por_concluir.count()
+        context["pending_completion"] = por_concluir[:10]
 
         return context
 

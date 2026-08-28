@@ -92,7 +92,7 @@
     <div>
         <span class="luxury-eyebrow">Sistema interno</span>
         <h1>Dashboard operacional</h1>
-        <p>Visão completa de agenda, receita, clientes, serviços, cancelamentos e lembretes.</p>
+        <p>Visão completa de agenda, clientes, serviços, cancelamentos e lembretes.</p>
     </div>
 
     <div class="dashboard-hero-actions">
@@ -112,7 +112,78 @@
 {# com as pendências primeiro é que não — os atalhos são a navegação.        #}
 <div class="row g-4 mb-4">
     <div class="col-12 col-lg-7">
-        <div class="row g-4">
+        {% if pending_completion_total %}
+    {# Em destaque e acima das outras pendências porque é a ponta que trava #}
+    {# tudo: enquanto uma marcação não for concluída, não gera retorno, não #}
+    {# entra no que está por receber e não conta para a receita. É a irmã do #}
+    {# "aguardando confirmação" logo abaixo — uma olha para as futuras que #}
+    {# falta confirmar, esta para as passadas que falta concluir. #}
+    <section class="pending-completion mb-4">
+        <header class="pending-completion-head">
+            <h2 class="h5 mb-1">
+                <i class="bi bi-exclamation-circle me-1" aria-hidden="true"></i>
+                {{ pending_completion_total }} atendimento{{ pending_completion_total|pluralize }} por concluir
+            </h2>
+
+            <p class="mb-0">
+                Estão confirmados e a data já passou. Até serem concluídos não
+                geram retorno nem entram nas contas.
+            </p>
+        </header>
+
+        <ul class="pending-completion-list">
+            {% for appointment in pending_completion %}
+                <li>
+                    <div class="pending-completion-who">
+                        <a href="{% url 'appointments:appointment_detail' appointment.pk %}">
+                            {{ appointment.customer.full_name }}
+                        </a>
+
+                        <span class="pending-completion-when">
+                            {{ appointment.date|date:"d/m/Y" }} ·
+                            {{ appointment.service.name }}
+                        </span>
+                    </div>
+
+                    {# O mesmo formulário do ecrã da marcação: concluir #}
+                    {# pergunta sobre a mensagem e sobre o retorno, e essas #}
+                    {# perguntas não deixam de existir por se estar aqui. #}
+                    <form
+                        method="post"
+                        action="{% url 'appointments:appointment_complete' appointment.pk %}"
+                        data-ask-send-message
+                        data-send-field="send_message"
+                        data-preview-url="{% url 'appointments:appointment_message_preview' appointment.pk %}"
+                        data-preview-action="complete"
+                        data-ask-return
+                        data-return-suggested="{{ appointment.service.return_days }}"
+                        data-choice-title="Enviar a mensagem de fim de atendimento?"
+                        data-choice-text="O atendimento fica concluído de qualquer forma."
+                        data-choice-yes="Concluir e enviar"
+                        data-choice-no="Concluir sem enviar"
+                    >
+                        {% csrf_token %}
+                        <input type="hidden" name="send_message" value="">
+                        <input type="hidden" name="return_mode" value="">
+                        <input type="hidden" name="return_days" value="">
+                        <input type="hidden" name="return_date" value="">
+                        <input type="hidden" name="return_time" value="">
+                        {# Volta para aqui: quem conclui a partir desta lista #}
+                        {# está a arrumá-la, e ser atirado para outro ecrã #}
+                        {# obriga a voltar atrás para arrumar a seguinte. #}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+                        <button type="submit" class="btn btn-sm btn-dark">
+                            Concluir
+                        </button>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+    </section>
+{% endif %}
+
+<div class="row g-4">
             <div class="col-12 col-sm-4">
                 <a href="{% url 'appointments:weekly_schedule' %}" class="dashboard-action-card">
                     <span>Agenda</span>
@@ -236,14 +307,6 @@
             <span>Amanhã</span>
             <strong>{{ metrics.tomorrow_total }}</strong>
             <small>marcações previstas</small>
-        </div>
-    </div>
-
-    <div class="col-12 col-md-3">
-        <div class="dashboard-grid-card">
-            <span>Receita mensal</span>
-            <strong>€ {{ metrics.month_revenue }}</strong>
-            <small>marcações concluídas</small>
         </div>
     </div>
 
@@ -408,29 +471,6 @@
         </div>
     </div>
 
-    <div class="col-12 col-lg-6">
-        <div class="dashboard-panel h-100">
-            <span class="luxury-eyebrow">Serviços</span>
-            <h2 class="h5 mb-3">Top serviços do mês</h2>
-
-            {% if top_services %}
-                {% for service in top_services %}
-                    <div class="dashboard-list-item">
-                        <div>
-                            <strong>{{ service.service__name }}</strong>
-                            <small>{{ service.total }} atendimento(s)</small>
-                        </div>
-
-                        <span class="badge bg-success">
-                            € {{ service.revenue }}
-                        </span>
-                    </div>
-                {% endfor %}
-            {% else %}
-                <p class="text-muted mb-0">Ainda não há serviços concluídos neste mês.</p>
-            {% endif %}
-        </div>
-    </div>
 </div>
 
 <div class="row g-4">
