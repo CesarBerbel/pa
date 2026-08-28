@@ -5425,8 +5425,17 @@ textarea.form-control {
 @media (max-width: 991px) {
     /* Dentro do menu recolhido a lista aparece encaixada; sem a moldura e a
        sombra fica mais claro que é uma continuação do menu e não um painel
-       solto por cima dele. */
-    .public-navbar .dropdown-menu {
+       solto por cima dele.
+       
+       `.navbar-nav` no meio, e não `.public-navbar .dropdown-menu`: é o
+       Bootstrap que decide quais destas listas ficam encaixadas, e a regra
+       dele — `.navbar-expand-lg .navbar-nav .dropdown-menu { position:
+       static }` — só apanha as que estão dentro de um `.navbar-nav`.
+       
+       A "Área do cliente" vive em `.navbar-side-actions` e por isso continua
+       posicionada em absoluto: flutua por cima da página, fora do fundo da
+       barra. Sem fundo próprio, via-se a página através dela. */
+    .public-navbar .navbar-nav .dropdown-menu {
         background: transparent;
         border: 0;
         box-shadow: none;

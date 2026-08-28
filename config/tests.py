@@ -25,18 +25,40 @@ class HomePageTests(ResetLanguageMixin, TestCase):
         self.assertIn('href="/#instagram"', html)
         self.assertIn('<section id="instagram"', html)
 
-    def test_the_page_text_does_not_name_the_salon(self):
-        # O nome de outra marca no mesmo edifício não pertence ao que se lê na
-        # página. Continua na consulta do mapa, e é o teste seguinte que o diz.
+    def test_the_page_does_not_name_the_salon_anywhere(self):
+        """O nome de outra marca no mesmo edifício não pertence a esta página.
+
+        Chegou a ficar na consulta do mapa do rodapé, porque era assim que o
+        Google encontrava a morada quando a clínica ainda não tinha ficha
+        própria. Agora tem, o mapa aponta para ela, e o nome deixou de ser
+        preciso em lado nenhum.
+        """
+
+        self.assertNotContains(self.client.get(reverse("home")), "DIVAH")
+
+    def test_the_map_points_at_the_clinic_listing(self):
         html = self.client.get(reverse("home")).content.decode()
-        texto = re.sub(r"<[^>]+>", " ", html)
 
-        self.assertNotIn("DIVAH", texto)
+        self.assertIn("Priscila%20Arantes%20Pedicure%20Terap", html)
 
-    def test_the_map_still_finds_the_place(self):
-        # O nome sai do texto, mas continua na consulta do mapa do rodapé: é
-        # assim que o Google encontra a loja.
-        self.assertContains(self.client.get(reverse("home")), "q=DIVAH")
+    def test_the_map_waits_for_consent(self):
+        """O endereço vive em `data-cookie-src` e não em `src`.
+
+        Escrito como `src`, o mapa da Google carregava antes de alguém dizer
+        que sim — e a política de cookies desta casa passava a mentir.
+        """
+
+        html = self.client.get(reverse("home")).content.decode()
+
+        self.assertIn('data-cookie-src="https://www.google.com/maps/embed', html)
+
+        # Ancorado: `data-cookie-src="..."` contém `src="..."` como
+        # sub-cadeia, e uma procura solta dava sempre o alarme. O que se
+        # procura é um `src` que não seja o fim de outro atributo.
+        self.assertIsNone(
+            re.search(r'(?<![-\w])src="https://www\.google\.com/maps/embed', html),
+            "o mapa carrega antes do consentimento",
+        )
 
     def test_the_page_does_not_link_to_the_salon_instagram(self):
         self.assertNotContains(

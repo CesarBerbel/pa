@@ -298,7 +298,7 @@ msgid "Ativam recursos de terceiros que melhoram a experiência, como mapa incor
 msgstr "Enable third-party features that improve the experience, such as the embedded location map. Currently the Google map only loads after functional consent."
 
 #: templates/home.html:57
-msgid "Av. Sá da Bandeira, n.º 33 — Loja 108, 3000-351 Coimbra"
+msgid "Av. Sá da Bandeira, n.º 33 — Loja 405, 3000-351 Coimbra"
 msgstr "Av. Sá da Bandeira, no. 33 — Unit 108, 3000-351 Coimbra"
 
 #: templates/base.html:401
@@ -782,7 +782,7 @@ msgstr "Map blocked by your cookie preferences"
 
 #: templates/base.html:370
 #: templates/home.html:78
-msgid "Mapa com a localização do salão DIVAH - Av. Sá da Bandeira 33, Loja 108, Coimbra"
+msgid "Mapa com a localização do salão DIVAH - Av. Sá da Bandeira 33, Loja 405, Coimbra"
 msgstr "Map showing the DIVAH salon - Av. Sá da Bandeira 33, Unit 108, Coimbra"
 
 #: templates/appointments/public_visual_schedule.html:214
@@ -901,7 +901,7 @@ msgid "O acesso ao registo clínico está limitado a quem dele necessita para a 
 msgstr "Access to the clinical record is limited to those who need it in order to provide care. Anyone performing only administrative duties, such as scheduling appointments, has no access to clinical information. Every change to the record is documented, identifying who made it and when."
 
 #: templates/legal/privacy_policy.html:30
-msgid "O atendimento é prestado na <strong>Galeria Avenida — Av. Sá da Bandeira, n.º 33, Loja 108, 3000-351 Coimbra</strong>."
+msgid "O atendimento é prestado na <strong>Galeria Avenida — Av. Sá da Bandeira, n.º 33, Loja 405, 3000-351 Coimbra</strong>."
 msgstr "Care is provided at <strong>Galeria Avenida — Av. Sá da Bandeira, no. 33, Unit 108, 3000-351 Coimbra</strong>."
 
 #: templates/legal/privacy_policy.html:142
@@ -917,8 +917,8 @@ msgid "O horário fica reservado, mas ainda será analisado e confirmado pela pr
 msgstr "The slot is held for you, but still needs to be reviewed and confirmed by the practitioner. We will get in touch if anything needs adjusting."
 
 #: templates/legal/complaints_book.html:46
-msgid "O livro em formato físico está disponível no local de atendimento, na <strong>Galeria Avenida — Av. Sá da Bandeira, n.º 33, Loja 108, 3000-351 Coimbra</strong>, e é entregue de imediato a quem o solicitar."
-msgstr "The paper book is kept at the premises, at <strong>Galeria Avenida — Av. Sá da Bandeira, n.º 33, Loja 108, 3000-351 Coimbra</strong>, and is handed over immediately to anyone who asks for it."
+msgid "O livro em formato físico está disponível no local de atendimento, na <strong>Galeria Avenida — Av. Sá da Bandeira, n.º 33, Loja 405, 3000-351 Coimbra</strong>, e é entregue de imediato a quem o solicitar."
+msgstr "The paper book is kept at the premises, at <strong>Galeria Avenida — Av. Sá da Bandeira, n.º 33, Loja 405, 3000-351 Coimbra</strong>, and is handed over immediately to anyone who asks for it."
 
 #: templates/legal/complaints_book.html:49
 msgid "O preenchimento é feito pelo próprio cliente. O duplicado da reclamação fica na posse do cliente e o original é remetido à entidade competente."
@@ -1726,8 +1726,8 @@ msgid "Onde fica e como se estaciona?"
 msgstr "Where are you, and where can I park?"
 
 #: templates/home.html
-msgid "Galeria Avenida, Av. Sá da Bandeira 33, Loja 108, em Coimbra. É no centro, com parques públicos a poucos minutos a pé."
-msgstr "Galeria Avenida, Av. Sá da Bandeira 33, Loja 108, in Coimbra. It is in the centre, with public car parks a few minutes away on foot."
+msgid "Galeria Avenida, Av. Sá da Bandeira 33, Loja 405, em Coimbra. É no centro, com parques públicos a poucos minutos a pé."
+msgstr "Galeria Avenida, Av. Sá da Bandeira 33, Loja 405, in Coimbra. It is in the centre, with public car parks a few minutes away on foot."
 
 #: templates/home.html
 msgid "Os seus pés merecem atenção antes de doerem"
@@ -1885,8 +1885,8 @@ msgstr "Before — %(titulo)s"
 msgid "Atendimento profissional em pedicure terapêutica, manicure e enfermagem em Coimbra. Consulte os serviços disponíveis e marque o seu horário online."
 msgstr "Professional therapeutic pedicure, manicure and nursing care in Coimbra. Browse the services available and book your appointment online."
 
-msgid "Av. Sá da Bandeira 33, Loja 108"
-msgstr "Av. Sá da Bandeira 33, Loja 108"
+msgid "Av. Sá da Bandeira 33, Loja 405"
+msgstr "Av. Sá da Bandeira 33, Loja 405"
 
 msgid "Cada problema dos pés tem a sua explicação, os seus sinais de alerta e o seu tratamento. Aqui estão os que aparecem mais vezes nesta clínica, explicados um a um."
 msgstr "Every foot problem has its own explanation, its own warning signs and its own treatment. Here are the ones we see most often at this clinic, explained one by one."
@@ -2061,3 +2061,6 @@ msgstr "privacy policy, data protection, GDPR"
 
 msgid "unha encravada Coimbra, micose na unha do pé, calos nos pés, pé diabético, verruga plantar, pedicure terapêutica Coimbra"
 msgstr "ingrown toenail Coimbra, toenail fungus, corns on feet, diabetic foot, plantar wart, foot care Coimbra"
+
+msgid "Mapa com a localização de Priscila Arantes Pedicure Terapêutica, na Av. Sá da Bandeira 33, Loja 405, Coimbra"
+msgstr "Map showing where Priscila Arantes Pedicure Terapêutica is, at Av. Sá da Bandeira 33, Loja 405, Coimbra"

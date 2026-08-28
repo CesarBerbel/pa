@@ -114,7 +114,7 @@ SEO_BUSINESS_EMAIL = config("SEO_BUSINESS_EMAIL", default="atendimento@priarante
 
 SEO_BUSINESS_STREET_ADDRESS = config(
     "SEO_BUSINESS_STREET_ADDRESS",
-    default="Av. Sá da Bandeira 33, Loja 108",
+    default="Av. Sá da Bandeira 33, Loja 405",
 )
 
 SEO_BUSINESS_LOCALITY = config("SEO_BUSINESS_LOCALITY", default="Coimbra")

@@ -551,17 +551,28 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             </div>
                         </div>
 
+                        {# O endereço continua em `data-cookie-src` e não em #}
+                        {# `src`: é o consentimento de cookies funcionais que #}
+                        {# o promove a `src`. Escrito como `src`, o mapa da #}
+                        {# Google carregava antes de alguém dizer que sim, e a #}
+                        {# política de cookies desta casa passava a mentir. #}
+                        {# #}
+                        {# O endereço é agora o da ficha própria, gerado pelo #}
+                        {# "Partilhar → Incorporar um mapa" do Google Maps. #}
+                        {# Antes era uma pesquisa pelo nome do salão que está #}
+                        {# no mesmo edifício, que era como o Google encontrava #}
+                        {# a morada quando a clínica ainda não tinha ficha. #}
                         <iframe
                             data-cookie-category="functional"
                             data-cookie-placeholder="#google-map-cookie-placeholder"
-                            data-cookie-src="https://www.google.com/maps?q=DIVAH%2C%20Av.%20S%C3%A1%20da%20Bandeira%2033%2C%20Loja%20108%2C%203000-351%20Coimbra&amp;hl=pt-PT&amp;output=embed"
-                            title="{% translate "Mapa com a localização do salão DIVAH - Av. Sá da Bandeira 33, Loja 108, Coimbra" %}"
+                            data-cookie-src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d8372.651118343003!2d-8.421179330722307!3d40.21086098822837!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd22f9608ebaeb71%3A0xb3ce60a117f3e59c!2sPriscila%20Arantes%20Pedicure%20Terap%C3%AAutica!5e0!3m2!1spt-PT!2spt!4v1787921638343!5m2!1spt-PT!2spt"
+                            title="{% translate "Mapa com a localização de Priscila Arantes Pedicure Terapêutica, na Av. Sá da Bandeira 33, Loja 405, Coimbra" %}"
                             width="600"
                             height="450"
                             style="border:0;"
                             allowfullscreen=""
                             loading="lazy"
-                            referrerpolicy="no-referrer-when-downgrade"
+                            referrerpolicy="strict-origin-when-cross-origin"
                             hidden
                         ></iframe>
                     </div>
