@@ -106,6 +106,20 @@
         margin-right: 4px;
     }
 
+    /* Do mesmo tamanho e peso da origem, só com a cor da casa em vez do
+       cinzento. Numa lista de trinta cartões, uma etiqueta com fundo e
+       contorno puxava o olho para si e roubava-o ao estado da marcação, que
+       é o que se percorre a lista a ler. */
+    .appointment-day-card-return {
+        color: #8b5e66;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    .appointment-day-card-return i {
+        margin-right: 4px;
+    }
+
     .appointment-day-card-customer {
         font-size: 16px;
         font-weight: 700;
@@ -375,6 +389,22 @@
                                             {% else %}
                                                 <span class="badge bg-secondary">
                                                     {{ appointment.get_status_display }}
+                                                </span>
+                                            {% endif %}
+
+                                            {# Um retorno lê-se de outra maneira: #}
+                                            {# não é uma marcação nova, é a segunda #}
+                                            {# metade de uma que já houve. Quem #}
+                                            {# percorre a lista precisa de saber #}
+                                            {# isso antes de abrir. #}
+                                            {% if appointment.return_visit %}
+                                                <span
+                                                    class="appointment-day-card-return"
+                                                    {% if appointment.return_visit.origin %}
+                                                        title="Retorno do atendimento de {{ appointment.return_visit.origin.date|date:'d/m/Y' }}"
+                                                    {% endif %}
+                                                >
+                                                    <i class="bi bi-arrow-repeat" aria-hidden="true"></i>Retorno
                                                 </span>
                                             {% endif %}
 

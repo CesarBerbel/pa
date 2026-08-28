@@ -1,6 +1,8 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.db.models import Exists, OuterRef
 from django.forms import inlineformset_factory
+from django.utils import timezone
 
 from appointments.availability import AvailabilityService
 from appointments.customer_services import find_or_create_customer
@@ -15,6 +17,7 @@ from .models import (
     ConditionQuestion,
     Customer,
     PatientRecord,
+    ReturnVisit,
     SchedulingSetting,
     ScheduleBlock,
     Service,
@@ -1038,3 +1041,116 @@ ConditionQuestionFormSet = inlineformset_factory(
     extra=2,
     can_delete=True,
 )
+
+
+class ReturnVisitForm(forms.ModelForm):
+    """Abrir um retorno a partir do atendimento que o justifica.
+
+    O retorno já existia, mas só nascia de dentro da conclusão de um
+    atendimento ou de um POST solto a partir da ficha da pessoa. Faltava a
+    porta da frente: quem liga na semana seguinte a pedir revisão não passa
+    por nenhuma dessas.
+
+    **A escolha é um atendimento e não uma pessoa.** É isso que dá o histórico:
+    com a origem guardada, a marcação de daqui a um mês sabe dizer de que
+    consulta veio, e a consulta de hoje sabe dizer o que gerou. Escolher só a
+    pessoa deixava as duas pontas soltas.
+    """
+
+    class Meta:
+        model = ReturnVisit
+        fields = ["origin", "target_date", "notes"]
+
+        widgets = {
+            "target_date": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
+            "notes": forms.Textarea(attrs={"rows": 3}),
+            # `data-appointment-search` é o que o JavaScript procura para pôr
+            # a caixa de pesquisa por cima. Sem ele — sem JavaScript — fica um
+            # <select> normal, que continua a funcionar.
+            "origin": forms.Select(attrs={"data-appointment-search": "1"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["origin"].queryset = self.atendimentos()
+        self.fields["origin"].label = "Atendimento"
+        self.fields["origin"].empty_label = "Escolha o atendimento…"
+        self.fields["origin"].help_text = (
+            "Só atendimentos concluídos. A pessoa e o serviço vêm daqui."
+        )
+
+        self.fields["origin"].label_from_instance = self.etiqueta
+
+        self.fields["target_date"].label = "Voltar por volta de"
+        self.fields["notes"].required = False
+
+    @staticmethod
+    def atendimentos():
+        """Os atendimentos que ainda podem dar origem a um retorno.
+
+        **Concluídos**, porque um retorno é o seguimento de algo que
+        aconteceu: propor um agendamento futuro como origem seria propor o
+        retorno de uma consulta que ainda não houve.
+
+        **E sem retorno aberto**, porque esta lista é para escolher e não para
+        procurar. Com os já tratados lá dentro, quem abre o ecrã tinha de se
+        lembrar de cor quais é que já fez — e a lista cresce todos os dias.
+
+        Um retorno **dispensado** não tranca o atendimento. Dispensar é
+        decidir que desta vez não se volta, não é fechar a porta para sempre:
+        se daqui a um mês a pessoa ligar, o atendimento tem de voltar a estar
+        aqui.
+        """
+
+        ja_tratados = ReturnVisit.objects.filter(origin=OuterRef("pk")).exclude(
+            status=ReturnVisit.STATUS_DISMISSED
+        )
+
+        return (
+            Appointment.objects.filter(status=Appointment.STATUS_COMPLETED)
+            .exclude(Exists(ja_tratados))
+            .select_related("customer", "service")
+            .order_by("-date", "-start_time")
+        )
+
+    @staticmethod
+    def etiqueta(appointment):
+        """O que se lê em cada linha da lista, e por onde se procura.
+
+        O nome primeiro porque é por ele que se procura — quem abre este ecrã
+        tem uma pessoa em mente, não uma data.
+        """
+
+        data = appointment.date.strftime("%d/%m/%Y")
+        servico = appointment.service.name if appointment.service_id else "sem serviço"
+
+        return f"{appointment.customer.full_name} — {servico} — {data}"
+
+    def clean_target_date(self):
+        data = self.cleaned_data["target_date"]
+
+        # Uma data que já passou não é um retorno: é uma coisa que ficou por
+        # fazer, e o ecrã não é o sítio para a registar como se fosse futura.
+        if data and data < timezone.localdate():
+            raise ValidationError("A data de voltar não pode ser no passado.")
+
+        return data
+
+    def save(self, commit=True):
+        """A pessoa e o serviço vêm do atendimento, não de campos à parte.
+
+        Pedi-los outra vez era pedir que se repetisse o que já foi escolhido —
+        e abrir a porta a um retorno cujo cliente não é o do atendimento de
+        origem.
+        """
+
+        retorno = super().save(commit=False)
+
+        retorno.customer = retorno.origin.customer
+        retorno.service = retorno.origin.service
+
+        if commit:
+            retorno.save()
+
+        return retorno

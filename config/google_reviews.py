@@ -106,8 +106,38 @@ def _normalizar(avaliacao):
         "empty_stars": max(0, 5 - int(avaliacao.get("rating") or 0)),
         "text": texto.strip(),
         "when": avaliacao.get("relativePublishTimeDescription", ""),
+        # Em ISO 8601, tal como a Google a manda. Não se mostra: serve para
+        # ordenar, e ordenar por texto funciona porque o formato dela é
+        # crescente por natureza — "2026-08-16" vem depois de "2026-08-03".
+        "published_at": avaliacao.get("publishTime", ""),
         "url": avaliacao.get("googleMapsUri", ""),
     }
+
+
+def _ordenar(avaliacoes):
+    """As mais recentes à frente.
+
+    **Quais são as cinco não se escolhe** — é a Google que as escolhe, e pedir
+    `reviews_sort` à Places API nova é recusado com um 400. O que está nas
+    nossas mãos é a ordem por que se mostram as que ela deu, e uma avaliação
+    de há duas semanas diz mais sobre a casa do que uma de há dois anos.
+
+    Ordenadas **antes** de se cortar pelo limite e não depois: com um limite
+    abaixo de cinco, a ordem deixa de ser só a ordem — passa a decidir quais
+    entram.
+
+    As sem data ficam à parte e vão para o fim. Metê-las na mesma ordenação
+    com uma chave qualquer não resolve: seja qual for a chave, o `reverse`
+    atira-as para a ponta oposta àquela onde se queriam. Foi o defeito da
+    primeira versão disto.
+    """
+
+    com_data = [a for a in avaliacoes if a.get("published_at")]
+    sem_data = [a for a in avaliacoes if not a.get("published_at")]
+
+    com_data.sort(key=lambda a: a["published_at"], reverse=True)
+
+    return com_data + sem_data
 
 
 def fetch_reviews():
@@ -125,6 +155,8 @@ def fetch_reviews():
         # média, que vem à parte, mas num cartão ficaria vazia.
         if (avaliacao.get("originalText") or avaliacao.get("text") or {}).get("text")
     ]
+
+    avaliacoes = _ordenar(avaliacoes)
 
     media = dados.get("rating")
 

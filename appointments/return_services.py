@@ -149,3 +149,93 @@ def mark_notified(return_visit):
     return_visit.save(update_fields=["notified_at", "updated_at"])
 
     return return_visit
+
+
+def book_from_appointment(appointment, target_date, start_time, user=None, notes=""):
+    """Abre o retorno **e marca-o já**, com dia e hora.
+
+    É o terceiro caminho, e o mais direto: quem acabou de ver o pé às vezes já
+    combina ali mesmo a data de voltar. Sem isto, essa combinação virava um
+    "prever retorno" e alguém tinha de a marcar outra vez mais tarde, a partir
+    de uma lista, repetindo uma decisão que já tinha sido tomada.
+
+    Devolve `(retorno, erro)`. O erro é uma frase para mostrar, não uma
+    exceção: **a conclusão do atendimento já aconteceu** quando isto corre, e
+    uma hora ocupada não pode desfazê-la. Nesse caso fica o retorno previsto —
+    a intenção não se perde — e quem marcar escolhe outra hora.
+    """
+
+    from appointments.availability import AvailabilityService
+
+    retorno = ReturnVisit.objects.create(
+        customer=appointment.customer,
+        origin=appointment,
+        service=appointment.service,
+        target_date=target_date,
+        created_by=user if user and user.is_authenticated else None,
+        notes=notes,
+    )
+
+    marcada = Appointment(
+        customer=appointment.customer,
+        service=appointment.service,
+        date=target_date,
+        start_time=start_time,
+        status=Appointment.STATUS_CONFIRMED,
+        origin=Appointment.ORIGIN_INTERNAL,
+        created_by=user if user and user.is_authenticated else None,
+        # A língua acompanha a pessoa: quem marcou em inglês da primeira vez
+        # não passa a receber português na segunda.
+        customer_speaks_english=appointment.customer_speaks_english,
+    )
+
+    ocupada = AvailabilityService.appointment_conflict(marcada)
+
+    if ocupada:
+        return retorno, (
+            f"O retorno ficou previsto para {target_date.strftime('%d/%m/%Y')}, "
+            f"mas as {start_time.strftime('%H:%M')} já estavam ocupadas. "
+            "Marque a hora a partir da lista de retornos."
+        )
+
+    # Fora do horário não impede: quem marca a partir daqui está com a agenda à
+    # frente e decidiu encaixar. Fica registado que foi fora do normal, como
+    # acontece no ecrã de marcação.
+    marcada.outside_schedule = bool(
+        AvailabilityService.schedule_conflict(
+            appointment.service, target_date, start_time
+        )
+    )
+
+    marcada.save()
+
+    attach_appointment(retorno, marcada)
+
+    return retorno, ""
+
+
+def release(appointment):
+    """Devolve à lista o retorno que esta marcação cumpria, se cumpria algum.
+
+    Cancelar a marcação de um retorno não desfaz a intenção de voltar: a pessoa
+    continua a precisar de ser vista. Sem isto, o retorno ficava dado como
+    marcado para sempre e desaparecia da lista — a marcação estava cancelada,
+    o retorno dizia-se cumprido, e ninguém voltava a ligar àquela pessoa.
+
+    Não mexe num retorno dispensado: dispensar foi uma decisão de quem atende,
+    e um cancelamento não a revoga.
+    """
+
+    retorno = ReturnVisit.objects.filter(
+        appointment=appointment,
+        status=ReturnVisit.STATUS_SCHEDULED,
+    ).first()
+
+    if not retorno:
+        return None
+
+    retorno.appointment = None
+    retorno.status = ReturnVisit.STATUS_PENDING
+    retorno.save(update_fields=["appointment", "status", "updated_at"])
+
+    return retorno

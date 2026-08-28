@@ -36,6 +36,7 @@ from appointments.forms import (
     AppointmentForm,
     AppointmentRescheduleForm,
     ClinicalNoteForm,
+    ReturnVisitForm,
 )
 from appointments.models import (
     Appointment,
@@ -187,6 +188,13 @@ class AppointmentCreateView(InternalAreaRequiredMixin, CreateView):
             if not self.request.GET.get("date"):
                 initial["date"] = retorno.target_date.isoformat()
 
+            # A língua acompanha a pessoa: quem foi atendido em inglês da
+            # primeira vez não passa a receber português na segunda.
+            if retorno.origin_id:
+                initial["customer_speaks_english"] = (
+                    retorno.origin.customer_speaks_english
+                )
+
         return initial
 
     def retorno_pedido(self):
@@ -202,6 +210,34 @@ class AppointmentCreateView(InternalAreaRequiredMixin, CreateView):
         context["retorno"] = self.retorno_pedido()
 
         return context
+
+    def get_form(self, form_class=None):
+        """Vindo de um retorno, a pessoa e o serviço deixam de ser escolhas.
+
+        Já foram decididos quando o retorno foi aberto, e o ecrã mostra-os como
+        etiqueta. Mas o campo continua a ir no formulário — escondido — e um
+        campo escondido é um campo que se pode trocar por fora.
+
+        Apertar aqui as listas é o que fecha isso: com uma opção só, um valor
+        trocado deixa de ser válido e o formulário recusa-o. Não é preciso
+        confiar no que vem do browser para o ecrã poder ser simples.
+        """
+
+        form = super().get_form(form_class)
+
+        retorno = self.retorno_pedido()
+
+        if retorno:
+            form.fields["customer"].queryset = Customer.objects.filter(
+                pk=retorno.customer_id
+            )
+
+            if retorno.service_id:
+                form.fields["service"].queryset = Service.objects.filter(
+                    pk=retorno.service_id
+                )
+
+        return form
 
     def form_valid(self, form):
         form.instance.created_by = self.request.user
@@ -381,6 +417,30 @@ class AppointmentUpdateView(InternalAreaRequiredMixin, UpdateView):
         return response
 
 
+def destino_depois_da_marcacao(appointment):
+    """Para onde se volta depois de concluir ou cancelar uma marcação.
+
+    Quem chegou a esta marcação a partir dos retornos veio de uma lista de
+    telefonemas por fazer, e é a essa lista que precisa de voltar — atirá-la
+    para a lista geral de marcações obrigava a procurar o caminho de volta.
+
+    "A partir dos retornos" é qualquer uma das duas pontas: a marcação que
+    cumpre um retorno, e a que o gerou. Nos dois casos o assunto em mãos é o
+    retorno, não a marcação.
+    """
+
+    from appointments.models import ReturnVisit
+
+    ligada = ReturnVisit.objects.filter(
+        Q(appointment=appointment) | Q(origin=appointment)
+    ).exists()
+
+    if ligada:
+        return "appointments:return_visit_list"
+
+    return "appointments:appointment_list"
+
+
 class AppointmentCancelView(InternalAreaRequiredMixin, UpdateView):
     # Shows an internal cancellation form and cancels an appointment with a required reason.
 
@@ -388,6 +448,17 @@ class AppointmentCancelView(InternalAreaRequiredMixin, UpdateView):
     form_class = AppointmentCancelForm
     template_name = "appointments/appointment_cancel_form.html"
     success_url = reverse_lazy("appointments:appointment_list")
+
+    def get_success_url(self):
+        """Cancelar um retorno é um assunto da lista de retornos.
+
+        O destino é decidido no `dispatch` e guardado, e não calculado aqui:
+        cancelar solta o retorno da marcação — para a pessoa voltar a ficar por
+        marcar — e nessa altura já não há ligação nenhuma para encontrar. Lido
+        depois, isto mandava sempre para a lista de marcações.
+        """
+
+        return reverse(getattr(self, "destino", "appointments:appointment_list"))
 
     def get_form_kwargs(self):
         # Remove instance because AppointmentCancelForm is a regular Form, not a ModelForm.
@@ -405,6 +476,9 @@ class AppointmentCancelView(InternalAreaRequiredMixin, UpdateView):
 
         # Prevent opening the cancellation form for appointments that cannot be cancelled.
         appointment = self.get_object()
+
+        # Antes de cancelar, enquanto a ligação ao retorno ainda existe.
+        self.destino = destino_depois_da_marcacao(appointment)
 
         if appointment.status == Appointment.STATUS_CANCELLED:
             messages.warning(
@@ -441,7 +515,11 @@ class AppointmentCancelView(InternalAreaRequiredMixin, UpdateView):
 
         if result.success:
             messages.success(self.request, result.message)
-            return redirect(self.success_url)
+
+            # `get_success_url` e não `self.success_url`: é ele que sabe se
+            # esta marcação veio de um retorno, e a diferença é para onde a
+            # pessoa aterra a seguir.
+            return redirect(self.get_success_url())
 
         form.add_error(None, result.message)
         return self.form_invalid(form)
@@ -537,6 +615,66 @@ class ReturnVisitListView(InternalAreaRequiredMixin, ListView):
         return context
 
 
+class ReturnVisitNewView(InternalAreaRequiredMixin, CreateView):
+    """A porta da frente para abrir um retorno.
+
+    Os outros dois caminhos — a conclusão de um atendimento e o botão da ficha
+    da pessoa — servem quem já está no meio de uma coisa. Este serve quem abre
+    a lista de retornos porque alguém ligou a pedir revisão, e é o caso que
+    não tinha por onde entrar.
+
+    O que se escolhe aqui é **um atendimento**, e é isso que dá o histórico: a
+    pessoa e o serviço vêm dele, e a marcação que vier a cumprir o retorno fica
+    ligada à consulta que o originou.
+    """
+
+    model = ReturnVisit
+    form_class = ReturnVisitForm
+    template_name = "appointments/return_visit_form.html"
+    success_url = reverse_lazy("appointments:return_visit_list")
+
+    def get_initial(self):
+        initial = super().get_initial()
+
+        # Vindo do botão de uma marcação, ela já vem escolhida — e com ela a
+        # data que o serviço propõe, se propuser alguma.
+        origem = self.atendimento_pedido()
+
+        if origem:
+            initial["origin"] = origem.pk
+
+            dias = return_services.suggested_days(origem)
+
+            if dias:
+                initial["target_date"] = origem.date + timedelta(days=dias)
+
+        return initial
+
+    def atendimento_pedido(self):
+        try:
+            return Appointment.objects.select_related("service").get(
+                pk=self.request.GET.get("atendimento") or 0,
+                status=Appointment.STATUS_COMPLETED,
+            )
+        except (Appointment.DoesNotExist, ValueError):
+            return None
+
+    def form_valid(self, form):
+        form.instance.created_by = (
+            self.request.user if self.request.user.is_authenticated else None
+        )
+
+        resposta = super().form_valid(form)
+
+        messages.success(
+            self.request,
+            f"Retorno de {self.object.customer.full_name} registado. "
+            "Fica na lista até ser marcado.",
+        )
+
+        return resposta
+
+
 class ReturnVisitCreateView(InternalAreaRequiredMixin, View):
     """Abre um retorno à mão, a partir da ficha ou do detalhe da marcação.
 
@@ -573,9 +711,7 @@ class ReturnVisitCreateView(InternalAreaRequiredMixin, View):
         return redirect(self.destino(request, customer))
 
     def destino(self, request, customer):
-        return request.POST.get("next") or reverse(
-            "appointments:customer_list"
-        )
+        return request.POST.get("next") or reverse("appointments:customer_list")
 
 
 class ReturnVisitDismissView(InternalAreaRequiredMixin, View):
@@ -596,6 +732,7 @@ class ReturnVisitDismissView(InternalAreaRequiredMixin, View):
         )
 
         return redirect("appointments:return_visit_list")
+
 
 class NewAppointmentMessagePreviewView(InternalAreaRequiredMixin, View):
     """O que a cliente receberia por uma marcação que ainda não existe.
@@ -778,7 +915,41 @@ class AppointmentCompleteView(InternalAreaRequiredMixin, View):
         else:
             messages.error(request, result.message)
 
-        return redirect("appointments:appointment_list")
+        return redirect(destino_depois_da_marcacao(appointment))
+
+    def marcar_retorno(self, request, appointment):
+        """Marca já o retorno, com o dia e a hora que foram combinados."""
+
+        data = parse_date(request.POST.get("return_date") or "")
+        hora = parse_time(request.POST.get("return_time") or "")
+
+        if not data or not hora:
+            messages.error(
+                request,
+                "O retorno não ficou marcado: faltou a data ou a hora.",
+            )
+
+            return
+
+        retorno, aviso = return_services.book_from_appointment(
+            appointment,
+            data,
+            hora,
+            user=request.user,
+        )
+
+        if aviso:
+            # A conclusão já aconteceu quando isto corre, e uma hora ocupada
+            # não pode desfazê-la: fica o retorno previsto e diz-se porquê.
+            messages.warning(request, aviso)
+
+            return
+
+        messages.info(
+            request,
+            f"Retorno marcado para {data.strftime('%d/%m/%Y')} "
+            f"às {hora.strftime('%H:%M')}.",
+        )
 
     def abrir_retorno(self, request, appointment):
         """Regista o retorno que a janela do "Concluir" pediu.
@@ -786,7 +957,28 @@ class AppointmentCompleteView(InternalAreaRequiredMixin, View):
         É aqui e não noutro sítio porque é o único momento em que quem atende
         sabe se é preciso voltar: acabou de ver o pé. Passada essa janela, o
         retorno passa a depender de alguém se lembrar.
+
+        Três respostas possíveis, e a do meio já existia. A de baixo — marcar
+        ali mesmo o dia e a hora — é a que faltava: sem ela, uma data combinada
+        com a pessoa à frente virava um "prever" e alguém tinha de a marcar
+        outra vez a partir de uma lista.
         """
+
+        modo = (request.POST.get("return_mode") or "").strip()
+
+        # Sem `return_mode` é um formulário anterior a esta alteração — ou um
+        # pedido escrito à mão. O que ele traz é o número de dias, e é assim
+        # que continua a ser lido.
+        if not modo:
+            modo = "predicted" if request.POST.get("return_days") else "none"
+
+        if modo == "scheduled":
+            self.marcar_retorno(request, appointment)
+
+            return
+
+        if modo != "predicted":
+            return
 
         try:
             dias = int(request.POST.get("return_days") or 0)

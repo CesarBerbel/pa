@@ -228,3 +228,45 @@ class SalonModalIsGoneTests(ResetLanguageMixin, TestCase):
         # O modal saiu; a morada não. Quem a procura continua a encontrá-la no
         # rodapé, que é onde se procura uma morada.
         self.assertContains(self.client.get(reverse("home")), "Sá da Bandeira")
+
+
+class TheOrderOnThePageTests(TestCase):
+    """As avaliações aparecem pelas mais recentes.
+
+    **Quais são as cinco não se escolhe**: é a Google que as escolhe, e pedir
+    `reviews_sort` à Places API nova é recusado com um 400. O que está nas
+    nossas mãos é a ordem por que se mostram as que ela deu.
+    """
+
+    def avaliacoes(self, *datas):
+        return [{"published_at": data, "author": data} for data in datas]
+
+    def datas(self, avaliacoes):
+        return [a["published_at"] for a in google_reviews._ordenar(avaliacoes)]
+
+    def test_the_newest_comes_first(self):
+        self.assertEqual(
+            self.datas(self.avaliacoes("2026-01-01", "2026-08-16", "2026-03-02")),
+            ["2026-08-16", "2026-03-02", "2026-01-01"],
+        )
+
+    def test_one_without_a_date_goes_last_and_not_first(self):
+        """Foi o defeito da primeira versão desta ordenação.
+
+        Estava tudo num `sorted` com uma chave que empurrava as sem data para
+        o fim — e o `reverse` atirava-as para a frente, que é a ponta oposta
+        àquela onde se queriam.
+        """
+
+        ordenadas = self.datas(self.avaliacoes("2026-01-01", "", "2026-08-16"))
+
+        self.assertEqual(ordenadas[0], "2026-08-16")
+        self.assertEqual(ordenadas[-1], "")
+
+    def test_nothing_is_lost_along_the_way(self):
+        entrada = self.avaliacoes("2026-01-01", "", "2026-08-16")
+
+        self.assertEqual(len(google_reviews._ordenar(entrada)), len(entrada))
+
+    def test_an_empty_list_is_not_a_special_case(self):
+        self.assertEqual(google_reviews._ordenar([]), [])

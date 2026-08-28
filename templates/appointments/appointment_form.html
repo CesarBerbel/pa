@@ -27,9 +27,10 @@
                 {% if retorno %}
                     <div class="alert alert-info small">
                         <i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i>
-                        Retorno de <strong>{{ retorno.customer.full_name }}</strong>,
-                        previsto para {{ retorno.target_date|date:"d/m/Y" }}.
-                        Ao gravar, o retorno fica dado como marcado.
+                        Retorno previsto para
+                        <strong>{{ retorno.target_date|date:"d/m/Y" }}</strong>.
+                        A data abaixo vem preenchida com essa e pode ser
+                        alterada. Ao gravar, o retorno fica dado como marcado.
                     </div>
                 {% endif %}
 
@@ -59,28 +60,92 @@
                     {# Os campos são renderizados um a um para controlar a ordem #}
                     {# e para ter âncoras estáveis, em vez de depender dos IDs   #}
                     {# gerados pelo crispy.                                      #}
-                    <div class="customer-mode-switch">
-                        {{ form.customer_mode|as_crispy_field }}
-                    </div>
+                    {% if retorno %}
+                        {# Vindo de um retorno, a pessoa e o tratamento já #}
+                        {# foram decididos quando ele foi aberto. Mostrá-los #}
+                        {# como listas era convidar a mudá-los, e mudá-los #}
+                        {# aqui fazia a marcação deixar de cumprir o retorno #}
+                        {# que a trouxe. #}
+                        {# #}
+                        {# Escondidos e não desativados: um campo desativado #}
+                        {# não é submetido, e o formulário perdia a pessoa. A #}
+                        {# view aperta as listas a uma opção só, e por isso um #}
+                        {# valor trocado por fora não passa na validação. #}
+                        <div class="appointment-fixed-fields">
+                            <div class="appointment-fixed-field">
+                                <span class="appointment-field-label">Cliente</span>
+                                <strong>{{ retorno.customer.full_name }}</strong>
+                            </div>
 
-                    <div data-customer-existing>
-                        {{ form.customer|as_crispy_field }}
-                    </div>
+                            {% if retorno.service %}
+                                <div class="appointment-fixed-field">
+                                    <span class="appointment-field-label">Tratamento</span>
+                                    <strong>{{ retorno.service.name }}</strong>
+                                </div>
+                            {% endif %}
 
-                    <div data-customer-new hidden>
-                        {{ form.new_customer_name|as_crispy_field }}
-                        {{ form.new_customer_phone|as_crispy_field }}
-                        {{ form.new_customer_email|as_crispy_field }}
-                    </div>
+                            <div class="appointment-fixed-field">
+                                <span class="appointment-field-label">Estado</span>
+                                <strong>Confirmado</strong>
+                            </div>
 
-                    {{ form.customer_speaks_english|as_crispy_field }}
+                            {% if retorno.customer.language == "en" or retorno.origin.customer_speaks_english %}
+                                <div class="appointment-fixed-field">
+                                    <span class="appointment-field-label">Mensagens</span>
+                                    <strong>Inglês</strong>
+                                </div>
+                            {% endif %}
+                        </div>
 
-                    <hr class="my-4">
+                        {{ form.customer_mode.as_hidden }}
+                        {{ form.customer.as_hidden }}
 
-                    {{ form.service|as_crispy_field }}
+                        {% if retorno.service %}
+                            {{ form.service.as_hidden }}
+                        {% else %}
+                            {{ form.service|as_crispy_field }}
+                        {% endif %}
+
+                        {# A língua e o estado também vêm decididos. A #}
+                        {# língua acompanha a pessoa, e o estado de um retorno #}
+                        {# combinado é sempre confirmado: são duas escolhas #}
+                        {# que só serviam para se enganar. #}
+                        {{ form.customer_speaks_english.as_hidden }}
+
+                        <hr class="my-4">
+                    {% else %}
+                        <div class="customer-mode-switch">
+                            {{ form.customer_mode|as_crispy_field }}
+                        </div>
+
+                        <div data-customer-existing>
+                            {{ form.customer|as_crispy_field }}
+                        </div>
+
+                        <div data-customer-new hidden>
+                            {{ form.new_customer_name|as_crispy_field }}
+                            {{ form.new_customer_phone|as_crispy_field }}
+                            {{ form.new_customer_email|as_crispy_field }}
+                        </div>
+
+                        {{ form.customer_speaks_english|as_crispy_field }}
+
+                        <hr class="my-4">
+
+                        {{ form.service|as_crispy_field }}
+                    {% endif %}
+
+                    {# A data vem preenchida com a prevista, mas continua a ser #}
+                    {# um campo: a data combinada ao telefone raramente é a que #}
+                    {# estava prevista. #}
                     {{ form.date|as_crispy_field }}
                     {{ form.start_time|as_crispy_field }}
-                    {{ form.status|as_crispy_field }}
+
+                    {% if retorno %}
+                        {{ form.status.as_hidden }}
+                    {% else %}
+                        {{ form.status|as_crispy_field }}
+                    {% endif %}
 
                     {# A morada e as indicações só aparecem quando a caixa está #}
                     {# marcada: num atendimento na clínica são dois campos que  #}

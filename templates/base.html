@@ -417,8 +417,27 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} mb-3">
+            {# Cinco segundos para todas. Houve uma versão com dois para as #}
+            {# confirmações, e dois segundos é o tempo de olhar para o lado e #}
+            {# perder a frase. #}
+            {# #}
+            {# O `role` continua a distinguir, porque isso não é tempo: um #}
+            {# problema interrompe quem usa leitor de ecrã, uma confirmação #}
+            {# espera pela pausa seguinte. Dizer "alert" a tudo fazia de cada #}
+            {# gravação bem sucedida uma interrupção. #}
+            <div
+                class="alert alert-{{ message.tags }} alert-dismissible fade show mb-3"
+                role="{% if message.level >= 30 %}alert{% else %}status{% endif %}"
+                data-auto-dismiss="5000"
+            >
                 {{ message }}
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Fechar"
+                ></button>
             </div>
         {% endfor %}
     {% endif %}
@@ -726,6 +745,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
 </script>
 <script src="{% versioned_static 'js/cookie_consent.js' %}"></script>
+{# Depois do Bootstrap: é ele que sabe fechar um alerta com a animação. #}
+<script defer src="{% versioned_static 'js/mensagens.js' %}"></script>
 
 <script>
     // O registo só funciona em HTTPS ou em localhost; noutros contextos o

@@ -7358,3 +7358,165 @@ textarea.form-control {
 .problem-card .stretched-link:focus-visible {
     outline: none;
 }
+
+/* =========================================================================
+   Cartões dos retornos
+
+   Reaproveitavam o `.customer-card`, que é uma lista de pessoas — e um
+   retorno não é uma pessoa: é uma data com uma pessoa agarrada. O que o
+   cartão tem de responder de relance é "a quem ligo primeiro", e por isso a
+   data é o maior número lá dentro.
+   ========================================================================= */
+
+.return-card {
+    background: #ffffff;
+    border: 1px solid #f1d5db;
+    border-left: 4px solid #d8a7b1;
+    border-radius: 18px;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 22px;
+}
+
+/* Um atrasado grita, os outros não. Se todos gritassem, nenhum gritava. */
+.return-card-late {
+    background: #fffaf3;
+    border-left-color: #d98c2b;
+}
+
+.return-card-head {
+    align-items: flex-start;
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+}
+
+.return-card-identity {
+    min-width: 0;
+}
+
+.return-card-name {
+    color: #2b2b2b;
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.return-card-service {
+    color: #6b6b6b;
+    font-size: 0.88rem;
+    margin: 2px 0 0;
+}
+
+.return-card-date {
+    align-items: baseline;
+    color: #2b2b2b;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 1.05rem;
+    margin: 16px 0 0;
+}
+
+.return-card-date i {
+    color: #8b5e66;
+}
+
+.return-card-when {
+    color: #6b6b6b;
+    font-size: 0.85rem;
+}
+
+/* De onde veio e o que o cumpriu. É o histórico, e é a razão de o retorno
+   guardar as duas pontas em vez de só a data. */
+.return-card-facts {
+    display: grid;
+    /* `auto 1fr`: a coluna das etiquetas encolhe ao seu conteúdo e a dos
+       valores fica com o resto. Duas colunas iguais deixavam metade do cartão
+       vazia à esquerda. */
+    grid-template-columns: auto 1fr;
+    gap: 2px 12px;
+    font-size: 0.85rem;
+    margin: 14px 0 0;
+}
+
+.return-card-facts dt {
+    color: #6b6b6b;
+    font-weight: 500;
+}
+
+.return-card-facts dd {
+    color: #2b2b2b;
+    margin: 0;
+}
+
+.return-card-facts a {
+    color: #8b5e66;
+}
+
+.return-card-notes {
+    background: #fff7f9;
+    border-radius: 12px;
+    color: #6b6b6b;
+    font-size: 0.85rem;
+    margin: 14px 0 0;
+    padding: 10px 12px;
+}
+
+/* `margin-top: auto` empurra os botões para o fundo: com cartões de alturas
+   diferentes lado a lado, os botões alinham-se entre si em vez de flutuarem
+   cada um à sua altura. */
+.return-card-actions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 16px;
+}
+
+.return-card-actions form {
+    margin: 0;
+}
+
+/* Depois das regras genéricas: uma media query não acrescenta especificidade,
+   e a última a aparecer é a que ganha. */
+@media (max-width: 575.98px) {
+    .return-card {
+        padding: 16px 18px;
+    }
+
+    .return-card-actions .btn {
+        flex: 1 1 auto;
+    }
+}
+
+/* Os campos que já vêm decididos, no ecrã de marcar um retorno.
+
+   Parecem um campo de formulário — mesma etiqueta pequena por cima, mesmo
+   espaçamento — mas não são: são o que já foi escolhido, e por isso não têm
+   caixa nem cursor. Desenhá-los como caixas desativadas convidava a tentar
+   clicar. */
+.appointment-fixed-fields {
+    background: #fff7f9;
+    border: 1px solid #f1d5db;
+    border-radius: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 32px;
+    margin-bottom: 20px;
+    padding: 14px 18px;
+}
+
+.appointment-fixed-field {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.appointment-fixed-field strong {
+    color: #2b2b2b;
+    overflow-wrap: anywhere;
+}

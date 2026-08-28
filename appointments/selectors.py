@@ -127,6 +127,11 @@ class AppointmentSelectors:
             "customer",
             "service",
             "created_by",
+            # O retorno que esta marcação cumpre, para o distintivo da lista.
+            # Sem isto era uma consulta por cartão — trinta marcações no ecrã,
+            # trinta idas à base de dados para desenhar uma etiqueta.
+            "return_visit",
+            "return_visit__origin",
         )
 
         if filters.limits_to_upcoming:

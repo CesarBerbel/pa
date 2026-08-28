@@ -19,6 +19,7 @@ from .views import (
     PatientRecordCreateView,
     ReturnVisitCreateView,
     ReturnVisitDismissView,
+    ReturnVisitNewView,
     ReturnVisitListView,
     PatientRecordIndexView,
     PatientRecordUpdateView,
@@ -229,6 +230,11 @@ urlpatterns = [
         "retornos/",
         ReturnVisitListView.as_view(),
         name="return_visit_list",
+    ),
+    path(
+        "retornos/novo/",
+        ReturnVisitNewView.as_view(),
+        name="return_visit_new",
     ),
     path(
         "clientes/<int:pk>/retorno/",

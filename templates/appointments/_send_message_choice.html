@@ -33,36 +33,95 @@
                 {# é preciso voltar. Passada esta janela, passa a depender de   #}
                 {# alguém se lembrar.                                           #}
                 <div class="return-choice mb-3" data-choice-return hidden>
-                    <label class="form-check-label d-flex align-items-center gap-2">
+                    <p class="text-uppercase text-muted small mb-2">Voltar</p>
+
+                    {# Três escolhas e não uma caixa: entre "não volta" e #}
+                    {# "volta daqui a três semanas" faltava o caso de quem #}
+                    {# combina a data ali mesmo, com a pessoa à frente. Esse #}
+                    {# virava um "prever" e alguém tinha de o marcar outra #}
+                    {# vez mais tarde, repetindo uma decisão já tomada. #}
+                    <label class="form-check-label d-flex align-items-center gap-2 mb-2">
                         <input
-                            type="checkbox"
+                            type="radio"
                             class="form-check-input mt-0"
-                            data-return-wanted
+                            name="return-mode"
+                            value="none"
+                            data-return-mode
+                        >
+                        <span>Sem retorno</span>
+                    </label>
+
+                    <label class="form-check-label d-flex align-items-center gap-2 mb-2">
+                        <input
+                            type="radio"
+                            class="form-check-input mt-0"
+                            name="return-mode"
+                            value="predicted"
+                            data-return-mode
                         >
                         <span>Prever retorno</span>
                     </label>
 
-                    <div class="d-flex align-items-center gap-2 mt-2" data-return-days-box hidden>
-                        <span class="text-muted small">Voltar daqui a</span>
+                    <div class="ms-4 mb-2" data-return-days-box hidden>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-muted small">Voltar daqui a</span>
 
-                        <input
-                            type="number"
-                            class="form-control form-control-sm"
-                            style="max-width: 90px;"
-                            min="1"
-                            max="365"
-                            step="1"
-                            value="21"
-                            data-return-days
-                            aria-label="Dias até ao retorno"
-                        >
+                            <input
+                                type="number"
+                                class="form-control form-control-sm"
+                                style="max-width: 90px;"
+                                min="1"
+                                max="365"
+                                step="1"
+                                value="21"
+                                data-return-days
+                                aria-label="Dias até ao retorno"
+                            >
 
-                        <span class="text-muted small">dias</span>
+                            <span class="text-muted small">dias</span>
+                        </div>
+
+                        <p class="text-muted small mb-0 mt-1">
+                            Fica na lista de retornos até ser marcado.
+                        </p>
                     </div>
 
-                    <p class="text-muted small mb-0 mt-2">
-                        Fica na lista de retornos até ser marcado. Não marca nada agora.
-                    </p>
+                    <label class="form-check-label d-flex align-items-center gap-2 mb-2">
+                        <input
+                            type="radio"
+                            class="form-check-input mt-0"
+                            name="return-mode"
+                            value="scheduled"
+                            data-return-mode
+                        >
+                        <span>Marcar já o retorno</span>
+                    </label>
+
+                    <div class="ms-4" data-return-slot-box hidden>
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <input
+                                type="date"
+                                class="form-control form-control-sm"
+                                style="max-width: 160px;"
+                                data-return-date
+                                aria-label="Data do retorno"
+                            >
+
+                            <input
+                                type="time"
+                                class="form-control form-control-sm"
+                                style="max-width: 120px;"
+                                step="900"
+                                data-return-time
+                                aria-label="Hora do retorno"
+                            >
+                        </div>
+
+                        <p class="text-muted small mb-0 mt-1">
+                            Fica marcado e confirmado. Se a hora estiver ocupada,
+                            o retorno fica só previsto e avisamos.
+                        </p>
+                    </div>
                 </div>
 
                 <div class="d-grid gap-2">
@@ -147,15 +206,38 @@
         var caixaPrevia = janela.querySelector("[data-choice-preview]");
         var corpoPrevia = janela.querySelector("[data-preview-body]");
         var caixaRetorno = janela.querySelector("[data-choice-return]");
-        var querRetorno = janela.querySelector("[data-return-wanted]");
+        var modosRetorno = janela.querySelectorAll("[data-return-mode]");
         var diasRetorno = janela.querySelector("[data-return-days]");
         var caixaDias = janela.querySelector("[data-return-days-box]");
+        var dataRetorno = janela.querySelector("[data-return-date]");
+        var horaRetorno = janela.querySelector("[data-return-time]");
+        var caixaHorario = janela.querySelector("[data-return-slot-box]");
 
-        if (querRetorno && caixaDias) {
-            querRetorno.addEventListener("change", function () {
-                caixaDias.hidden = !querRetorno.checked;
-            });
+        function modoEscolhido() {
+            for (var i = 0; i < modosRetorno.length; i += 1) {
+                if (modosRetorno[i].checked) {
+                    return modosRetorno[i].value;
+                }
+            }
+
+            return "none";
         }
+
+        function mostrarCaixaDoModo() {
+            var modo = modoEscolhido();
+
+            if (caixaDias) {
+                caixaDias.hidden = modo !== "predicted";
+            }
+
+            if (caixaHorario) {
+                caixaHorario.hidden = modo !== "scheduled";
+            }
+        }
+
+        Array.prototype.forEach.call(modosRetorno, function (opcao) {
+            opcao.addEventListener("change", mostrarCaixaDoModo);
+        });
         var pendente = null;
         var pedidoPrevia = 0;
 
@@ -316,11 +398,35 @@
                     if (pedeRetorno && diasRetorno) {
                         var sugerido = parseInt(form.dataset.returnSuggested || "0", 10);
 
-                        // O serviço propõe o prazo. Sem proposta, a caixa nasce
-                        // desmarcada e com um valor de partida qualquer.
-                        querRetorno.checked = sugerido > 0;
+                        // O serviço propõe o prazo, e com ele a escolha de
+                        // partida: sem proposta, o normal é não voltar.
+                        var partida = sugerido > 0 ? "predicted" : "none";
+
+                        Array.prototype.forEach.call(modosRetorno, function (opcao) {
+                            opcao.checked = opcao.value === partida;
+                        });
+
                         diasRetorno.value = sugerido > 0 ? sugerido : 21;
-                        caixaDias.hidden = !querRetorno.checked;
+
+                        // A data de partida de "marcar já" é a que os dias
+                        // propõem: quem combina ali mesmo combina quase sempre
+                        // à volta do prazo do serviço.
+                        if (dataRetorno) {
+                            var alvo = new Date();
+                            alvo.setDate(alvo.getDate() + (sugerido > 0 ? sugerido : 21));
+
+                            // `toISOString` daria o dia em UTC, que à noite em
+                            // Lisboa é o dia seguinte. Montado à mão, é o dia
+                            // que a pessoa tem no relógio.
+                            dataRetorno.value =
+                                alvo.getFullYear() +
+                                "-" +
+                                String(alvo.getMonth() + 1).padStart(2, "0") +
+                                "-" +
+                                String(alvo.getDate()).padStart(2, "0");
+                        }
+
+                        mostrarCaixaDoModo();
                     }
                 }
 
@@ -341,17 +447,38 @@
 
         function guardarRetorno(form) {
             // A janela vive fora do formulário, portanto o que se escolhe aqui
-            // não é submetido: passa para o campo escondido que o formulário
+            // não é submetido: passa para os campos escondidos que o formulário
             // já traz, como acontece com a resposta sobre a mensagem.
-            var campo = form.querySelector("[name='return_days']");
+            var campoModo = form.querySelector("[name='return_mode']");
 
-            if (!campo) {
+            if (!campoModo) {
                 return;
             }
 
-            var quer = querRetorno && querRetorno.checked;
+            var modo = modoEscolhido();
 
-            campo.value = quer && diasRetorno ? diasRetorno.value : "";
+            campoModo.value = modo;
+
+            function escrever(nome, valor) {
+                var campo = form.querySelector("[name='" + nome + "']");
+
+                if (campo) {
+                    campo.value = valor;
+                }
+            }
+
+            escrever(
+                "return_days",
+                modo === "predicted" && diasRetorno ? diasRetorno.value : ""
+            );
+            escrever(
+                "return_date",
+                modo === "scheduled" && dataRetorno ? dataRetorno.value : ""
+            );
+            escrever(
+                "return_time",
+                modo === "scheduled" && horaRetorno ? horaRetorno.value : ""
+            );
         }
 
         Array.prototype.forEach.call(botoes, function (botao) {

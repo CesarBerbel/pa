@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% load crispy_forms_tags %}
+{% load assets %}
+
+{% block title %}Novo retorno | Priscila Arantes Pedicure Terapêutica{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-7">
+
+        <div class="mb-4">
+            <h1 class="h4 mb-1">Novo retorno</h1>
+
+            <p class="text-muted mb-0">
+                Escolha o atendimento de onde vem. A pessoa e o serviço vêm
+                dele, e a marcação que vier a cumprir este retorno fica ligada
+                a essa consulta.
+            </p>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    {{ form|crispy }}
+
+                    <div class="d-flex gap-2 mt-3">
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+
+                        <a href="{% url 'appointments:return_visit_list' %}" class="btn btn-outline-secondary">
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if not form.fields.origin.queryset.exists %}
+            {# Sem atendimentos concluídos não há de onde partir. Dizê-lo é #}
+            {# melhor do que uma lista vazia sem explicação. #}
+            <div class="alert alert-info mt-4 small">
+                <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+                Ainda não há atendimentos concluídos. Um retorno parte sempre de
+                uma consulta que já aconteceu — conclua um atendimento na agenda
+                e ele passa a aparecer aqui.
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+    <script defer src="{% versioned_static 'js/appointment_search.js' %}"></script>
+{% endblock %}

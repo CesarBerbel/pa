@@ -8,6 +8,7 @@ from django.utils import timezone
 from notifications.models import EmailEventSetting, WhatsAppEventSetting
 from notifications.whatsapp_dispatch import notify as notify_whatsapp
 
+from appointments import return_services
 from appointments.emails import (
     send_professional_notification_email,
     deliver_after_commit,
@@ -144,6 +145,10 @@ class AppointmentCancellationService:
                 "updated_at",
             ]
         )
+
+        # O retorno que esta marcação cumpria volta à lista: a marcação caiu,
+        # mas a pessoa continua a precisar de ser vista.
+        return_services.release(appointment)
 
         AppointmentAuditService.log(
             appointment=appointment,
