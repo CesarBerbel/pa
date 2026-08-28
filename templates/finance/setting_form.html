@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Reinvestimento | Priscila Arantes Pedicure Terapêutica{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-6">
+
+        <div class="mb-4">
+            <h1 class="h4 mb-1">Reinvestimento</h1>
+
+            <p class="text-muted mb-0">
+                De cada pagamento, quanto é posto de lado para voltar ao
+                negócio — material, equipamento, formação.
+            </p>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    {{ form|crispy }}
+
+                    <div class="d-flex gap-2 mt-3">
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+
+                        <a href="{% url 'finance:dashboard' %}" class="btn btn-outline-secondary">
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {# Dito aqui e não só no `help_text` do campo, porque é a pergunta que #}
+        {# se faz a seguir a mudar o número. #}
+        <div class="alert alert-info mt-4 small">
+            <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+            Cada pagamento guarda a percentagem que estava em vigor quando foi
+            registado. Mudar este número muda o que vier a partir de agora — os
+            saldos dos meses passados ficam como estão, porque um saldo que
+            muda sozinho deixa de ser um saldo.
+        </div>
+
+    </div>
+</div>
+{% endblock %}

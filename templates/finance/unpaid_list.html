@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Por receber | Priscila Arantes Pedicure Terapêutica{% endblock %}
+
+{% block content %}
+<div class="app-agenda-page">
+
+    <div class="app-agenda-header mb-4">
+        <span class="luxury-eyebrow">Financeiro</span>
+        <h1>Por receber</h1>
+
+        <p>
+            {# «Cerca de» e não um total: o valor cobrado só existe depois de #}
+            {# haver pagamento, e estas são precisamente as que não têm. #}
+            Atendimentos concluídos sem pagamento registado — cerca de
+            <strong>{{ total }} €</strong>, estimado pelo preço de tabela.
+        </p>
+
+        <div class="d-flex gap-2 justify-content-center mt-3">
+            <a class="btn btn-outline-secondary btn-sm" href="{% url 'finance:dashboard' %}">
+                Voltar ao resumo
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            {% if appointments %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Quem</th>
+                                <th>Serviço</th>
+                                <th class="text-end">Tabela</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for marcacao in appointments %}
+                                <tr>
+                                    <td>{{ marcacao.date|date:"d/m/Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'appointments:appointment_detail' marcacao.pk %}">
+                                            {{ marcacao.customer.full_name }}
+                                        </a>
+                                    </td>
+                                    <td class="text-muted">{{ marcacao.service.name }}</td>
+                                    <td class="text-end text-muted">{{ marcacao.service.price }} €</td>
+                                    <td class="text-end">
+                                        <a class="btn btn-sm btn-primary"
+                                           href="{% url 'finance:payment_create' marcacao.pk %}?next={% url 'finance:unpaid_list' %}">
+                                            Registar pagamento
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="app-empty-state">
+                    <div class="app-empty-icon"><i class="bi bi-check2-circle"></i></div>
+                    <h3>Não há nada por receber</h3>
+                    <p>Todos os atendimentos concluídos têm pagamento registado.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

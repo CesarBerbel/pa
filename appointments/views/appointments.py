@@ -915,6 +915,14 @@ class AppointmentCompleteView(InternalAreaRequiredMixin, View):
         else:
             messages.error(request, result.message)
 
+        # O `next` do formulário ganha, quando vier: quem conclui a partir do
+        # financeiro está a arrumar uma lista, e ser atirado para outro ecrã
+        # obriga a voltar atrás para arrumar a seguinte. Sem `next`, vale a
+        # regra de sempre — e o `back_to` valida o destino, que um `next` para
+        # fora do site é um redirecionamento aberto.
+        if request.POST.get("next"):
+            return redirect(back_to(request))
+
         return redirect(destino_depois_da_marcacao(appointment))
 
     def marcar_retorno(self, request, appointment):

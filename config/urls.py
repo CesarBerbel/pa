@@ -96,6 +96,9 @@ urlpatterns += i18n_patterns(
     path("", include("accounts.urls")),
     path("", include("appointments.urls")),
     path("", include("notifications.urls")),
+    # Sob um prefixo próprio: é uma área da casa e não mais um ecrã da
+    # agenda, e um endereço que o diz poupa explicações.
+    path("financeiro/", include("finance.urls")),
     path(
         "dashboard/",
         DashboardView.as_view(),

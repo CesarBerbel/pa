@@ -419,6 +419,28 @@
                     </a>
                 {% endif %}
 
+                {# O pagamento entra por aqui: um pagamento é sempre de #}
+                {# alguma coisa, e é esta a página dessa coisa. #}
+                {% if appointment.status == "completed" %}
+                    {% if appointment.payment %}
+                        <a
+                            href="{% url 'finance:payment_update' appointment.payment.pk %}"
+                            class="btn btn-outline-success"
+                        >
+                            <i class="bi bi-cash-coin me-1" aria-hidden="true"></i>
+                            {{ appointment.payment.amount }} € · {{ appointment.payment.get_method_display }}
+                        </a>
+                    {% else %}
+                        <a
+                            href="{% url 'finance:payment_create' appointment.pk %}"
+                            class="btn btn-outline-primary"
+                        >
+                            <i class="bi bi-cash-coin me-1" aria-hidden="true"></i>
+                            Registar pagamento
+                        </a>
+                    {% endif %}
+                {% endif %}
+
                 <a
                     href="{% url 'notifications:appointment_followups' appointment.pk %}"
                     class="btn btn-outline-secondary"

@@ -7529,3 +7529,292 @@ textarea.form-control {
     color: #2b2b2b;
     overflow-wrap: anywhere;
 }
+
+/* =========================================================================
+   Financeiro
+   ========================================================================= */
+
+.finance-tile {
+    background: #ffffff;
+    border: 1px solid #f1d5db;
+    border-left: 4px solid #d8a7b1;
+    border-radius: 18px;
+    display: block;
+    padding: 20px 22px;
+    text-decoration: none;
+}
+
+/* O previsto é o que ainda não aconteceu: fica mais apagado do que os
+   números que já são factos, para não se confundir com eles. */
+.finance-tile-expected {
+    background: #fbfbfc;
+    border-left-color: #b9b2b5;
+}
+
+.finance-tile-expected .finance-tile-value {
+    color: #6b6b6b;
+}
+
+.finance-tile-in {
+    border-left-color: #4f9d69;
+}
+
+/* O que está concluído e por cobrar. Fica entre o que entrou e o que saiu
+   porque é dinheiro que devia ter entrado: a cor diz que falta, sem gritar
+   como um erro. */
+.finance-tile-owed {
+    border-left-color: #b8860b;
+}
+
+.finance-tile-out {
+    border-left-color: #d98c2b;
+}
+
+.finance-tile-result {
+    border-left-color: #8b5e66;
+}
+
+/* Um resultado negativo tem de se ver que é negativo antes de alguém ler o
+   sinal de menos. */
+.finance-tile-negative {
+    background: #fff5f5;
+    border-left-color: #c0392b;
+}
+
+.finance-tile-negative .finance-tile-value {
+    color: #c0392b;
+}
+
+.finance-tile-label {
+    color: #6b6b6b;
+    display: block;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+}
+
+.finance-tile-value {
+    color: #2b2b2b;
+    display: block;
+    font-size: 1.7rem;
+    margin-top: 4px;
+}
+
+.finance-unpaid {
+    align-items: center;
+    background: #fff7f9;
+    border: 1px solid #f1d5db;
+    border-radius: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: space-between;
+    padding: 16px 20px;
+}
+
+.finance-unpaid p {
+    color: #6b6b6b;
+    font-size: 0.86rem;
+}
+
+/* As semanas do mês. `align-items: end` para as barras crescerem de baixo
+   para cima: crescendo de cima, uma semana fraca parecia uma semana forte
+   pendurada. */
+.finance-weeks {
+    display: grid;
+    /* `auto-fit` e não um número fixo: um mês tem cinco ou seis semanas
+       civis conforme o dia em que começa, e a grelha acompanha. */
+    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+    gap: 10px;
+}
+
+.finance-week {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.finance-week-total {
+    color: #6b6b6b;
+    font-size: 0.72rem;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.finance-week-bar-slot {
+    align-items: end;
+    display: flex;
+    height: 110px;
+}
+
+.finance-week-bar {
+    background: #d8a7b1;
+    border-radius: 6px 6px 0 0;
+    /* Sem JavaScript fica no mínimo e não desaparece: os valores continuam
+       escritos por cima de cada barra. */
+    height: 2px;
+    width: 100%;
+}
+
+.finance-week-name {
+    color: #6b6b6b;
+    font-size: 0.72rem;
+    text-align: center;
+}
+
+
+/* Depois das regras genéricas: uma media query não acrescenta especificidade,
+   e a última a aparecer é a que ganha. */
+@media (max-width: 575.98px) {
+    /* Três semanas por linha: cinco ou seis lado a lado num telemóvel são
+       riscos com o valor por cima que ninguém lê. O `auto-fit` acima já
+       reduziria, mas deixava-as demasiado estreitas para o número caber. */
+    .finance-weeks {
+        grid-template-columns: repeat(3, 1fr);
+        row-gap: 16px;
+    }
+
+    .finance-week-bar-slot {
+        height: 80px;
+    }
+
+    .finance-tile-value {
+        font-size: 1.3rem;
+    }
+}
+
+/* Os atendimentos por concluir, no topo do dashboard operacional.
+
+   Chamam mais a atenção do que tudo o resto porque travam tudo o resto:
+   enquanto uma marcação não for concluída, não gera retorno, não entra no que
+   está por receber e não conta para a receita.
+
+   Vivem aqui e não no financeiro porque concluir é trabalho de agenda: quem
+   olha para as contas quer ver o que já aconteceu, não arrumar o que falta
+   registar. */
+.pending-completion {
+    background: #fffaf3;
+    border: 1px solid #f0d9b8;
+    border-left: 4px solid #d98c2b;
+    border-radius: 18px;
+    padding: 18px 22px;
+}
+
+.pending-completion-head h2 {
+    color: #8a5a12;
+}
+
+.pending-completion-head p {
+    color: #6b6b6b;
+    font-size: 0.86rem;
+}
+
+.pending-completion-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    list-style: none;
+    margin: 16px 0 0;
+    padding: 0;
+}
+
+.pending-completion-list li {
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #f0d9b8;
+    border-radius: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: space-between;
+    padding: 10px 14px;
+}
+
+.pending-completion-list form {
+    margin: 0;
+}
+
+.pending-completion-who {
+    min-width: 0;
+}
+
+.pending-completion-who a {
+    color: #2b2b2b;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.pending-completion-when {
+    color: #6b6b6b;
+    display: block;
+    font-size: 0.82rem;
+}
+
+/* Depois das regras genéricas: uma media query não acrescenta especificidade,
+   e a última a aparecer é a que ganha. */
+@media (max-width: 575.98px) {
+    .pending-completion {
+        padding: 16px 18px;
+    }
+
+    .pending-completion-list .btn {
+        width: 100%;
+    }
+}
+
+/* As duas contas, debaixo do gráfico do mês.
+
+   Maiores do que os cartões de cima porque respondem a outra pergunta: os de
+   cima dizem como correu o mês, estes dizem onde está o dinheiro. */
+.finance-account {
+    background: #ffffff;
+    border: 1px solid #f1d5db;
+    border-radius: 18px;
+    padding: 22px 24px;
+}
+
+.finance-account-invest {
+    background: #f6f8fb;
+    border-color: #d7e0ec;
+}
+
+.finance-account-free {
+    background: #f5faf6;
+    border-color: #cfe4d4;
+}
+
+/* Disponível negativo quer dizer que as despesas passaram o que sobrou. É o
+   mês que interessa ver, e por isso é o que se vê primeiro. */
+.finance-account-negative {
+    background: #fff5f5;
+    border-color: #f0cccc;
+}
+
+.finance-account-negative .finance-account-value {
+    color: #c0392b;
+}
+
+.finance-account-label {
+    color: #6b6b6b;
+    display: block;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+}
+
+.finance-account-value {
+    color: #2b2b2b;
+    display: block;
+    font-size: 2rem;
+    margin: 4px 0;
+}
+
+.finance-account-link,
+.finance-account-note {
+    color: #6b6b6b;
+    display: block;
+    font-size: 0.8rem;
+}
+
+.finance-account-link {
+    color: #8b5e66;
+}

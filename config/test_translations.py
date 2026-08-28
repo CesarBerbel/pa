@@ -44,6 +44,7 @@ AREA_INTERNA = (
     "templates/appointments/weekly_schedule",
     "templates/appointments/_agenda",
     "templates/appointments/_send_message",
+    "templates/finance/",
     "templates/notifications/",
     "templates/admin/",
     "templates/accounts/passkey",
