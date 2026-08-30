@@ -464,28 +464,41 @@ class TheWeeklyChartTests(FinanceBase):
 class WhatIsStillToComeTests(FinanceBase):
     """Previsto é o que **falta** entrar, não o que o mês inteiro valeu."""
 
-    def mes_atual(self):
-        return self.mes_de(self.hoje)
+    # Um mês escrito à mão, e não "daqui a dois dias".
+    #
+    # Com datas relativas a hoje, no dia 30 de um mês de 31 a marcação caía já
+    # no mês seguinte e ficava de fora do intervalo. O teste que espera 30 €
+    # falhava — e os três que esperam 0 € passavam pela razão errada, que é
+    # pior: um teste que passa por a marcação estar no mês errado não guarda
+    # nada sobre estados nem sobre datas.
+    MES = date(2027, 3, 1)
+    HOJE = date(2027, 3, 10)
+
+    ANTES = date(2027, 3, 9)
+    DEPOIS = date(2027, 3, 12)
+
+    def previsto(self):
+        return reports.previsto(*self.mes_de(self.MES), hoje=self.HOJE)
 
     def test_a_confirmed_appointment_still_to_come_counts(self):
         self.marcacao(
-            date=self.hoje + timedelta(days=2),
+            date=self.DEPOIS,
             start_time=time(9, 30),
             status=Appointment.STATUS_CONFIRMED,
         )
 
-        self.assertEqual(reports.previsto(*self.mes_atual()), Decimal("30.00"))
+        self.assertEqual(self.previsto(), Decimal("30.00"))
 
     def test_one_waiting_for_confirmation_does_not(self):
         # Contar dinheiro de uma consulta que ninguém confirmou é contar com o
         # que pode não acontecer.
         self.marcacao(
-            date=self.hoje + timedelta(days=2),
+            date=self.DEPOIS,
             start_time=time(9, 30),
             status=Appointment.STATUS_SCHEDULED,
         )
 
-        self.assertEqual(reports.previsto(*self.mes_atual()), Decimal("0.00"))
+        self.assertEqual(self.previsto(), Decimal("0.00"))
 
     def test_one_that_already_happened_does_not(self):
         """Já não é previsão nenhuma.
@@ -495,21 +508,21 @@ class WhatIsStillToComeTests(FinanceBase):
         """
 
         self.marcacao(
-            date=self.hoje - timedelta(days=1),
+            date=self.ANTES,
             start_time=time(11, 0),
             status=Appointment.STATUS_CONFIRMED,
         )
 
-        self.assertEqual(reports.previsto(*self.mes_atual()), Decimal("0.00"))
+        self.assertEqual(self.previsto(), Decimal("0.00"))
 
     def test_a_cancelled_one_does_not(self):
         self.marcacao(
-            date=self.hoje + timedelta(days=2),
+            date=self.DEPOIS,
             start_time=time(9, 30),
             status=Appointment.STATUS_CANCELLED,
         )
 
-        self.assertEqual(reports.previsto(*self.mes_atual()), Decimal("0.00"))
+        self.assertEqual(self.previsto(), Decimal("0.00"))
 
     def test_a_month_that_already_passed_expects_nothing(self):
         self.assertEqual(

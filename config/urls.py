@@ -7,6 +7,7 @@ from django.urls import include, path, re_path
 
 from accounts.views import DashboardView
 from appointments.models import SchedulingSetting, Service, ServiceCategory
+from config.export_views import DataExportView
 from config.google_reviews import get_reviews
 from config.seo import build_home_structured_data
 from config.views import (
@@ -103,6 +104,13 @@ urlpatterns += i18n_patterns(
         "dashboard/",
         DashboardView.as_view(),
         name="dashboard",
+    ),
+    # Sob "configuracoes/" e não na raiz: é uma ferramenta de gestão da
+    # casa, e o prefixo mantém-na longe dos endereços que as clientes usam.
+    path(
+        "configuracoes/exportar/",
+        DataExportView.as_view(),
+        name="data_export",
     ),
     prefix_default_language=False,
 )

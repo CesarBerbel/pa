@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Exportar dados | Priscila Arantes Pedicure Terapêutica{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+
+        <div class="mb-4">
+            <span class="luxury-eyebrow">Configurações</span>
+            <h1 class="h4 mb-1">Exportar dados</h1>
+
+            <p class="text-muted mb-0">
+                Tudo o que está guardado, em ficheiros que outro sistema
+                consegue ler. Não é uma cópia de segurança: é para sair
+                daqui.
+            </p>
+        </div>
+
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-4">
+
+                <h2 class="h6 text-uppercase text-muted mb-3">O que vai levar</h2>
+
+                <ul class="list-group list-group-flush mb-4">
+                    {% for nome, quantas in contagens %}
+                        <li class="list-group-item d-flex justify-content-between px-0">
+                            <span>{{ nome }}</span>
+                            <strong>{{ quantas }}</strong>
+                        </li>
+                    {% endfor %}
+
+                    {% for nome, quantas in contagens_clinicas %}
+                        <li class="list-group-item d-flex justify-content-between px-0">
+                            <span>{{ nome }}</span>
+                            <strong>{{ quantas }}</strong>
+                        </li>
+                    {% endfor %}
+                </ul>
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    {% if pode_levar_clinicos %}
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox"
+                                   name="incluir_clinicos" id="incluirClinicos">
+
+                            <label class="form-check-label" for="incluirClinicos">
+                                Incluir as fichas clínicas e as notas de evolução
+
+                                {# Fora por omissão. A maior parte das razões #}
+                                {# para exportar — mudar de software, dar os  #}
+                                {# números à contabilista — não precisa de    #}
+                                {# dados de saúde, e o que não sai não se     #}
+                                {# perde.                                     #}
+                                <span class="d-block small text-muted">
+                                    São dados de saúde. Só marque se o sistema
+                                    de destino for mesmo para os guardar.
+                                </span>
+                            </label>
+                        </div>
+                    {% endif %}
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-download me-1" aria-hidden="true"></i>
+                        Descarregar exportação
+                    </button>
+                </form>
+
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-4">
+                <h2 class="h6 text-uppercase text-muted mb-3">O que recebe</h2>
+
+                <p class="small text-muted">
+                    Um ficheiro <code>.zip</code> com um CSV por cada coisa,
+                    mais um <code>LEIA-ME.txt</code> que explica como os
+                    ficheiros se ligam uns aos outros e em que formato estão as
+                    datas e os valores.
+                </p>
+
+                <ul class="small text-muted mb-0">
+                    {% for ficheiro in ficheiros %}
+                        <li><code>{{ ficheiro }}</code></li>
+                    {% endfor %}
+                    <li><code>LEIA-ME.txt</code></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="alert alert-warning small">
+            <i class="bi bi-shield-lock me-1" aria-hidden="true"></i>
+            O ficheiro leva nomes, contactos e moradas de pessoas. Guarde-o num
+            sítio cifrado, não o envie por email sem proteção, e apague-o
+            quando já não precisar dele. Cada exportação fica registada.
+        </div>
+
+    </div>
+</div>
+{% endblock %}
