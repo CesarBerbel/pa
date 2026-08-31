@@ -875,14 +875,22 @@ class AvailabilityService:
         end_datetime,
         slot_minutes,
     ):
+        # A linha que **contém** o começo, e não a que lhe é igual. O mesmo
+        # que nas marcações: um bloqueio às 16:45 numa grelha de 30 minutos
+        # não acertava em linha nenhuma e ficava invisível, deixando as linhas
+        # seguintes a dizer que estavam ocupadas por nada que se visse.
+        slot_end = slot_start + timedelta(minutes=slot_minutes)
+
         for block in blocks:
             block_start = block.get_start_datetime_for_date(selected_date)
             block_end = block.get_end_datetime_for_date(selected_date)
 
-            if slot_start == block_start or (
+            if (slot_start <= block_start < slot_end) or (
                 block.is_full_day and slot_start == current_datetime
             ):
-                duration_minutes = int((block_end - block_start).total_seconds() / 60)
+                # Medido a partir do início da linha, para a altura do cartão
+                # cobrir as linhas que o bloqueio ocupa mesmo.
+                duration_minutes = int((block_end - slot_start).total_seconds() / 60)
 
                 if block.is_full_day:
                     duration_minutes = int(
@@ -910,13 +918,34 @@ class AvailabilityService:
 
     @classmethod
     def _mark_appointment_slot(cls, slot_data, appointments, slot_start, slot_minutes):
+        """Diz a que marcação pertence esta linha da grelha, se a alguma.
+
+        A linha de início é a que **contém** o começo da marcação, e não a que
+        lhe é exatamente igual. A diferença só aparece quando a hora não cai
+        na grelha — um encaixe às 16:45 com linhas de 30 minutos — e aí a
+        igualdade não acertava em linha nenhuma: a marcação desaparecia do
+        ecrã, a linha das 16:30 dizia "horário livre" com um botão de marcar
+        por cima de uma pessoa que já lá estava, e as linhas seguintes ficavam
+        a dizer "ocupado pelo atendimento acima" a apontar para um atendimento
+        que não se via em lado nenhum.
+        """
+
+        slot_end = slot_start + timedelta(minutes=slot_minutes)
+
         for appointment in appointments:
             appointment_start = appointment.get_start_datetime()
             appointment_end = appointment.get_end_datetime()
 
-            if slot_start == appointment_start:
+            if slot_start <= appointment_start < slot_end:
+                # Contado a partir do início da **linha** e não do da marcação:
+                # um encaixe às 16:45 de uma hora acaba às 17:45 e ocupa três
+                # linhas, não duas. Com a marcação alinhada à grelha dá o mesmo
+                # de sempre, que é o caso normal.
+                minutos_ate_ao_fim = int(
+                    (appointment_end - slot_start).total_seconds() / 60
+                )
                 block_slots = cls._duration_to_slot_count(
-                    appointment.service.duration_minutes,
+                    minutos_ate_ao_fim,
                     slot_minutes,
                 )
                 slot_data.update(
@@ -930,7 +959,7 @@ class AvailabilityService:
                 )
                 return
 
-            if slot_start > appointment_start and slot_start < appointment_end:
+            if appointment_start < slot_start < appointment_end:
                 slot_data["appointment"] = appointment
                 slot_data["is_inside_appointment"] = True
                 return
