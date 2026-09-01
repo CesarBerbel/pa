@@ -213,6 +213,17 @@ GOOGLE_REVIEWS_LANGUAGE = config("GOOGLE_REVIEWS_LANGUAGE", default="pt-PT").str
 
 GOOGLE_REQUEST_TIMEOUT = config("GOOGLE_REQUEST_TIMEOUT", default=10, cast=int)
 
+# Chave do Maps Embed API, para o mapa do rodape mostrar o cartao do
+# estabelecimento com a classificacao e as avaliacoes.
+#
+# **Nao e a mesma chave das avaliacoes.** Aquela e lida no servidor e nunca sai
+# daqui; esta vai escrita no HTML, a vista de quem abrir o codigo da pagina --
+# tem de ser restringida por dominio na consola da Google, e uma chave
+# restringida por IP nem sequer funcionaria no browser de quem visita o site.
+#
+# Sem ela, o rodape mostra o mapa simples de sempre.
+GOOGLE_MAPS_EMBED_API_KEY = config("GOOGLE_MAPS_EMBED_API_KEY", default="").strip()
+
 # Onde a clínica se desloca. As moradas sugeridas no formulário da marcação
 # ficam-se por aqui: uma lista com moradas do outro lado do mundo só
 # atrapalha quem escreve. Duas letras, no formato da norma ISO 3166-1.
@@ -346,6 +357,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "django.template.context_processors.i18n",
                 "config.context_processors.seo_settings",
+                "config.context_processors.map_settings",
                 "config.context_processors.instagram_settings",
                 "config.context_processors.language_alternates",
                 "config.context_processors.clinical_settings",

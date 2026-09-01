@@ -4,6 +4,7 @@ from django.conf import settings
 from django.urls import translate_url
 
 from appointments.models import TreatedCondition
+from config.maps import endereco_do_mapa
 from notifications.models import BeforeAfterCase
 
 
@@ -44,6 +45,21 @@ def seo_settings(request):
         "SEO_WHATSAPP_NUMBER": whatsapp_number,
         "SEO_WHATSAPP_DISPLAY": _format_pt_phone(whatsapp_number),
         "SEO_WHATSAPP_LINK": f"https://wa.me/{whatsapp_digits}?text={whatsapp_message}",
+    }
+
+
+def map_settings(request):
+    """O endereço do mapa do rodapé.
+
+    Um context processor porque o rodapé é do `base.html` e aparece em todas as
+    páginas: passá-lo view a view era repetir a mesma linha dezenas de vezes e
+    esquecê-la numa.
+    """
+
+    from django.utils import translation
+
+    return {
+        "GOOGLE_MAP_EMBED_URL": endereco_do_mapa(translation.get_language()),
     }
 
 
