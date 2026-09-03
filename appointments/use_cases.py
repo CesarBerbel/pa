@@ -39,25 +39,30 @@ def confirmation_event_for(appointment):
     return WhatsAppEventSetting.EVENT_APPOINTMENT_CONFIRMED
 
 
-def deliver_confirmation_message(appointment, *, send_email=True):
+def deliver_confirmation_message(appointment, *, send_email=True, override=None):
     """Manda à cliente a confirmação da marcação: email e WhatsApp.
 
     Existe à parte do caso de uso porque a confirmação deixou de vir sempre do
     mesmo sítio: uma marcação criada na área interna já nasce confirmada, e a
     mensagem que a cliente recebe tem de ser exatamente a mesma que receberia
     se alguém carregasse depois no botão de confirmar.
+
+    `override` é o que a janela de confirmação mudou — a língua, e o texto se
+    alguém o reescreveu. Vale para este envio e não é gravado.
     """
 
     if send_email:
         deliver_after_commit(
             send_appointment_confirmation_email,
             appointment,
+            override=override,
         )
 
     deliver_after_commit(
         notify_whatsapp,
         appointment,
         confirmation_event_for(appointment),
+        override=override,
     )
 
 
@@ -90,7 +95,13 @@ def deliver_completion_message(appointment):
 class ConfirmAppointmentUseCase:
     @staticmethod
     def execute(
-        *, appointment, user, send_email=True, send_whatsapp=True, send_message=True
+        *,
+        appointment,
+        user,
+        send_email=True,
+        send_whatsapp=True,
+        send_message=True,
+        override=None,
     ):
         """Confirma a marcação e, se assim for pedido, avisa a cliente.
 
@@ -163,7 +174,9 @@ class ConfirmAppointmentUseCase:
             )
 
             if send_message:
-                deliver_confirmation_message(appointment, send_email=send_email)
+                deliver_confirmation_message(
+                    appointment, send_email=send_email, override=override
+                )
 
         if not send_message:
             return UseCaseResult(

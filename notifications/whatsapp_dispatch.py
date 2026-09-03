@@ -101,7 +101,7 @@ def send_test(setting, recipient):
     return provider_module().send_test(setting, recipient)
 
 
-def preview(appointment, event_type):
+def preview(appointment, event_type, override=None):
     """O que sairia por WhatsApp para este acontecimento, sem enviar nada.
 
     Percorre as mesmas regras que o `notify` percorre e pede a cada fornecedor
@@ -135,8 +135,12 @@ def preview(appointment, event_type):
         try:
             destinatarios = resolve_recipients(regra, appointment)
             # A pré-visualização mostra o que a pessoa vai mesmo receber,
-            # incluindo a língua.
+            # incluindo a língua — e incluindo a língua escolhida na janela,
+            # senão trocar para inglês mostrava português e enviava inglês.
             lingua = audience_language(regra, appointment)
+
+            if override and regra.audience == regra.AUDIENCE_CUSTOMER:
+                lingua = override.language_or(lingua)
             texto = provider_module().build_body(
                 regra,
                 build_context(appointment, lingua),
@@ -158,6 +162,10 @@ def preview(appointment, event_type):
         mensagens.append(
             {
                 "audience": regra.get_audience_display(),
+                # A chave crua, e não a etiqueta traduzida: quem decide se isto
+                # se pode reescrever é o código, e comparar com "Cliente"
+                # partia-se assim que alguém renomeasse a etiqueta no admin.
+                "editable": regra.audience == regra.AUDIENCE_CUSTOMER,
                 "provider": "WhatsApp da clínica",
                 "to": destinatarios,
                 "body": texto,
@@ -167,11 +175,14 @@ def preview(appointment, event_type):
     return mensagens, avisos
 
 
-def notify(appointment, event_type):
+def notify(appointment, event_type, override=None):
     """Dispara todas as regras ativas para este acontecimento.
 
     Nunca levanta exceção: uma falha de envio não pode desfazer uma marcação
     que já foi gravada.
+
+    `override` é o texto e a língua que a janela de confirmação escolheu para
+    este envio, e vai até ao fornecedor sem passar por lado nenhum que grave.
     """
 
     if not MessagingSetting.whatsapp_enabled():
@@ -210,7 +221,9 @@ def notify(appointment, event_type):
             continue
 
         try:
-            resultado = provider_module().send_for_setting(appointment, regra)
+            resultado = provider_module().send_for_setting(
+                appointment, regra, override=override
+            )
         except Exception as erro:
             logger.exception("Erro inesperado a enviar %s", regra)
             houve_falha = True

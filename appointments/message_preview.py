@@ -59,8 +59,8 @@ class MessagePreview:
         }
 
 
-def _emails_da_confirmacao(appointment):
-    send_appointment_confirmation_email(appointment)
+def _emails_da_confirmacao(appointment, override=None):
+    send_appointment_confirmation_email(appointment, override=override)
 
 
 def _emails_da_conclusao(appointment):
@@ -99,8 +99,13 @@ def _emails_do_cancelamento(appointment, cancellation_reason):
     )
 
 
-def build_preview(appointment, action, cancellation_reason=""):
-    """As mensagens que esta ação faria sair, sem fazer sair nenhuma."""
+def build_preview(appointment, action, cancellation_reason="", override=None):
+    """As mensagens que esta ação faria sair, sem fazer sair nenhuma.
+
+    `override` é a escolha feita na janela — hoje, a língua. Passa por aqui
+    para que o que se lê no ecrã seja o que sai: mostrar português e enviar
+    inglês seria pior do que não mostrar nada.
+    """
 
     if action not in ACTIONS:
         raise ValueError(f"Ação desconhecida: {action}")
@@ -120,13 +125,22 @@ def build_preview(appointment, action, cancellation_reason=""):
 
     with capture_emails() as recolhidos:
         if action == ACTION_CONFIRM:
-            _emails_da_confirmacao(appointment)
+            _emails_da_confirmacao(appointment, override=override)
         elif action == ACTION_COMPLETE:
             _emails_da_conclusao(appointment)
         else:
             _emails_do_cancelamento(appointment, cancellation_reason)
 
     preview.emails = recolhidos
+
+    # Só a mensagem para a cliente se reescreve na janela. Um aviso interno
+    # para a profissional não é a mensagem que se esteve a rever no ecrã, e
+    # deixá-lo editável convidava a mudar o texto errado.
+    email_da_cliente = (getattr(appointment.customer, "email", "") or "").lower()
+
+    for mensagem in preview.emails:
+        destinos = [str(destino).lower() for destino in (mensagem.get("to") or [])]
+        mensagem["editable"] = bool(email_da_cliente and email_da_cliente in destinos)
 
     from notifications.models import MessagingSetting
 
@@ -136,7 +150,9 @@ def build_preview(appointment, action, cancellation_reason=""):
     elif not preview.emails and not appointment.customer.email:
         preview.notes.append("A cliente não tem email registado.")
 
-    preview.whatsapp, avisos = whatsapp_dispatch.preview(appointment, evento_whatsapp)
+    preview.whatsapp, avisos = whatsapp_dispatch.preview(
+        appointment, evento_whatsapp, override=override
+    )
     preview.notes.extend(avisos)
 
     return preview
