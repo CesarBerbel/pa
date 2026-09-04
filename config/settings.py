@@ -224,6 +224,16 @@ GOOGLE_REQUEST_TIMEOUT = config("GOOGLE_REQUEST_TIMEOUT", default=10, cast=int)
 # Sem ela, o rodape mostra o mapa simples de sempre.
 GOOGLE_MAPS_EMBED_API_KEY = config("GOOGLE_MAPS_EMBED_API_KEY", default="").strip()
 
+# Apagada nos testes, como a das avaliacoes -- mas por outra razao. Aquela e
+# para nao fazer chamadas externas; esta nao chama nada, e uma cadeia de texto
+# no HTML. O motivo aqui e a determinacao: com a chave no .env de quem corre os
+# testes, o rodape sai com o mapa do cartao; sem ela, com o mapa simples. A
+# mesma suite passava a dar resultados diferentes conforme a maquina, e foi
+# exatamente isso que aconteceu. Os testes do mapa ligam-na de volta com
+# override_settings e uma chave de mentira.
+if RUNNING_TESTS:
+    GOOGLE_MAPS_EMBED_API_KEY = ""
+
 # Onde a clínica se desloca. As moradas sugeridas no formulário da marcação
 # ficam-se por aqui: uma lista com moradas do outro lado do mundo só
 # atrapalha quem escreve. Duas letras, no formato da norma ISO 3166-1.

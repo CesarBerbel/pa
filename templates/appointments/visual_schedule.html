@@ -339,6 +339,22 @@
                         Limpar
                     </button>
 
+                    {# Marcar a partir da seleção, além de bloquear. O endereço #}
+                    {# é o mesmo do botão de cada linha: o que muda é que aqui #}
+                    {# a hora vem do primeiro horário escolhido. #}
+                    {# #}
+                    {# A hora vai escrita no botão de propósito. Com horários #}
+                    {# soltos — as 9:00 e as 15:00 — marcar no primeiro seria #}
+                    {# uma surpresa; dizendo qual é, deixa de ser. #}
+                    <a
+                        class="btn btn-outline-success"
+                        data-slot-book
+                        data-slot-book-url="{% url 'appointments:appointment_create' %}?date={{ selected_date|date:'Y-m-d' }}&amp;start_time="
+                        href="{% url 'appointments:appointment_create' %}?date={{ selected_date|date:'Y-m-d' }}"
+                    >
+                        Marcar
+                    </a>
+
                     <button type="submit" class="btn btn-danger">
                         <i class="bi bi-slash-circle me-1" aria-hidden="true"></i>
                         Bloquear
@@ -358,6 +374,10 @@
                         document.querySelectorAll("[data-slot-checkbox]")
                     );
                     var contador = form.querySelector("[data-slot-count]");
+                    var marcar = form.querySelector("[data-slot-book]");
+                    var baseDeMarcacao = marcar
+                        ? marcar.getAttribute("data-slot-book-url")
+                        : "";
 
                     function atualizar() {
                         var escolhidas = caixas.filter(function (caixa) {
@@ -382,6 +402,16 @@
 
                         if (emblema) {
                             emblema.textContent = escolhidas.length;
+                        }
+
+                        // As caixas estão no HTML por ordem de hora, por isso
+                        // a primeira escolhida é a mais cedo. Ordenar outra
+                        // vez seria confiar duas vezes na mesma coisa.
+                        if (marcar && escolhidas.length) {
+                            var inicio = escolhidas[0].value;
+
+                            marcar.setAttribute("href", baseDeMarcacao + inicio);
+                            marcar.textContent = "Marcar às " + inicio;
                         }
                     }
 
