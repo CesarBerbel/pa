@@ -135,7 +135,9 @@ worker é a pasta onde é servido.
 
 O conteúdo do catálogo vive na base e não passa por `gettext`: cada categoria e
 serviço tem campos `_en` próprios, com recurso ao português quando ficam vazios
-(`get_localized_value`).
+(`get_localized_value`). O mesmo vale para o que é escrito na área interna e
+sai no site — as páginas de condição tratada e o título e a legenda de cada
+caso antes e depois.
 
 ## Travões
 

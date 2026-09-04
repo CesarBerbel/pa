@@ -26,7 +26,7 @@
         <div class="ba-list" data-ba-list>
             {% for case in cases %}
                 <article class="ba-case">
-                    <h2 class="ba-case-title">{{ case.title }}</h2>
+                    <h2 class="ba-case-title">{{ case.display_title }}</h2>
 
                     {% comment %} A direção da linha é escolhida caso a caso, no
                        formulário: um pé fotografado ao comprido divide-se
@@ -48,7 +48,7 @@
                                 class="ba-img"
                                 style="{{ case.after_style }}"
                                 src="{{ case.after_image.url }}"
-                                alt="{% blocktranslate with titulo=case.title %}Depois — {{ titulo }}{% endblocktranslate %}"
+                                alt="{% blocktranslate with titulo=case.display_title %}Depois — {{ titulo }}{% endblocktranslate %}"
                                 loading="lazy"
                             >
                         </div>
@@ -58,7 +58,7 @@
                                 class="ba-img"
                                 style="{{ case.before_style }}"
                                 src="{{ case.before_image.url }}"
-                                alt="{% blocktranslate with titulo=case.title %}Antes — {{ titulo }}{% endblocktranslate %}"
+                                alt="{% blocktranslate with titulo=case.display_title %}Antes — {{ titulo }}{% endblocktranslate %}"
                                 loading="lazy"
                             >
                         </div>
@@ -88,8 +88,8 @@
                         >
                     </div>
 
-                    {% if case.caption %}
-                        <p class="ba-caption">{{ case.caption|linebreaksbr }}</p>
+                    {% if case.display_caption %}
+                        <p class="ba-caption">{{ case.display_caption|linebreaksbr }}</p>
                     {% endif %}
                 </article>
             {% endfor %}

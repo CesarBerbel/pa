@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Q
+from appointments.models import get_localized_value
 from notifications.images import resize_uploaded_image
 
 logger = logging.getLogger(__name__)
@@ -929,6 +930,23 @@ class BeforeAfterCase(models.Model):
         help_text="Texto que acompanha o par. Aparece por baixo das fotografias.",
     )
 
+    # O título e a legenda são escritos aqui, não no código, e por isso não
+    # passam pelo gettext: a página em /en/ mostrava a moldura em inglês e o
+    # texto de cada caso em português. Um campo por língua, como já acontece
+    # nas categorias, nos serviços e nas páginas de condição.
+    title_en = models.CharField(
+        "Título da foto (inglês)",
+        max_length=140,
+        blank=True,
+        help_text="Usado nas páginas em /en/. Se ficar vazio, mostra o título em português.",
+    )
+
+    caption_en = models.TextField(
+        "Legenda da foto (inglês)",
+        blank=True,
+        help_text="Usada nas páginas em /en/. Se ficar vazia, mostra a legenda em português.",
+    )
+
     before_image = models.ImageField(
         "Fotografia do antes",
         upload_to="antes-e-depois/",
@@ -1035,6 +1053,14 @@ class BeforeAfterCase(models.Model):
             "x": f"{getattr(self, f'{lado}_focus_x')}%",
             "y": f"{getattr(self, f'{lado}_focus_y')}%",
         }
+
+    @property
+    def display_title(self):
+        return get_localized_value(self.title, self.title_en)
+
+    @property
+    def display_caption(self):
+        return get_localized_value(self.caption, self.caption_en)
 
     @property
     def is_horizontal(self):

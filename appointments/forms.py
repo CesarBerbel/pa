@@ -115,6 +115,8 @@ class BeforeAfterCaseForm(forms.ModelForm):
         fields = [
             "title",
             "caption",
+            "title_en",
+            "caption_en",
             "before_image",
             "after_image",
             "reveal_orientation",

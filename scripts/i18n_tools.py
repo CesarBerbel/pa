@@ -129,18 +129,37 @@ def collect_messages() -> dict[str, list[str]]:
     return messages
 
 
-def parse_po(path: Path) -> dict[str, str]:
-    # Leitura tolerante: só precisamos dos pares msgid/msgstr já traduzidos.
+def parse_po(path: Path) -> dict:
+    """As entradas do catálogo, por original.
+
+    Uma entrada simples é `texto -> tradução`. Uma entrada com plural é
+    `(singular, plural) -> [forma 0, forma 1, ...]`: no `.mo` as duas metades
+    do original vivem na mesma chave, separadas por um zero, e é preciso
+    guardar as duas para lá chegar.
+
+    Leitura tolerante: interessa o que está traduzido, não validar o ficheiro.
+    """
+
     if not path.exists():
         return {}
 
-    catalog: dict[str, str] = {}
+    catalog: dict = {}
     current_key = None
+    current_plural = None
     current_target: list[str] = []
+    formas: list[str] = []
     collecting = None
 
     def flush():
-        if current_key is not None and collecting == "msgstr":
+        if current_key is None:
+            return
+
+        if current_plural is not None:
+            todas = formas + ["".join(current_target)] if collecting else formas
+
+            if any(todas):
+                catalog[(current_key, current_plural)] = todas
+        elif collecting == "msgstr":
             catalog[current_key] = "".join(current_target)
 
     for raw_line in path.read_text(encoding="utf-8").splitlines():
@@ -152,8 +171,21 @@ def parse_po(path: Path) -> dict[str, str]:
         if line.startswith("msgid "):
             flush()
             current_key = unquote_literal(line[len("msgid ") :].strip())
+            current_plural = None
             current_target = []
+            formas = []
             collecting = "msgid"
+        elif line.startswith("msgid_plural "):
+            current_plural = unquote_literal(line[len("msgid_plural ") :].strip())
+            collecting = "msgid_plural"
+        elif line.startswith("msgstr[") and "]" in line:
+            # Cada `msgstr[n]` fecha a forma anterior: são vizinhos no
+            # ficheiro e não há mais nada a separá-los.
+            if collecting == "msgstr":
+                formas.append("".join(current_target))
+
+            current_target = [unquote_literal(line.split("]", 1)[1].strip())]
+            collecting = "msgstr"
         elif line.startswith("msgstr "):
             current_target = [unquote_literal(line[len("msgstr ") :].strip())]
             collecting = "msgstr"
@@ -161,6 +193,8 @@ def parse_po(path: Path) -> dict[str, str]:
             chunk = unquote_literal(line)
             if collecting == "msgid":
                 current_key = (current_key or "") + chunk
+            elif collecting == "msgid_plural":
+                current_plural = (current_plural or "") + chunk
             else:
                 current_target.append(chunk)
 
@@ -182,7 +216,26 @@ def write_po(path: Path, language: str, messages: dict[str, list[str]], existing
         lines.append(f'msgstr "{escape_for_po(translation)}"')
         lines.append("")
 
-    obsolete = sorted(set(existing) - set(messages))
+    # As entradas com plural passam ao lado da extração: o que sai de um
+    # `blocktranslate` com `{% plural %}` é o corpo inteiro, e não o par
+    # singular/plural que o `.po` guarda. Voltam ao ficheiro como estavam,
+    # em vez de se perderem a cada extração.
+    plurais = sorted(chave for chave in existing if isinstance(chave, tuple))
+
+    for singular, plural in plurais:
+        lines.append(f'msgid "{escape_for_po(singular)}"')
+        lines.append(f'msgid_plural "{escape_for_po(plural)}"')
+
+        for indice, forma in enumerate(existing[(singular, plural)]):
+            lines.append(f'msgstr[{indice}] "{escape_for_po(forma)}"')
+
+        lines.append("")
+
+    obsolete = sorted(
+        text
+        for text in set(existing) - set(messages)
+        if isinstance(text, str)
+    )
 
     if obsolete:
         lines.append("# Entradas que já não aparecem no código:")
@@ -209,7 +262,17 @@ def build_mo(catalog: dict[str, str], language: str) -> bytes:
     entries = {b"": headers.encode("utf-8")}
 
     for text, translation in catalog.items():
-        if translation:
+        if not translation:
+            continue
+
+        # Uma entrada com plural guarda as duas metades do original — e as
+        # formas da tradução — numa chave só, separadas por um zero. É assim
+        # que o `ngettext` as encontra.
+        if isinstance(text, tuple):
+            entries["\x00".join(text).encode("utf-8")] = "\x00".join(
+                translation
+            ).encode("utf-8")
+        else:
             entries[text.encode("utf-8")] = translation.encode("utf-8")
 
     keys = sorted(entries)

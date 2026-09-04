@@ -4,14 +4,17 @@ import os
 import re
 import shutil
 import tempfile
+from importlib import import_module
 from io import BytesIO
 
+from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from PIL import Image
 
+from config.test_utils import ResetLanguageMixin
 from notifications.models import BeforeAfterCase
 
 MEDIA_DE_TESTE = tempfile.mkdtemp(prefix="pa-antes-depois-")
@@ -642,3 +645,157 @@ class BeforeAfterRevealOrientationTests(TestCase):
         caso = BeforeAfterCase.objects.get(title="Unha encravada")
 
         self.assertTrue(caso.is_horizontal)
+
+
+@override_settings(MEDIA_ROOT=MEDIA_DE_TESTE)
+class BeforeAfterEnglishTests(ResetLanguageMixin, TestCase):
+    """O título e a legenda de cada caso na página em /en/.
+
+    A moldura da página já saía traduzida pelo gettext, mas o texto de cada
+    par é escrito na área interna e vive na base de dados: sem campo próprio,
+    uma página inglesa de alto a baixo ficava com "Unha encravada" por cima
+    das fotografias.
+    """
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(MEDIA_DE_TESTE, ignore_errors=True)
+        super().tearDownClass()
+
+    def criar(self, **campos):
+        valores = {
+            "title": "Unha encravada",
+            "caption": "Duas semanas entre uma fotografia e a outra.",
+            "before_image": imagem("antes.jpg", "red"),
+            "after_image": imagem("depois.jpg", "green"),
+        }
+        valores.update(campos)
+
+        return BeforeAfterCase.objects.create(**valores)
+
+    def test_the_english_page_shows_the_english_title_and_caption(self):
+        self.criar(
+            title_en="Ingrown toenail",
+            caption_en="Two weeks between one photo and the other.",
+        )
+
+        html = self.client.get("/en/antes-e-depois/").content.decode()
+
+        self.assertIn("Ingrown toenail", html)
+        self.assertIn("Two weeks between one photo and the other.", html)
+        self.assertNotIn("Unha encravada", html)
+
+    def test_the_english_title_reaches_the_alt_text_of_both_photos(self):
+        # O texto alternativo é montado com o título: deixado em português,
+        # era o que um leitor de ecrã inglês ouvia.
+        self.criar(title_en="Ingrown toenail")
+
+        html = self.client.get("/en/antes-e-depois/").content.decode()
+
+        self.assertIn("alt=\"Before — Ingrown toenail\"", html)
+        self.assertIn("alt=\"After — Ingrown toenail\"", html)
+
+    def test_without_an_english_version_the_portuguese_still_shows(self):
+        # Meia tradução deixa a página meio traduzida, não meio em branco.
+        self.criar()
+
+        html = self.client.get("/en/antes-e-depois/").content.decode()
+
+        self.assertIn("Unha encravada", html)
+        self.assertIn("Duas semanas entre uma fotografia e a outra.", html)
+
+    def test_the_portuguese_page_ignores_the_english_fields(self):
+        self.criar(
+            title_en="Ingrown toenail",
+            caption_en="Two weeks between one photo and the other.",
+        )
+
+        html = self.client.get(
+            reverse("appointments:public_before_after")
+        ).content.decode()
+
+        self.assertIn("Unha encravada", html)
+        self.assertNotIn("Ingrown toenail", html)
+
+    def test_the_english_fields_are_on_the_internal_form(self):
+        User = get_user_model()
+        User.objects.create_superuser(
+            email="admin@test.com", password="testpass123", full_name="Admin"
+        )
+        self.client.login(email="admin@test.com", password="testpass123")
+
+        html = self.client.get(
+            reverse("appointments:before_after_create")
+        ).content.decode()
+
+        self.assertIn("name=\"title_en\"", html)
+        self.assertIn("name=\"caption_en\"", html)
+
+
+@override_settings(MEDIA_ROOT=MEDIA_DE_TESTE)
+class BeforeAfterSeededTranslationTests(TestCase):
+    """A migração que traduz os casos que já estavam publicados.
+
+    Os casos vivem na base de produção e não são criados por migração
+    nenhuma, portanto o que se prova aqui é a função: que traduz o que
+    reconhece e que não pisa o que já lá esteja escrito.
+    """
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(MEDIA_DE_TESTE, ignore_errors=True)
+        super().tearDownClass()
+
+    def migracao(self):
+        return import_module(
+            "notifications.migrations.0035_translate_before_after_cases"
+        )
+
+    def criar(self, **campos):
+        valores = {
+            "before_image": imagem("antes.jpg", "red"),
+            "after_image": imagem("depois.jpg", "green"),
+        }
+        valores.update(campos)
+
+        return BeforeAfterCase.objects.create(**valores)
+
+    def test_a_published_case_gets_its_english_version(self):
+        caso = self.criar(title="Unha encravada", caption="Oito meses assim.")
+
+        self.migracao().apply_translations(apps, None)
+        caso.refresh_from_db()
+
+        self.assertEqual(caso.title_en, "Ingrown toenail")
+        self.assertIn("8 months", caso.caption_en)
+
+    def test_the_title_is_matched_without_accents_or_case(self):
+        # O texto foi escrito à mão na área interna: a correspondência não
+        # pode depender de como lá ficou.
+        caso = self.criar(title="CALO COM NÚCLEO", caption="Dor ao calçar.")
+
+        self.migracao().apply_translations(apps, None)
+        caso.refresh_from_db()
+
+        self.assertEqual(caso.title_en, "Callus with a core")
+
+    def test_a_translation_typed_by_hand_survives(self):
+        caso = self.criar(
+            title="Unha encravada",
+            caption="Oito meses assim.",
+            title_en="Ingrown nail",
+        )
+
+        self.migracao().apply_translations(apps, None)
+        caso.refresh_from_db()
+
+        self.assertEqual(caso.title_en, "Ingrown nail")
+
+    def test_a_case_the_migration_does_not_know_is_left_alone(self):
+        caso = self.criar(title="Caso novo", caption="Escrito depois.")
+
+        self.migracao().apply_translations(apps, None)
+        caso.refresh_from_db()
+
+        self.assertEqual(caso.title_en, "")
+        self.assertEqual(caso.caption_en, "")

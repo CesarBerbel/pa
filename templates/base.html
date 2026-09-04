@@ -473,12 +473,26 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <div class="footer-hours">
                             <h4>{% translate "Horário de funcionamento" %}</h4>
 
-                            {% for linha in OPENING_HOURS %}
-                                <p>
-                                    {{ linha.days }}:
-                                    {% for periodo in linha.periods %}{% if not forloop.first %} {% translate "e" %} {% endif %}{{ periodo }}{% endfor %}
-                                </p>
-                            {% endfor %}
+                            {# A semana toda, um dia por linha. Só os dias #}
+                            {# abertos deixavam a coluna com duas linhas ao #}
+                            {# lado de um mapa com o triplo da altura, e #}
+                            {# obrigavam quem procura o domingo a concluí-lo #}
+                            {# pela ausência. #}
+                            <ul class="footer-hours-list">
+                                {% for linha in OPENING_HOURS %}
+                                    <li{% if linha.closed %} class="is-closed"{% endif %}>
+                                        <span class="footer-hours-day">{{ linha.day }}</span>
+
+                                        <span class="footer-hours-time">
+                                            {% if linha.closed %}
+                                                {% translate "Encerrado" %}
+                                            {% else %}
+                                                {% for periodo in linha.periods %}{% if not forloop.first %} {% translate "e" %} {% endif %}<span class="footer-hours-period">{{ periodo }}</span>{% endfor %}
+                                            {% endif %}
+                                        </span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
                         </div>
                     {% endif %}
                 </div>
@@ -807,15 +821,28 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // Distância ao topo do documento, e não `offsetTop` — esse conta a
+    // partir do antepassado posicionado mais próximo, e o rodapé e as
+    // secções não têm o mesmo.
+    function distanciaAoTopo(elemento) {
+        return elemento.getBoundingClientRect().top + window.scrollY;
+    }
+
     function setActiveSection() {
-        const scrollPosition = window.scrollY + 260;
+        const linha = window.scrollY + 260;
         let activeSection = null;
+        let topoDaAtiva = -1;
 
         sections.forEach(function (section) {
-            const sectionTop = section.element.offsetTop;
+            const topo = distanciaAoTopo(section.element);
 
-            if (scrollPosition >= sectionTop) {
+            // A mais abaixo de todas as que já passaram a linha. Comparar os
+            // topos e não ficar com a última do ciclo: a lista vem pela ordem
+            // do menu — Marcação primeiro —, que não é a ordem da página, e
+            // assim a partir de "Sobre" ficava sempre aceso o item errado.
+            if (topo <= linha && topo >= topoDaAtiva) {
                 activeSection = section;
+                topoDaAtiva = topo;
             }
         });
 
@@ -825,6 +852,19 @@ document.addEventListener("DOMContentLoaded", function () {
             activeSection.link.classList.add("is-active");
         }
     }
+
+    // No telemóvel o menu abre por cima da página e nada o fechava: tocar
+    // numa secção rolava até lá por trás do menu aberto, e quem tocou ficava
+    // a olhar para o menu sem perceber que já tinha chegado.
+    const menu = document.getElementById("mainNavbar");
+
+    links.forEach(function (link) {
+        link.addEventListener("click", function () {
+            if (menu && menu.classList.contains("show")) {
+                bootstrap.Collapse.getOrCreateInstance(menu).hide();
+            }
+        });
+    });
 
     window.addEventListener("scroll", setActiveSection);
     window.addEventListener("resize", setActiveSection);

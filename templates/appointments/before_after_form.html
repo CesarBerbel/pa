@@ -25,6 +25,24 @@
                     {{ form.title|as_crispy_field }}
                     {{ form.caption|as_crispy_field }}
 
+                    {# Fechado por omissão: a maior parte das visitas a este #}
+                    {# ecrã é para mexer no português, e dois campos abertos #}
+                    {# que ninguém vai usar afastam o enquadramento do topo. #}
+                    <details class="mb-3">
+                        <summary style="cursor: pointer;">
+                            <span class="text-uppercase text-muted small">Versão inglesa</span>
+                        </summary>
+
+                        <p class="text-muted small mt-2 mb-3">
+                            Servida em <code>/en/</code>. Cada campo que ficar
+                            vazio mostra o português — uma tradução feita a meio
+                            deixa a página meio traduzida, não meio em branco.
+                        </p>
+
+                        {{ form.title_en|as_crispy_field }}
+                        {{ form.caption_en|as_crispy_field }}
+                    </details>
+
                     <div class="ba-editor-grid">
                         {% for lado in framing_sides %}
                             <div class="ba-editor" data-ba-editor data-side="{{ lado.name }}">

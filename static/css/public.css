@@ -1670,10 +1670,6 @@ html {
     }
 }
 
-section[id] {
-    scroll-margin-top: 96px;
-}
-
 /* ======================
    TRUST STRIP
 ====================== */
@@ -1844,6 +1840,59 @@ section[id] {
     border-top: 1px solid #f1d5db;
 }
 
+/* Uma linha por dia, o dia à esquerda e as horas encostadas à direita. A
+   semana lê-se de relance quando as horas caem todas na mesma margem —
+   procurar o sábado é descer a coluna, não ler sete frases. */
+.footer-hours-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.footer-hours-list li {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 7px 0;
+    border-bottom: 1px solid #faeef1;
+    color: #6b6b6b;
+    line-height: 1.6;
+}
+
+.footer-hours-list li:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+.footer-hours-day {
+    color: #2b2b2b;
+    font-weight: 500;
+}
+
+/* `tabular-nums`: com os algarismos todos da mesma largura, os dois pontos
+   das horas ficam uns por cima dos outros. É o que faz a coluna parecer
+   alinhada em vez de quase alinhada. */
+.footer-hours-time {
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+/* Um dia com pausa tem dois períodos, e num ecrã estreito a linha parte-se.
+   Que se parta entre os dois e nunca dentro de um: "08:00 —" numa linha e
+   "12:00" na seguinte não é uma hora, são dois números perdidos. */
+.footer-hours-period {
+    white-space: nowrap;
+}
+
+/* O dia fechado fica na lista — é isso que responde à pergunta — mas sem o
+   peso de um dia em que se atende. */
+.footer-hours-list .is-closed,
+.footer-hours-list .is-closed .footer-hours-day {
+    color: #a99ba1;
+    font-weight: 400;
+}
+
 .footer-hours h4,
 .footer-info-panel h4 {
     font-family: 'Playfair Display', serif;
@@ -1878,17 +1927,27 @@ section[id] {
     margin-top: 18px;
 }
 
+/* A mesma caixa dos cartões de avaliação — fundo branco, a mesma linha e o
+   mesmo raio. Solto no rodapé, o mapa lia-se como um remate da página; dentro
+   da caixa lê-se como o cartão do sítio, ao lado dos contactos. */
 .footer-map {
-    overflow: hidden;
-    border-radius: 24px;
+    background: #ffffff;
     border: 1px solid #f1d5db;
-    min-height: 220px;
+    border-radius: 20px;
+    padding: 14px;
 }
 
+/* A altura é o que faz aparecer o cartão do estabelecimento — nome, estrelas
+   e número de avaliações — que o `place` do Maps Embed API traz. Não é uma
+   opção do endereço: é o próprio Google que o esconde quando o `iframe` é
+   baixo demais, e nos 240px de antes nunca chegava a caber. */
 .footer-map iframe {
     width: 100%;
-    height: 240px;
+    height: 360px;
     border: 0;
+    /* O recorte vive aqui e não num `overflow` na caixa: com a caixa a ter
+       agora espaço à volta, era o `iframe` que ficava de cantos direitos. */
+    border-radius: 12px;
     display: block;
     filter: saturate(0.85) contrast(0.95);
 }
@@ -1930,6 +1989,9 @@ html {
     scroll-behavior: smooth;
 }
 
+/* A barra de cima é `sticky`: sem esta folga, saltar para uma âncora
+   deixava o título da secção escondido por trás dela. 110px é a barra mais
+   alta — 60 de logótipo, 12 de espaço de cada lado — e mais uma respiração. */
 section[id],
 footer[id] {
     scroll-margin-top: 110px;
@@ -3656,6 +3718,15 @@ footer[id] {
     color: #6b5a54;
     line-height: 1.6;
     margin-bottom: 14px;
+}
+
+/* Escrito aqui e não junto ao rodapé: é depois da regra genérica que ganha
+   sem depender da especificidade. Dentro da caixa do mapa, o aviso ocupa o
+   lugar exato do `iframe` que substitui — o mesmo recorte e a mesma altura,
+   para o rodapé não dar um salto quando alguém aceita os cookies. */
+.footer-map .cookie-map-placeholder {
+    border-radius: 12px;
+    min-height: 360px;
 }
 
 .cookie-consent-banner {

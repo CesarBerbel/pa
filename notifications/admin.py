@@ -414,5 +414,5 @@ class BeforeAfterCaseAdmin(admin.ModelAdmin):
 
     list_display = ("title", "display_order", "is_active", "updated_at")
     list_filter = ("is_active",)
-    search_fields = ("title", "caption")
+    search_fields = ("title", "caption", "title_en", "caption_en")
     ordering = ("display_order", "-created_at")

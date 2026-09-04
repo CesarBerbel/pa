@@ -539,6 +539,10 @@ msgstr "In consumer matters, the client may also turn to alternative dispute res
 msgid "Email:"
 msgstr "Email:"
 
+#: templates/base.html
+msgid "Encerrado"
+msgstr "Closed"
+
 #: templates/home.html:377
 msgid "Enfermagem"
 msgstr "Nursing"

@@ -10,10 +10,13 @@ O que aqui se guarda são três coisas que não dão erro quando estão erradas:
 """
 
 import re
+from pathlib import Path
 
+from django.conf import settings
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
+from appointments.tests.css_cascade import Stylesheet
 from config.maps import MAPA_SIMPLES, endereco_do_mapa
 
 CHAVE = "chave-de-mentira-do-embed"
@@ -106,3 +109,54 @@ class WhatReachesThePageTests(TestCase):
 
         self.assertNotContains(resposta, "chave-do-servidor-que-nao-pode-sair")
         self.assertContains(resposta, CHAVE)
+
+
+class TheBoxAroundItTests(TestCase):
+    """A caixa do mapa no rodapé.
+
+    O endereço pede o cartão do estabelecimento — nome, estrelas e número de
+    avaliações —, mas quem decide mostrá-lo é o Google, e num `iframe` baixo
+    demais esconde-o. Pedir o cartão e não lhe dar altura era ficar na mesma
+    com o pino de sempre.
+    """
+
+    #: Abaixo disto o Google deixa de desenhar o cartão.
+    ALTURA_MINIMA = 300
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+
+        caminho = Path(settings.BASE_DIR) / "static" / "css" / "public.css"
+        cls.folha = Stylesheet(caminho.read_text(encoding="utf-8"))
+
+    def altura(self, largura):
+        return self.folha.resolve(".footer-map iframe", "height", largura)
+
+    def test_the_map_is_tall_enough_for_the_card(self):
+        for largura in (390, 1280):
+            with self.subTest(largura=largura):
+                altura = self.altura(largura)
+
+                self.assertIsNotNone(altura, "o mapa ficou sem altura")
+                self.assertGreaterEqual(
+                    int(altura.removesuffix("px")),
+                    self.ALTURA_MINIMA,
+                )
+
+    def test_the_box_matches_the_review_cards(self):
+        # O mesmo fundo, a mesma linha e o mesmo raio dos cartões de
+        # avaliação: solto no rodapé, o mapa lia-se como um remate da página.
+        for propriedade in ("background", "border", "border-radius"):
+            with self.subTest(propriedade=propriedade):
+                self.assertEqual(
+                    self.folha.resolve(".footer-map", propriedade, 1280),
+                    self.folha.resolve(".review-card", propriedade, 1280),
+                )
+
+    def test_the_map_itself_keeps_rounded_corners(self):
+        # A caixa passou a ter espaço à volta: sem raio próprio, o `iframe`
+        # ficava de cantos direitos dentro de uma caixa redonda.
+        self.assertIsNotNone(
+            self.folha.resolve(".footer-map iframe", "border-radius", 1280)
+        )
