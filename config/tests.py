@@ -3,9 +3,9 @@ import re
 
 from django.conf import settings
 from django.test import TestCase, override_settings
+from django.urls import reverse
 
 from config.test_utils import ResetLanguageMixin
-from django.urls import reverse
 
 
 class HomePageTests(ResetLanguageMixin, TestCase):
@@ -92,14 +92,33 @@ class HomePageTests(ResetLanguageMixin, TestCase):
         self.assertNotIn("footer-cookie-link", html)
 
     def test_the_instagram_widget_waits_for_cookie_consent(self):
-        # O widget da Elfsight é JavaScript de terceiros: não pode ser pedido
+        # O widget da Curator é JavaScript de terceiros: não pode ser pedido
         # antes de a pessoa aceitar cookies funcionais. Uma tag <script> com o
         # endereço no HTML corria sempre, e é isso que este teste impede.
         html = self.client.get(reverse("home")).content.decode()
 
-        self.assertIn("elfsight-app-", html)
-        self.assertNotIn('<script src="https://elfsightcdn.com', html)
+        self.assertIn("curator-feed-default-feed-layout", html)
         self.assertIn("instagram-cookie-placeholder", html)
+
+        # O endereço só pode aparecer dentro do JavaScript que espera pelo
+        # consentimento, nunca como `src` de uma tag que o browser segue
+        # sozinho. Procurado por `src="`, e não pelo domínio: é a forma que
+        # faz o pedido sair, e a que tem de continuar ausente.
+        self.assertNotIn('src="https://cdn.curator.io', html)
+
+    def test_the_feed_keeps_the_attribution_the_plan_requires(self):
+        # A ligação "Powered by Curator.io" é condição do plano. Fica dentro
+        # do bloco escondido porque sem consentimento não há feed nenhum para
+        # creditar — mas tem de existir no HTML, senão desaparece de vez.
+        html = self.client.get(reverse("home")).content.decode()
+
+        self.assertIn("Powered by Curator.io", html)
+
+    def test_no_trace_of_the_previous_widget_is_left(self):
+        # Trocar de fornecedor e deixar o antigo para trás era pedir os dois.
+        html = self.client.get(reverse("home")).content.decode()
+
+        self.assertNotIn("elfsight", html.lower())
 
     def test_external_links_are_safe(self):
         # target="_blank" sem rel deixaria a página aberta ao window.opener.

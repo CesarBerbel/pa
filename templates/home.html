@@ -767,10 +767,17 @@
             </div>
         </div>
 
-        <div class="elfsight-app-7c1bad08-f8a9-41c4-88cb-df35cd29c808" data-elfsight-app-lazy hidden></div>
+        {# O `<a>` da Curator é exigido pelo plano deles e é o próprio widget #}
+        {# que o substitui quando carrega. Fica dentro do `div` escondido: #}
+        {# sem consentimento não há feed nenhum para creditar. #}
+        <div id="curator-feed-default-feed-layout" hidden>
+            <a href="https://curator.io" target="_blank" rel="noopener noreferrer" class="crt-logo crt-tag">
+                Powered by Curator.io
+            </a>
+        </div>
 
         <script>
-            // O widget da Elfsight traz JavaScript de terceiros que põe cookies
+            // O widget da Curator traz JavaScript de terceiros que põe cookies
             // e contacta os servidores deles. O mapa do rodapé é travado da
             // mesma maneira: sem consentimento funcional, não se carrega nada.
             //
@@ -778,8 +785,8 @@
             // `src` (iframes). Um <script> não serve: uma vez no documento sem
             // `src`, dar-lhe um depois já não o faz correr. Daí criá-lo aqui.
             (function () {
-                const FONTE = "https://elfsightcdn.com/platform.js";
-                const widget = document.querySelector(".elfsight-app-7c1bad08-f8a9-41c4-88cb-df35cd29c808");
+                const FONTE = "https://cdn.curator.io/published/f44359db-c781-4327-8123-ffa40f927c3b.js";
+                const widget = document.getElementById("curator-feed-default-feed-layout");
                 const aviso = document.getElementById("instagram-cookie-placeholder");
                 let pedido = false;
 
@@ -798,9 +805,14 @@
                     // isso é preciso recarregar a página, e o aviso volta.
                     pedido = true;
 
+                    // O snippet da Curator insere-se antes do primeiro
+                    // <script> da página. Aqui vai para o <head>, que é o
+                    // mesmo efeito e não depende de haver outro <script> no
+                    // documento.
                     const script = document.createElement("script");
                     script.src = FONTE;
                     script.async = true;
+                    script.charset = "UTF-8";
                     document.head.appendChild(script);
                 }
 

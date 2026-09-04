@@ -1,8 +1,20 @@
+import re
+
 from django.test import TestCase
 
+from appointments.models import Service, ServiceCategory
 from config.test_utils import ResetLanguageMixin
 
-from appointments.models import Service, ServiceCategory
+# O preço é desenhado dentro de `service-public-meta`, e é só aí que a bandeira
+# `show_prices` manda. Procurar "15 €" na página inteira apanhava também as
+# descrições — e uma delas passou a dizer "Entre 15 € e 20 €", o que pôs o
+# teste a falhar por causa de um texto que nunca foi um preço.
+METAS = re.compile(r'<div class="service-public-meta">(.*?)</div>', re.S)
+VALOR = re.compile(r"\d+(?:,\d+)?\s*€")
+
+
+def precos_desenhados(html):
+    return [valor for bloco in METAS.findall(html) for valor in VALOR.findall(bloco)]
 
 
 class PublicPriceVisibilityTests(ResetLanguageMixin, TestCase):
@@ -23,10 +35,13 @@ class PublicPriceVisibilityTests(ResetLanguageMixin, TestCase):
         html = response.content.decode()
 
         self.assertEqual(response.status_code, 200)
+
+        desenhados = precos_desenhados(html)
+
         # Avaliação em Podologia: 15 €
-        self.assertIn("15 €", html)
+        self.assertIn("15 €", desenhados)
         # Verruga plantar – protocolo inicial (5 sessões): 250 €
-        self.assertIn("250 €", html)
+        self.assertIn("250 €", desenhados)
 
     def test_service_feed_keeps_price_on_request_for_other_categories(self):
         response = self.client.get("/servicos/feed/")
@@ -46,8 +61,10 @@ class PublicPriceVisibilityTests(ResetLanguageMixin, TestCase):
         response = self.client.get("/servicos/feed/")
         html = response.content.decode()
 
-        self.assertNotIn("15 €", html)
-        self.assertNotIn("250 €", html)
+        # Nenhum valor onde os preços se desenham. Uma descrição que fale de
+        # dinheiro — "Entre 15 € e 20 €" — é texto escrito de propósito e não
+        # um preço publicado por engano, que é o que esta bandeira trava.
+        self.assertEqual(precos_desenhados(html), [])
 
     def test_prices_are_whole_numbers_without_trailing_decimals(self):
         # floatformat:"-2" keeps decimals only when they exist, so a 15.00 price
