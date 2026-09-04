@@ -219,11 +219,16 @@ def _record(appointment, setting, recipient, status, payload, response, error=""
         return None
 
 
-def send_for_setting(appointment, setting, force=False):
+def send_for_setting(appointment, setting, force=False, override=None):
     """Envia esta regra para todos os destinatários dela.
 
     Com `force`, repete um envio que já tinha corrido bem. É o que o botão de
     envio manual precisa: quem carrega nele quer que a mensagem saia outra vez.
+
+    `override` é o que a janela de confirmação mudou para este envio. Só se
+    aplica às regras que falam com a cliente: o aviso interno à profissional
+    sai sempre como está escrito, em português, porque quem o lê é sempre a
+    mesma pessoa e não foi essa a mensagem que alguém esteve a rever no ecrã.
     """
 
     destinatarios = resolve_recipients(setting, appointment)
@@ -234,9 +239,18 @@ def send_for_setting(appointment, setting, force=False):
             message=f"{setting}: nenhum número válido para enviar.",
         )
 
+    para_a_cliente = setting.audience == setting.AUDIENCE_CUSTOMER
+    manda_no_texto = bool(override and para_a_cliente)
+
     lingua = audience_language(setting, appointment)
 
-    texto = build_body(setting, build_context(appointment, lingua), language=lingua)
+    if manda_no_texto:
+        lingua = override.language_or(lingua)
+
+    if manda_no_texto and override.whatsapp_body:
+        texto = override.whatsapp_body
+    else:
+        texto = build_body(setting, build_context(appointment, lingua), language=lingua)
 
     if not texto:
         return SendResult(

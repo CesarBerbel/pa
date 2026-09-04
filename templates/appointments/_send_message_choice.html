@@ -21,11 +21,33 @@
                 {# abre, e não com a página: numa lista de oito marcações,     #}
                 {# seriam oito pré-visualizações que ninguém pediu.            #}
                 <div data-choice-preview hidden>
-                    <h3 class="text-uppercase text-muted small mb-2">
-                        O que a cliente recebe
-                    </h3>
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                        <h3 class="text-uppercase text-muted small mb-0">
+                            O que a cliente recebe
+                        </h3>
 
-                    <div class="send-message-preview mb-3" data-preview-body></div>
+                        {# A língua é desta mensagem e não da cliente: escolher #}
+                        {# inglês aqui não lhe mexe na ficha. Quem quer mudar   #}
+                        {# isso para sempre muda-o lá, que é onde dura.         #}
+                        <div class="btn-group btn-group-sm" role="group"
+                             aria-label="Língua da mensagem" data-choice-language hidden>
+                            <input type="radio" class="btn-check" name="message-language"
+                                   id="message-language-pt" value="pt-pt" checked>
+                            <label class="btn btn-outline-secondary" for="message-language-pt">PT</label>
+
+                            <input type="radio" class="btn-check" name="message-language"
+                                   id="message-language-en" value="en">
+                            <label class="btn btn-outline-secondary" for="message-language-en">EN</label>
+                        </div>
+                    </div>
+
+                    <div class="send-message-preview mb-2" data-preview-body></div>
+
+                    <p class="text-muted small mb-3" data-choice-edit-note hidden>
+                        Pode reescrever o texto antes de enviar. A alteração vale
+                        só para esta mensagem — o modelo fica como está. Trocar de
+                        língua recarrega o texto e descarta o que estiver escrito.
+                    </p>
                 </div>
 
                 {# O retorno pergunta-se aqui porque é aqui que se está: o fim  #}
@@ -186,6 +208,29 @@
         color: #8a6d1f;
         margin: 0;
     }
+
+    /* O campo editável fica com o mesmo aspeto do texto que substitui: quem
+       está a rever a mensagem não deve sentir que mudou de ecrã ao clicar. */
+    .send-message-preview-edit {
+        width: 100%;
+        border: 1px solid #e2d3d9;
+        border-radius: 8px;
+        background: #ffffff;
+        padding: 8px 10px;
+        margin-top: 4px;
+        font: inherit;
+        font-size: 13px;
+        line-height: 1.5;
+        color: #5b4a52;
+        resize: vertical;
+        min-height: 96px;
+    }
+
+    .send-message-preview-edit:focus {
+        outline: 2px solid #8b5e66;
+        outline-offset: 1px;
+        border-color: transparent;
+    }
 </style>
 
 <script>
@@ -212,6 +257,28 @@
         var dataRetorno = janela.querySelector("[data-return-date]");
         var horaRetorno = janela.querySelector("[data-return-time]");
         var caixaHorario = janela.querySelector("[data-return-slot-box]");
+        var caixaLingua = janela.querySelector("[data-choice-language]");
+        var linguas = janela.querySelectorAll("[name='message-language']");
+        var notaEdicao = janela.querySelector("[data-choice-edit-note]");
+
+        // Reescrever a mensagem só se oferece na confirmação: é aí que alguém
+        // está a falar com a cliente sobre uma marcação que acabou de aceitar.
+        // Ler a ação em vez de exigir um atributo novo em cada formulário faz
+        // com que qualquer botão de confirmar, esteja onde estiver, apanhe
+        // isto sem ninguém se lembrar de o marcar.
+        function deixaEditar(form) {
+            return !!form && form.dataset.previewAction === "confirm";
+        }
+
+        function linguaEscolhida() {
+            for (var i = 0; i < linguas.length; i += 1) {
+                if (linguas[i].checked) {
+                    return linguas[i].value;
+                }
+            }
+
+            return "pt-pt";
+        }
 
         function modoEscolhido() {
             for (var i = 0; i < modosRetorno.length; i += 1) {
@@ -238,6 +305,18 @@
         Array.prototype.forEach.call(modosRetorno, function (opcao) {
             opcao.addEventListener("change", mostrarCaixaDoModo);
         });
+
+        Array.prototype.forEach.call(linguas, function (opcao) {
+            opcao.addEventListener("change", function () {
+                // O texto vem do servidor já na língua certa. Recarregar é a
+                // única forma de o mostrar traduzido — e o que estiver escrito
+                // à mão perde-se, porque foi escrito sobre outro texto. A nota
+                // por baixo do editor avisa disso antes de acontecer.
+                if (pendente) {
+                    carregarPrevia(pendente);
+                }
+            });
+        });
         var pendente = null;
         var pedidoPrevia = 0;
 
@@ -250,6 +329,29 @@
         function desenharPrevia(dados) {
             var partes = [];
 
+            // `editar` diz se esta janela permite reescrever; `editable`,
+            // que vem do servidor, diz se ESTA mensagem é a da cliente. As
+            // duas têm de ser verdade.
+            var editar = deixaEditar(pendente);
+
+            function corpo(texto, campo, editavel) {
+                if (!editar || !editavel) {
+                    return (
+                        '<p class="send-message-preview-body">' +
+                        escapar(texto) +
+                        "</p>"
+                    );
+                }
+
+                return (
+                    '<textarea class="send-message-preview-edit" data-edit="' +
+                    campo +
+                    '" aria-label="Texto da mensagem">' +
+                    escapar(texto) +
+                    "</textarea>"
+                );
+            }
+
             (dados.emails || []).forEach(function (email) {
                 partes.push(
                     '<div class="send-message-preview-item">' +
@@ -259,9 +361,7 @@
                         '<div class="send-message-preview-subject">' +
                         escapar(email.subject) +
                         "</div>" +
-                        '<p class="send-message-preview-body">' +
-                        escapar(email.body) +
-                        "</p>" +
+                        corpo(email.body, "email", email.editable) +
                         "</div>"
                 );
             });
@@ -274,9 +374,7 @@
                         ") para " +
                         escapar((mensagem.to || []).join(", ")) +
                         "</span>" +
-                        '<p class="send-message-preview-body">' +
-                        escapar(mensagem.body) +
-                        "</p>" +
+                        corpo(mensagem.body, "whatsapp", mensagem.editable) +
                         "</div>"
                 );
             });
@@ -326,6 +424,7 @@
                 : new FormData();
 
             dados.append("acao", form.dataset.previewAction || "");
+            dados.append("message_language", linguaEscolhida());
             dados.append(
                 "csrfmiddlewaretoken",
                 (form.querySelector("[name=csrfmiddlewaretoken]") || {}).value || ""
@@ -440,10 +539,69 @@
                     }
                 });
 
+                var podeEditar = deixaEditar(form);
+
+                if (caixaLingua) {
+                    caixaLingua.hidden = !podeEditar;
+                }
+
+                if (notaEdicao) {
+                    notaEdicao.hidden = !podeEditar;
+                }
+
+                // Cada abertura começa em português, que é a língua da casa.
+                // Herdar a escolha da marcação anterior mandaria inglês a uma
+                // cliente portuguesa sem ninguém ter pedido.
+                Array.prototype.forEach.call(linguas, function (opcao) {
+                    opcao.checked = opcao.value === "pt-pt";
+                });
+
                 carregarPrevia(form);
                 escolha.show();
             });
         });
+
+        function guardarMensagem(form) {
+            // A janela vive fora do formulário: o que se escreve aqui não é
+            // submetido por si. Os campos são criados agora, e não pedidos a
+            // cada template, para qualquer botão de confirmar os ganhar sem
+            // ninguém ter de se lembrar de os acrescentar.
+            function escrever(nome, valor) {
+                var campo = form.querySelector("[name='" + nome + "']");
+
+                if (!campo) {
+                    campo = document.createElement("input");
+                    campo.type = "hidden";
+                    campo.name = nome;
+                    form.appendChild(campo);
+                }
+
+                campo.value = valor;
+            }
+
+            if (!deixaEditar(form)) {
+                return;
+            }
+
+            escrever("message_language", linguaEscolhida());
+
+            // Só vai o que foi mesmo mudado. Reenviar o texto tal como veio
+            // faria o envio passar pelo caminho do texto reescrito sem razão
+            // nenhuma, e um espaço a mais numa caixa passava a ser uma
+            // mensagem "editada".
+            var editaveis = janela.querySelectorAll("[data-edit]");
+
+            Array.prototype.forEach.call(editaveis, function (caixa) {
+                // `defaultValue` de um textarea é o texto com que ele nasceu,
+                // ou seja o que o servidor mandou. Diferente disso é edição.
+                var mudou = caixa.value !== caixa.defaultValue;
+
+                escrever(
+                    "message_" + caixa.dataset.edit + "_body",
+                    mudou ? caixa.value : ""
+                );
+            });
+        }
 
         function guardarRetorno(form) {
             // A janela vive fora do formulário, portanto o que se escolhe aqui
@@ -495,6 +653,7 @@
                     campo.value = botao.dataset.sendChoice;
                 }
 
+                guardarMensagem(pendente);
                 guardarRetorno(pendente);
 
                 Array.prototype.forEach.call(botoes, function (outro) {

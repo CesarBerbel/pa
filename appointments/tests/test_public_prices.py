@@ -25,8 +25,8 @@ class PublicPriceVisibilityTests(ResetLanguageMixin, TestCase):
         self.assertEqual(response.status_code, 200)
         # Avaliação em Podologia: 15 €
         self.assertIn("15 €", html)
-        # Pacote ILIB: 270 €
-        self.assertIn("270 €", html)
+        # Verruga plantar – protocolo inicial (5 sessões): 250 €
+        self.assertIn("250 €", html)
 
     def test_service_feed_keeps_price_on_request_for_other_categories(self):
         response = self.client.get("/servicos/feed/")
@@ -47,7 +47,7 @@ class PublicPriceVisibilityTests(ResetLanguageMixin, TestCase):
         html = response.content.decode()
 
         self.assertNotIn("15 €", html)
-        self.assertNotIn("270 €", html)
+        self.assertNotIn("250 €", html)
 
     def test_prices_are_whole_numbers_without_trailing_decimals(self):
         # floatformat:"-2" keeps decimals only when they exist, so a 15.00 price
@@ -78,4 +78,4 @@ class PublicPriceVisibilityTests(ResetLanguageMixin, TestCase):
         ):
             self.assertIn(service.display_name, html)
 
-        self.assertEqual(expected, 14)
+        self.assertEqual(expected, 16)

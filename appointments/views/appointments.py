@@ -27,6 +27,7 @@ from django.views.generic import (
 
 from appointments.audit_services import AppointmentAuditService
 from appointments import address_lookup
+from appointments.message_override import MessageOverride, language_from_request
 from appointments.message_preview import ACTION_CONFIRM, build_preview
 from appointments import return_services
 from appointments.phone_form_field import PhoneField
@@ -870,6 +871,10 @@ class AppointmentMessagePreviewView(InternalAreaRequiredMixin, View):
                 appointment,
                 action=request.POST.get("acao", ""),
                 cancellation_reason=request.POST.get("cancellation_reason", ""),
+                # A janela volta a pedir isto sempre que se troca de língua.
+                # O texto editado não vem: quem está a editar não quer ver o
+                # que escreveu ser substituído pelo modelo.
+                override=MessageOverride(language=language_from_request(request)),
             )
         except ValueError:
             return JsonResponse({"error": "Ação desconhecida."}, status=400)
@@ -887,6 +892,7 @@ class AppointmentConfirmView(InternalAreaRequiredMixin, View):
             appointment=appointment,
             user=request.user,
             send_message=wants_to_notify(request),
+            override=MessageOverride.from_request(request),
         )
 
         if result.success:

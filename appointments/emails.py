@@ -277,8 +277,14 @@ def render_email_for_event(
     )
 
 
-def send_appointment_confirmation_email(appointment):
-    # Sends appointment creation or confirmation email.
+def send_appointment_confirmation_email(appointment, override=None):
+    """A confirmação que vai para a cliente.
+
+    `override` traz o que a janela de confirmação mudou só para este envio: a
+    língua, e o texto se alguém lhe mexeu. É opcional em todo o caminho — sem
+    ele, esta função faz exatamente o que fazia.
+    """
+
     customer_email = appointment.customer.email
 
     if not customer_email:
@@ -322,7 +328,13 @@ def send_appointment_confirmation_email(appointment):
     if not event_setting:
         return
 
-    context = build_appointment_context(appointment, customer_language(appointment))
+    lingua = (
+        override.language_or(customer_language(appointment))
+        if override
+        else customer_language(appointment)
+    )
+
+    context = build_appointment_context(appointment, lingua)
     context.update(
         {
             "cancellation_link": cancel_url,
@@ -350,13 +362,25 @@ def send_appointment_confirmation_email(appointment):
         fallback_subject=fallback_subject,
         fallback_body=fallback_body,
         email_template=event_setting.email_template,
-        language=customer_language(appointment),
+        language=lingua,
     )
+
+    corpo_texto = rendered_email["body_text"]
+    corpo_html = rendered_email["body_html"]
+
+    if override and override.email_body:
+        corpo_texto = override.email_body
+
+        # O HTML tem de cair. Um email com as duas versões é mostrado pela
+        # versão HTML em quase todos os clientes de correio: mantê-la faria a
+        # cliente ler o texto original, e quem editou ficaria convencido de que
+        # a alteração tinha saído.
+        corpo_html = ""
 
     send_rendered_email(
         subject=rendered_email["subject"],
-        body_text=rendered_email["body_text"],
-        body_html=rendered_email["body_html"],
+        body_text=corpo_texto,
+        body_html=corpo_html,
         recipient_list=[customer_email],
     )
 
